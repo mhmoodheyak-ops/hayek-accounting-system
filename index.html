@@ -5,49 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HAYEK SPOT - نظام المحاسبة</title>
     <style>
-        /* التنسيق الملكي الشامل */
+        /* التنسيق الملكي المتكامل */
         :root { --gold: #d4af37; --bg: #0a0a0a; --card: #141414; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        
-        .auth-box, .calc-box { background: var(--card); padding: 25px; border-radius: 16px; border-top: 6px solid var(--gold); width: 90%; max-width: 450px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-        
+        body { background: var(--bg); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { width: 100%; max-width: 480px; }
+        .auth-box, .calc-box { background: var(--card); padding: 25px; border-radius: 16px; border-top: 6px solid var(--gold); box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; text-align: center; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button { cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
+        .btn-gold { width: 100%; padding: 15px; background: var(--gold); color: #000; border-radius: 8px; margin-top: 10px; }
         
-        /* تنسيق الحاسبة */
-        .screen { background: #000; padding: 20px; border-radius: 10px; text-align: left; margin-bottom: 20px; border: 1px solid #222; }
-        .value { color: var(--gold); font-size: 2.5rem; font-weight: bold; overflow: hidden; }
+        /* الحاسبة */
+        .screen { background: #000; padding: 20px; border-radius: 10px; text-align: left; margin-bottom: 20px; border: 1px solid #222; min-height: 80px; display: flex; align-items: center; justify-content: flex-end; }
+        .value { color: var(--gold); font-size: 2.5rem; font-weight: bold; }
         .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .key { background: #222; color: #fff; padding: 15px; border-radius: 8px; border: none; font-size: 1.2rem; cursor: pointer; }
+        .key { background: #222; color: #fff; padding: 18px; border-radius: 8px; font-size: 1.2rem; }
         .key.op { color: var(--gold); }
-        .key.eq { background: var(--gold); color: #000; }
+        .key.eq { background: var(--gold); color: #000; grid-row: span 2; }
         
-        #main-content { display: none; width: 100%; display: flex; justify-content: center; }
+        /* الجداول والمزايا */
+        .history-section { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table th, .table td { padding: 10px; border-bottom: 1px solid #222; text-align: right; }
+        .table th { color: var(--gold); font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <div id="auth-overlay">
-        <div class="auth-box">
-            <h1 style="color: var(--gold);">HAYEK SPOT</h1>
-            <p>نظام المحاسبة المحمي</p>
-            <input type="text" id="user" placeholder="اسم المستخدم">
-            <input type="password" id="pass" placeholder="كلمة المرور">
-            <button onclick="checkLogin()">دخول النظام</button>
-            <p id="msg" style="color: #ff4d4d; margin-top: 10px;"></p>
-        </div>
+<div class="container">
+    <div id="auth-overlay" class="auth-box">
+        <h1 style="color: var(--gold); text-align: center;">HAYEK SPOT</h1>
+        <input type="text" id="user" placeholder="اسم المستخدم">
+        <input type="password" id="pass" placeholder="كلمة المرور">
+        <button class="btn-gold" onclick="checkLogin()">دخول النظام</button>
+        <p id="msg" style="color: #ff4d4d; text-align: center; margin-top: 10px;"></p>
     </div>
 
     <div id="main-content" style="display: none;">
         <div class="calc-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <span style="color: var(--gold); font-weight: bold;">HAYEK SPOT</span>
-                <button onclick="location.reload()" style="width: auto; padding: 5px 15px; margin: 0; font-size: 0.8rem; background: #333; color: #fff;">خروج</button>
+                <button onclick="location.reload()" style="background: #333; color: #fff; padding: 5px 12px; border-radius: 5px;">خروج</button>
             </div>
             
-            <div class="screen">
-                <div class="value" id="display">0</div>
-            </div>
+            <div class="screen"><div class="value" id="display">0</div></div>
             
             <div class="keys">
                 <button class="key op" onclick="clearScreen()">C</button>
@@ -68,50 +68,74 @@
                 <button class="key" onclick="press('1')">1</button>
                 <button class="key" onclick="press('2')">2</button>
                 <button class="key" onclick="press('3')">3</button>
-                <button class="key eq" style="grid-row: span 2;" onclick="calculate()">=</button>
+                <button class="key eq" onclick="calculate()">=</button>
                 
                 <button class="key" style="grid-column: span 2;" onclick="press('0')">0</button>
                 <button class="key" onclick="press('.')">.</button>
             </div>
+
+            <div class="history-section">
+                <h3 style="color: var(--gold);">سجل نشاط الزبائن</h3>
+                <table class="table">
+                    <thead>
+                        <tr><th>الزبون</th><th>العملية</th><th>المبلغ</th></tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <tr><td colspan="3" style="text-align: center; color: #666;">لا يوجد عمليات حالياً</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // منطق الدخول
-        function checkLogin() {
-            const u = document.getElementById('user').value.trim().toLowerCase();
-            const p = document.getElementById('pass').value.trim();
-            if (u === "mahmood" && p === "456") {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'flex';
-            } else {
-                document.getElementById('msg').innerText = "البيانات خاطئة!";
-            }
+<script>
+    // منطق الدخول
+    function checkLogin() {
+        const u = document.getElementById('user').value.trim().toLowerCase();
+        const p = document.getElementById('pass').value.trim();
+        if ((u === "mahmood" && p === "456") || (u === "admin" && p === "123")) {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        } else {
+            document.getElementById('msg').innerText = "البيانات خاطئة!";
         }
+    }
 
-        // منطق الحاسبة
-        let currentInput = "";
-        function press(num) {
-            currentInput += num;
-            document.getElementById('display').innerText = currentInput;
+    // منطق الحاسبة
+    let current = "";
+    const disp = document.getElementById('display');
+
+    function press(v) {
+        current += v;
+        disp.innerText = current;
+    }
+    function clearScreen() {
+        current = "";
+        disp.innerText = "0";
+    }
+    function backspace() {
+        current = current.slice(0, -1);
+        disp.innerText = current || "0";
+    }
+    function calculate() {
+        try {
+            // إضافة العملية للسجل قبل الحساب
+            if(current) addToHistory("عام", "حساب", current);
+            current = eval(current).toString();
+            disp.innerText = current;
+        } catch {
+            disp.innerText = "خطأ";
+            current = "";
         }
-        function clearScreen() {
-            currentInput = "";
-            document.getElementById('display').innerText = "0";
-        }
-        function backspace() {
-            currentInput = currentInput.slice(0, -1);
-            document.getElementById('display').innerText = currentInput || "0";
-        }
-        function calculate() {
-            try {
-                currentInput = eval(currentInput).toString();
-                document.getElementById('display').innerText = currentInput;
-            } catch {
-                document.getElementById('display').innerText = "خطأ";
-                currentInput = "";
-            }
-        }
-    </script>
+    }
+
+    function addToHistory(user, action, amount) {
+        const body = document.getElementById('history-body');
+        if (body.innerHTML.includes("لا يوجد")) body.innerHTML = "";
+        const row = `<tr><td>${user}</td><td>${action}</td><td>${amount}</td></tr>`;
+        body.innerHTML = row + body.innerHTML;
+    }
+</script>
 </body>
 </html>
