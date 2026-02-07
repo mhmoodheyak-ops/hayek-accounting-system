@@ -1,136 +1,70 @@
-// admin.js
-(async function () {
-  // لازم auth.js يكون عامل window.sb
-  const sb = window.sb;
-  const logoutBtn = document.getElementById("logoutBtn");
-  const refreshBtn = document.getElementById("refreshBtn");
-  const usersTbody = document.getElementById("usersTbody");
-  const countUsers = document.getElementById("countUsers");
-  const adminInfo = document.getElementById("adminInfo");
+(() => {
+    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+    const SESSION_KEY = "hayek_auth_session_v1";
 
-  const createBtn = document.getElementById("createBtn");
-  const newUsername = document.getElementById("newUsername");
-  const newPassword = document.getElementById("newPassword");
+    const overlay = document.getElementById("auth-overlay");
+    const userEl = document.getElementById("auth-email");
+    const passEl = document.getElementById("auth-pass");
+    const msgEl  = document.getElementById("auth-msg");
+    const btnLogin = document.getElementById("btn-login");
 
-  // حماية: إذا مو مسجّل دخول، رجّعه
-  if (!window.isLoggedIn?.()) {
-    location.href = "index.html";
-    return;
-  }
+    async function handleLogin() {
+        const u = userEl.value.trim();
+        const p = passEl.value.trim();
 
-  // تأكد إنه Admin
-  const session = window.getSession?.();
-  adminInfo.textContent = session?.name ? `مرحبًا ${session.name}` : "";
+        if (!u || !p) {
+            msgEl.innerText = "الرجاء إدخال اسم المستخدم وكلمة المرور";
+            msgEl.style.color = "#ff4d4d";
+            return;
+        }
 
-  async function getMeProfile() {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return null;
+        btnLogin.disabled = true;
+        msgEl.innerText = "جاري الاتصال بقاعدة البيانات...";
+        msgEl.style.color = "#d4af37";
 
-    const { data, error } = await sb
-      .from("app_users")
-      .select("username,is_admin,blocked,created_at")
-      .eq("id", user.id)
-      .single();
+        try {
+            const query = `${SUPABASE_URL}/rest/v1/app_users?username=eq.${encodeURIComponent(u)}&pass=eq.${encodeURIComponent(p)}&select=*`;
+            const response = await fetch(query, {
+                headers: { 
+                    "apikey": SUPABASE_ANON_KEY, 
+                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}` 
+                }
+            });
+            const users = await response.json();
 
-    if (error) return null;
-    return data;
-  }
-
-  const me = await getMeProfile();
-  if (!me?.is_admin) {
-    alert("هذه الصفحة للإدمن فقط");
-    location.href = "index.html";
-    return;
-  }
-
-  async function loadUsers() {
-    usersTbody.innerHTML = `<tr><td colspan="5">جاري التحميل...</td></tr>`;
-
-    const { data, error } = await sb
-      .from("app_users")
-      .select("id,username,is_admin,blocked,created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      usersTbody.innerHTML = `<tr><td colspan="5">خطأ: ${error.message}</td></tr>`;
-      return;
+            if (users && users.length > 0) {
+                const user = users[0];
+                if (user.blocked) {
+                    msgEl.innerText = "تم حظر هذا الحساب. راجع الإدارة.";
+                    msgEl.style.color = "red";
+                } else {
+                    localStorage.setItem(SESSION_KEY, JSON.stringify({
+                        username: user.username,
+                        is_admin: user.is_admin,
+                        loginTime: new Date().toISOString()
+                    }));
+                    msgEl.innerText = "تم التحقق.. جاري الدخول ✅";
+                    setTimeout(() => location.reload(), 800);
+                }
+            } else {
+                msgEl.innerText = "بيانات الدخول غير صحيحة";
+                msgEl.style.color = "red";
+            }
+        } catch (e) {
+            msgEl.innerText = "خطأ في الاتصال. تأكد من الإنترنت.";
+        } finally {
+            btnLogin.disabled = false;
+        }
     }
 
-    countUsers.textContent = data?.length || 0;
-
-    usersTbody.innerHTML = "";
-    (data || []).forEach(u => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${u.username}</td>
-        <td>${u.is_admin ? `<span class="tag admin">Admin</span>` : `User`}</td>
-        <td>${u.blocked ? `<span class="tag blocked">Blocked</span>` : `Active`}</td>
-        <td class="ltr">${new Date(u.created_at).toLocaleString()}</td>
-        <td>
-          <div class="actions">
-            <button class="btn ${u.blocked ? "ok" : ""}" data-action="toggle" data-id="${u.id}" data-blocked="${u.blocked}">
-              ${u.blocked ? "فك حظر" : "حظر"}
-            </button>
-
-            <button class="btn danger" data-action="deleteRow" data-id="${u.id}">
-              حذف من الجدول
-            </button>
-          </div>
-          <div class="muted">* حذف نهائي من Auth نعمله لاحقًا بـ Edge Function</div>
-        </td>
-      `;
-      usersTbody.appendChild(tr);
-    });
-  }
-
-  usersTbody.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-
-    const action = btn.dataset.action;
-    const id = btn.dataset.id;
-
-    if (action === "toggle") {
-      const blocked = btn.dataset.blocked === "true";
-      const next = !blocked;
-
-      const ok = confirm(next ? "تأكيد حظر المستخدم؟" : "تأكيد فك الحظر؟");
-      if (!ok) return;
-
-      const { error } = await sb
-        .from("app_users")
-        .update({ blocked: next })
-        .eq("id", id);
-
-      if (error) return alert("خطأ: " + error.message);
-      await loadUsers();
+    const session = localStorage.getItem(SESSION_KEY);
+    if (session) {
+        overlay.style.display = "none";
+        const data = JSON.parse(session);
+        document.getElementById("welcomeUser").innerText = "أهلاً، " + data.username;
     }
 
-    if (action === "deleteRow") {
-      const ok = confirm("هذا سيحذف صف المستخدم من جدول app_users فقط (وليس من Auth). متابعة؟");
-      if (!ok) return;
-
-      const { error } = await sb
-        .from("app_users")
-        .delete()
-        .eq("id", id);
-
-      if (error) return alert("خطأ: " + error.message);
-      await loadUsers();
-    }
-  });
-
-  refreshBtn.addEventListener("click", loadUsers);
-
-  logoutBtn.addEventListener("click", async () => {
-    await window.logout?.();
-    location.href = "index.html";
-  });
-
-  // إنشاء مستخدم: مبدئيًا (قريبًا) عبر Edge Function
-  createBtn.addEventListener("click", async () => {
-    alert("إنشاء مستخدم من داخل اللوحة يحتاج Edge Function (Service Role). قلّي إذا بدك أجهزها لك.");
-  });
-
-  await loadUsers();
+    btnLogin.addEventListener("click", handleLogin);
+    window.logout = () => { localStorage.removeItem(SESSION_KEY); location.reload(); };
 })();
