@@ -1,70 +1,378 @@
-(() => {
-    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-    const SESSION_KEY = "hayek_auth_session_v1";
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111315" />
+  <title>HAYEK SPOT | لوحة الأدمن</title>
 
-    const overlay = document.getElementById("auth-overlay");
-    const userEl = document.getElementById("auth-email");
-    const passEl = document.getElementById("auth-pass");
-    const msgEl  = document.getElementById("auth-msg");
-    const btnLogin = document.getElementById("btn-login");
+  <style>
+    :root{
+      --white:#FFFFFF;
+      --green:#19C37D;
+      --gray:#5F6368;
+      --dark:#2F3337;
+      --black:#111315;
+      --yellow:#D6A628;
 
-    async function handleLogin() {
-        const u = userEl.value.trim();
-        const p = passEl.value.trim();
+      --bg: var(--gray);
+      --card: var(--dark);
+      --line: rgba(255,255,255,.18);
+      --text: var(--white);
+      --muted: rgba(255,255,255,.78);
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background: var(--bg); color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", "Noto Naskh Arabic", sans-serif;
+      display:flex; justify-content:center; padding:16px;
+    }
+    .wrap{width:min(520px,100%); display:grid; gap:12px}
+    .top{
+      background: linear-gradient(180deg, rgba(17,19,21,.95), rgba(47,51,55,.95));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px 14px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .brand{display:grid; gap:4px}
+    .brand b{font-size:16px}
+    .brand span{font-size:12px; color:var(--muted)}
+    .pill{font-size:12px; font-weight:1000; padding:7px 10px; border-radius:999px; background:var(--yellow); color:var(--black)}
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      overflow:hidden;
+    }
+    .p{padding:14px}
+    .field{display:grid; gap:6px}
+    .field label{font-size:12px; color:var(--muted); font-weight:1000}
+    input{
+      width:100%;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: rgba(17,19,21,.45);
+      color: var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    input:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
+    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
+    .btn{
+      user-select:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      padding:12px 12px;
+      border-radius:16px;
+      font-weight:1000;
+      font-size:14px;
+      cursor:pointer;
+      touch-action: manipulation;
+    }
+    .btn:active{transform: scale(.99)}
+    .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
+    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
+    .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
+    .note{font-size:12px; color:var(--muted); line-height:1.7}
 
-        if (!u || !p) {
-            msgEl.innerText = "الرجاء إدخال اسم المستخدم وكلمة المرور";
-            msgEl.style.color = "#ff4d4d";
-            return;
+    table{
+      width:100%;
+      border-collapse:collapse;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background: rgba(17,19,21,.25);
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      font-size:13px;
+      text-align:right;
+      vertical-align:middle;
+    }
+    th{color:var(--muted); font-weight:1000}
+    tr:last-child td{border-bottom:none}
+    .tag{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:1000;
+      font-size:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+    }
+    .tag.ok{background: rgba(25,195,125,.20); border-color: rgba(25,195,125,.45)}
+    .tag.bad{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
+    .mono{direction:ltr; text-align:left; font-weight:1000}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <b>لوحة الأدمن — HAYEK SPOT</b>
+        <span>إضافة عملاء + كلمات مرور + حظر/فك حظر</span>
+      </div>
+      <div class="pill" id="pill">مقفل</div>
+    </div>
+
+    <!-- Admin Login -->
+    <div class="card" id="loginCard">
+      <div class="p" style="display:grid; gap:10px">
+        <div class="field">
+          <label>كلمة مرور الأدمن</label>
+          <input id="adminPass" type="password" placeholder="••••" />
+        </div>
+        <div class="row2">
+          <button class="btn green" id="adminLoginBtn">دخول الأدمن</button>
+          <button class="btn yellow" id="goClientBtn">صفحة العميل</button>
+        </div>
+
+        <div class="note">
+          كلمة مرور الأدمن الافتراضية: <span class="mono">hayekadmin123</span><br>
+          (تقدر تغيّرها من داخل هذا الملف بسهولة)
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="card" id="panelCard" style="display:none">
+      <div class="p" style="display:grid; gap:12px">
+        <div class="row3">
+          <div class="field">
+            <label>اسم العميل</label>
+            <input id="newName" placeholder="مثال: أبو أحمد" />
+          </div>
+          <div class="field">
+            <label>كلمة المرور للعميل</label>
+            <input id="newPass" placeholder="مثال: 5599" />
+          </div>
+          <div class="field">
+            <label>توليد كلمة مرور</label>
+            <button class="btn yellow" id="genBtn" type="button">توليد</button>
+          </div>
+        </div>
+
+        <div class="row2">
+          <button class="btn green" id="addBtn">حفظ العميل</button>
+          <button class="btn red" id="adminLogoutBtn">خروج الأدمن</button>
+        </div>
+
+        <div class="note">
+          ✅ بعد إضافة العميل: أعطه (الاسم + كلمة المرور) ليدخل من صفحة العميل.<br>
+          ✅ زر الحظر يمنع الدخول فوراً.
+        </div>
+      </div>
+
+      <div class="p" style="border-top:1px solid rgba(255,255,255,.12)">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px">
+          <b>قائمة العملاء</b>
+          <button class="btn" id="copyClientsBtn">نسخ القائمة</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th class="mono">كلمة المرور</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  const $ = (id) => document.getElementById(id);
+
+  const K_CLIENTS = "hs_clients_v1";
+  const K_ADMIN   = "hs_admin_session_v1";
+
+  // ✅ غيّر كلمة مرور الأدمن هنا إذا بدك
+  const ADMIN_PASSWORD = "hayekadmin123";
+
+  const VIBRATE_MS = 12;
+  const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
+
+  const toast = (msg) => {
+    const d = document.createElement("div");
+    d.textContent = msg;
+    Object.assign(d.style, {
+      position:"fixed", bottom:"18px", left:"50%",
+      transform:"translateX(-50%)",
+      background:"rgba(17,19,21,.85)",
+      color:"#fff", padding:"10px 14px",
+      borderRadius:"14px", fontWeight:"1000",
+      zIndex:9999, backdropFilter:"blur(8px)",
+      border:"1px solid rgba(255,255,255,.18)"
+    });
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(), 1300);
+  };
+
+  const loadClients = () => {
+    try { return JSON.parse(localStorage.getItem(K_CLIENTS) || "[]"); }
+    catch { return []; }
+  };
+  const saveClients = (arr) => localStorage.setItem(K_CLIENTS, JSON.stringify(arr));
+
+  const saveAdminSession = () => localStorage.setItem(K_ADMIN, "1");
+  const clearAdminSession = () => localStorage.removeItem(K_ADMIN);
+  const isAdmin = () => localStorage.getItem(K_ADMIN) === "1";
+
+  const loginCard = $("loginCard");
+  const panelCard = $("panelCard");
+  const pill = $("pill");
+
+  const setMode = (adminOn) => {
+    pill.textContent = adminOn ? "مفتوح" : "مقفل";
+    loginCard.style.display = adminOn ? "none" : "block";
+    panelCard.style.display = adminOn ? "block" : "none";
+  };
+
+  const genPass = () => {
+    // 4 أرقام
+    const n = Math.floor(1000 + Math.random()*9000);
+    return String(n);
+  };
+
+  const render = () => {
+    const tbody = $("tbody");
+    const clients = loadClients();
+    tbody.innerHTML = "";
+
+    for (const c of clients) {
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.textContent = c.name;
+
+      const td2 = document.createElement("td");
+      td2.className = "mono";
+      td2.textContent = c.pass;
+
+      const td3 = document.createElement("td");
+      const tag = document.createElement("span");
+      tag.className = "tag " + (c.blocked ? "bad" : "ok");
+      tag.textContent = c.blocked ? "محظور" : "مفعل";
+      td3.appendChild(tag);
+
+      const td4 = document.createElement("td");
+      td4.style.display = "flex";
+      td4.style.gap = "8px";
+      td4.style.flexWrap = "wrap";
+
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "btn " + (c.blocked ? "green" : "yellow");
+      toggleBtn.textContent = c.blocked ? "فك الحظر" : "حظر";
+      toggleBtn.addEventListener("click", () => {
+        vibe();
+        const arr = loadClients();
+        const idx = arr.findIndex(x => x.id === c.id);
+        if (idx >= 0) {
+          arr[idx].blocked = !arr[idx].blocked;
+          saveClients(arr);
+          render();
+          toast(arr[idx].blocked ? "تم الحظر" : "تم فك الحظر");
         }
+      });
 
-        btnLogin.disabled = true;
-        msgEl.innerText = "جاري الاتصال بقاعدة البيانات...";
-        msgEl.style.color = "#d4af37";
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn red";
+      delBtn.textContent = "حذف";
+      delBtn.addEventListener("click", () => {
+        vibe();
+        const arr = loadClients().filter(x => x.id !== c.id);
+        saveClients(arr);
+        render();
+        toast("تم الحذف");
+      });
 
-        try {
-            const query = `${SUPABASE_URL}/rest/v1/app_users?username=eq.${encodeURIComponent(u)}&pass=eq.${encodeURIComponent(p)}&select=*`;
-            const response = await fetch(query, {
-                headers: { 
-                    "apikey": SUPABASE_ANON_KEY, 
-                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}` 
-                }
-            });
-            const users = await response.json();
+      td4.append(toggleBtn, delBtn);
+      tr.append(td1, td2, td3, td4);
+      tbody.appendChild(tr);
+    }
+  };
 
-            if (users && users.length > 0) {
-                const user = users[0];
-                if (user.blocked) {
-                    msgEl.innerText = "تم حظر هذا الحساب. راجع الإدارة.";
-                    msgEl.style.color = "red";
-                } else {
-                    localStorage.setItem(SESSION_KEY, JSON.stringify({
-                        username: user.username,
-                        is_admin: user.is_admin,
-                        loginTime: new Date().toISOString()
-                    }));
-                    msgEl.innerText = "تم التحقق.. جاري الدخول ✅";
-                    setTimeout(() => location.reload(), 800);
-                }
-            } else {
-                msgEl.innerText = "بيانات الدخول غير صحيحة";
-                msgEl.style.color = "red";
-            }
-        } catch (e) {
-            msgEl.innerText = "خطأ في الاتصال. تأكد من الإنترنت.";
-        } finally {
-            btnLogin.disabled = false;
-        }
+  // ===== Events =====
+  $("adminLoginBtn").addEventListener("click", () => {
+    vibe();
+    const pass = ($("adminPass").value || "").trim();
+    if (pass !== ADMIN_PASSWORD) return toast("كلمة مرور الأدمن غير صحيحة");
+    saveAdminSession();
+    setMode(true);
+    render();
+    toast("تم الدخول ✅");
+  });
+
+  $("adminLogoutBtn").addEventListener("click", () => {
+    vibe();
+    clearAdminSession();
+    setMode(false);
+    toast("تم الخروج");
+  });
+
+  $("goClientBtn").addEventListener("click", () => { vibe(); location.href = "./index.html"; });
+  $("genBtn").addEventListener("click", () => { vibe(); $("newPass").value = genPass(); });
+
+  $("addBtn").addEventListener("click", () => {
+    vibe();
+    const name = ($("newName").value || "").trim();
+    const pass = ($("newPass").value || "").trim();
+
+    if (!name) return toast("اكتب اسم العميل");
+    if (!pass) return toast("اكتب كلمة المرور أو اضغط توليد");
+
+    const arr = loadClients();
+
+    // إذا الاسم موجود: نحدّث كلمة المرور بدل التكرار
+    const existing = arr.find(c => c.name === name);
+    if (existing){
+      existing.pass = pass;
+      existing.blocked = false;
+      saveClients(arr);
+      render();
+      $("newName").value = "";
+      $("newPass").value = "";
+      return toast("تم تحديث العميل ✅");
     }
 
-    const session = localStorage.getItem(SESSION_KEY);
-    if (session) {
-        overlay.style.display = "none";
-        const data = JSON.parse(session);
-        document.getElementById("welcomeUser").innerText = "أهلاً، " + data.username;
-    }
+    arr.unshift({ id: crypto.randomUUID(), name, pass, blocked:false, ts: Date.now() });
+    saveClients(arr);
+    render();
 
-    btnLogin.addEventListener("click", handleLogin);
-    window.logout = () => { localStorage.removeItem(SESSION_KEY); location.reload(); };
-})();
+    $("newName").value = "";
+    $("newPass").value = "";
+    toast("تمت الإضافة ✅");
+  });
+
+  $("copyClientsBtn").addEventListener("click", async () => {
+    vibe();
+    const clients = loadClients();
+    const text = clients.map(c => `${c.name}\t${c.pass}\t${c.blocked ? "محظور" : "مفعل"}`).join("\n") || "لا يوجد عملاء";
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("تم النسخ ✅");
+    }catch{
+      toast("لم يتم النسخ (المتصفح منع)");
+    }
+  });
+
+  // ===== Boot =====
+  setMode(isAdmin());
+  if (isAdmin()) render();
+</script>
+</body>
+</html>
