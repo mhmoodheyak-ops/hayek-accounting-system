@@ -1,100 +1,634 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HAYEK SPOT | نظام المحاسبة الذكي</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>HAYEK SPOT | نظام المحاسبة الذكي</title>
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a33;
+      --card2:#0c1630;
+      --text:#eaf0ff;
+      --muted:#9fb0d6;
+      --line:rgba(255,255,255,.10);
+      --btn:rgba(255,255,255,.07);
+      --btn2:rgba(255,255,255,.10);
+      --accent:#4ade80;
+      --danger:#fb7185;
+      --warn:#fbbf24;
+      --shadow: 0 16px 50px rgba(0,0,0,.45);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:radial-gradient(1200px 800px at 20% -10%, #1a2b55 0%, transparent 60%),
+               radial-gradient(900px 700px at 110% 10%, #173b2d 0%, transparent 55%),
+               var(--bg);
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", "Noto Naskh Arabic", sans-serif;
+      display:flex; justify-content:center; padding:18px;
+    }
+    .wrap{width:min(440px, 100%); display:flex; flex-direction:column; gap:14px}
+    .header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px; border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .brand{display:flex; flex-direction:column; gap:2px}
+    .brand b{font-size:16px; letter-spacing:.3px}
+    .brand span{font-size:12px; color:var(--muted)}
+    .pill{
+      font-size:12px; color:#0b1220; background:var(--accent);
+      padding:7px 10px; border-radius:999px; font-weight:700;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    /* LOGIN */
+    .login{padding:16px; display:grid; gap:10px}
+    .login .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .field{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .field label{font-size:12px; color:var(--muted)}
+    input{
+      width:100%;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    input:focus{border-color: rgba(74,222,128,.6); box-shadow: 0 0 0 4px rgba(74,222,128,.12)}
+    .actions{display:flex; gap:10px; margin-top:4px}
+    .btn{
+      user-select:none;
+      border:1px solid var(--line);
+      background: var(--btn);
+      color:var(--text);
+      padding:12px 12px;
+      border-radius:16px;
+      font-weight:700;
+      font-size:14px;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      gap:8px;
+      transition: transform .05s ease, background .2s ease;
+      touch-action: manipulation;
+    }
+    .btn:active{transform: scale(.99)}
+    .btn.primary{background: rgba(74,222,128,.18); border-color: rgba(74,222,128,.35)}
+    .btn.danger{background: rgba(251,113,133,.14); border-color: rgba(251,113,133,.35)}
+    .btn.ghost{background: transparent}
+    .login-note{font-size:12px; color:var(--muted); line-height:1.6}
+
+    /* APP */
+    .app{display:none}
+    .screen{
+      padding:16px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+    }
+    .display{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      border-radius:20px;
+      padding:14px 14px;
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .expr{font-size:14px; color:var(--muted); min-height:18px; text-align:left; direction:ltr}
+    .result{font-size:28px; font-weight:900; text-align:left; direction:ltr; letter-spacing:.2px}
+
+    .keys{
+      padding:14px;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+    }
+    .key{
+      padding:14px 10px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background: var(--btn);
+      font-weight:900;
+      font-size:16px;
+      cursor:pointer;
+      touch-action: manipulation;
+      display:flex; align-items:center; justify-content:center;
+      min-height:52px;
+    }
+    .key.op{background: rgba(255,255,255,.09)}
+    .key.eq{background: rgba(74,222,128,.22); border-color: rgba(74,222,128,.35)}
+    .key.warn{background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.30)}
+    .key.danger{background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.30)}
+
+    .footer-actions{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      border-top:1px solid var(--line);
+      background: rgba(0,0,0,.10);
+    }
+    .bigline{
+      width:90%;
+      align-self:center;
+      padding:14px 12px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      font-weight:900;
+      cursor:pointer;
+      touch-action: manipulation;
+    }
+    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+
+    .log{
+      padding:14px;
+      display:grid;
+      gap:10px;
+      border-top:1px solid var(--line);
+    }
+    .log h3{margin:0; font-size:14px}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.15);
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      font-size:13px;
+      text-align:right;
+    }
+    th{color:var(--muted); font-weight:800}
+    td.num{text-align:left; direction:ltr; font-weight:800}
+    tr:last-child td{border-bottom:none}
+    .total{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 12px;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius:16px;
+      background: rgba(0,0,0,.10);
+      font-weight:900;
+    }
+    .total span:last-child{direction:ltr}
+
+    @media (max-width:360px){
+      .result{font-size:24px}
+      .key{min-height:48px}
+    }
+
+    /* PRINT */
+    @media print{
+      body{background:#fff; color:#000; padding:0}
+      .header, .login, .keys, .footer-actions, .btn, .pill{display:none !important}
+      .wrap{width:100%}
+      .card{box-shadow:none; border:none}
+      .screen{border:none}
+      table, th, td{border:1px solid #bbb}
+      th{color:#111}
+      .expr{color:#333}
+    }
+  </style>
 </head>
+
 <body>
-    <div id="auth-overlay">
-        <div class="auth-card">
-            <h1 style="color: #d4af37; margin-bottom: 5px;">HAYEK SPOT</h1>
-            <p style="color: #888; margin-bottom: 20px;">نظام المحاسبة المحمي © 2026</p>
-            <div style="text-align: right; margin-bottom: 15px;">
-                <label style="color: #d4af37; font-size: 0.9rem;">اسم المستخدم</label>
-                <input type="text" id="auth-email" class="in" placeholder="أدخل اسمك هنا">
-                <label style="color: #d4af37; font-size: 0.9rem; margin-top: 10px; display: block;">كلمة المرور</label>
-                <input type="password" id="auth-pass" class="in" placeholder="••••••">
-            </div>
-            <button id="btn-login" class="btn primary" style="width: 100%; font-size: 1.2rem;">دخول النظام</button>
-            <p id="auth-msg" style="margin-top: 15px; min-height: 20px; font-weight: bold;"></p>
-        </div>
+  <div class="wrap">
+
+    <div class="header">
+      <div class="brand">
+        <b>HAYEK SPOT</b>
+        <span>نظام المحاسبة المحمي © 2026</span>
+      </div>
+      <div class="pill" id="statusPill">مقفل</div>
     </div>
 
-    <div class="main">
-        <div class="calc">
-            <div class="topbar">
-                <div class="user-info">
-                    <span class="status-dot"></span>
-                    <span id="welcomeUser" style="color: #d4af37;"></span>
-                </div>
-                <button onclick="window.logout()" class="btn small danger">تسجيل خروج</button>
-            </div>
-
-            <div class="screen">
-                <div id="expr" class="expr"></div>
-                <div id="value" class="value">0</div>
-            </div>
-
-            <div class="noteBox">
-                <input type="text" id="noteInput" class="in" placeholder="البيان (مثلاً: دفعة بضاعة)">
-                <input type="text" id="invoiceName" class="in" placeholder="اسم العميل / الفاتورة">
-            </div>
-
-            <div id="keys" class="keys">
-                <button class="btn op" data-action="clear">C</button>
-                <button class="btn op" id="ceBtn">CE</button>
-                <button class="btn op" data-action="back">⌫</button>
-                <button class="btn op" data-op="/">÷</button>
-                <button class="btn" data-num="7">7</button>
-                <button class="btn" data-num="8">8</button>
-                <button class="btn" data-num="9">9</button>
-                <button class="btn op" data-op="*">×</button>
-                <button class="btn" data-num="4">4</button>
-                <button class="btn" data-num="5">5</button>
-                <button class="btn" data-num="6">6</button>
-                <button class="btn op" data-op="-">−</button>
-                <button class="btn" data-num="1">1</button>
-                <button class="btn" data-num="2">2</button>
-                <button class="btn" data-num="3">3</button>
-                <button class="btn op" data-op="+">+</button>
-                <button class="btn span2" data-num="0">0</button>
-                <button class="btn" data-action="dot">.</button>
-                <button class="btn eq" data-action="equals">=</button>
-            </div>
-
-            <div class="tools">
-                <button id="printPdfBtn" class="btn gold-border">تصدير فاتورة PDF</button>
-                <button id="clearHistoryBtn" class="btn danger">مسح السجل</button>
-            </div>
-
-            <div class="historyWrap">
-                <h3 style="color: #d4af37; border-bottom: 1px solid #333; padding-bottom: 5px;">سجل العمليات</h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>البيان</th>
-                            <th>العملية</th>
-                            <th>النتيجة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyBody"></tbody>
-                </table>
-            </div>
-
-            <div class="finalTotalBox">
-                <span>إجمالي الكشف:</span>
-                <span id="grandTotal">0</span>
-            </div>
+    <!-- LOGIN CARD -->
+    <div class="card login" id="loginCard">
+      <div class="row">
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input id="u" autocomplete="username" inputmode="text" placeholder="مثال: hayek" />
         </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <input id="p" type="password" autocomplete="current-password" inputmode="text" placeholder="••••" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="loginBtn">دخول النظام</button>
+        <button class="btn ghost" id="demoBtn" title="دخول سريع للاختبار">تجريبي</button>
+      </div>
+
+      <div class="login-note">
+        <b>بيانات الدخول الافتراضية:</b> المستخدم <span dir="ltr">hayek</span> وكلمة المرور <span dir="ltr">1234</span><br>
+        (تقدر تغيّرهم من داخل الكود لاحقًا إذا بدك)
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
-    <script src="amiri-font.js"></script>
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
+    <!-- APP CARD -->
+    <div class="card app" id="appCard">
+      <div class="screen">
+        <div class="display" id="printable">
+          <div class="expr" id="expr">0</div>
+          <div class="result" id="res">0</div>
+        </div>
+      </div>
+
+      <!-- KEYPAD: ترتيب الأرقام كما طلبت (3 بدل 1 / 6 بدل 4 / 9 بدل 7) -->
+      <div class="keys" id="keys">
+        <button class="key warn" data-k="C">C</button>
+        <button class="key warn" data-k="CE">CE</button>
+        <button class="key warn" data-k="BK">⌫</button>
+        <button class="key op" data-k="/">÷</button>
+
+        <button class="key" data-k="7">7</button>
+        <button class="key" data-k="8">8</button>
+        <button class="key" data-k="9">9</button>
+        <button class="key op" data-k="*">×</button>
+
+        <button class="key" data-k="4">4</button>
+        <button class="key" data-k="5">5</button>
+        <button class="key" data-k="6">6</button>
+        <button class="key op" data-k="-">−</button>
+
+        <button class="key" data-k="1">1</button>
+        <button class="key" data-k="2">2</button>
+        <button class="key" data-k="3">3</button>
+        <button class="key op" data-k="+">+</button>
+
+        <button class="key" data-k="0">0</button>
+        <button class="key" data-k=".">.</button>
+        <button class="key eq" data-k="=">=</button>
+        <button class="key danger" data-k="LOGOUT">تسجيل خروج</button>
+      </div>
+
+      <div class="footer-actions">
+        <button class="bigline" id="newlineBtn">طف السطر</button>
+
+        <div class="row2">
+          <button class="btn" id="copyBtn">نسخ السجل كجدول</button>
+          <button class="btn" id="copyResBtn">نسخ النتيجة</button>
+        </div>
+
+        <div class="row2">
+          <button class="btn primary" id="pdfBtn">تصدير فاتورة PDF</button>
+          <button class="btn danger" id="clearLogBtn">مسح السجل</button>
+        </div>
+      </div>
+
+      <div class="log">
+        <h3>سجل العمليات</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>البيان</th>
+              <th class="num">العملية</th>
+              <th class="num">النتيجة</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+
+        <div class="total">
+          <span>إجمالي الكشف:</span>
+          <span id="grandTotal">0</span>
+        </div>
+
+        <div style="font-size:12px;color:var(--muted);line-height:1.7">
+          تم تطوير الحاسبة من قبل الحايك للحلول الرقمية
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script type="module">
+  // =========================
+  // Modern ES2024 Logic
+  // =========================
+
+  const $ = (id) => document.getElementById(id);
+
+  const loginCard = $("loginCard");
+  const appCard = $("appCard");
+  const statusPill = $("statusPill");
+
+  // Defaults (غيرهم إذا بدك)
+  const DEFAULT_USER = "hayek";
+  const DEFAULT_PASS = "1234";
+
+  // UI elements
+  const exprEl = $("expr");
+  const resEl  = $("res");
+  const tbody  = $("tbody");
+  const grandTotalEl = $("grandTotal");
+
+  const VIBRATE_MS = 12;
+  const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
+
+  // State
+  let expr = "";
+  let lastResult = 0;
+  let log = loadLog();
+
+  function setLocked(isLocked){
+    statusPill.textContent = isLocked ? "مقفل" : "مفتوح";
+    statusPill.style.background = isLocked ? "#94a3b8" : "var(--accent)";
+    statusPill.style.color = isLocked ? "#0b1220" : "#0b1220";
+    loginCard.style.display = isLocked ? "grid" : "none";
+    appCard.style.display = isLocked ? "none" : "block";
+  }
+
+  function saveSession(open){
+    localStorage.setItem("hs_session_open", open ? "1" : "0");
+  }
+  function isSessionOpen(){
+    return localStorage.getItem("hs_session_open") === "1";
+  }
+
+  function loadLog(){
+    try{
+      const raw = localStorage.getItem("hs_log");
+      return raw ? JSON.parse(raw) : [];
+    }catch{
+      return [];
+    }
+  }
+  function saveLog(){
+    localStorage.setItem("hs_log", JSON.stringify(log));
+  }
+
+  function formatNumber(n){
+    const x = Number(n);
+    if (!Number.isFinite(x)) return "0";
+    // عرض مرتب بدون أصفار مزعجة
+    const s = x.toString();
+    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
+  }
+
+  function safeEval(expression){
+    // Allow only digits, operators, dot, parentheses, spaces
+    if (!/^[0-9+\-*/().\s]+$/.test(expression)) return null;
+    try{
+      // eslint-disable-next-line no-new-func
+      const fn = Function(`"use strict"; return (${expression});`);
+      const val = fn();
+      return Number.isFinite(val) ? val : null;
+    }catch{
+      return null;
+    }
+  }
+
+  function render(){
+    exprEl.textContent = expr.trim() ? expr : "0";
+    const calc = safeEval(expr.replace(/×/g,"*").replace(/÷/g,"/"));
+    resEl.textContent = calc === null ? formatNumber(lastResult) : formatNumber(calc);
+
+    // Log render
+    tbody.innerHTML = "";
+    let total = 0;
+
+    for (const row of log){
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.textContent = row.label;
+
+      const td2 = document.createElement("td");
+      td2.className = "num";
+      td2.textContent = row.op;
+
+      const td3 = document.createElement("td");
+      td3.className = "num";
+      td3.textContent = row.result;
+
+      tr.append(td1, td2, td3);
+      tbody.appendChild(tr);
+
+      const r = Number(row.result);
+      if (Number.isFinite(r)) total += r;
+    }
+    grandTotalEl.textContent = formatNumber(total);
+    saveLog();
+  }
+
+  function appendChar(ch){
+    expr += ch;
+    render();
+  }
+
+  function backspace(){
+    expr = expr.slice(0, -1);
+    render();
+  }
+
+  function clearAll(){
+    expr = "";
+    lastResult = 0;
+    render();
+  }
+
+  function clearEntry(){
+    // يمسح آخر رقم/جزء بعد آخر عامل
+    const m = expr.match(/^(.*?)([+\-*/])\s*[^+\-*/]*$/);
+    expr = m ? (m[1] + m[2] + " ") : "";
+    render();
+  }
+
+  function newlineCommit(){
+    // يسجل السطر الحالي كعملية
+    const clean = expr.trim();
+    if (!clean) return;
+
+    const val = safeEval(clean);
+    if (val === null) return;
+
+    lastResult = val;
+
+    log.unshift({
+      label: "عملية",
+      op: clean.replace(/\*/g,"×").replace(/\//g,"÷"),
+      result: formatNumber(val),
+      ts: Date.now()
+    });
+    expr = ""; // سطر جديد
+    render();
+  }
+
+  async function copyText(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("تم النسخ ✅");
+    }catch{
+      // Fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position="fixed";
+      ta.style.left="-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      toast("تم النسخ ✅");
+    }
+  }
+
+  function logAsTSV(){
+    // جدول (Tab separated)
+    const header = ["البيان","العملية","النتيجة"].join("\t");
+    const rows = log.map(r => [r.label, r.op, r.result].join("\t"));
+    return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
+  }
+
+  function toast(msg){
+    const div = document.createElement("div");
+    div.textContent = msg;
+    div.style.position="fixed";
+    div.style.bottom="18px";
+    div.style.left="50%";
+    div.style.transform="translateX(-50%)";
+    div.style.background="rgba(0,0,0,.75)";
+    div.style.color="#fff";
+    div.style.padding="10px 14px";
+    div.style.borderRadius="14px";
+    div.style.fontWeight="800";
+    div.style.zIndex="9999";
+    div.style.backdropFilter="blur(8px)";
+    document.body.appendChild(div);
+    setTimeout(()=>div.remove(), 1200);
+  }
+
+  function exportPDF(){
+    // الأكثر ثباتًا: فتح نافذة الطباعة، ومن هناك "Save as PDF"
+    window.print();
+  }
+
+  // =========================
+  // Events (Reliable on mobile)
+  // =========================
+  const onKey = (k) => {
+    vibe();
+
+    if (k === "C") return clearAll();
+    if (k === "CE") return clearEntry();
+    if (k === "BK") return backspace();
+    if (k === "=") return newlineCommit();
+    if (k === "LOGOUT") return doLogout();
+
+    if (["/","*","-","+"].includes(k)){
+      // منع تكرار العوامل
+      if (!expr.trim()) return;
+      if (/[+\-*/]\s*$/.test(expr)) expr = expr.replace(/[+\-*/]\s*$/,"");
+      expr += ` ${k} `;
+      return render();
+    }
+
+    if (k === "."){
+      // منع نقطتين في نفس الرقم
+      const lastChunk = expr.split(/[+\-*/]/).pop() ?? "";
+      if (lastChunk.includes(".")) return;
+    }
+
+    appendChar(k);
+  };
+
+  // Delegation for keypad
+  $("keys").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-k]");
+    if (!btn) return;
+    onKey(btn.dataset.k);
+  }, { passive: true });
+
+  // Newline button
+  $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, { passive:true });
+
+  // Copy buttons
+  $("copyBtn").addEventListener("click", () => { vibe(); copyText(logAsTSV()); }, { passive:true });
+  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, { passive:true });
+
+  // Clear log
+  $("clearLogBtn").addEventListener("click", () => {
+    vibe();
+    log = [];
+    render();
+    toast("تم مسح السجل");
+  }, { passive:true });
+
+  // PDF
+  $("pdfBtn").addEventListener("click", () => { vibe(); exportPDF(); }, { passive:true });
+
+  // Keyboard support
+  window.addEventListener("keydown", (e) => {
+    const map = {
+      "Enter":"=",
+      "Backspace":"BK",
+      "Escape":"C",
+      "/":"/",
+      "*":"*",
+      "-":"-",
+      "+":"+",
+      ".":"."
+    };
+    if (e.key >= "0" && e.key <= "9") return onKey(e.key);
+    if (map[e.key]) return onKey(map[e.key]);
+  });
+
+  // =========================
+  // Auth (Simple + stable)
+  // =========================
+  function doLogin(user, pass){
+    const ok = (user === DEFAULT_USER && pass === DEFAULT_PASS);
+    if (!ok){
+      toast("بيانات الدخول غير صحيحة");
+      return;
+    }
+    saveSession(true);
+    setLocked(false);
+    toast("تم الدخول ✅");
+  }
+
+  function doLogout(){
+    saveSession(false);
+    setLocked(true);
+    toast("تم تسجيل الخروج");
+  }
+
+  $("loginBtn").addEventListener("click", () => {
+    vibe();
+    doLogin($("u").value.trim(), $("p").value);
+  }, { passive:true });
+
+  $("demoBtn").addEventListener("click", () => {
+    vibe();
+    $("u").value = DEFAULT_USER;
+    $("p").value = DEFAULT_PASS;
+    doLogin(DEFAULT_USER, DEFAULT_PASS);
+  }, { passive:true });
+
+  // Boot
+  setLocked(!isSessionOpen());
+  render();
+</script>
 </body>
 </html>
