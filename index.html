@@ -3,115 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#111315" />
   <title>HAYEK SPOT | نظام المحاسبة الذكي</title>
 
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f1a33;
-      --card2:#0c1630;
-      --text:#eaf0ff;
-      --muted:#9fb0d6;
-      --line:rgba(255,255,255,.10);
-      --btn:rgba(255,255,255,.07);
-      --btn2:rgba(255,255,255,.10);
-      --accent:#4ade80;
-      --danger:#fb7185;
-      --warn:#fbbf24;
-      --shadow: 0 16px 50px rgba(0,0,0,.45);
+      /* ✅ Palette (حسب صورتك) */
+      --white:#FFFFFF;
+      --green:#19C37D;
+      --gray:#5F6368;
+      --dark:#2F3337;
+      --black:#111315;
+      --yellow:#D6A628;
+
+      /* UI */
+      --bg: var(--gray);
+      --card: var(--dark);
+      --card2: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.18);
+      --text: var(--white);
+      --muted: rgba(255,255,255,.78);
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
       --radius: 22px;
     }
+
     *{box-sizing:border-box}
     body{
-      margin:0; background:radial-gradient(1200px 800px at 20% -10%, #1a2b55 0%, transparent 60%),
-               radial-gradient(900px 700px at 110% 10%, #173b2d 0%, transparent 55%),
-               var(--bg);
+      margin:0;
+      background: var(--bg);
       color:var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", "Noto Naskh Arabic", sans-serif;
-      display:flex; justify-content:center; padding:18px;
+      display:flex; justify-content:center; padding:16px;
     }
-    .wrap{width:min(440px, 100%); display:flex; flex-direction:column; gap:14px}
-    .header{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 16px; border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    .wrap{width:min(440px,100%); display:grid; gap:12px}
+
+    .top{
+      background: linear-gradient(180deg, rgba(17,19,21,.95), rgba(47,51,55,.95));
+      border:1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      padding:14px 14px;
+      display:flex; align-items:center; justify-content:space-between;
     }
-    .brand{display:flex; flex-direction:column; gap:2px}
-    .brand b{font-size:16px; letter-spacing:.3px}
+    .brand{display:grid; gap:4px}
+    .brand b{font-size:16px; letter-spacing:.4px}
     .brand span{font-size:12px; color:var(--muted)}
     .pill{
-      font-size:12px; color:#0b1220; background:var(--accent);
-      padding:7px 10px; border-radius:999px; font-weight:700;
+      font-size:12px; font-weight:900;
+      padding:7px 10px;
+      border-radius:999px;
+      background: var(--yellow);
+      color: var(--black);
     }
 
     .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
       border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
     }
 
     /* LOGIN */
-    .login{padding:16px; display:grid; gap:10px}
-    .login .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .field{
-      display:flex; flex-direction:column; gap:6px;
-    }
-    .field label{font-size:12px; color:var(--muted)}
+    .login{padding:14px; display:grid; gap:10px}
+    .field{display:grid; gap:6px}
+    .field label{font-size:12px; color:var(--muted); font-weight:800}
     input{
       width:100%;
       padding:12px 12px;
       border-radius:16px;
       border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
-      color:var(--text);
+      background: rgba(17,19,21,.45);
+      color: var(--text);
       outline:none;
       font-size:14px;
     }
-    input:focus{border-color: rgba(74,222,128,.6); box-shadow: 0 0 0 4px rgba(74,222,128,.12)}
-    .actions{display:flex; gap:10px; margin-top:4px}
+    input:focus{
+      border-color: rgba(25,195,125,.55);
+      box-shadow: 0 0 0 4px rgba(25,195,125,.18);
+    }
+    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
     .btn{
       user-select:none;
       border:1px solid var(--line);
-      background: var(--btn);
-      color:var(--text);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
       padding:12px 12px;
       border-radius:16px;
-      font-weight:700;
+      font-weight:900;
       font-size:14px;
       cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      gap:8px;
-      transition: transform .05s ease, background .2s ease;
       touch-action: manipulation;
+      display:flex; align-items:center; justify-content:center;
+      transition: transform .05s ease, background .2s ease;
     }
     .btn:active{transform: scale(.99)}
-    .btn.primary{background: rgba(74,222,128,.18); border-color: rgba(74,222,128,.35)}
-    .btn.danger{background: rgba(251,113,133,.14); border-color: rgba(251,113,133,.35)}
-    .btn.ghost{background: transparent}
-    .login-note{font-size:12px; color:var(--muted); line-height:1.6}
+    .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
+    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
+    .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
+    .note{font-size:12px; color:var(--muted); line-height:1.7}
 
     /* APP */
     .app{display:none}
-    .screen{
-      padding:16px;
-      border-bottom:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent);
-    }
+    .screen{padding:14px; border-bottom:1px solid var(--line)}
     .display{
-      width:100%;
+      background: rgba(17,19,21,.55);
       border:1px solid var(--line);
-      background: rgba(0,0,0,.22);
-      border-radius:20px;
+      border-radius: 20px;
       padding:14px 14px;
-      display:flex; flex-direction:column; gap:6px;
+      display:grid; gap:6px;
     }
-    .expr{font-size:14px; color:var(--muted); min-height:18px; text-align:left; direction:ltr}
-    .result{font-size:28px; font-weight:900; text-align:left; direction:ltr; letter-spacing:.2px}
+    .expr{font-size:13px; color:var(--muted); min-height:18px; text-align:left; direction:ltr}
+    .result{font-size:30px; font-weight:1000; text-align:left; direction:ltr}
+
+    .labelWrap{margin-top:10px; display:grid; gap:6px}
+    .labelWrap .t{font-size:12px; color:var(--muted); font-weight:900}
 
     .keys{
       padding:14px;
@@ -123,83 +129,69 @@
       padding:14px 10px;
       border-radius:18px;
       border:1px solid var(--line);
-      background: var(--btn);
-      font-weight:900;
+      background: rgba(255,255,255,.10);
+      font-weight:1000;
       font-size:16px;
       cursor:pointer;
       touch-action: manipulation;
       display:flex; align-items:center; justify-content:center;
       min-height:52px;
     }
-    .key.op{background: rgba(255,255,255,.09)}
-    .key.eq{background: rgba(74,222,128,.22); border-color: rgba(74,222,128,.35)}
-    .key.warn{background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.30)}
-    .key.danger{background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.30)}
-
-    .footer-actions{
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      border-top:1px solid var(--line);
-      background: rgba(0,0,0,.10);
-    }
-    .bigline{
-      width:90%;
-      align-self:center;
-      padding:14px 12px;
-      border-radius:18px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.08);
-      font-weight:900;
-      cursor:pointer;
-      touch-action: manipulation;
-    }
-    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-
-    .log{
+    .key.op{background: rgba(214,166,40,.18); border-color: rgba(214,166,40,.45)}
+    .key.eq{background: rgba(25,195,125,.25); border-color: rgba(25,195,125,.55)}
+    .key.warn{background: rgba(255,255,255,.14)}
+    .key.danger{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
+    .footer{
       padding:14px;
       display:grid;
       gap:10px;
       border-top:1px solid var(--line);
+      background: rgba(17,19,21,.30);
     }
+    .bigline{
+      width:90%;
+      justify-self:center;
+      padding:14px 12px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.10);
+      font-weight:1000;
+      cursor:pointer;
+      touch-action: manipulation;
+    }
+
+    .log{padding:14px; display:grid; gap:10px; border-top:1px solid var(--line)}
     .log h3{margin:0; font-size:14px}
     table{
       width:100%;
       border-collapse:collapse;
-      overflow:hidden;
       border-radius:16px;
+      overflow:hidden;
       border:1px solid var(--line);
-      background: rgba(0,0,0,.15);
+      background: rgba(17,19,21,.25);
     }
     th, td{
       padding:10px 10px;
-      border-bottom:1px solid var(--line);
+      border-bottom:1px solid rgba(255,255,255,.12);
       font-size:13px;
       text-align:right;
     }
-    th{color:var(--muted); font-weight:800}
-    td.num{text-align:left; direction:ltr; font-weight:800}
+    th{color:var(--muted); font-weight:1000}
+    td.num{text-align:left; direction:ltr; font-weight:1000}
     tr:last-child td{border-bottom:none}
     .total{
       display:flex; justify-content:space-between; align-items:center;
       padding:10px 12px;
-      border:1px dashed rgba(255,255,255,.18);
+      border:1px dashed rgba(255,255,255,.22);
       border-radius:16px;
-      background: rgba(0,0,0,.10);
-      font-weight:900;
+      background: rgba(255,255,255,.06);
+      font-weight:1000;
     }
     .total span:last-child{direction:ltr}
 
-    @media (max-width:360px){
-      .result{font-size:24px}
-      .key{min-height:48px}
-    }
-
-    /* PRINT */
     @media print{
       body{background:#fff; color:#000; padding:0}
-      .header, .login, .keys, .footer-actions, .btn, .pill{display:none !important}
+      .top, .login, .keys, .footer, .btn, .pill{display:none !important}
       .wrap{width:100%}
       .card{box-shadow:none; border:none}
       .screen{border:none}
@@ -212,49 +204,53 @@
 
 <body>
   <div class="wrap">
-
-    <div class="header">
+    <div class="top">
       <div class="brand">
         <b>HAYEK SPOT</b>
-        <span>نظام المحاسبة المحمي © 2026</span>
+        <span>نظام المحاسبة الذكي © 2026</span>
       </div>
       <div class="pill" id="statusPill">مقفل</div>
     </div>
 
-    <!-- LOGIN CARD -->
+    <!-- ✅ Login Client -->
     <div class="card login" id="loginCard">
-      <div class="row">
+      <div class="row2">
         <div class="field">
-          <label>اسم المستخدم</label>
-          <input id="u" autocomplete="username" inputmode="text" placeholder="مثال: hayek" />
+          <label>اسم العميل</label>
+          <input id="clientName" placeholder="مثال: أبو أحمد" />
         </div>
         <div class="field">
-          <label>كلمة المرور</label>
-          <input id="p" type="password" autocomplete="current-password" inputmode="text" placeholder="••••" />
+          <label>كلمة المرور (من الأدمن)</label>
+          <input id="clientPass" type="password" placeholder="••••" />
         </div>
       </div>
 
-      <div class="actions">
-        <button class="btn primary" id="loginBtn">دخول النظام</button>
-        <button class="btn ghost" id="demoBtn" title="دخول سريع للاختبار">تجريبي</button>
+      <div class="row2">
+        <button class="btn green" id="loginBtn">دخول</button>
+        <button class="btn yellow" id="goAdminBtn" title="صفحة الأدمن">الأدمن</button>
       </div>
 
-      <div class="login-note">
-        <b>بيانات الدخول الافتراضية:</b> المستخدم <span dir="ltr">hayek</span> وكلمة المرور <span dir="ltr">1234</span><br>
-        (تقدر تغيّرهم من داخل الكود لاحقًا إذا بدك)
+      <div class="note">
+        ✅ العميل يأخذ كلمة المرور من الأدمن.<br>
+        ✅ إذا كان العميل <b>محظور</b> لن يفتح النظام.
       </div>
     </div>
 
-    <!-- APP CARD -->
+    <!-- ✅ App -->
     <div class="card app" id="appCard">
       <div class="screen">
-        <div class="display" id="printable">
+        <div class="display">
           <div class="expr" id="expr">0</div>
           <div class="result" id="res">0</div>
         </div>
+
+        <div class="labelWrap">
+          <div class="t">البيان (اختياري) — يضاف بجانب العملية</div>
+          <input id="labelInput" placeholder="مثال: دفعة زبون / مصروف / فاتورة..." />
+        </div>
       </div>
 
-      <!-- KEYPAD: ترتيب الأرقام كما طلبت (3 بدل 1 / 6 بدل 4 / 9 بدل 7) -->
+      <!-- ✅ Keypad (تبديل أماكن الأرقام كما طلبت سابقاً: 3/6/9) -->
       <div class="keys" id="keys">
         <button class="key warn" data-k="C">C</button>
         <button class="key warn" data-k="CE">CE</button>
@@ -279,20 +275,20 @@
         <button class="key" data-k="0">0</button>
         <button class="key" data-k=".">.</button>
         <button class="key eq" data-k="=">=</button>
-        <button class="key danger" data-k="LOGOUT">تسجيل خروج</button>
+        <button class="key danger" data-k="LOGOUT">خروج</button>
       </div>
 
-      <div class="footer-actions">
-        <button class="bigline" id="newlineBtn">طف السطر</button>
+      <div class="footer">
+        <button class="bigline" id="newlineBtn">طف السطر (تسجيل العملية)</button>
 
         <div class="row2">
-          <button class="btn" id="copyBtn">نسخ السجل كجدول</button>
+          <button class="btn" id="copyTableBtn">نسخ سجل كجدول</button>
           <button class="btn" id="copyResBtn">نسخ النتيجة</button>
         </div>
 
         <div class="row2">
-          <button class="btn primary" id="pdfBtn">تصدير فاتورة PDF</button>
-          <button class="btn danger" id="clearLogBtn">مسح السجل</button>
+          <button class="btn green" id="pdfBtn">تصدير PDF</button>
+          <button class="btn red" id="clearLogBtn">مسح السجل</button>
         </div>
       </div>
 
@@ -319,25 +315,25 @@
         </div>
       </div>
     </div>
-
   </div>
 
 <script type="module">
-  // =========================
-  // Modern ES2024 Logic
-  // =========================
-
   const $ = (id) => document.getElementById(id);
 
-  const loginCard = $("loginCard");
-  const appCard = $("appCard");
+  // ========= Storage Keys =========
+  const K_CLIENTS = "hs_clients_v1";
+  const K_SESSION = "hs_client_session_v1";
+  const K_LOG     = "hs_log_v1";
+
+  // ========= UI =========
   const statusPill = $("statusPill");
+  const loginCard  = $("loginCard");
+  const appCard    = $("appCard");
 
-  // Defaults (غيرهم إذا بدك)
-  const DEFAULT_USER = "hayek";
-  const DEFAULT_PASS = "1234";
+  const clientName = $("clientName");
+  const clientPass = $("clientPass");
+  const labelInput = $("labelInput");
 
-  // UI elements
   const exprEl = $("expr");
   const resEl  = $("res");
   const tbody  = $("tbody");
@@ -346,73 +342,93 @@
   const VIBRATE_MS = 12;
   const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
 
-  // State
-  let expr = "";
-  let lastResult = 0;
-  let log = loadLog();
+  // ========= Helpers =========
+  const toast = (msg) => {
+    const d = document.createElement("div");
+    d.textContent = msg;
+    Object.assign(d.style, {
+      position:"fixed", bottom:"18px", left:"50%",
+      transform:"translateX(-50%)",
+      background:"rgba(17,19,21,.85)",
+      color:"#fff", padding:"10px 14px",
+      borderRadius:"14px", fontWeight:"900",
+      zIndex:9999, backdropFilter:"blur(8px)",
+      border:"1px solid rgba(255,255,255,.18)"
+    });
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(), 1300);
+  };
 
-  function setLocked(isLocked){
-    statusPill.textContent = isLocked ? "مقفل" : "مفتوح";
-    statusPill.style.background = isLocked ? "#94a3b8" : "var(--accent)";
-    statusPill.style.color = isLocked ? "#0b1220" : "#0b1220";
-    loginCard.style.display = isLocked ? "grid" : "none";
-    appCard.style.display = isLocked ? "none" : "block";
-  }
+  const loadClients = () => {
+    try { return JSON.parse(localStorage.getItem(K_CLIENTS) || "[]"); }
+    catch { return []; }
+  };
 
-  function saveSession(open){
-    localStorage.setItem("hs_session_open", open ? "1" : "0");
-  }
-  function isSessionOpen(){
-    return localStorage.getItem("hs_session_open") === "1";
-  }
+  const getClient = (name, pass) => {
+    const n = (name || "").trim();
+    const p = (pass || "").trim();
+    if (!n || !p) return null;
+    const clients = loadClients();
+    return clients.find(c => c.name === n && c.pass === p) || null;
+  };
 
-  function loadLog(){
-    try{
-      const raw = localStorage.getItem("hs_log");
-      return raw ? JSON.parse(raw) : [];
-    }catch{
-      return [];
-    }
-  }
-  function saveLog(){
-    localStorage.setItem("hs_log", JSON.stringify(log));
-  }
+  const saveSession = (name) => localStorage.setItem(K_SESSION, JSON.stringify({name, ts: Date.now()}));
+  const clearSession = () => localStorage.removeItem(K_SESSION);
+  const loadSession = () => {
+    try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); }
+    catch { return null; }
+  };
 
-  function formatNumber(n){
+  const formatNumber = (n) => {
     const x = Number(n);
     if (!Number.isFinite(x)) return "0";
-    // عرض مرتب بدون أصفار مزعجة
     const s = x.toString();
     return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
-  }
+  };
 
-  function safeEval(expression){
-    // Allow only digits, operators, dot, parentheses, spaces
+  const safeEval = (expression) => {
     if (!/^[0-9+\-*/().\s]+$/.test(expression)) return null;
-    try{
+    try {
       // eslint-disable-next-line no-new-func
       const fn = Function(`"use strict"; return (${expression});`);
       const val = fn();
       return Number.isFinite(val) ? val : null;
-    }catch{
-      return null;
-    }
-  }
+    } catch { return null; }
+  };
 
-  function render(){
+  // ========= App State =========
+  let expr = "";
+  let lastResult = 0;
+
+  const loadLog = () => {
+    try { return JSON.parse(localStorage.getItem(K_LOG) || "[]"); }
+    catch { return []; }
+  };
+  let log = loadLog();
+
+  const saveLog = () => localStorage.setItem(K_LOG, JSON.stringify(log));
+
+  const setLocked = (locked) => {
+    statusPill.textContent = locked ? "مقفل" : "مفتوح";
+    statusPill.style.background = locked ? "var(--yellow)" : "var(--green)";
+    statusPill.style.color = "var(--black)";
+    loginCard.style.display = locked ? "grid" : "none";
+    appCard.style.display = locked ? "none" : "block";
+  };
+
+  const render = () => {
     exprEl.textContent = expr.trim() ? expr : "0";
-    const calc = safeEval(expr.replace(/×/g,"*").replace(/÷/g,"/"));
+    const calc = safeEval(expr);
     resEl.textContent = calc === null ? formatNumber(lastResult) : formatNumber(calc);
 
-    // Log render
     tbody.innerHTML = "";
     let total = 0;
 
-    for (const row of log){
+    for (const row of log) {
       const tr = document.createElement("tr");
 
       const td1 = document.createElement("td");
-      td1.textContent = row.label;
+      td1.textContent = row.label || "عملية";
 
       const td2 = document.createElement("td");
       td2.className = "num";
@@ -430,33 +446,9 @@
     }
     grandTotalEl.textContent = formatNumber(total);
     saveLog();
-  }
+  };
 
-  function appendChar(ch){
-    expr += ch;
-    render();
-  }
-
-  function backspace(){
-    expr = expr.slice(0, -1);
-    render();
-  }
-
-  function clearAll(){
-    expr = "";
-    lastResult = 0;
-    render();
-  }
-
-  function clearEntry(){
-    // يمسح آخر رقم/جزء بعد آخر عامل
-    const m = expr.match(/^(.*?)([+\-*/])\s*[^+\-*/]*$/);
-    expr = m ? (m[1] + m[2] + " ") : "";
-    render();
-  }
-
-  function newlineCommit(){
-    // يسجل السطر الحالي كعملية
+  const newlineCommit = () => {
     const clean = expr.trim();
     if (!clean) return;
 
@@ -465,79 +457,41 @@
 
     lastResult = val;
 
+    const label = (labelInput.value || "").trim() || "عملية";
+
     log.unshift({
-      label: "عملية",
+      label,
       op: clean.replace(/\*/g,"×").replace(/\//g,"÷"),
       result: formatNumber(val),
       ts: Date.now()
     });
-    expr = ""; // سطر جديد
+
+    expr = "";
+    labelInput.value = "";
     render();
-  }
+  };
 
-  async function copyText(text){
-    try{
-      await navigator.clipboard.writeText(text);
-      toast("تم النسخ ✅");
-    }catch{
-      // Fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position="fixed";
-      ta.style.left="-9999px";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
-      toast("تم النسخ ✅");
-    }
-  }
+  const clearAll = () => { expr=""; lastResult=0; render(); };
+  const backspace = () => { expr = expr.slice(0,-1); render(); };
 
-  function logAsTSV(){
-    // جدول (Tab separated)
-    const header = ["البيان","العملية","النتيجة"].join("\t");
-    const rows = log.map(r => [r.label, r.op, r.result].join("\t"));
-    return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
-  }
+  const clearEntry = () => {
+    const m = expr.match(/^(.*?)([+\-*/])\s*[^+\-*/]*$/);
+    expr = m ? (m[1] + m[2] + " ") : "";
+    render();
+  };
 
-  function toast(msg){
-    const div = document.createElement("div");
-    div.textContent = msg;
-    div.style.position="fixed";
-    div.style.bottom="18px";
-    div.style.left="50%";
-    div.style.transform="translateX(-50%)";
-    div.style.background="rgba(0,0,0,.75)";
-    div.style.color="#fff";
-    div.style.padding="10px 14px";
-    div.style.borderRadius="14px";
-    div.style.fontWeight="800";
-    div.style.zIndex="9999";
-    div.style.backdropFilter="blur(8px)";
-    document.body.appendChild(div);
-    setTimeout(()=>div.remove(), 1200);
-  }
+  const appendChar = (ch) => { expr += ch; render(); };
 
-  function exportPDF(){
-    // الأكثر ثباتًا: فتح نافذة الطباعة، ومن هناك "Save as PDF"
-    window.print();
-  }
-
-  // =========================
-  // Events (Reliable on mobile)
-  // =========================
   const onKey = (k) => {
     vibe();
 
-    if (k === "C") return clearAll();
+    if (k === "C")  return clearAll();
     if (k === "CE") return clearEntry();
     if (k === "BK") return backspace();
-    if (k === "=") return newlineCommit();
+    if (k === "=")  return newlineCommit();
     if (k === "LOGOUT") return doLogout();
 
     if (["/","*","-","+"].includes(k)){
-      // منع تكرار العوامل
       if (!expr.trim()) return;
       if (/[+\-*/]\s*$/.test(expr)) expr = expr.replace(/[+\-*/]\s*$/,"");
       expr += ` ${k} `;
@@ -545,7 +499,6 @@
     }
 
     if (k === "."){
-      // منع نقطتين في نفس الرقم
       const lastChunk = expr.split(/[+\-*/]/).pop() ?? "";
       if (lastChunk.includes(".")) return;
     }
@@ -553,81 +506,75 @@
     appendChar(k);
   };
 
-  // Delegation for keypad
+  const copyText = async (text) => {
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("تم النسخ ✅");
+    }catch{
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position="fixed"; ta.style.left="-9999px";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      toast("تم النسخ ✅");
+    }
+  };
+
+  const logAsTSV = () => {
+    const header = ["البيان","العملية","النتيجة"].join("\t");
+    const rows = log.map(r => [r.label, r.op, r.result].join("\t"));
+    return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
+  };
+
+  const exportPDF = () => window.print();
+
+  // ========= Auth (Client) =========
+  const doLogin = () => {
+    vibe();
+    const c = getClient(clientName.value, clientPass.value);
+
+    if (!c) return toast("الاسم أو كلمة المرور غير صحيحة");
+    if (c.blocked) return toast("هذا العميل محظور ❌");
+
+    saveSession(c.name);
+    setLocked(false);
+    toast("تم الدخول ✅");
+  };
+
+  const doLogout = () => {
+    vibe();
+    clearSession();
+    setLocked(true);
+    toast("تم تسجيل الخروج");
+  };
+
+  // ========= Events =========
+  $("loginBtn").addEventListener("click", doLogin, {passive:true});
+  $("goAdminBtn").addEventListener("click", () => { vibe(); location.href = "./admin.html"; }, {passive:true});
+
   $("keys").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-k]");
     if (!btn) return;
     onKey(btn.dataset.k);
-  }, { passive: true });
+  }, {passive:true});
 
-  // Newline button
-  $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, { passive:true });
+  $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, {passive:true});
+  $("copyTableBtn").addEventListener("click", () => { vibe(); copyText(logAsTSV()); }, {passive:true});
+  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, {passive:true});
+  $("pdfBtn").addEventListener("click", () => { vibe(); exportPDF(); }, {passive:true});
+  $("clearLogBtn").addEventListener("click", () => { vibe(); log=[]; render(); toast("تم مسح السجل"); }, {passive:true});
 
-  // Copy buttons
-  $("copyBtn").addEventListener("click", () => { vibe(); copyText(logAsTSV()); }, { passive:true });
-  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, { passive:true });
-
-  // Clear log
-  $("clearLogBtn").addEventListener("click", () => {
-    vibe();
-    log = [];
-    render();
-    toast("تم مسح السجل");
-  }, { passive:true });
-
-  // PDF
-  $("pdfBtn").addEventListener("click", () => { vibe(); exportPDF(); }, { passive:true });
-
-  // Keyboard support
   window.addEventListener("keydown", (e) => {
-    const map = {
-      "Enter":"=",
-      "Backspace":"BK",
-      "Escape":"C",
-      "/":"/",
-      "*":"*",
-      "-":"-",
-      "+":"+",
-      ".":"."
-    };
+    const map = { "Enter":"=", "Backspace":"BK", "Escape":"C", "/":"/", "*":"*", "-":"-", "+":"+", ".":"." };
     if (e.key >= "0" && e.key <= "9") return onKey(e.key);
     if (map[e.key]) return onKey(map[e.key]);
   });
 
-  // =========================
-  // Auth (Simple + stable)
-  // =========================
-  function doLogin(user, pass){
-    const ok = (user === DEFAULT_USER && pass === DEFAULT_PASS);
-    if (!ok){
-      toast("بيانات الدخول غير صحيحة");
-      return;
-    }
-    saveSession(true);
-    setLocked(false);
-    toast("تم الدخول ✅");
-  }
-
-  function doLogout(){
-    saveSession(false);
-    setLocked(true);
-    toast("تم تسجيل الخروج");
-  }
-
-  $("loginBtn").addEventListener("click", () => {
-    vibe();
-    doLogin($("u").value.trim(), $("p").value);
-  }, { passive:true });
-
-  $("demoBtn").addEventListener("click", () => {
-    vibe();
-    $("u").value = DEFAULT_USER;
-    $("p").value = DEFAULT_PASS;
-    doLogin(DEFAULT_USER, DEFAULT_PASS);
-  }, { passive:true });
-
-  // Boot
-  setLocked(!isSessionOpen());
+  // ========= Boot =========
+  const sess = loadSession();
+  setLocked(!sess);
   render();
 </script>
 </body>
