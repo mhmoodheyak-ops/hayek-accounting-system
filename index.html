@@ -77,6 +77,7 @@
       border-radius:20px;
       padding:14px 14px;
       display:grid; gap:6px;
+      position: relative; /* مهم للـ mobileInput */
     }
     .expr{font-size:13px;color:var(--muted);min-height:18px;text-align:left;direction:ltr}
     .result{font-size:30px;font-weight:1000;text-align:left;direction:ltr}
@@ -115,15 +116,51 @@
     }
     .total span:last-child{direction:ltr}
 
+    /* ✅ PDF Styling */
     @media print{
-      body{background:#fff;color:#000;padding:0}
-      .top,.login,.keys,.footer,.btn,.pill{display:none !important}
+      body{
+        background:#fff;
+        color:#000;
+        padding:0;
+        font-family: "Amiri", serif;
+      }
+      .top,.login,.keys,.footer,.btn,.pill{
+        display:none !important;
+      }
       .wrap{width:100%}
       .card{box-shadow:none;border:none}
       .screen{border:none}
-      table,th,td{border:1px solid #bbb}
-      th{color:#111}
-      .expr{color:#333}
+      h3{
+        color:#111;
+        border-bottom:2px solid #000;
+        padding-bottom:6px;
+      }
+      table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+        border:1px solid #000;
+      }
+      th{
+        background:#f0f0f0;
+        color:#000;
+        font-weight:900;
+        border:1px solid #000;
+      }
+      td{
+        border:1px solid #999;
+        padding:8px;
+      }
+      tr:nth-child(even){
+        background:#fafafa;
+      }
+      .total{
+        margin-top:12px;
+        font-size:16px;
+        font-weight:900;
+        border:2px dashed #000;
+        background:#fff;
+      }
     }
   </style>
 </head>
@@ -165,9 +202,13 @@
     <!-- APP -->
     <div class="card app" id="appCard">
       <div class="screen">
-        <div class="display">
+        <div class="display" id="displayTapArea">
           <div class="expr" id="expr">0</div>
           <div class="result" id="res">0</div>
+
+          <!-- ✅ كيبورد الهاتف للأرقام (مخفي) -->
+          <input id="mobileInput" inputmode="decimal" autocomplete="off"
+                 style="opacity:0; position:absolute; pointer-events:none; left:-9999px; top:-9999px;">
         </div>
 
         <div class="labelWrap">
@@ -200,8 +241,9 @@
 
         <button class="key" data-k="0">0</button>
         <button class="key" data-k=".">.</button>
-        <button class="key eq" data-k="=">=</button>
-        <button class="key danger" data-k="LOGOUT">خروج</button>
+
+        <!-- ✅ = يأخذ مكان زرين -->
+        <button class="key eq" data-k="=" style="grid-column: span 2; font-size:20px;">=</button>
       </div>
 
       <div class="footer">
@@ -219,6 +261,12 @@
       </div>
 
       <div class="log">
+        <!-- ✅ عنوان أعلى الـ PDF -->
+        <div style="text-align:center; font-size:20px; font-weight:900; margin-bottom:10px;">
+          شركة الحايك<br>
+          <span style="font-size:14px;">HAYEK SPOT</span>
+        </div>
+
         <h3>سجل العمليات</h3>
         <table>
           <thead>
@@ -236,8 +284,11 @@
           <span id="grandTotal">0</span>
         </div>
 
-        <div style="font-size:12px;color:var(--muted);line-height:1.7">
-          تم تطوير الحاسبة من قبل الحايك للحلول الرقمية
+        <!-- ✅ نص النهاية الجديد -->
+        <div style="margin-top:12px; font-size:12px; line-height:1.8; color:var(--muted);">
+          تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br>
+          شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية /<br>
+          05510217646
         </div>
       </div>
     </div>
@@ -289,7 +340,6 @@
       const t = await res.text().catch(()=> "");
       throw new Error(`API ${res.status}: ${t || res.statusText}`);
     }
-    // بعض عمليات DELETE ترجع فاضي
     const text = await res.text();
     return text ? JSON.parse(text) : null;
   };
@@ -318,6 +368,9 @@
   const tbody  = $("tbody");
   const grandTotalEl = $("grandTotal");
 
+  const mobileInput = $("mobileInput");
+  const displayTapArea = $("displayTapArea");
+
   const setLocked = (locked) => {
     statusPill.textContent = locked ? "مقفل" : "مفتوح";
     statusPill.style.background = locked ? "var(--yellow)" : "var(--green)";
@@ -328,14 +381,12 @@
 
   // =========================
   // Auth (Supabase table: app_users)
-  // columns: username text, pass text, is_admin bool, blocked bool
   // =========================
   const loginUser = async (username, pass) => {
     const u = (username || "").trim();
     const p = (pass || "").trim();
     if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return; }
 
-    // query: username + pass exact (حسب جدولك الحالي)
     const q =
       `?select=id,username,is_admin,blocked` +
       `&username=eq.${encodeURIComponent(u)}` +
@@ -361,7 +412,7 @@
   };
 
   // =========================
-  // Calculator + Log (local per user/device)
+  // Calculator + Log (local)
   // =========================
   const K_LOG = "hs_calc_log_v2";
   let expr = "";
@@ -496,12 +547,36 @@
   }
 
   // =========================
+  // ✅ كيبورد الهاتف للأرقام
+  // =========================
+  function focusMobileKeyboard(){
+    try{
+      mobileInput.focus({ preventScroll:true });
+    }catch{
+      mobileInput.focus();
+    }
+  }
+
+  // لمس/نقر على شاشة العرض يفتح كيبورد الأرقام
+  displayTapArea.addEventListener("click", focusMobileKeyboard, { passive:true });
+  displayTapArea.addEventListener("touchstart", focusMobileKeyboard, { passive:true });
+
+  // استقبال أرقام الكيبورد
+  mobileInput.addEventListener("input", () => {
+    const v = (mobileInput.value || "").replace(/[^0-9.]/g, "");
+    if (v) appendChar(v);
+    mobileInput.value = "";
+  });
+
+  // =========================
   // Events
   // =========================
   $("loginBtn").addEventListener("click", async () => {
     vibe();
     try{
       await loginUser(usernameEl.value, passwordEl.value);
+      // بعد الدخول افتح كيبورد الأرقام
+      setTimeout(focusMobileKeyboard, 150);
     }catch(e){
       toast("خطأ اتصال بقاعدة البيانات");
       console.error(e);
