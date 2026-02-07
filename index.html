@@ -14,57 +14,27 @@
             <p>نظام المحاسبة المحمي © 2026</p>
             
             <label>اسم المستخدم</label>
-            <input type="text" id="auth-email" placeholder="أدخل اسمك هنا">
+            <input type="text" id="auth-email" placeholder="mahmood">
             
             <label>كلمة المرور</label>
-            <input type="password" id="auth-pass" placeholder="••••••">
+            <input type="password" id="auth-pass" placeholder="••••">
             
             <button id="btn-login">دخول النظام</button>
-            <p id="auth-msg" style="margin-top: 10px; font-weight: bold;"></p>
+            <p id="auth-msg" style="margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
 
     <div id="main-content" style="display: none;">
-        <header>
-            <div class="header-top">
-                <h2>HAYEK SPOT</h2>
-                <button id="btn-logout" style="background: white; color: black; padding: 5px 10px; border-radius: 5px; cursor: pointer;">تسجيل خروج</button>
+        <div class="calc">
+            <div class="screen">
+                <div class="value" id="calc-screen">0</div>
             </div>
-        </header>
-
-        <main>
-            <div class="calculator-container">
-                <div class="screen" id="calc-screen">0</div>
-                <input type="text" id="entry-desc" placeholder="البيان (مثلاً: دفعة بضاعة)">
-                <input type="text" id="entry-name" placeholder="اسم العميل / الفاتورة">
-                
-                <div class="buttons">
-                    <button class="btn btn-tool" onclick="clearScreen()">C</button>
-                    <button class="btn btn-tool" onclick="clearEntry()">CE</button>
-                    <button class="btn btn-tool" onclick="backspace()">⌫</button>
-                    <button class="btn btn-op" onclick="setOp('/')">÷</button>
-                    
-                    <button class="btn" onclick="addNum('7')">7</button>
-                    <button class="btn" onclick="addNum('8')">8</button>
-                    <button class="btn" onclick="addNum('9')">9</button>
-                    <button class="btn btn-op" onclick="setOp('*')">×</button>
-                    
-                    <button class="btn" onclick="addNum('4')">4</button>
-                    <button class="btn" onclick="addNum('5')">5</button>
-                    <button class="btn" onclick="addNum('6')">6</button>
-                    <button class="btn btn-op" onclick="setOp('-')">-</button>
-                    
-                    <button class="btn" onclick="addNum('1')">1</button>
-                    <button class="btn" onclick="addNum('2')">2</button>
-                    <button class="btn" onclick="addNum('3')">3</button>
-                    <button class="btn btn-op" onclick="setOp('+')">+</button>
-                    
-                    <button class="btn btn-zero" onclick="addNum('0')">0</button>
-                    <button class="btn" onclick="addNum('.')">.</button>
-                    <button class="btn btn-equal" onclick="calculate()">=</button>
-                </div>
+            <button id="btn-logout" style="width:100%; padding:10px; background:white; color:black; border-radius:10px; margin-bottom:10px; cursor:pointer;">تسجيل خروج</button>
+            
+            <div class="keys">
+                <button class="btn" onclick="location.reload()">إعادة ضبط</button>
             </div>
-        </main>
+        </div>
     </div>
 
     <script src="auth.js"></script>
