@@ -48,6 +48,132 @@
       overflow:hidden;
     }
 
+    /* ✅ Luxe banners (تظهر على الشاشة + PDF) */
+    .heroWrap{
+      padding:14px;
+      display:grid;
+      gap:12px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(900px 260px at 50% 0%, rgba(214,166,40,.22), rgba(0,0,0,0) 70%),
+        radial-gradient(700px 240px at 20% 40%, rgba(25,195,125,.18), rgba(0,0,0,0) 65%),
+        rgba(17,19,21,.18);
+    }
+
+    .bannerBox{
+      position: relative;
+      text-align:center;
+      padding:16px 14px;
+      border-radius:20px;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.88));
+      color:#111315;
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+      border: 1px solid rgba(0,0,0,.10);
+      overflow:hidden;
+    }
+    .bannerBox::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(450px 160px at 50% -10%, rgba(214,166,40,.42), rgba(0,0,0,0) 70%);
+      pointer-events:none;
+      opacity: 1;
+    }
+    .bannerBox::after{
+      content:"";
+      position:absolute;
+      top:-60px; left:-60px;
+      width:160px; height:160px;
+      border-radius:50%;
+      background: rgba(25,195,125,.22);
+      filter: blur(0px);
+      opacity: .9;
+      pointer-events:none;
+    }
+
+    .bannerTitle{
+      position:relative;
+      font-weight:1000;
+      font-size:28px;      /* ✅ أكبر */
+      line-height:1.12;
+      letter-spacing:.3px;
+      color:#111315;
+      text-shadow: 0 1px 0 rgba(255,255,255,.5);
+    }
+    .bannerSub{
+      position:relative;
+      margin-top:6px;
+      font-weight:1000;
+      font-size:16px;
+      letter-spacing:2px;
+      color:#0f7d4f;
+    }
+    .badgeRow{
+      position:relative;
+      margin-top:10px;
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .badge{
+      font-size:12px;
+      font-weight:1000;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(17,19,21,.08);
+      border:1px solid rgba(17,19,21,.10);
+      color:#111315;
+      box-shadow: 0 6px 16px rgba(0,0,0,.10);
+      white-space:nowrap;
+    }
+
+    .bannerFooter{
+      text-align:center;
+      padding:16px 14px;
+      border-radius:20px;
+      background: linear-gradient(135deg, rgba(17,19,21,.96), rgba(47,51,55,.96));
+      color:#FFFFFF;
+      box-shadow: 0 14px 34px rgba(0,0,0,.45);
+      border: 1px solid rgba(255,255,255,.16);
+      overflow:hidden;
+      position:relative;
+    }
+    .bannerFooter::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(520px 180px at 50% -10%, rgba(25,195,125,.28), rgba(0,0,0,0) 70%);
+      pointer-events:none;
+    }
+    .footerMain{
+      position:relative;
+      font-weight:1000;
+      font-size:16px;
+      line-height:1.7;
+      color:#FFFFFF;
+    }
+    .footerLine{
+      position:relative;
+      margin-top:6px;
+      font-weight:1000;
+      font-size:14px;
+      line-height:1.8;
+      color:#D6A628;
+    }
+    .footerPhone{
+      position:relative;
+      margin-top:10px;
+      font-weight:1000;
+      font-size:20px;
+      direction:ltr;
+      color:#19C37D;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:10px 12px;
+      display:inline-block;
+      box-shadow: 0 10px 22px rgba(0,0,0,.35);
+    }
+
     /* LOGIN */
     .login{padding:14px;display:grid;gap:10px}
     .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -77,7 +203,6 @@
       border-radius:20px;
       padding:14px 14px;
       display:grid; gap:6px;
-      position: relative; /* مهم للـ mobileInput */
     }
     .expr{font-size:13px;color:var(--muted);min-height:18px;text-align:left;direction:ltr}
     .result{font-size:30px;font-weight:1000;text-align:left;direction:ltr}
@@ -94,7 +219,6 @@
     .key.op{background: rgba(214,166,40,.18); border-color: rgba(214,166,40,.45)}
     .key.eq{background: rgba(25,195,125,.25); border-color: rgba(25,195,125,.55)}
     .key.warn{background: rgba(255,255,255,.14)}
-    .key.danger{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
 
     .footer{padding:14px;display:grid;gap:10px;border-top:1px solid var(--line);background: rgba(17,19,21,.30)}
     .bigline{
@@ -102,7 +226,7 @@
       background: rgba(255,255,255,.10);font-weight:1000;cursor:pointer;touch-action:manipulation
     }
 
-    .log{padding:14px;display:grid;gap:10px;border-top:1px solid var(--line)}
+    .log{padding:0;display:grid;gap:10px;border-top:1px solid var(--line)} /* padding صار بالـ heroWrap */
     .log h3{margin:0;font-size:14px}
     table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right}
@@ -130,6 +254,27 @@
       .wrap{width:100%}
       .card{box-shadow:none;border:none}
       .screen{border:none}
+      .heroWrap{
+        background:#fff !important;
+        border-bottom:none !important;
+      }
+      .bannerBox{
+        background:#fff !important;
+        color:#000 !important;
+        border:2px solid #000 !important;
+        box-shadow:none !important;
+      }
+      .bannerFooter{
+        background:#111 !important;
+        color:#fff !important;
+        border:2px solid #111 !important;
+        box-shadow:none !important;
+      }
+      .bannerSub{color:#0b7a4a !important}
+      .footerLine{color:#D6A628 !important}
+      .footerPhone{color:#19C37D !important; border:2px solid #19C37D !important; box-shadow:none !important; background:#fff !important}
+      .badge{border:1px solid #000 !important; box-shadow:none !important; background:#fff !important}
+
       h3{
         color:#111;
         border-bottom:2px solid #000;
@@ -202,13 +347,9 @@
     <!-- APP -->
     <div class="card app" id="appCard">
       <div class="screen">
-        <div class="display" id="displayTapArea">
+        <div class="display">
           <div class="expr" id="expr">0</div>
           <div class="result" id="res">0</div>
-
-          <!-- ✅ كيبورد الهاتف للأرقام (مخفي) -->
-          <input id="mobileInput" inputmode="decimal" autocomplete="off"
-                 style="opacity:0; position:absolute; pointer-events:none; left:-9999px; top:-9999px;">
         </div>
 
         <div class="labelWrap">
@@ -260,35 +401,43 @@
         </div>
       </div>
 
+      <!-- ✅ السجل + بوكسات على الشاشة + PDF -->
       <div class="log">
-        <!-- ✅ عنوان أعلى الـ PDF -->
-        <div style="text-align:center; font-size:20px; font-weight:900; margin-bottom:10px;">
-          شركة الحايك<br>
-          <span style="font-size:14px;">HAYEK SPOT</span>
-        </div>
+        <div class="heroWrap">
+          <div class="bannerBox">
+            <div class="bannerTitle">شركة الحايك</div>
+            <div class="bannerSub">HAYEK SPOT</div>
+            <div class="badgeRow">
+              <div class="badge">حاسبة احترافية</div>
+              <div class="badge">سجل عمليات</div>
+              <div class="badge">تصدير PDF</div>
+              <div class="badge">Supabase</div>
+            </div>
+          </div>
 
-        <h3>سجل العمليات</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>البيان</th>
-              <th class="num">العملية</th>
-              <th class="num">النتيجة</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+          <h3>سجل العمليات</h3>
 
-        <div class="total">
-          <span>إجمالي الكشف:</span>
-          <span id="grandTotal">0</span>
-        </div>
+          <table>
+            <thead>
+              <tr>
+                <th>البيان</th>
+                <th class="num">العملية</th>
+                <th class="num">النتيجة</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
 
-        <!-- ✅ نص النهاية الجديد -->
-        <div style="margin-top:12px; font-size:12px; line-height:1.8; color:var(--muted);">
-          تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br>
-          شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية /<br>
-          05510217646
+          <div class="total">
+            <span>إجمالي الكشف:</span>
+            <span id="grandTotal">0</span>
+          </div>
+
+          <div class="bannerFooter">
+            <div class="footerMain">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+            <div class="footerLine">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية /</div>
+            <div class="footerPhone">05510217646</div>
+          </div>
         </div>
       </div>
     </div>
@@ -302,9 +451,6 @@
   const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
   const REST = `${SUPABASE_URL}/rest/v1`;
 
-  // =========================
-  // Helpers
-  // =========================
   const $ = (id) => document.getElementById(id);
   const VIBRATE_MS = 12;
   const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
@@ -344,17 +490,12 @@
     return text ? JSON.parse(text) : null;
   };
 
-  // =========================
   // Session
-  // =========================
   const K_SESSION = "hs_session_v2";
   const saveSession = (obj) => localStorage.setItem(K_SESSION, JSON.stringify(obj));
   const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
-  const clearSession = () => localStorage.removeItem(K_SESSION);
 
-  // =========================
   // UI refs
-  // =========================
   const statusPill = $("statusPill");
   const loginCard  = $("loginCard");
   const appCard    = $("appCard");
@@ -368,9 +509,6 @@
   const tbody  = $("tbody");
   const grandTotalEl = $("grandTotal");
 
-  const mobileInput = $("mobileInput");
-  const displayTapArea = $("displayTapArea");
-
   const setLocked = (locked) => {
     statusPill.textContent = locked ? "مقفل" : "مفتوح";
     statusPill.style.background = locked ? "var(--yellow)" : "var(--green)";
@@ -379,9 +517,7 @@
     appCard.style.display = locked ? "none" : "block";
   };
 
-  // =========================
-  // Auth (Supabase table: app_users)
-  // =========================
+  // Auth
   const loginUser = async (username, pass) => {
     const u = (username || "").trim();
     const p = (pass || "").trim();
@@ -404,16 +540,7 @@
     toast("تم الدخول ✅");
   };
 
-  const logoutUser = () => {
-    vibe();
-    clearSession();
-    setLocked(true);
-    toast("تم تسجيل الخروج");
-  };
-
-  // =========================
   // Calculator + Log (local)
-  // =========================
   const K_LOG = "hs_calc_log_v2";
   let expr = "";
   let lastResult = 0;
@@ -508,7 +635,6 @@
     if (k === "CE") return clearEntry();
     if (k === "BK") return backspace();
     if (k === "=") return newlineCommit();
-    if (k === "LOGOUT") return logoutUser();
 
     if (["/","*","-","+"].includes(k)){
       if (!expr.trim()) return;
@@ -546,37 +672,11 @@
     return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
   }
 
-  // =========================
-  // ✅ كيبورد الهاتف للأرقام
-  // =========================
-  function focusMobileKeyboard(){
-    try{
-      mobileInput.focus({ preventScroll:true });
-    }catch{
-      mobileInput.focus();
-    }
-  }
-
-  // لمس/نقر على شاشة العرض يفتح كيبورد الأرقام
-  displayTapArea.addEventListener("click", focusMobileKeyboard, { passive:true });
-  displayTapArea.addEventListener("touchstart", focusMobileKeyboard, { passive:true });
-
-  // استقبال أرقام الكيبورد
-  mobileInput.addEventListener("input", () => {
-    const v = (mobileInput.value || "").replace(/[^0-9.]/g, "");
-    if (v) appendChar(v);
-    mobileInput.value = "";
-  });
-
-  // =========================
   // Events
-  // =========================
   $("loginBtn").addEventListener("click", async () => {
     vibe();
     try{
       await loginUser(usernameEl.value, passwordEl.value);
-      // بعد الدخول افتح كيبورد الأرقام
-      setTimeout(focusMobileKeyboard, 150);
     }catch(e){
       toast("خطأ اتصال بقاعدة البيانات");
       console.error(e);
