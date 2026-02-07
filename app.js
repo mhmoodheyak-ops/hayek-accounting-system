@@ -1,40 +1,21 @@
-// المنطق الهندسي لفتح النظام
-const runSystem = () => {
-    const loginBtn = document.getElementById('btn-login');
-    const logoutBtn = document.getElementById('btn-logout');
+window.onload = function() {
+    const btn = document.getElementById('btn-login');
+    if (btn) {
+        btn.onclick = function() {
+            const u = document.getElementById('auth-email').value.trim().toLowerCase();
+            const p = document.getElementById('auth-pass').value.trim();
+            const msg = document.getElementById('auth-msg');
 
-    if (loginBtn) {
-        loginBtn.onclick = () => {
-            const user = document.getElementById('auth-email').value.trim().toLowerCase();
-            const pass = document.getElementById('auth-pass').value.trim();
-            const message = document.getElementById('auth-msg');
-
-            // فحص البيانات باستخدام الدالة الموجودة في auth.js
             if (typeof login === 'function') {
-                if (login(user, pass)) {
-                    message.innerText = "تم التحقق.. أهلاً بك يا حايك";
-                    message.style.color = "#d4af37";
-                    
-                    // إخفاء الدخول وإظهار النظام
-                    setTimeout(() => {
-                        document.getElementById('auth-overlay').style.display = 'none';
-                        document.getElementById('main-content').style.display = 'block';
-                    }, 500);
+                if (login(u, p)) {
+                    document.getElementById('auth-overlay').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
                 } else {
-                    message.innerText = "بيانات غير صحيحة أو مستخدم محظور";
-                    message.style.color = "#ff4d4d";
+                    alert("خطأ: اسم المستخدم أو كلمة المرور غير صحيحة");
                 }
             } else {
-                alert("خطأ: لم يتم العثور على ملف الصلاحيات auth.js");
+                alert("يتم تحميل النظام.. انتظر ثانية وحاول مجدداً");
             }
         };
     }
-
-    if (logoutBtn) {
-        logoutBtn.onclick = () => location.reload();
-    }
 };
-
-// تشغيل النظام فوراً وعند تحميل الصفحة لضمان الاستجابة
-window.onload = runSystem;
-runSystem();
