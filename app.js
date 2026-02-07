@@ -1,40 +1,33 @@
-document.addEventListener('DOMContentLoaded', () => {document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {document.addEventListener('DOMContentLoaded', () => {// التأكد من أن الكود يعمل فور تحميل الصفحة
+window.onload = function() {
+    console.log("النظام جاهز...");
+    
     const btnLogin = document.getElementById('btn-login');
-    const authOverlay = document.getElementById('auth-overlay');
-    const mainContent = document.getElementById('main-content');
-    const userEl = document.getElementById('auth-email');
-    const passEl = document.getElementById('auth-pass');
-    const msgEl = document.getElementById('auth-msg');
-
+    
     if (btnLogin) {
-        btnLogin.addEventListener('click', () => {
-            const u = userEl.value.trim();
-            const p = passEl.value.trim();
+        btnLogin.onclick = function() {
+            const u = document.getElementById('auth-email').value.trim().toLowerCase(); // تحويل للأحرف الصغيرة تلقائياً
+            const p = document.getElementById('auth-pass').value.trim();
+            const msgEl = document.getElementById('auth-msg');
 
-            // استخدام المنطق من ملف auth.js
-            const result = login(u, p); 
+            console.log("محاولة دخول باسم:", u);
 
-            if (result === true) {
-                msgEl.innerText = "تم التحقق.. جاري الدخول";
-                msgEl.style.color = "#4caf50";
-                
-                // المنطق الهندسي: إخفاء شاشة الدخول وإظهار الواجهة
-                setTimeout(() => {
-                    authOverlay.style.display = 'none';
-                    mainContent.style.display = 'block';
-                }, 1000);
+            // استدعاء المنطق من ملف auth.js
+            if (typeof login === "function") {
+                const result = login(u, p);
+                if (result === true) {
+                    msgEl.innerText = "تم التحقق بنجاح! جاري الدخول...";
+                    msgEl.style.color = "#d4af37";
+                    setTimeout(() => {
+                        document.getElementById('auth-overlay').style.display = 'none';
+                        document.getElementById('main-content').style.display = 'block';
+                    }, 1000);
+                }
             } else {
-                msgEl.innerText = "فشل الدخول، تحقق من البيانات";
-                msgEl.style.color = "#ff4d4d";
+                alert("خطأ تقني: ملف auth.js لم يتم تحميله بعد. يرجى تحديث الصفحة.");
             }
-        });
+        };
+    } else {
+        console.error("لم يتم العثور على زر الدخول!");
     }
-
-    // إضافة منطق زر تسجيل الخروج
-    const btnLogout = document.getElementById('btn-logout');
-    if (btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            location.reload(); // إعادة تحميل الصفحة للعودة لشاشة الدخول
-        });
-    }
-});
+};
