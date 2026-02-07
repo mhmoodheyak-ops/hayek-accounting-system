@@ -3,21 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HAYEK SPOT</title>
+    <title>HAYEK SPOT - نظام المحاسبة</title>
     <style>
-        /* التنسيق الملكي */
-        body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .auth-box { background: #141414; padding: 30px; border-radius: 16px; border-top: 6px solid #d4af37; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; text-align: center; }
-        button { width: 100%; padding: 15px; background: #d4af37; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        #main-content { display: none; text-align: center; padding: 50px; }
+        /* التنسيق الملكي الشامل */
+        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #141414; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        
+        .auth-box, .calc-box { background: var(--card); padding: 25px; border-radius: 16px; border-top: 6px solid var(--gold); width: 90%; max-width: 450px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; text-align: center; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        /* تنسيق الحاسبة */
+        .screen { background: #000; padding: 20px; border-radius: 10px; text-align: left; margin-bottom: 20px; border: 1px solid #222; }
+        .value { color: var(--gold); font-size: 2.5rem; font-weight: bold; overflow: hidden; }
+        .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .key { background: #222; color: #fff; padding: 15px; border-radius: 8px; border: none; font-size: 1.2rem; cursor: pointer; }
+        .key.op { color: var(--gold); }
+        .key.eq { background: var(--gold); color: #000; }
+        
+        #main-content { display: none; width: 100%; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="auth-overlay">
         <div class="auth-box">
-            <h1 style="color: #d4af37;">HAYEK SPOT</h1>
+            <h1 style="color: var(--gold);">HAYEK SPOT</h1>
+            <p>نظام المحاسبة المحمي</p>
             <input type="text" id="user" placeholder="اسم المستخدم">
             <input type="password" id="pass" placeholder="كلمة المرور">
             <button onclick="checkLogin()">دخول النظام</button>
@@ -25,29 +38,78 @@
         </div>
     </div>
 
-    <div id="main-content">
-        <h1 style="color: #d4af37;">أهلاً بك يا حايك</h1>
-        <div style="background: #141414; padding: 30px; border-radius: 15px; border: 1px solid #333;">
-            <p>تم الدخول إلى النظام بنجاح</p>
-            <button onclick="location.reload()" style="background: #fff;">تسجيل خروج</button>
+    <div id="main-content" style="display: none;">
+        <div class="calc-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span style="color: var(--gold); font-weight: bold;">HAYEK SPOT</span>
+                <button onclick="location.reload()" style="width: auto; padding: 5px 15px; margin: 0; font-size: 0.8rem; background: #333; color: #fff;">خروج</button>
+            </div>
+            
+            <div class="screen">
+                <div class="value" id="display">0</div>
+            </div>
+            
+            <div class="keys">
+                <button class="key op" onclick="clearScreen()">C</button>
+                <button class="key op" onclick="press('/')">/</button>
+                <button class="key op" onclick="press('*')">×</button>
+                <button class="key op" onclick="backspace()">⌫</button>
+                
+                <button class="key" onclick="press('7')">7</button>
+                <button class="key" onclick="press('8')">8</button>
+                <button class="key" onclick="press('9')">9</button>
+                <button class="key op" onclick="press('-')">-</button>
+                
+                <button class="key" onclick="press('4')">4</button>
+                <button class="key" onclick="press('5')">5</button>
+                <button class="key" onclick="press('6')">6</button>
+                <button class="key op" onclick="press('+')">+</button>
+                
+                <button class="key" onclick="press('1')">1</button>
+                <button class="key" onclick="press('2')">2</button>
+                <button class="key" onclick="press('3')">3</button>
+                <button class="key eq" style="grid-row: span 2;" onclick="calculate()">=</button>
+                
+                <button class="key" style="grid-column: span 2;" onclick="press('0')">0</button>
+                <button class="key" onclick="press('.')">.</button>
+            </div>
         </div>
     </div>
 
     <script>
+        // منطق الدخول
         function checkLogin() {
             const u = document.getElementById('user').value.trim().toLowerCase();
             const p = document.getElementById('pass').value.trim();
-            const m = document.getElementById('msg');
-
-            // المنطق المباشر بدون ملفات خارجية
             if (u === "mahmood" && p === "456") {
                 document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-            } else if (u === "admin" && p === "123") {
-                document.getElementById('auth-overlay').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
+                document.getElementById('main-content').style.display = 'flex';
             } else {
-                m.innerText = "البيانات خاطئة!";
+                document.getElementById('msg').innerText = "البيانات خاطئة!";
+            }
+        }
+
+        // منطق الحاسبة
+        let currentInput = "";
+        function press(num) {
+            currentInput += num;
+            document.getElementById('display').innerText = currentInput;
+        }
+        function clearScreen() {
+            currentInput = "";
+            document.getElementById('display').innerText = "0";
+        }
+        function backspace() {
+            currentInput = currentInput.slice(0, -1);
+            document.getElementById('display').innerText = currentInput || "0";
+        }
+        function calculate() {
+            try {
+                currentInput = eval(currentInput).toString();
+                document.getElementById('display').innerText = currentInput;
+            } catch {
+                document.getElementById('display').innerText = "خطأ";
+                currentInput = "";
             }
         }
     </script>
