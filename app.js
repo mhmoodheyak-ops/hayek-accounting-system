@@ -1,33 +1,40 @@
-document.addEventListener('DOMContentLoaded', () => {document.addEventListener('DOMContentLoaded', () => {// التأكد من أن الكود يعمل فور تحميل الصفحة
-window.onload = function() {
-    console.log("النظام جاهز...");
-    
-    const btnLogin = document.getElementById('btn-login');
-    
-    if (btnLogin) {
-        btnLogin.onclick = function() {
-            const u = document.getElementById('auth-email').value.trim().toLowerCase(); // تحويل للأحرف الصغيرة تلقائياً
-            const p = document.getElementById('auth-pass').value.trim();
-            const msgEl = document.getElementById('auth-msg');
+// المنطق الهندسي لفتح النظام
+const runSystem = () => {
+    const loginBtn = document.getElementById('btn-login');
+    const logoutBtn = document.getElementById('btn-logout');
 
-            console.log("محاولة دخول باسم:", u);
+    if (loginBtn) {
+        loginBtn.onclick = () => {
+            const user = document.getElementById('auth-email').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-pass').value.trim();
+            const message = document.getElementById('auth-msg');
 
-            // استدعاء المنطق من ملف auth.js
-            if (typeof login === "function") {
-                const result = login(u, p);
-                if (result === true) {
-                    msgEl.innerText = "تم التحقق بنجاح! جاري الدخول...";
-                    msgEl.style.color = "#d4af37";
+            // فحص البيانات باستخدام الدالة الموجودة في auth.js
+            if (typeof login === 'function') {
+                if (login(user, pass)) {
+                    message.innerText = "تم التحقق.. أهلاً بك يا حايك";
+                    message.style.color = "#d4af37";
+                    
+                    // إخفاء الدخول وإظهار النظام
                     setTimeout(() => {
                         document.getElementById('auth-overlay').style.display = 'none';
                         document.getElementById('main-content').style.display = 'block';
-                    }, 1000);
+                    }, 500);
+                } else {
+                    message.innerText = "بيانات غير صحيحة أو مستخدم محظور";
+                    message.style.color = "#ff4d4d";
                 }
             } else {
-                alert("خطأ تقني: ملف auth.js لم يتم تحميله بعد. يرجى تحديث الصفحة.");
+                alert("خطأ: لم يتم العثور على ملف الصلاحيات auth.js");
             }
         };
-    } else {
-        console.error("لم يتم العثور على زر الدخول!");
+    }
+
+    if (logoutBtn) {
+        logoutBtn.onclick = () => location.reload();
     }
 };
+
+// تشغيل النظام فوراً وعند تحميل الصفحة لضمان الاستجابة
+window.onload = runSystem;
+runSystem();
