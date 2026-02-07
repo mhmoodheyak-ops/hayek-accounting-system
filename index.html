@@ -3,139 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HAYEK SPOT - نظام المحاسبة</title>
-    <style>
-        /* التنسيق الملكي المتكامل */
-        :root { --gold: #d4af37; --bg: #0a0a0a; --card: #141414; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { width: 100%; max-width: 480px; }
-        .auth-box, .calc-box { background: var(--card); padding: 25px; border-radius: 16px; border-top: 6px solid var(--gold); box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; text-align: center; box-sizing: border-box; }
-        button { cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
-        .btn-gold { width: 100%; padding: 15px; background: var(--gold); color: #000; border-radius: 8px; margin-top: 10px; }
-        
-        /* الحاسبة */
-        .screen { background: #000; padding: 20px; border-radius: 10px; text-align: left; margin-bottom: 20px; border: 1px solid #222; min-height: 80px; display: flex; align-items: center; justify-content: flex-end; }
-        .value { color: var(--gold); font-size: 2.5rem; font-weight: bold; }
-        .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .key { background: #222; color: #fff; padding: 18px; border-radius: 8px; font-size: 1.2rem; }
-        .key.op { color: var(--gold); }
-        .key.eq { background: var(--gold); color: #000; grid-row: span 2; }
-        
-        /* الجداول والمزايا */
-        .history-section { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .table th, .table td { padding: 10px; border-bottom: 1px solid #222; text-align: right; }
-        .table th { color: var(--gold); font-size: 0.9rem; }
-    </style>
+    <title>HAYEK SPOT | نظام المحاسبة الذكي</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="container">
-    <div id="auth-overlay" class="auth-box">
-        <h1 style="color: var(--gold); text-align: center;">HAYEK SPOT</h1>
-        <input type="text" id="user" placeholder="اسم المستخدم">
-        <input type="password" id="pass" placeholder="كلمة المرور">
-        <button class="btn-gold" onclick="checkLogin()">دخول النظام</button>
-        <p id="msg" style="color: #ff4d4d; text-align: center; margin-top: 10px;"></p>
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h1 style="color: #d4af37; margin-bottom: 5px;">HAYEK SPOT</h1>
+            <p style="color: #888; margin-bottom: 20px;">نظام المحاسبة المحمي © 2026</p>
+            <div style="text-align: right; margin-bottom: 15px;">
+                <label style="color: #d4af37; font-size: 0.9rem;">اسم المستخدم</label>
+                <input type="text" id="auth-email" class="in" placeholder="أدخل اسمك هنا">
+                <label style="color: #d4af37; font-size: 0.9rem; margin-top: 10px; display: block;">كلمة المرور</label>
+                <input type="password" id="auth-pass" class="in" placeholder="••••••">
+            </div>
+            <button id="btn-login" class="btn primary" style="width: 100%; font-size: 1.2rem;">دخول النظام</button>
+            <p id="auth-msg" style="margin-top: 15px; min-height: 20px; font-weight: bold;"></p>
+        </div>
     </div>
 
-    <div id="main-content" style="display: none;">
-        <div class="calc-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <span style="color: var(--gold); font-weight: bold;">HAYEK SPOT</span>
-                <button onclick="location.reload()" style="background: #333; color: #fff; padding: 5px 12px; border-radius: 5px;">خروج</button>
-            </div>
-            
-            <div class="screen"><div class="value" id="display">0</div></div>
-            
-            <div class="keys">
-                <button class="key op" onclick="clearScreen()">C</button>
-                <button class="key op" onclick="press('/')">/</button>
-                <button class="key op" onclick="press('*')">×</button>
-                <button class="key op" onclick="backspace()">⌫</button>
-                
-                <button class="key" onclick="press('7')">7</button>
-                <button class="key" onclick="press('8')">8</button>
-                <button class="key" onclick="press('9')">9</button>
-                <button class="key op" onclick="press('-')">-</button>
-                
-                <button class="key" onclick="press('4')">4</button>
-                <button class="key" onclick="press('5')">5</button>
-                <button class="key" onclick="press('6')">6</button>
-                <button class="key op" onclick="press('+')">+</button>
-                
-                <button class="key" onclick="press('1')">1</button>
-                <button class="key" onclick="press('2')">2</button>
-                <button class="key" onclick="press('3')">3</button>
-                <button class="key eq" onclick="calculate()">=</button>
-                
-                <button class="key" style="grid-column: span 2;" onclick="press('0')">0</button>
-                <button class="key" onclick="press('.')">.</button>
+    <div class="main">
+        <div class="calc">
+            <div class="topbar">
+                <div class="user-info">
+                    <span class="status-dot"></span>
+                    <span id="welcomeUser" style="color: #d4af37;"></span>
+                </div>
+                <button onclick="window.logout()" class="btn small danger">تسجيل خروج</button>
             </div>
 
-            <div class="history-section">
-                <h3 style="color: var(--gold);">سجل نشاط الزبائن</h3>
+            <div class="screen">
+                <div id="expr" class="expr"></div>
+                <div id="value" class="value">0</div>
+            </div>
+
+            <div class="noteBox">
+                <input type="text" id="noteInput" class="in" placeholder="البيان (مثلاً: دفعة بضاعة)">
+                <input type="text" id="invoiceName" class="in" placeholder="اسم العميل / الفاتورة">
+            </div>
+
+            <div id="keys" class="keys">
+                <button class="btn op" data-action="clear">C</button>
+                <button class="btn op" id="ceBtn">CE</button>
+                <button class="btn op" data-action="back">⌫</button>
+                <button class="btn op" data-op="/">÷</button>
+                <button class="btn" data-num="7">7</button>
+                <button class="btn" data-num="8">8</button>
+                <button class="btn" data-num="9">9</button>
+                <button class="btn op" data-op="*">×</button>
+                <button class="btn" data-num="4">4</button>
+                <button class="btn" data-num="5">5</button>
+                <button class="btn" data-num="6">6</button>
+                <button class="btn op" data-op="-">−</button>
+                <button class="btn" data-num="1">1</button>
+                <button class="btn" data-num="2">2</button>
+                <button class="btn" data-num="3">3</button>
+                <button class="btn op" data-op="+">+</button>
+                <button class="btn span2" data-num="0">0</button>
+                <button class="btn" data-action="dot">.</button>
+                <button class="btn eq" data-action="equals">=</button>
+            </div>
+
+            <div class="tools">
+                <button id="printPdfBtn" class="btn gold-border">تصدير فاتورة PDF</button>
+                <button id="clearHistoryBtn" class="btn danger">مسح السجل</button>
+            </div>
+
+            <div class="historyWrap">
+                <h3 style="color: #d4af37; border-bottom: 1px solid #333; padding-bottom: 5px;">سجل العمليات</h3>
                 <table class="table">
                     <thead>
-                        <tr><th>الزبون</th><th>العملية</th><th>المبلغ</th></tr>
+                        <tr>
+                            <th>البيان</th>
+                            <th>العملية</th>
+                            <th>النتيجة</th>
+                        </tr>
                     </thead>
-                    <tbody id="history-body">
-                        <tr><td colspan="3" style="text-align: center; color: #666;">لا يوجد عمليات حالياً</td></tr>
-                    </tbody>
+                    <tbody id="historyBody"></tbody>
                 </table>
+            </div>
+
+            <div class="finalTotalBox">
+                <span>إجمالي الكشف:</span>
+                <span id="grandTotal">0</span>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // منطق الدخول
-    function checkLogin() {
-        const u = document.getElementById('user').value.trim().toLowerCase();
-        const p = document.getElementById('pass').value.trim();
-        if ((u === "mahmood" && p === "456") || (u === "admin" && p === "123")) {
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('main-content').style.display = 'block';
-        } else {
-            document.getElementById('msg').innerText = "البيانات خاطئة!";
-        }
-    }
-
-    // منطق الحاسبة
-    let current = "";
-    const disp = document.getElementById('display');
-
-    function press(v) {
-        current += v;
-        disp.innerText = current;
-    }
-    function clearScreen() {
-        current = "";
-        disp.innerText = "0";
-    }
-    function backspace() {
-        current = current.slice(0, -1);
-        disp.innerText = current || "0";
-    }
-    function calculate() {
-        try {
-            // إضافة العملية للسجل قبل الحساب
-            if(current) addToHistory("عام", "حساب", current);
-            current = eval(current).toString();
-            disp.innerText = current;
-        } catch {
-            disp.innerText = "خطأ";
-            current = "";
-        }
-    }
-
-    function addToHistory(user, action, amount) {
-        const body = document.getElementById('history-body');
-        if (body.innerHTML.includes("لا يوجد")) body.innerHTML = "";
-        const row = `<tr><td>${user}</td><td>${action}</td><td>${amount}</td></tr>`;
-        body.innerHTML = row + body.innerHTML;
-    }
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script src="amiri-font.js"></script>
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
