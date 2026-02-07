@@ -1,90 +1,70 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>لوحة الإدارة - HAYEK SPOT</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    .adminWrap{ width:min(920px, 100%); margin:0 auto; padding:14px; }
-    .adminCard{ background:#fff; border-radius:18px; box-shadow:0 10px 25px rgba(0,0,0,.08); padding:14px; }
-    .adminTop{ display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .adminTop .left{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .kpi{ font-size:12px; color:#555; }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; margin:10px 0; }
-    .row input{ flex:1; min-width:220px; }
-    .btn{ border:0; border-radius:12px; padding:10px 12px; font-weight:900; cursor:pointer; background:#eef0f3; }
-    .btn.primary{ background:#111; color:#fff; }
-    .btn.danger{ background:#ffe3e3; color:#a80000; }
-    .btn.ok{ background:#dff7e7; color:#0d6b2a; }
-    .tag{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:900; }
-    .tag.admin{ background:#e8f0ff; color:#1b4dd6; }
-    .tag.blocked{ background:#ffe3e3; color:#a80000; }
-    .tableWrap{ overflow:auto; border:1px solid #eee; border-radius:14px; }
-    table{ width:100%; border-collapse:collapse; min-width:760px; }
-    th,td{ padding:10px; border-bottom:1px solid #eee; font-size:13px; vertical-align:top; text-align:right; }
-    th{ background:#fafafa; font-weight:950; }
-    td.ltr{ direction:ltr; text-align:left; }
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .muted{ color:#666; font-size:12px; }
-  </style>
-</head>
-<body>
+(() => {
+    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+    const SESSION_KEY = "hayek_auth_session_v1";
 
-  <header class="topbar">
-    <div class="brand">
-      <div class="title">HAYEK SPOT</div>
-      <div class="sub">لوحة الإدارة</div>
-    </div>
-    <div class="left">
-      <a class="chip" href="index.html">رجوع للحاسبة</a>
-      <button id="logoutBtn" class="chip">خروج</button>
-    </div>
-  </header>
+    const overlay = document.getElementById("auth-overlay");
+    const userEl = document.getElementById("auth-email");
+    const passEl = document.getElementById("auth-pass");
+    const msgEl  = document.getElementById("auth-msg");
+    const btnLogin = document.getElementById("btn-login");
 
-  <main class="adminWrap">
-    <div class="adminCard">
+    async function handleLogin() {
+        const u = userEl.value.trim();
+        const p = passEl.value.trim();
 
-      <div class="adminTop">
-        <div class="left">
-          <button id="refreshBtn" class="btn">تحديث</button>
-          <div class="kpi">عدد المستخدمين: <b id="countUsers">0</b></div>
-        </div>
-        <div class="muted" id="adminInfo">...</div>
-      </div>
+        if (!u || !p) {
+            msgEl.innerText = "الرجاء إدخال اسم المستخدم وكلمة المرور";
+            msgEl.style.color = "#ff4d4d";
+            return;
+        }
 
-      <!-- إضافة مستخدم (يتطلب Edge Function لاحقًا إذا بدك إنشاء من داخل اللوحة) -->
-      <div class="row">
-        <input id="newUsername" type="text" placeholder="اسم المستخدم الجديد (مثال: ali)" inputmode="text" />
-        <input id="newPassword" type="text" placeholder="كلمة المرور الجديدة" inputmode="text" />
-        <button id="createBtn" class="btn primary">إنشاء مستخدم</button>
-      </div>
-      <div class="muted">
-        * إنشاء المستخدم من داخل اللوحة يحتاج Edge Function (لأن إنشاء مستخدم في Auth يحتاج Service Role). إذا ما بدك هلأ، بنخليه “قريبًا”.
-      </div>
+        btnLogin.disabled = true;
+        msgEl.innerText = "جاري الاتصال بقاعدة البيانات...";
+        msgEl.style.color = "#d4af37";
 
-      <div style="height:12px"></div>
+        try {
+            const query = `${SUPABASE_URL}/rest/v1/app_users?username=eq.${encodeURIComponent(u)}&pass=eq.${encodeURIComponent(p)}&select=*`;
+            const response = await fetch(query, {
+                headers: { 
+                    "apikey": SUPABASE_ANON_KEY, 
+                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}` 
+                }
+            });
+            const users = await response.json();
 
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:18%;">Username</th>
-              <th style="width:14%;">Role</th>
-              <th style="width:14%;">Status</th>
-              <th style="width:24%;">Created</th>
-              <th style="width:30%;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="usersTbody"></tbody>
-        </table>
-      </div>
+            if (users && users.length > 0) {
+                const user = users[0];
+                if (user.blocked) {
+                    msgEl.innerText = "تم حظر هذا الحساب. راجع الإدارة.";
+                    msgEl.style.color = "red";
+                } else {
+                    localStorage.setItem(SESSION_KEY, JSON.stringify({
+                        username: user.username,
+                        is_admin: user.is_admin,
+                        loginTime: new Date().toISOString()
+                    }));
+                    msgEl.innerText = "تم التحقق.. جاري الدخول ✅";
+                    setTimeout(() => location.reload(), 800);
+                }
+            } else {
+                msgEl.innerText = "بيانات الدخول غير صحيحة";
+                msgEl.style.color = "red";
+            }
+        } catch (e) {
+            msgEl.innerText = "خطأ في الاتصال. تأكد من الإنترنت.";
+        } finally {
+            btnLogin.disabled = false;
+        }
+    }
 
-    </div>
-  </main>
+    const session = localStorage.getItem(SESSION_KEY);
+    if (session) {
+        overlay.style.display = "none";
+        const data = JSON.parse(session);
+        document.getElementById("welcomeUser").innerText = "أهلاً، " + data.username;
+    }
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js"></script>
-  <script src="admin.js"></script>
-</body>
-</html>
+    btnLogin.addEventListener("click", handleLogin);
+    window.logout = () => { localStorage.removeItem(SESSION_KEY); location.reload(); };
+})();
