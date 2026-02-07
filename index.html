@@ -8,34 +8,21 @@
 
   <style>
     :root{
-      /* ✅ Palette (حسب صورتك) */
-      --white:#FFFFFF;
-      --green:#19C37D;
-      --gray:#5F6368;
-      --dark:#2F3337;
-      --black:#111315;
-      --yellow:#D6A628;
-
-      /* UI */
+      --white:#FFFFFF; --green:#19C37D; --gray:#5F6368; --dark:#2F3337; --black:#111315; --yellow:#D6A628;
       --bg: var(--gray);
-      --card: var(--dark);
-      --card2: rgba(255,255,255,.08);
       --line: rgba(255,255,255,.18);
       --text: var(--white);
       --muted: rgba(255,255,255,.78);
       --shadow: 0 14px 40px rgba(0,0,0,.35);
       --radius: 22px;
     }
-
     *{box-sizing:border-box}
     body{
-      margin:0;
-      background: var(--bg);
-      color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", "Noto Naskh Arabic", sans-serif;
-      display:flex; justify-content:center; padding:16px;
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
+      display:flex;justify-content:center;padding:16px
     }
-    .wrap{width:min(440px,100%); display:grid; gap:12px}
+    .wrap{width:min(440px,100%);display:grid;gap:12px}
 
     .top{
       background: linear-gradient(180deg, rgba(17,19,21,.95), rgba(47,51,55,.95));
@@ -45,15 +32,12 @@
       padding:14px 14px;
       display:flex; align-items:center; justify-content:space-between;
     }
-    .brand{display:grid; gap:4px}
-    .brand b{font-size:16px; letter-spacing:.4px}
-    .brand span{font-size:12px; color:var(--muted)}
+    .brand{display:grid;gap:4px}
+    .brand b{font-size:16px;letter-spacing:.4px}
+    .brand span{font-size:12px;color:var(--muted)}
     .pill{
-      font-size:12px; font-weight:900;
-      padding:7px 10px;
-      border-radius:999px;
-      background: var(--yellow);
-      color: var(--black);
+      font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;
+      background: var(--yellow); color: var(--black);
     }
 
     .card{
@@ -65,137 +49,79 @@
     }
 
     /* LOGIN */
-    .login{padding:14px; display:grid; gap:10px}
-    .field{display:grid; gap:6px}
-    .field label{font-size:12px; color:var(--muted); font-weight:800}
+    .login{padding:14px;display:grid;gap:10px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:grid;gap:6px}
+    .field label{font-size:12px;color:var(--muted);font-weight:1000}
     input{
-      width:100%;
-      padding:12px 12px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background: rgba(17,19,21,.45);
-      color: var(--text);
-      outline:none;
-      font-size:14px;
+      width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);
+      background: rgba(17,19,21,.45); color: var(--text); outline:none; font-size:14px
     }
-    input:focus{
-      border-color: rgba(25,195,125,.55);
-      box-shadow: 0 0 0 4px rgba(25,195,125,.18);
-    }
-    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    input:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
     .btn{
-      user-select:none;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.10);
-      color: var(--text);
-      padding:12px 12px;
-      border-radius:16px;
-      font-weight:900;
-      font-size:14px;
-      cursor:pointer;
-      touch-action: manipulation;
-      display:flex; align-items:center; justify-content:center;
-      transition: transform .05s ease, background .2s ease;
+      user-select:none;border:1px solid var(--line);background: rgba(255,255,255,.10);
+      color: var(--text);padding:12px 12px;border-radius:16px;font-weight:1000;font-size:14px;
+      cursor:pointer;touch-action:manipulation
     }
-    .btn:active{transform: scale(.99)}
     .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
     .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
     .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .note{font-size:12px; color:var(--muted); line-height:1.7}
+    .note{font-size:12px;color:var(--muted);line-height:1.7}
 
     /* APP */
     .app{display:none}
-    .screen{padding:14px; border-bottom:1px solid var(--line)}
+    .screen{padding:14px;border-bottom:1px solid var(--line)}
     .display{
       background: rgba(17,19,21,.55);
       border:1px solid var(--line);
-      border-radius: 20px;
+      border-radius:20px;
       padding:14px 14px;
       display:grid; gap:6px;
     }
-    .expr{font-size:13px; color:var(--muted); min-height:18px; text-align:left; direction:ltr}
-    .result{font-size:30px; font-weight:1000; text-align:left; direction:ltr}
+    .expr{font-size:13px;color:var(--muted);min-height:18px;text-align:left;direction:ltr}
+    .result{font-size:30px;font-weight:1000;text-align:left;direction:ltr}
+    .labelWrap{margin-top:10px;display:grid;gap:6px}
+    .labelWrap .t{font-size:12px;color:var(--muted);font-weight:1000}
 
-    .labelWrap{margin-top:10px; display:grid; gap:6px}
-    .labelWrap .t{font-size:12px; color:var(--muted); font-weight:900}
-
-    .keys{
-      padding:14px;
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:10px;
-    }
+    .keys{padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
     .key{
-      padding:14px 10px;
-      border-radius:18px;
-      border:1px solid var(--line);
+      padding:14px 10px;border-radius:18px;border:1px solid var(--line);
       background: rgba(255,255,255,.10);
-      font-weight:1000;
-      font-size:16px;
-      cursor:pointer;
-      touch-action: manipulation;
-      display:flex; align-items:center; justify-content:center;
-      min-height:52px;
+      font-weight:1000;font-size:16px;cursor:pointer;touch-action:manipulation;
+      display:flex;align-items:center;justify-content:center;min-height:52px
     }
     .key.op{background: rgba(214,166,40,.18); border-color: rgba(214,166,40,.45)}
     .key.eq{background: rgba(25,195,125,.25); border-color: rgba(25,195,125,.55)}
     .key.warn{background: rgba(255,255,255,.14)}
     .key.danger{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .footer{
-      padding:14px;
-      display:grid;
-      gap:10px;
-      border-top:1px solid var(--line);
-      background: rgba(17,19,21,.30);
-    }
+
+    .footer{padding:14px;display:grid;gap:10px;border-top:1px solid var(--line);background: rgba(17,19,21,.30)}
     .bigline{
-      width:90%;
-      justify-self:center;
-      padding:14px 12px;
-      border-radius:18px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.10);
-      font-weight:1000;
-      cursor:pointer;
-      touch-action: manipulation;
+      width:90%;justify-self:center;padding:14px 12px;border-radius:18px;border:1px solid var(--line);
+      background: rgba(255,255,255,.10);font-weight:1000;cursor:pointer;touch-action:manipulation
     }
 
-    .log{padding:14px; display:grid; gap:10px; border-top:1px solid var(--line)}
-    .log h3{margin:0; font-size:14px}
-    table{
-      width:100%;
-      border-collapse:collapse;
-      border-radius:16px;
-      overflow:hidden;
-      border:1px solid var(--line);
-      background: rgba(17,19,21,.25);
-    }
-    th, td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.12);
-      font-size:13px;
-      text-align:right;
-    }
-    th{color:var(--muted); font-weight:1000}
-    td.num{text-align:left; direction:ltr; font-weight:1000}
+    .log{padding:14px;display:grid;gap:10px;border-top:1px solid var(--line)}
+    .log h3{margin:0;font-size:14px}
+    table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right}
+    th{color:var(--muted);font-weight:1000}
+    td.num{text-align:left;direction:ltr;font-weight:1000}
     tr:last-child td{border-bottom:none}
     .total{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:10px 12px;
-      border:1px dashed rgba(255,255,255,.22);
-      border-radius:16px;
-      background: rgba(255,255,255,.06);
-      font-weight:1000;
+      display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+      border:1px dashed rgba(255,255,255,.22);border-radius:16px;background: rgba(255,255,255,.06);
+      font-weight:1000
     }
     .total span:last-child{direction:ltr}
 
     @media print{
-      body{background:#fff; color:#000; padding:0}
-      .top, .login, .keys, .footer, .btn, .pill{display:none !important}
+      body{background:#fff;color:#000;padding:0}
+      .top,.login,.keys,.footer,.btn,.pill{display:none !important}
       .wrap{width:100%}
-      .card{box-shadow:none; border:none}
+      .card{box-shadow:none;border:none}
       .screen{border:none}
-      table, th, td{border:1px solid #bbb}
+      table,th,td{border:1px solid #bbb}
       th{color:#111}
       .expr{color:#333}
     }
@@ -212,31 +138,31 @@
       <div class="pill" id="statusPill">مقفل</div>
     </div>
 
-    <!-- ✅ Login Client -->
+    <!-- LOGIN (User) -->
     <div class="card login" id="loginCard">
       <div class="row2">
         <div class="field">
-          <label>اسم العميل</label>
-          <input id="clientName" placeholder="مثال: أبو أحمد" />
+          <label>اسم المستخدم</label>
+          <input id="username" placeholder="مثال: محمود" />
         </div>
         <div class="field">
-          <label>كلمة المرور (من الأدمن)</label>
-          <input id="clientPass" type="password" placeholder="••••" />
+          <label>كلمة السر</label>
+          <input id="password" type="password" placeholder="••••" />
         </div>
       </div>
 
       <div class="row2">
         <button class="btn green" id="loginBtn">دخول</button>
-        <button class="btn yellow" id="goAdminBtn" title="صفحة الأدمن">الأدمن</button>
+        <button class="btn yellow" id="adminBtn">الأدمن</button>
       </div>
 
-      <div class="note">
-        ✅ العميل يأخذ كلمة المرور من الأدمن.<br>
-        ✅ إذا كان العميل <b>محظور</b> لن يفتح النظام.
+      <div class="note" id="loginNote">
+        ✅ الدخول يعتمد على قاعدة البيانات (Supabase) ويعمل من أي جهاز.<br>
+        ✅ إذا كان المستخدم محظور، لن يتمكن من الدخول.
       </div>
     </div>
 
-    <!-- ✅ App -->
+    <!-- APP -->
     <div class="card app" id="appCard">
       <div class="screen">
         <div class="display">
@@ -250,7 +176,7 @@
         </div>
       </div>
 
-      <!-- ✅ Keypad (تبديل أماكن الأرقام كما طلبت سابقاً: 3/6/9) -->
+      <!-- Keypad -->
       <div class="keys" id="keys">
         <button class="key warn" data-k="C">C</button>
         <button class="key warn" data-k="CE">CE</button>
@@ -318,31 +244,20 @@
   </div>
 
 <script type="module">
+  // =========================
+  // ✅ Supabase (مفاتيحك داخل الكود)
+  // =========================
+  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+  const REST = `${SUPABASE_URL}/rest/v1`;
+
+  // =========================
+  // Helpers
+  // =========================
   const $ = (id) => document.getElementById(id);
-
-  // ========= Storage Keys =========
-  const K_CLIENTS = "hs_clients_v1";
-  const K_SESSION = "hs_client_session_v1";
-  const K_LOG     = "hs_log_v1";
-
-  // ========= UI =========
-  const statusPill = $("statusPill");
-  const loginCard  = $("loginCard");
-  const appCard    = $("appCard");
-
-  const clientName = $("clientName");
-  const clientPass = $("clientPass");
-  const labelInput = $("labelInput");
-
-  const exprEl = $("expr");
-  const resEl  = $("res");
-  const tbody  = $("tbody");
-  const grandTotalEl = $("grandTotal");
-
   const VIBRATE_MS = 12;
   const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
 
-  // ========= Helpers =========
   const toast = (msg) => {
     const d = document.createElement("div");
     d.textContent = msg;
@@ -351,62 +266,57 @@
       transform:"translateX(-50%)",
       background:"rgba(17,19,21,.85)",
       color:"#fff", padding:"10px 14px",
-      borderRadius:"14px", fontWeight:"900",
+      borderRadius:"14px", fontWeight:"1000",
       zIndex:9999, backdropFilter:"blur(8px)",
       border:"1px solid rgba(255,255,255,.18)"
     });
     document.body.appendChild(d);
-    setTimeout(()=>d.remove(), 1300);
+    setTimeout(()=>d.remove(), 1400);
   };
 
-  const loadClients = () => {
-    try { return JSON.parse(localStorage.getItem(K_CLIENTS) || "[]"); }
-    catch { return []; }
+  const apiFetch = async (path, options = {}) => {
+    const res = await fetch(`${REST}${path}`, {
+      ...options,
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(()=> "");
+      throw new Error(`API ${res.status}: ${t || res.statusText}`);
+    }
+    // بعض عمليات DELETE ترجع فاضي
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
   };
 
-  const getClient = (name, pass) => {
-    const n = (name || "").trim();
-    const p = (pass || "").trim();
-    if (!n || !p) return null;
-    const clients = loadClients();
-    return clients.find(c => c.name === n && c.pass === p) || null;
-  };
-
-  const saveSession = (name) => localStorage.setItem(K_SESSION, JSON.stringify({name, ts: Date.now()}));
+  // =========================
+  // Session
+  // =========================
+  const K_SESSION = "hs_session_v2";
+  const saveSession = (obj) => localStorage.setItem(K_SESSION, JSON.stringify(obj));
+  const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
   const clearSession = () => localStorage.removeItem(K_SESSION);
-  const loadSession = () => {
-    try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); }
-    catch { return null; }
-  };
 
-  const formatNumber = (n) => {
-    const x = Number(n);
-    if (!Number.isFinite(x)) return "0";
-    const s = x.toString();
-    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
-  };
+  // =========================
+  // UI refs
+  // =========================
+  const statusPill = $("statusPill");
+  const loginCard  = $("loginCard");
+  const appCard    = $("appCard");
 
-  const safeEval = (expression) => {
-    if (!/^[0-9+\-*/().\s]+$/.test(expression)) return null;
-    try {
-      // eslint-disable-next-line no-new-func
-      const fn = Function(`"use strict"; return (${expression});`);
-      const val = fn();
-      return Number.isFinite(val) ? val : null;
-    } catch { return null; }
-  };
+  const usernameEl = $("username");
+  const passwordEl = $("password");
+  const labelInput = $("labelInput");
 
-  // ========= App State =========
-  let expr = "";
-  let lastResult = 0;
-
-  const loadLog = () => {
-    try { return JSON.parse(localStorage.getItem(K_LOG) || "[]"); }
-    catch { return []; }
-  };
-  let log = loadLog();
-
-  const saveLog = () => localStorage.setItem(K_LOG, JSON.stringify(log));
+  const exprEl = $("expr");
+  const resEl  = $("res");
+  const tbody  = $("tbody");
+  const grandTotalEl = $("grandTotal");
 
   const setLocked = (locked) => {
     statusPill.textContent = locked ? "مقفل" : "مفتوح";
@@ -416,7 +326,68 @@
     appCard.style.display = locked ? "none" : "block";
   };
 
-  const render = () => {
+  // =========================
+  // Auth (Supabase table: app_users)
+  // columns: username text, pass text, is_admin bool, blocked bool
+  // =========================
+  const loginUser = async (username, pass) => {
+    const u = (username || "").trim();
+    const p = (pass || "").trim();
+    if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return; }
+
+    // query: username + pass exact (حسب جدولك الحالي)
+    const q =
+      `?select=id,username,is_admin,blocked` +
+      `&username=eq.${encodeURIComponent(u)}` +
+      `&pass=eq.${encodeURIComponent(p)}` +
+      `&limit=1`;
+
+    const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
+    const user = Array.isArray(rows) ? rows[0] : null;
+
+    if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return; }
+    if (user.blocked) { toast("هذا المستخدم محظور ❌"); return; }
+
+    saveSession({ id: user.id, username: user.username, is_admin: !!user.is_admin, ts: Date.now() });
+    setLocked(false);
+    toast("تم الدخول ✅");
+  };
+
+  const logoutUser = () => {
+    vibe();
+    clearSession();
+    setLocked(true);
+    toast("تم تسجيل الخروج");
+  };
+
+  // =========================
+  // Calculator + Log (local per user/device)
+  // =========================
+  const K_LOG = "hs_calc_log_v2";
+  let expr = "";
+  let lastResult = 0;
+  let log = loadLog();
+
+  function loadLog(){ try { return JSON.parse(localStorage.getItem(K_LOG) || "[]"); } catch { return []; } }
+  function saveLog(){ localStorage.setItem(K_LOG, JSON.stringify(log)); }
+
+  function formatNumber(n){
+    const x = Number(n);
+    if (!Number.isFinite(x)) return "0";
+    const s = x.toString();
+    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
+  }
+  function safeEval(expression){
+    if (!/^[0-9+\-*/().\s]+$/.test(expression)) return null;
+    try{
+      // eslint-disable-next-line no-new-func
+      const fn = Function(`"use strict"; return (${expression});`);
+      const val = fn();
+      return Number.isFinite(val) ? val : null;
+    }catch{ return null; }
+  }
+
+  function render(){
     exprEl.textContent = expr.trim() ? expr : "0";
     const calc = safeEval(expr);
     resEl.textContent = calc === null ? formatNumber(lastResult) : formatNumber(calc);
@@ -424,7 +395,7 @@
     tbody.innerHTML = "";
     let total = 0;
 
-    for (const row of log) {
+    for (const row of log){
       const tr = document.createElement("tr");
 
       const td1 = document.createElement("td");
@@ -446,9 +417,9 @@
     }
     grandTotalEl.textContent = formatNumber(total);
     saveLog();
-  };
+  }
 
-  const newlineCommit = () => {
+  function newlineCommit(){
     const clean = expr.trim();
     if (!clean) return;
 
@@ -469,27 +440,24 @@
     expr = "";
     labelInput.value = "";
     render();
-  };
+  }
 
-  const clearAll = () => { expr=""; lastResult=0; render(); };
-  const backspace = () => { expr = expr.slice(0,-1); render(); };
-
-  const clearEntry = () => {
+  function clearAll(){ expr=""; lastResult=0; render(); }
+  function backspace(){ expr = expr.slice(0,-1); render(); }
+  function clearEntry(){
     const m = expr.match(/^(.*?)([+\-*/])\s*[^+\-*/]*$/);
     expr = m ? (m[1] + m[2] + " ") : "";
     render();
-  };
-
-  const appendChar = (ch) => { expr += ch; render(); };
+  }
+  function appendChar(ch){ expr += ch; render(); }
 
   const onKey = (k) => {
     vibe();
-
-    if (k === "C")  return clearAll();
+    if (k === "C") return clearAll();
     if (k === "CE") return clearEntry();
     if (k === "BK") return backspace();
-    if (k === "=")  return newlineCommit();
-    if (k === "LOGOUT") return doLogout();
+    if (k === "=") return newlineCommit();
+    if (k === "LOGOUT") return logoutUser();
 
     if (["/","*","-","+"].includes(k)){
       if (!expr.trim()) return;
@@ -506,73 +474,65 @@
     appendChar(k);
   };
 
-  const copyText = async (text) => {
+  async function copyText(text){
     try{
       await navigator.clipboard.writeText(text);
       toast("تم النسخ ✅");
     }catch{
       const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position="fixed"; ta.style.left="-9999px";
+      ta.value = text; ta.style.position="fixed"; ta.style.left="-9999px";
       document.body.appendChild(ta);
       ta.focus(); ta.select();
       document.execCommand("copy");
       ta.remove();
       toast("تم النسخ ✅");
     }
-  };
+  }
 
-  const logAsTSV = () => {
+  function logAsTSV(){
     const header = ["البيان","العملية","النتيجة"].join("\t");
     const rows = log.map(r => [r.label, r.op, r.result].join("\t"));
     return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
-  };
+  }
 
-  const exportPDF = () => window.print();
-
-  // ========= Auth (Client) =========
-  const doLogin = () => {
+  // =========================
+  // Events
+  // =========================
+  $("loginBtn").addEventListener("click", async () => {
     vibe();
-    const c = getClient(clientName.value, clientPass.value);
+    try{
+      await loginUser(usernameEl.value, passwordEl.value);
+    }catch(e){
+      toast("خطأ اتصال بقاعدة البيانات");
+      console.error(e);
+    }
+  }, { passive:true });
 
-    if (!c) return toast("الاسم أو كلمة المرور غير صحيحة");
-    if (c.blocked) return toast("هذا العميل محظور ❌");
-
-    saveSession(c.name);
-    setLocked(false);
-    toast("تم الدخول ✅");
-  };
-
-  const doLogout = () => {
+  $("adminBtn").addEventListener("click", () => {
     vibe();
-    clearSession();
-    setLocked(true);
-    toast("تم تسجيل الخروج");
-  };
-
-  // ========= Events =========
-  $("loginBtn").addEventListener("click", doLogin, {passive:true});
-  $("goAdminBtn").addEventListener("click", () => { vibe(); location.href = "./admin.html"; }, {passive:true});
+    location.href = "./admin.html";
+  }, { passive:true });
 
   $("keys").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-k]");
     if (!btn) return;
     onKey(btn.dataset.k);
-  }, {passive:true});
+  }, { passive:true });
 
-  $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, {passive:true});
-  $("copyTableBtn").addEventListener("click", () => { vibe(); copyText(logAsTSV()); }, {passive:true});
-  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, {passive:true});
-  $("pdfBtn").addEventListener("click", () => { vibe(); exportPDF(); }, {passive:true});
-  $("clearLogBtn").addEventListener("click", () => { vibe(); log=[]; render(); toast("تم مسح السجل"); }, {passive:true});
+  $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, { passive:true });
+  $("copyTableBtn").addEventListener("click", () => { vibe(); copyText(logAsTSV()); }, { passive:true });
+  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, { passive:true });
+  $("pdfBtn").addEventListener("click", () => { vibe(); window.print(); }, { passive:true });
+  $("clearLogBtn").addEventListener("click", () => { vibe(); log=[]; render(); toast("تم مسح السجل"); }, { passive:true });
 
   window.addEventListener("keydown", (e) => {
-    const map = { "Enter":"=", "Backspace":"BK", "Escape":"C", "/":"/", "*":"*", "-":"-", "+":"+", ".":"." };
+    const map = { "Enter":"=", "Backspace":"BK", "Escape":"C", "/":"/", "*":"*", "-":"-", "+":"+",
+                  ".":"." };
     if (e.key >= "0" && e.key <= "9") return onKey(e.key);
     if (map[e.key]) return onKey(map[e.key]);
   });
 
-  // ========= Boot =========
+  // Boot
   const sess = loadSession();
   setLocked(!sess);
   render();
