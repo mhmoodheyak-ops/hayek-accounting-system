@@ -8,15 +8,8 @@
 
   <style>
     :root{
-      --white:#FFFFFF;
-      --green:#19C37D;
-      --gray:#5F6368;
-      --dark:#2F3337;
-      --black:#111315;
-      --yellow:#D6A628;
-
+      --white:#FFFFFF; --green:#19C37D; --gray:#5F6368; --dark:#2F3337; --black:#111315; --yellow:#D6A628;
       --bg: var(--gray);
-      --card: var(--dark);
       --line: rgba(255,255,255,.18);
       --text: var(--white);
       --muted: rgba(255,255,255,.78);
@@ -24,12 +17,8 @@
       --radius: 22px;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0; background: var(--bg); color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", "Noto Naskh Arabic", sans-serif;
-      display:flex; justify-content:center; padding:16px;
-    }
-    .wrap{width:min(520px,100%); display:grid; gap:12px}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;display:flex;justify-content:center;padding:16px}
+    .wrap{width:min(720px,100%);display:grid;gap:12px}
     .top{
       background: linear-gradient(180deg, rgba(17,19,21,.95), rgba(47,51,55,.95));
       border:1px solid var(--line);
@@ -37,11 +26,13 @@
       box-shadow: var(--shadow);
       padding:14px 14px;
       display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
     }
-    .brand{display:grid; gap:4px}
+    .brand{display:grid;gap:4px}
     .brand b{font-size:16px}
-    .brand span{font-size:12px; color:var(--muted)}
-    .pill{font-size:12px; font-weight:1000; padding:7px 10px; border-radius:999px; background:var(--yellow); color:var(--black)}
+    .brand span{font-size:12px;color:var(--muted)}
+    .pill{font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;background:var(--yellow);color:var(--black)}
+
     .card{
       border:1px solid var(--line);
       border-radius: var(--radius);
@@ -50,68 +41,37 @@
       overflow:hidden;
     }
     .p{padding:14px}
-    .field{display:grid; gap:6px}
-    .field label{font-size:12px; color:var(--muted); font-weight:1000}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .field{display:grid;gap:6px}
+    .field label{font-size:12px;color:var(--muted);font-weight:1000}
     input{
-      width:100%;
-      padding:12px 12px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background: rgba(17,19,21,.45);
-      color: var(--text);
-      outline:none;
-      font-size:14px;
+      width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);
+      background: rgba(17,19,21,.45); color: var(--text); outline:none; font-size:14px
     }
     input:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
-    .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
     .btn{
-      user-select:none;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.10);
-      color: var(--text);
-      padding:12px 12px;
-      border-radius:16px;
-      font-weight:1000;
-      font-size:14px;
-      cursor:pointer;
-      touch-action: manipulation;
+      user-select:none;border:1px solid var(--line);background: rgba(255,255,255,.10);
+      color: var(--text);padding:12px 12px;border-radius:16px;font-weight:1000;font-size:14px;
+      cursor:pointer;touch-action:manipulation
     }
-    .btn:active{transform: scale(.99)}
     .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
     .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
     .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .note{font-size:12px; color:var(--muted); line-height:1.7}
+    .note{font-size:12px;color:var(--muted);line-height:1.7}
+    .mono{direction:ltr;text-align:left;font-weight:1000}
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      border-radius:16px;
-      overflow:hidden;
-      border:1px solid var(--line);
-      background: rgba(17,19,21,.25);
-    }
-    th, td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.12);
-      font-size:13px;
-      text-align:right;
-      vertical-align:middle;
-    }
-    th{color:var(--muted); font-weight:1000}
+    table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right;vertical-align:middle}
+    th{color:var(--muted);font-weight:1000}
     tr:last-child td{border-bottom:none}
     .tag{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-weight:1000;
-      font-size:12px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.08);
+      display:inline-block;padding:6px 10px;border-radius:999px;font-weight:1000;font-size:12px;
+      border:1px solid rgba(255,255,255,.18);background: rgba(255,255,255,.08)
     }
     .tag.ok{background: rgba(25,195,125,.20); border-color: rgba(25,195,125,.45)}
     .tag.bad{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .mono{direction:ltr; text-align:left; font-weight:1000}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
   </style>
 </head>
 
@@ -119,71 +79,93 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <b>لوحة الأدمن — HAYEK SPOT</b>
-        <span>إضافة عملاء + كلمات مرور + حظر/فك حظر</span>
+        <b>HAYEK SPOT — لوحة الأدمن</b>
+        <span>إضافة مستخدمين + حظر/فك حظر + حذف + بحث</span>
       </div>
       <div class="pill" id="pill">مقفل</div>
     </div>
 
-    <!-- Admin Login -->
+    <!-- Admin login (من نفس جدول app_users) -->
     <div class="card" id="loginCard">
-      <div class="p" style="display:grid; gap:10px">
-        <div class="field">
-          <label>كلمة مرور الأدمن</label>
-          <input id="adminPass" type="password" placeholder="••••" />
+      <div class="p" style="display:grid;gap:10px">
+        <div class="row2">
+          <div class="field">
+            <label>اسم الأدمن</label>
+            <input id="adminUser" placeholder="مثال: admin" />
+          </div>
+          <div class="field">
+            <label>كلمة السر</label>
+            <input id="adminPass" type="password" placeholder="••••" />
+          </div>
         </div>
+
         <div class="row2">
           <button class="btn green" id="adminLoginBtn">دخول الأدمن</button>
-          <button class="btn yellow" id="goClientBtn">صفحة العميل</button>
+          <button class="btn yellow" id="goClientBtn">صفحة المستخدم</button>
         </div>
 
         <div class="note">
-          كلمة مرور الأدمن الافتراضية: <span class="mono">hayekadmin123</span><br>
-          (تقدر تغيّرها من داخل هذا الملف بسهولة)
+          ✅ لازم يكون لديك صف بالأدمن في جدول <span class="mono">app_users</span> وتكون قيمة <span class="mono">is_admin = true</span>.
         </div>
       </div>
     </div>
 
-    <!-- Admin Panel -->
+    <!-- Panel -->
     <div class="card" id="panelCard" style="display:none">
-      <div class="p" style="display:grid; gap:12px">
+      <div class="p" style="display:grid;gap:12px">
         <div class="row3">
           <div class="field">
-            <label>اسم العميل</label>
-            <input id="newName" placeholder="مثال: أبو أحمد" />
+            <label>اسم المستخدم</label>
+            <input id="newUser" placeholder="مثال: محمود" />
           </div>
           <div class="field">
-            <label>كلمة المرور للعميل</label>
-            <input id="newPass" placeholder="مثال: 5599" />
+            <label>كلمة السر</label>
+            <input id="newPass" placeholder="مثال: 123456" />
           </div>
           <div class="field">
-            <label>توليد كلمة مرور</label>
+            <label>توليد كلمة سر</label>
             <button class="btn yellow" id="genBtn" type="button">توليد</button>
           </div>
         </div>
 
+        <div class="row3">
+          <button class="btn green" id="addBtn">حفظ المستخدم</button>
+          <button class="btn" id="refreshBtn">تحديث القائمة</button>
+          <button class="btn.red btn" id="logoutBtn">خروج</button>
+        </div>
+
         <div class="row2">
-          <button class="btn green" id="addBtn">حفظ العميل</button>
-          <button class="btn red" id="adminLogoutBtn">خروج الأدمن</button>
+          <div class="field">
+            <label>بحث بالاسم (اختياري)</label>
+            <input id="searchBox" placeholder="اكتب جزء من الاسم..." />
+          </div>
+          <div class="field">
+            <label>عرض</label>
+            <div class="row2">
+              <button class="btn" id="prevBtn">السابق</button>
+              <button class="btn" id="nextBtn">التالي</button>
+            </div>
+          </div>
         </div>
 
         <div class="note">
-          ✅ بعد إضافة العميل: أعطه (الاسم + كلمة المرور) ليدخل من صفحة العميل.<br>
-          ✅ زر الحظر يمنع الدخول فوراً.
+          ✅ يدعم 1000+ مستخدم (Paging).<br>
+          ✅ زر الحظر يمنع الدخول فورًا.
         </div>
       </div>
 
       <div class="p" style="border-top:1px solid rgba(255,255,255,.12)">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px">
-          <b>قائمة العملاء</b>
-          <button class="btn" id="copyClientsBtn">نسخ القائمة</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+          <b>قائمة المستخدمين</b>
+          <button class="btn" id="copyBtn">نسخ القائمة</button>
         </div>
 
         <table>
           <thead>
             <tr>
               <th>الاسم</th>
-              <th class="mono">كلمة المرور</th>
+              <th class="mono">كلمة السر</th>
+              <th>Admin</th>
               <th>الحالة</th>
               <th>إجراءات</th>
             </tr>
@@ -195,14 +177,17 @@
   </div>
 
 <script type="module">
+  // =========================
+  // ✅ Supabase (مفاتيحك داخل الكود)
+  // =========================
+  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+  const REST = `${SUPABASE_URL}/rest/v1`;
+
+  // =========================
+  // Helpers
+  // =========================
   const $ = (id) => document.getElementById(id);
-
-  const K_CLIENTS = "hs_clients_v1";
-  const K_ADMIN   = "hs_admin_session_v1";
-
-  // ✅ غيّر كلمة مرور الأدمن هنا إذا بدك
-  const ADMIN_PASSWORD = "hayekadmin123";
-
   const VIBRATE_MS = 12;
   const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
 
@@ -219,160 +204,281 @@
       border:"1px solid rgba(255,255,255,.18)"
     });
     document.body.appendChild(d);
-    setTimeout(()=>d.remove(), 1300);
+    setTimeout(()=>d.remove(), 1400);
   };
 
-  const loadClients = () => {
-    try { return JSON.parse(localStorage.getItem(K_CLIENTS) || "[]"); }
-    catch { return []; }
+  const apiFetch = async (path, options = {}) => {
+    const res = await fetch(`${REST}${path}`, {
+      ...options,
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(()=> "");
+      throw new Error(`API ${res.status}: ${t || res.statusText}`);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
   };
-  const saveClients = (arr) => localStorage.setItem(K_CLIENTS, JSON.stringify(arr));
 
-  const saveAdminSession = () => localStorage.setItem(K_ADMIN, "1");
-  const clearAdminSession = () => localStorage.removeItem(K_ADMIN);
-  const isAdmin = () => localStorage.getItem(K_ADMIN) === "1";
+  // =========================
+  // Admin session
+  // =========================
+  const K_ADMIN = "hs_admin_session_v2";
+  const saveAdmin = (obj) => localStorage.setItem(K_ADMIN, JSON.stringify(obj));
+  const loadAdmin = () => { try { return JSON.parse(localStorage.getItem(K_ADMIN) || "null"); } catch { return null; } };
+  const clearAdmin = () => localStorage.removeItem(K_ADMIN);
 
+  const pill = $("pill");
   const loginCard = $("loginCard");
   const panelCard = $("panelCard");
-  const pill = $("pill");
 
   const setMode = (adminOn) => {
     pill.textContent = adminOn ? "مفتوح" : "مقفل";
+    pill.style.background = adminOn ? "var(--green)" : "var(--yellow)";
+    pill.style.color = "var(--black)";
     loginCard.style.display = adminOn ? "none" : "block";
     panelCard.style.display = adminOn ? "block" : "none";
   };
 
-  const genPass = () => {
-    // 4 أرقام
-    const n = Math.floor(1000 + Math.random()*9000);
-    return String(n);
+  // =========================
+  // Auth: admin from app_users where is_admin=true
+  // =========================
+  const adminLogin = async (u, p) => {
+    const user = (u || "").trim();
+    const pass = (p || "").trim();
+    if (!user || !pass) { toast("اكتب اسم الأدمن وكلمة السر"); return false; }
+
+    const q =
+      `?select=id,username,is_admin,blocked` +
+      `&username=eq.${encodeURIComponent(user)}` +
+      `&pass=eq.${encodeURIComponent(pass)}` +
+      `&limit=1`;
+
+    const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
+    const admin = Array.isArray(rows) ? rows[0] : null;
+
+    if (!admin) { toast("بيانات الأدمن غير صحيحة"); return false; }
+    if (admin.blocked) { toast("الأدمن محظور ❌"); return false; }
+    if (!admin.is_admin) { toast("هذا المستخدم ليس أدمن"); return false; }
+
+    saveAdmin({ id: admin.id, username: admin.username, ts: Date.now() });
+    setMode(true);
+    toast("تم الدخول ✅");
+    return true;
   };
 
-  const render = () => {
+  const adminLogout = () => {
+    vibe();
+    clearAdmin();
+    setMode(false);
+    toast("تم الخروج");
+  };
+
+  // =========================
+  // Users CRUD
+  // =========================
+  let page = 0;
+  const PAGE_SIZE = 30;
+
+  const genPass = () => String(Math.floor(100000 + Math.random()*900000)); // 6 digits
+
+  const renderTable = (rows) => {
     const tbody = $("tbody");
-    const clients = loadClients();
     tbody.innerHTML = "";
 
-    for (const c of clients) {
+    for (const r of rows) {
       const tr = document.createElement("tr");
 
       const td1 = document.createElement("td");
-      td1.textContent = c.name;
+      td1.textContent = r.username;
 
       const td2 = document.createElement("td");
       td2.className = "mono";
-      td2.textContent = c.pass;
+      td2.textContent = r.pass;
 
       const td3 = document.createElement("td");
-      const tag = document.createElement("span");
-      tag.className = "tag " + (c.blocked ? "bad" : "ok");
-      tag.textContent = c.blocked ? "محظور" : "مفعل";
-      td3.appendChild(tag);
+      td3.innerHTML = r.is_admin ? `<span class="tag ok">YES</span>` : `<span class="tag">NO</span>`;
 
       const td4 = document.createElement("td");
-      td4.style.display = "flex";
-      td4.style.gap = "8px";
-      td4.style.flexWrap = "wrap";
+      td4.innerHTML = r.blocked ? `<span class="tag bad">محظور</span>` : `<span class="tag ok">مفعل</span>`;
 
-      const toggleBtn = document.createElement("button");
-      toggleBtn.className = "btn " + (c.blocked ? "green" : "yellow");
-      toggleBtn.textContent = c.blocked ? "فك الحظر" : "حظر";
-      toggleBtn.addEventListener("click", () => {
+      const td5 = document.createElement("td");
+      const box = document.createElement("div");
+      box.className = "actions";
+
+      const toggle = document.createElement("button");
+      toggle.className = r.blocked ? "btn green" : "btn yellow";
+      toggle.textContent = r.blocked ? "فك الحظر" : "حظر";
+      toggle.onclick = async () => {
         vibe();
-        const arr = loadClients();
-        const idx = arr.findIndex(x => x.id === c.id);
-        if (idx >= 0) {
-          arr[idx].blocked = !arr[idx].blocked;
-          saveClients(arr);
-          render();
-          toast(arr[idx].blocked ? "تم الحظر" : "تم فك الحظر");
+        try{
+          await apiFetch(`/app_users?id=eq.${r.id}`, {
+            method:"PATCH",
+            headers: { "Prefer": "return=minimal" },
+            body: JSON.stringify({ blocked: !r.blocked })
+          });
+          toast(r.blocked ? "تم فك الحظر" : "تم الحظر");
+          await fetchUsers();
+        }catch(e){
+          console.error(e);
+          toast("فشل التعديل");
         }
-      });
+      };
 
-      const delBtn = document.createElement("button");
-      delBtn.className = "btn red";
-      delBtn.textContent = "حذف";
-      delBtn.addEventListener("click", () => {
+      const del = document.createElement("button");
+      del.className = "btn red";
+      del.textContent = "حذف";
+      del.onclick = async () => {
         vibe();
-        const arr = loadClients().filter(x => x.id !== c.id);
-        saveClients(arr);
-        render();
-        toast("تم الحذف");
-      });
+        try{
+          await apiFetch(`/app_users?id=eq.${r.id}`, { method:"DELETE" });
+          toast("تم الحذف");
+          await fetchUsers();
+        }catch(e){
+          console.error(e);
+          toast("فشل الحذف");
+        }
+      };
 
-      td4.append(toggleBtn, delBtn);
-      tr.append(td1, td2, td3, td4);
+      box.append(toggle, del);
+      td5.appendChild(box);
+
+      tr.append(td1, td2, td3, td4, td5);
       tbody.appendChild(tr);
     }
   };
 
-  // ===== Events =====
-  $("adminLoginBtn").addEventListener("click", () => {
-    vibe();
-    const pass = ($("adminPass").value || "").trim();
-    if (pass !== ADMIN_PASSWORD) return toast("كلمة مرور الأدمن غير صحيحة");
-    saveAdminSession();
-    setMode(true);
-    render();
-    toast("تم الدخول ✅");
-  });
+  const fetchUsers = async () => {
+    const search = ($("searchBox").value || "").trim();
+    const offset = page * PAGE_SIZE;
 
-  $("adminLogoutBtn").addEventListener("click", () => {
-    vibe();
-    clearAdminSession();
-    setMode(false);
-    toast("تم الخروج");
-  });
+    // filter username ilike
+    let filter = "";
+    if (search) filter = `&username=ilike.*${encodeURIComponent(search)}*`;
 
-  $("goClientBtn").addEventListener("click", () => { vibe(); location.href = "./index.html"; });
-  $("genBtn").addEventListener("click", () => { vibe(); $("newPass").value = genPass(); });
+    const q =
+      `?select=id,username,pass,is_admin,blocked,created_at` +
+      `&order=id.desc` +
+      `&limit=${PAGE_SIZE}&offset=${offset}` +
+      filter;
 
-  $("addBtn").addEventListener("click", () => {
-    vibe();
-    const name = ($("newName").value || "").trim();
-    const pass = ($("newPass").value || "").trim();
+    const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
+    renderTable(Array.isArray(rows) ? rows : []);
+  };
 
-    if (!name) return toast("اكتب اسم العميل");
-    if (!pass) return toast("اكتب كلمة المرور أو اضغط توليد");
+  const upsertUser = async (username, pass) => {
+    const u = (username || "").trim();
+    const p = (pass || "").trim();
+    if (!u) { toast("اكتب اسم المستخدم"); return; }
+    if (!p) { toast("اكتب كلمة السر أو اضغط توليد"); return; }
 
-    const arr = loadClients();
-
-    // إذا الاسم موجود: نحدّث كلمة المرور بدل التكرار
-    const existing = arr.find(c => c.name === name);
-    if (existing){
-      existing.pass = pass;
-      existing.blocked = false;
-      saveClients(arr);
-      render();
-      $("newName").value = "";
-      $("newPass").value = "";
-      return toast("تم تحديث العميل ✅");
+    // إذا الاسم موجود -> تحديث pass + فك الحظر
+    const existing = await apiFetch(`/app_users?select=id&username=eq.${encodeURIComponent(u)}&limit=1`, { method:"GET" });
+    if (Array.isArray(existing) && existing[0]?.id) {
+      const id = existing[0].id;
+      await apiFetch(`/app_users?id=eq.${id}`, {
+        method:"PATCH",
+        headers:{ "Prefer":"return=minimal" },
+        body: JSON.stringify({ pass: p, blocked: false })
+      });
+      toast("تم تحديث المستخدم ✅");
+      return;
     }
 
-    arr.unshift({ id: crypto.randomUUID(), name, pass, blocked:false, ts: Date.now() });
-    saveClients(arr);
-    render();
-
-    $("newName").value = "";
-    $("newPass").value = "";
+    // insert جديد
+    await apiFetch(`/app_users`, {
+      method:"POST",
+      headers:{ "Prefer":"return=minimal" },
+      body: JSON.stringify({
+        username: u,
+        pass: p,
+        is_admin: false,
+        blocked: false
+      })
+    });
     toast("تمت الإضافة ✅");
-  });
+  };
 
-  $("copyClientsBtn").addEventListener("click", async () => {
-    vibe();
-    const clients = loadClients();
-    const text = clients.map(c => `${c.name}\t${c.pass}\t${c.blocked ? "محظور" : "مفعل"}`).join("\n") || "لا يوجد عملاء";
+  const copyList = async () => {
     try{
+      // نسخ أول 300 نتيجة كحد (حتى ما يتقل المتصفح)
+      const rows = await apiFetch(`/app_users?select=username,pass,is_admin,blocked&order=id.desc&limit=300`, { method:"GET" });
+      const text = (rows || []).map(r => `${r.username}\t${r.pass}\t${r.is_admin ? "admin" : "user"}\t${r.blocked ? "blocked" : "active"}`).join("\n") || "لا يوجد";
       await navigator.clipboard.writeText(text);
       toast("تم النسخ ✅");
-    }catch{
-      toast("لم يتم النسخ (المتصفح منع)");
+    }catch(e){
+      console.error(e);
+      toast("فشل النسخ");
     }
+  };
+
+  // =========================
+  // Events
+  // =========================
+  $("adminLoginBtn").addEventListener("click", async () => {
+    vibe();
+    try{
+      const ok = await adminLogin($("adminUser").value, $("adminPass").value);
+      if (ok) await fetchUsers();
+    }catch(e){
+      console.error(e);
+      toast("خطأ اتصال بقاعدة البيانات");
+    }
+  }, { passive:true });
+
+  $("goClientBtn").addEventListener("click", () => { vibe(); location.href = "./index.html"; }, { passive:true });
+
+  $("logoutBtn").addEventListener("click", () => adminLogout(), { passive:true });
+
+  $("genBtn").addEventListener("click", () => { vibe(); $("newPass").value = genPass(); }, { passive:true });
+
+  $("addBtn").addEventListener("click", async () => {
+    vibe();
+    try{
+      await upsertUser($("newUser").value, $("newPass").value);
+      $("newUser").value = "";
+      $("newPass").value = "";
+      page = 0;
+      await fetchUsers();
+    }catch(e){
+      console.error(e);
+      toast("فشل الحفظ");
+    }
+  }, { passive:true });
+
+  $("refreshBtn").addEventListener("click", async () => { vibe(); await fetchUsers(); }, { passive:true });
+
+  $("searchBox").addEventListener("input", async () => {
+    page = 0;
+    try{ await fetchUsers(); }catch(e){ console.error(e); }
   });
 
-  // ===== Boot =====
-  setMode(isAdmin());
-  if (isAdmin()) render();
+  $("prevBtn").addEventListener("click", async () => {
+    vibe();
+    page = Math.max(0, page - 1);
+    await fetchUsers();
+  });
+
+  $("nextBtn").addEventListener("click", async () => {
+    vibe();
+    page = page + 1;
+    await fetchUsers();
+  });
+
+  $("copyBtn").addEventListener("click", async () => { vibe(); await copyList(); }, { passive:true });
+
+  // Boot
+  const sess = loadAdmin();
+  setMode(!!sess);
+  if (sess) {
+    fetchUsers().catch(e => { console.error(e); toast("خطأ تحميل القائمة"); });
+  }
 </script>
 </body>
 </html>
