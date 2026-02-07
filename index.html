@@ -4,27 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HAYEK SPOT</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* التنسيق الملكي */
+        body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .auth-box { background: #141414; padding: 30px; border-radius: 16px; border-top: 6px solid #d4af37; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #000; color: #fff; text-align: center; }
+        button { width: 100%; padding: 15px; background: #d4af37; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #main-content { display: none; text-align: center; padding: 50px; }
+    </style>
 </head>
 <body>
-    <div id="auth-overlay" class="auth-overlay">
+
+    <div id="auth-overlay">
         <div class="auth-box">
-            <h1>HAYEK SPOT</h1>
-            <label>اسم المستخدم</label>
-            <input type="text" id="auth-email" placeholder="mahmood">
-            <label>كلمة المرور</label>
-            <input type="password" id="auth-pass">
-            <button id="btn-login">دخول النظام</button>
-            <p id="auth-msg"></p>
+            <h1 style="color: #d4af37;">HAYEK SPOT</h1>
+            <input type="text" id="user" placeholder="اسم المستخدم">
+            <input type="password" id="pass" placeholder="كلمة المرور">
+            <button onclick="checkLogin()">دخول النظام</button>
+            <p id="msg" style="color: #ff4d4d; margin-top: 10px;"></p>
         </div>
     </div>
-    <div id="main-content" style="display: none;">
-        <div class="calc">
-            <div class="screen"><div class="value" id="calc-screen">0</div></div>
-            <button onclick="location.reload()" style="width:100%; padding:15px; background:gold; color:black; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">دخول ناجح - إضغط للعودة</button>
+
+    <div id="main-content">
+        <h1 style="color: #d4af37;">أهلاً بك يا حايك</h1>
+        <div style="background: #141414; padding: 30px; border-radius: 15px; border: 1px solid #333;">
+            <p>تم الدخول إلى النظام بنجاح</p>
+            <button onclick="location.reload()" style="background: #fff;">تسجيل خروج</button>
         </div>
     </div>
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
+
+    <script>
+        function checkLogin() {
+            const u = document.getElementById('user').value.trim().toLowerCase();
+            const p = document.getElementById('pass').value.trim();
+            const m = document.getElementById('msg');
+
+            // المنطق المباشر بدون ملفات خارجية
+            if (u === "mahmood" && p === "456") {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else if (u === "admin" && p === "123") {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            } else {
+                m.innerText = "البيانات خاطئة!";
+            }
+        }
+    </script>
 </body>
 </html>
