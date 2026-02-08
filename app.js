@@ -1,7 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  // عناصر
   const statePill = $("statePill");
   const statusText = $("statusText");
   const invoiceState = $("invoiceState");
@@ -30,82 +29,69 @@
   const calcDisplay = $("calcDisplay");
   const opsCount = $("opsCount");
 
-  // إعداد Supabase
+  // Supabase config
   const cfg = window.HAYEK || {};
   if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
-    setStatus("مفاتيح Supabase غير جاهزة في config.js", true);
-    console.error("Missing Supabase config.");
+    console.error("Missing config.js values: SUPABASE_URL / SUPABASE_ANON_KEY");
   }
 
-  // Instance واحدة
+  // Create ONE Supabase client only
   if (!window.HAYEK_DB && window.supabase) {
     window.HAYEK_DB = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
   }
   const db = window.HAYEK_DB;
 
-  // تخزين محلي
+  // ✅ مطابق لقاعدة بياناتك
+  const USERS_TABLE = "app_users";      // columns: username, pass, blocked, device_id
+  const INVOICES_TABLE = "app_invoices"; // must have: id, username, customer_name, status, total, lines, created_at, finalized_at
+  const OPS_TABLE = "app_operations";    // optional (نسجل عمليات الحاسبة إن كانت الأعمدة متاحة)
+
   const LS_USER = "HAYEK_USER_SESSION";
   const LS_INVOICE = "HAYEK_OPEN_INVOICE";
+  const LS_DEVICE = "HAYEK_DEVICE_ID";
 
-  // جداول/حقول (إذا أسماءك مختلفة خبرني ونعدّلها)
-  const USERS_TABLE = "users";       // أعمدة متوقعة: id, username, password, blocked(optional)
-  const INVOICES_TABLE = "invoices"; // أعمدة متوقعة: id, user_id, username, customer_name, status, total, lines, created_at, finalized_at
+  let sessionUser = null;     // { username }
+  let currentInvoice = null;  // { id, customer_name, status, lines:[] }
 
-  // حالة
-  let sessionUser = null;   // { id, username }
-  let currentInvoice = null; // { id, customer_name, status, lines:[] }
-
-  // حاسبة
   let expr = "0";
   let opsLog = [];
 
-  // أدوات
-  function setStatus(msg, err=false) {
+  // ---------- Helpers ----------
+  function setStatus(msg, err=false){
     statusText.textContent = msg;
     statePill.className = "pill " + (err ? "bad" : (sessionUser ? "good" : "bad"));
     statePill.textContent = sessionUser ? "مفتوح" : "غير مسجّل";
   }
-  function setPillLogin(ok){
-    statePill.className = "pill " + (ok ? "good" : "bad");
-    statePill.textContent = ok ? "مفتوح" : "غير مسجّل";
+
+  function vibrate(){ try{ if(navigator.vibrate) navigator.vibrate(15); }catch{} }
+
+  function money(n){ const x = Number(n||0); return (Math.round(x*100)/100).toString(); }
+
+  function safeName(s){ return String(s||"").trim().replace(/[\\\/:*?"<>|]+/g, "-").slice(0,80); }
+
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
   }
-  function vibrate(){
-    try { if (navigator.vibrate) navigator.vibrate(15); } catch {}
-  }
-  function toastShake(el){
-    el.classList.remove("shake");
-    void el.offsetWidth;
-    el.classList.add("shake");
-  }
-  function money(n){
-    const x = Number(n || 0);
-    return (Math.round(x*100)/100).toString();
-  }
-  function safeName(s){
-    return String(s||"").trim().replace(/[\\\/:*?"<>|]+/g, "-").slice(0,80);
-  }
+
   function updateTotal(){
     const total = (currentInvoice?.lines || []).reduce((a,l)=>a + Number(l.amount||0), 0);
     totalText.textContent = money(total);
     return total;
   }
+
   function setInvoiceUI(){
     const open = !!currentInvoice;
     invoiceState.textContent = open ? (currentInvoice.status === "final" ? "منتهية" : "مفتوحة") : "غير مفتوحة";
 
-    // ممنوع نسخ/PDF إلا بعد إنهاء
     const finalized = open && currentInvoice.status === "final";
     btnCopyTable.disabled = !finalized;
     btnPdf.disabled = !finalized;
 
-    // فتح/إنهاء
     btnFinalize.disabled = !open || currentInvoice.status === "final";
     btnOpenInvoice.disabled = !sessionUser || !customerNameEl.value.trim();
 
-    // إضافة سطر
     btnAddLine.disabled = !open || currentInvoice.status === "final";
 
-    // اسم السيرفر
     if (open){
       serverName.textContent = `${safeName(sessionUser.username)}__${safeName(currentInvoice.customer_name)}__${currentInvoice.id}`;
     } else {
@@ -113,57 +99,77 @@
     }
   }
 
-  // ========= 로그인 (مطلوب: اسم + كلمة سر) =========
-  async function login() {
+  function getOrCreateDeviceId(){
+    let deviceId = localStorage.getItem(LS_DEVICE);
+    if (deviceId) return deviceId;
+
+    // crypto.randomUUID موجود غالبًا، مع fallback
+    if (window.crypto && crypto.randomUUID) deviceId = crypto.randomUUID();
+    else deviceId = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now();
+
+    localStorage.setItem(LS_DEVICE, deviceId);
+    return deviceId;
+  }
+
+  // ---------- LOGIN (قفل جهاز واحد) ----------
+  async function login(){
     vibrate();
+
     const username = usernameEl.value.trim();
-    const password = passwordEl.value.trim();
-    if (!username || !password){
+    const pass = passwordEl.value.trim();
+    if(!username || !pass){
       setStatus("اسم المستخدم وكلمة السر إجباريين", true);
-      toastShake(btnLogin);
       return;
     }
-    if (!db){
+    if(!db){
       setStatus("Supabase غير جاهز", true);
       return;
     }
 
-    setStatus("جاري تسجيل الدخول...");
-    // بحث عن المستخدم
+    setStatus("جاري التحقق...");
+
+    const deviceId = getOrCreateDeviceId();
+
     const { data, error } = await db
       .from(USERS_TABLE)
-      .select("*")
+      .select("username, pass, blocked, device_id")
       .eq("username", username)
       .limit(1);
 
-    if (error){
+    if(error){
       console.error(error);
-      setStatus("خطأ اتصال (users table)", true);
+      setStatus("خطأ قراءة جدول app_users", true);
       return;
     }
 
-    const u = (data && data[0]) ? data[0] : null;
-    if (!u){
-      setStatus("بيانات خاطئة (المستخدم غير موجود)", true);
-      setPillLogin(false);
-      return;
-    }
-    if (u.blocked === true){
-      setStatus("هذا المستخدم محظور", true);
-      setPillLogin(false);
-      return;
-    }
-    if (String(u.password) !== password){
-      setStatus("بيانات خاطئة", true);
-      setPillLogin(false);
+    const u = data?.[0] || null;
+    if(!u){ setStatus("بيانات خاطئة", true); return; }
+    if(u.blocked === true){ setStatus("هذا الحساب محظور", true); return; }
+    if(String(u.pass) !== pass){ setStatus("بيانات خاطئة", true); return; }
+
+    // 🔐 قفل الجهاز
+    if (u.device_id && u.device_id !== deviceId){
+      setStatus("هذا الحساب مستخدم على جهاز آخر ❌", true);
       return;
     }
 
-    sessionUser = { id: u.id, username: u.username };
+    // أول دخول: اربط الحساب بهذا الجهاز
+    if (!u.device_id){
+      const { error: upErr } = await db
+        .from(USERS_TABLE)
+        .update({ device_id: deviceId })
+        .eq("username", username);
+
+      if (upErr){
+        console.error(upErr);
+        setStatus("فشل ربط الجهاز بالحساب", true);
+        return;
+      }
+    }
+
+    sessionUser = { username: u.username };
     localStorage.setItem(LS_USER, JSON.stringify(sessionUser));
-
     setStatus("تم تسجيل الدخول ✅");
-    setPillLogin(true);
     setInvoiceUI();
   }
 
@@ -176,33 +182,20 @@
     renderLines([]);
     totalText.textContent = "0";
     setStatus("تم تسجيل الخروج");
-    setPillLogin(false);
     setInvoiceUI();
   }
 
-  // ========= فتح فاتورة تلقائيًا عند اسم الزبون =========
-  async function openInvoice() {
+  // ---------- INVOICE ----------
+  async function openInvoice(){
     vibrate();
-    if (!sessionUser){
-      setStatus("سجّل دخول أولًا", true);
-      return;
-    }
+    if(!sessionUser){ setStatus("سجّل دخول أولًا", true); return; }
     const customer = customerNameEl.value.trim();
-    if (!customer){
-      setStatus("اسم الزبون إجباري", true);
-      toastShake(customerNameEl);
-      return;
-    }
-    if (!db){
-      setStatus("Supabase غير جاهز", true);
-      return;
-    }
+    if(!customer){ setStatus("اسم الزبون إجباري", true); return; }
+    if(!db){ setStatus("Supabase غير جاهز", true); return; }
 
     setStatus("فتح فاتورة...");
 
-    // إنشاء فاتورة مفتوحة
     const payload = {
-      user_id: sessionUser.id,
       username: sessionUser.username,
       customer_name: customer,
       status: "open",
@@ -217,9 +210,9 @@
       .select("*")
       .single();
 
-    if (error){
+    if(error){
       console.error(error);
-      setStatus("خطأ إنشاء فاتورة (invoices table)", true);
+      setStatus("خطأ إنشاء فاتورة (app_invoices)", true);
       return;
     }
 
@@ -231,59 +224,52 @@
     };
 
     localStorage.setItem(LS_INVOICE, JSON.stringify(currentInvoice));
-
     renderLines(currentInvoice.lines);
     updateTotal();
     setStatus("تم فتح فاتورة ✅");
     setInvoiceUI();
   }
 
-  // ========= حفظ الفاتورة على السيرفر (تحديث) =========
-  async function syncInvoice(partial = {}) {
-    if (!db || !currentInvoice) return;
+  async function syncInvoice(partial = {}){
+    if(!db || !currentInvoice) return;
 
     const total = updateTotal();
-    const updatePayload = {
-      ...partial,
-      lines: currentInvoice.lines,
-      total
-    };
+    const updatePayload = { ...partial, lines: currentInvoice.lines, total };
 
     const { error } = await db
       .from(INVOICES_TABLE)
       .update(updatePayload)
       .eq("id", currentInvoice.id);
 
-    if (error){
+    if(error){
       console.error(error);
-      setStatus("تحذير: لم يتم الحفظ على السيرفر", true);
+      setStatus("تحذير: لم يتم حفظ الفاتورة على السيرفر", true);
     }
   }
 
-  // ========= إنهاء الفاتورة (إجباري قبل PDF/نسخ) =========
   async function finalizeInvoice(){
     vibrate();
-    if (!currentInvoice) return;
-    if (currentInvoice.status === "final") return;
+    if(!currentInvoice) return;
+    if(currentInvoice.status === "final") return;
 
     setStatus("إنهاء الفاتورة...");
     currentInvoice.status = "final";
 
-    await syncInvoice({ status: "final", finalized_at: new Date().toISOString() });
+    await syncInvoice({ status:"final", finalized_at: new Date().toISOString() });
 
     localStorage.setItem(LS_INVOICE, JSON.stringify(currentInvoice));
     setStatus("تم إنهاء الفاتورة ورفعها ✅");
     setInvoiceUI();
   }
 
-  // ========= سطور =========
+  // ---------- LINES ----------
   function renderLines(lines){
-    if (!lines || !lines.length){
+    if(!lines || !lines.length){
       linesBody.innerHTML = `<tr><td colspan="4" class="center muted">لا يوجد سطور بعد.</td></tr>`;
       return;
     }
     linesBody.innerHTML = "";
-    lines.forEach((l, idx) => {
+    lines.forEach((l, idx)=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${idx+1}</td>
@@ -298,36 +284,16 @@
     });
   }
 
-  function escapeHtml(s){
-    return String(s||"").replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[c]));
-  }
-
   async function addLine(){
     vibrate();
-    if (!currentInvoice){
-      setStatus("افتح فاتورة أولًا", true);
-      return;
-    }
-    if (currentInvoice.status === "final"){
-      setStatus("الفاتورة منتهية، لا يمكن إضافة سطور", true);
-      return;
-    }
+    if(!currentInvoice){ setStatus("افتح فاتورة أولًا", true); return; }
+    if(currentInvoice.status === "final"){ setStatus("الفاتورة منتهية", true); return; }
 
     const note = lineNoteEl.value.trim();
     const amount = Number(lineAmountEl.value);
-    if (!isFinite(amount)){
-      setStatus("المبلغ غير صحيح", true);
-      toastShake(lineAmountEl);
-      return;
-    }
+    if(!isFinite(amount)){ setStatus("المبلغ غير صحيح", true); return; }
 
-    currentInvoice.lines.push({
-      note,
-      amount: Math.round(amount*100)/100
-    });
-
+    currentInvoice.lines.push({ note, amount: Math.round(amount*100)/100 });
     lineNoteEl.value = "";
     lineAmountEl.value = "";
 
@@ -339,11 +305,8 @@
 
   async function clearLines(){
     vibrate();
-    if (!currentInvoice) return;
-    if (currentInvoice.status === "final"){
-      setStatus("الفاتورة منتهية، لا يمكن مسح السطور", true);
-      return;
-    }
+    if(!currentInvoice) return;
+    if(currentInvoice.status === "final"){ setStatus("الفاتورة منتهية", true); return; }
     currentInvoice.lines = [];
     renderLines(currentInvoice.lines);
     await syncInvoice();
@@ -353,17 +316,14 @@
 
   async function handleTableActions(e){
     const btn = e.target.closest("button");
-    if (!btn) return;
+    if(!btn) return;
     const act = btn.dataset.act;
     const i = Number(btn.dataset.i);
-    if (!currentInvoice || !isFinite(i)) return;
+    if(!currentInvoice || !isFinite(i)) return;
 
-    if (currentInvoice.status === "final"){
-      setStatus("الفاتورة منتهية، لا تعديل/حذف", true);
-      return;
-    }
+    if(currentInvoice.status === "final"){ setStatus("الفاتورة منتهية", true); return; }
 
-    if (act === "del"){
+    if(act === "del"){
       vibrate();
       currentInvoice.lines.splice(i,1);
       renderLines(currentInvoice.lines);
@@ -372,18 +332,16 @@
       return;
     }
 
-    if (act === "edit"){
+    if(act === "edit"){
       vibrate();
       const l = currentInvoice.lines[i];
       const newNote = prompt("تعديل البيان (اختياري):", l.note || "");
-      if (newNote === null) return;
+      if(newNote === null) return;
       const newAmountStr = prompt("تعديل المبلغ:", String(l.amount ?? 0));
-      if (newAmountStr === null) return;
+      if(newAmountStr === null) return;
       const newAmount = Number(newAmountStr);
-      if (!isFinite(newAmount)){
-        setStatus("المبلغ غير صحيح", true);
-        return;
-      }
+      if(!isFinite(newAmount)){ setStatus("المبلغ غير صحيح", true); return; }
+
       l.note = (newNote || "").trim();
       l.amount = Math.round(newAmount*100)/100;
       renderLines(currentInvoice.lines);
@@ -392,43 +350,36 @@
     }
   }
 
-  // ========= نسخ الجدول (بعد الإنهاء فقط) =========
+  // ---------- COPY TABLE ----------
   async function copyTable(){
     vibrate();
-    if (!currentInvoice || currentInvoice.status !== "final"){
+    if(!currentInvoice || currentInvoice.status !== "final"){
       setStatus("لا يمكن النسخ قبل إنهاء الفاتورة", true);
       return;
     }
-
     const rows = currentInvoice.lines.map((l,idx)=> `${idx+1}\t${l.note||""}\t${money(l.amount)}`);
-    const header = "رقم\tالبيان\tالمبلغ";
-    const text = [header, ...rows].join("\n");
-
+    const text = ["رقم\tالبيان\tالمبلغ", ...rows].join("\n");
     try{
       await navigator.clipboard.writeText(text);
       setStatus("تم نسخ الجدول ✅");
     }catch{
-      setStatus("لم ينجح النسخ (المتصفح منع)", true);
+      setStatus("فشل النسخ (المتصفح منع)", true);
     }
   }
 
-  // ========= PDF احترافي (بعد الإنهاء فقط) =========
+  // ---------- PDF ----------
   function buildPrintableHTML(){
     const user = sessionUser?.username || "—";
     const customer = currentInvoice?.customer_name || "—";
     const total = money(updateTotal());
     const now = new Date().toLocaleString("ar");
 
-    const headerText = `
+    const header = `
       <h3>فاتورة — HAYEK SPOT</h3>
       <p class="p-muted">
-        المستخدم: <b>${escapeHtml(user)}</b> &nbsp; | &nbsp;
-        الزبون: <b>${escapeHtml(customer)}</b> &nbsp; | &nbsp;
-        التاريخ: <b>${escapeHtml(now)}</b>
+        المستخدم: <b>${escapeHtml(user)}</b> | الزبون: <b>${escapeHtml(customer)}</b> | التاريخ: <b>${escapeHtml(now)}</b>
       </p>
-      <p class="p-muted">
-        ملاحظة تعريفية: هذه الفاتورة صادرة من نظام HAYEK SPOT، لأي استفسار تواصل مع الإدارة.
-      </p>
+      <p class="p-muted">ملاحظة تعريفية: هذه الفاتورة صادرة من نظام HAYEK SPOT.</p>
     `;
 
     const rows = (currentInvoice?.lines || []).map((l, idx) => `
@@ -448,25 +399,23 @@
             <th style="width:140px">المبلغ</th>
           </tr>
         </thead>
-        <tbody>
-          ${rows || `<tr><td colspan="3" class="center">لا يوجد سطور</td></tr>`}
-        </tbody>
+        <tbody>${rows || `<tr><td colspan="3" class="center">لا يوجد سطور</td></tr>`}</tbody>
       </table>
     `;
 
     const footer = `
       <div class="p-footer">
         <b>الإجمالي:</b> ${escapeHtml(total)} <br/>
-        نص تعريفي في نهاية الملف: شكرًا لتعاملكم معنا — HAYEK SPOT.
+        شكرًا لتعاملكم معنا — HAYEK SPOT.
       </div>
     `;
 
-    return `${headerText}${table}${footer}`;
+    return `${header}${table}${footer}`;
   }
 
   async function exportPDF(){
     vibrate();
-    if (!currentInvoice || currentInvoice.status !== "final"){
+    if(!currentInvoice || currentInvoice.status !== "final"){
       setStatus("لا يمكن PDF قبل إنهاء الفاتورة", true);
       return;
     }
@@ -476,13 +425,12 @@
 
     const fileName = `${safeName(sessionUser.username)}__${safeName(currentInvoice.customer_name)}.pdf`;
 
-    // إعدادات PDF احترافية
     const opt = {
-      margin:       10,
-      filename:     fileName,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      margin: 10,
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
     };
 
     try{
@@ -491,42 +439,57 @@
     }catch(e){
       console.error(e);
       setStatus("فشل تصدير PDF", true);
-    } finally {
+    }finally{
       printable.style.display = "none";
     }
   }
 
-  // ========= الحاسبة =========
-  function setCalcDisplay(v){
-    calcDisplay.textContent = v;
+  // ---------- CALC ----------
+  function setCalcDisplay(v){ calcDisplay.textContent = v; }
+
+  async function tryLogOperation(exprText, outVal){
+    // إذا جدول app_operations عنده أعمدة مختلفة، تجاهل بدون كسر الصفحة
+    try{
+      if(!db || !sessionUser) return;
+      // نفترض أعمدة عامة: username, expr, result, created_at (إن ما موجودة، يفشل بصمت)
+      await db.from(OPS_TABLE).insert({
+        username: sessionUser.username,
+        expr: exprText,
+        result: String(outVal),
+        created_at: new Date().toISOString()
+      });
+    }catch{}
   }
-  function calcPress(k){
+
+  async function calcPress(k){
     vibrate();
-    toastShake(calcDisplay);
 
     if (k === "C"){
       expr = "0";
       setCalcDisplay("0");
       return;
     }
+
     if (k === "="){
       try{
-        // تقييم بسيط
         const cleaned = expr.replace(/[^0-9+\-*/().]/g, "");
         // eslint-disable-next-line no-new-func
         const val = Function(`"use strict"; return (${cleaned || "0"});`)();
         const out = Math.round(Number(val)*100)/100;
         setCalcDisplay(String(out));
+
         opsLog.push({ expr, out, t: Date.now() });
         opsCount.textContent = String(opsLog.length);
+
+        await tryLogOperation(expr, out);
         expr = String(out);
       }catch{
         setStatus("عملية غير صحيحة بالحاسبة", true);
       }
       return;
     }
+
     if (k === "PUT"){
-      // إدخال النتيجة في مبلغ السطر
       const v = Number(calcDisplay.textContent);
       if (isFinite(v)){
         lineAmountEl.value = String(v);
@@ -535,22 +498,18 @@
       return;
     }
 
-    if (expr === "0" && /[0-9.]/.test(k)){
-      expr = k;
-    } else {
-      expr += k;
-    }
+    if (expr === "0" && /[0-9.]/.test(k)) expr = k;
+    else expr += k;
+
     setCalcDisplay(expr);
   }
 
-  // ========= أحداث =========
+  // ---------- Events ----------
   btnLogin.addEventListener("click", login);
   btnLogout.addEventListener("click", logout);
 
   btnOpenInvoice.addEventListener("click", openInvoice);
-  customerNameEl.addEventListener("keydown", (e)=>{
-    if (e.key === "Enter") openInvoice();
-  });
+  customerNameEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") openInvoice(); });
 
   btnFinalize.addEventListener("click", finalizeInvoice);
 
@@ -567,17 +526,12 @@
     calcPress(b.dataset.k);
   });
 
-  // ========= استعادة جلسة =========
+  // ---------- Restore ----------
   function restore(){
     try{
       const u = JSON.parse(localStorage.getItem(LS_USER) || "null");
-      if (u && u.id && u.username){
-        sessionUser = u;
-        setPillLogin(true);
-      } else {
-        setPillLogin(false);
-      }
-    }catch{ setPillLogin(false); }
+      if (u && u.username) sessionUser = u;
+    }catch{}
 
     try{
       const inv = JSON.parse(localStorage.getItem(LS_INVOICE) || "null");
@@ -588,10 +542,10 @@
       }
     }catch{}
 
-    setInvoiceUI();
-    setStatus("جاهز");
     setCalcDisplay("0");
     opsCount.textContent = "0";
+    setInvoiceUI();
+    setStatus("جاهز");
   }
 
   restore();
