@@ -4,21 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111315" />
-  <title>HAYEK SPOT | لوحة الأدمن</title>
+  <title>HAYEK SPOT — لوحة الأدمن</title>
 
   <style>
     :root{
       --white:#FFFFFF; --green:#19C37D; --gray:#5F6368; --dark:#2F3337; --black:#111315; --yellow:#D6A628;
-      --bg: var(--gray);
       --line: rgba(255,255,255,.18);
-      --text: var(--white);
       --muted: rgba(255,255,255,.78);
       --shadow: 0 14px 40px rgba(0,0,0,.35);
       --radius: 22px;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;display:flex;justify-content:center;padding:16px}
-    .wrap{width:min(720px,100%);display:grid;gap:12px}
+    body{
+      margin:0;background:var(--gray);color:var(--white);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
+      display:flex;justify-content:center;padding:16px
+    }
+    .wrap{width:min(980px,100%);display:grid;gap:12px}
+
     .top{
       background: linear-gradient(180deg, rgba(17,19,21,.95), rgba(47,51,55,.95));
       border:1px solid var(--line);
@@ -26,52 +29,126 @@
       box-shadow: var(--shadow);
       padding:14px 14px;
       display:flex; align-items:center; justify-content:space-between;
-      gap:12px;
+      gap:10px;
     }
     .brand{display:grid;gap:4px}
-    .brand b{font-size:16px}
+    .brand b{font-size:16px;letter-spacing:.4px}
     .brand span{font-size:12px;color:var(--muted)}
-    .pill{font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;background:var(--yellow);color:var(--black)}
+    .pill{
+      font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;
+      background: var(--yellow); color: var(--black);
+    }
 
     .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
       border:1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
       overflow:hidden;
     }
-    .p{padding:14px}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .field{display:grid;gap:6px}
-    .field label{font-size:12px;color:var(--muted);font-weight:1000}
-    input{
-      width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);
-      background: rgba(17,19,21,.45); color: var(--text); outline:none; font-size:14px
+
+    .pad{padding:14px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr .7fr;
+      gap:10px;
     }
-    input:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .field{display:grid;gap:6px}
+    label{font-size:12px;color:var(--muted);font-weight:1000}
+    input, select{
+      width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);
+      background: rgba(17,19,21,.45); color: var(--white); outline:none; font-size:14px
+    }
+    input:focus,select:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
     .btn{
       user-select:none;border:1px solid var(--line);background: rgba(255,255,255,.10);
-      color: var(--text);padding:12px 12px;border-radius:16px;font-weight:1000;font-size:14px;
+      color: var(--white);padding:12px 12px;border-radius:16px;font-weight:1000;font-size:14px;
       cursor:pointer;touch-action:manipulation
     }
     .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
     .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
     .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .note{font-size:12px;color:var(--muted);line-height:1.7}
-    .mono{direction:ltr;text-align:left;font-weight:1000}
+    .btn.gray{background: rgba(255,255,255,.08)}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 
-    table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
-    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right;vertical-align:middle}
-    th{color:var(--muted);font-weight:1000}
-    tr:last-child td{border-bottom:none}
-    .tag{
-      display:inline-block;padding:6px 10px;border-radius:999px;font-weight:1000;font-size:12px;
-      border:1px solid rgba(255,255,255,.18);background: rgba(255,255,255,.08)
+    table{
+      width:100%;
+      border-collapse:collapse;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background: rgba(17,19,21,.25)
     }
-    .tag.ok{background: rgba(25,195,125,.20); border-color: rgba(25,195,125,.45)}
-    .tag.bad{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right}
+    th{color:var(--muted);font-weight:1000}
+    td.num{text-align:left;direction:ltr;font-weight:1000}
+    tr:last-child td{border-bottom:none}
+
+    .invoiceHead{
+      display:grid;
+      gap:10px;
+      padding:14px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(900px 260px at 50% 0%, rgba(214,166,40,.22), rgba(0,0,0,0) 70%),
+        radial-gradient(700px 240px at 20% 40%, rgba(25,195,125,.18), rgba(0,0,0,0) 65%),
+        rgba(17,19,21,.18);
+    }
+    .heroBox{
+      text-align:center;
+      padding:14px;
+      border-radius:20px;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.88));
+      color:#111315;
+      border: 1px solid rgba(0,0,0,.10);
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+    }
+    .heroBox .t1{font-size:26px;font-weight:1000}
+    .heroBox .t2{margin-top:6px;font-size:14px;font-weight:1000;letter-spacing:2px;color:#0f7d4f}
+    .meta{
+      display:flex;gap:10px;flex-wrap:wrap;justify-content:center
+    }
+    .meta .chip{
+      padding:8px 10px;border-radius:999px;
+      background: rgba(17,19,21,.08);
+      border:1px solid rgba(17,19,21,.10);
+      font-weight:1000;font-size:12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.10);
+    }
+
+    .total{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 12px;
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius:16px;
+      background: rgba(255,255,255,.06);
+      font-weight:1000
+    }
+    .total span:last-child{direction:ltr}
+
+    .note{
+      font-size:12px;color:var(--muted);line-height:1.7
+    }
+
+    /* ✅ Print (PDF) */
+    @media print{
+      body{background:#fff;color:#000;padding:0;font-family:"Amiri",serif}
+      .top,.controls,.noPrint{display:none !important}
+      .wrap{width:100%}
+      .card{box-shadow:none;border:none}
+      .invoiceHead{background:#fff !important}
+      .heroBox{box-shadow:none !important;border:2px solid #000 !important}
+      table{border:1px solid #000 !important}
+      th{background:#f0f0f0 !important;color:#000 !important;border:1px solid #000 !important}
+      td{border:1px solid #999 !important;color:#000}
+      tr:nth-child(even){background:#fafafa}
+      .total{border:2px dashed #000 !important;background:#fff !important}
+    }
   </style>
 </head>
 
@@ -80,405 +157,96 @@
     <div class="top">
       <div class="brand">
         <b>HAYEK SPOT — لوحة الأدمن</b>
-        <span>إضافة مستخدمين + حظر/فك حظر + حذف + بحث</span>
+        <span>فاتورة العميل + تصدير PDF + حذف بيانات لتوفير المساحة</span>
       </div>
-      <div class="pill" id="pill">مقفل</div>
+      <div class="pill" id="pill">مفتوح</div>
     </div>
 
-    <!-- Admin login (من نفس جدول app_users) -->
-    <div class="card" id="loginCard">
-      <div class="p" style="display:grid;gap:10px">
-        <div class="row2">
+    <!-- Controls -->
+    <div class="card controls">
+      <div class="pad">
+        <div class="grid">
           <div class="field">
-            <label>اسم الأدمن</label>
-            <input id="adminUser" placeholder="مثال: admin" />
+            <label>بحث عن اسم المستخدم</label>
+            <input id="searchUser" placeholder="اكتب جزء من الاسم..." />
           </div>
-          <div class="field">
-            <label>كلمة السر</label>
-            <input id="adminPass" type="password" placeholder="••••" />
-          </div>
-        </div>
 
-        <div class="row2">
-          <button class="btn green" id="adminLoginBtn">دخول الأدمن</button>
-          <button class="btn yellow" id="goClientBtn">صفحة المستخدم</button>
-        </div>
-
-        <div class="note">
-          ✅ لازم يكون لديك صف بالأدمن في جدول <span class="mono">app_users</span> وتكون قيمة <span class="mono">is_admin = true</span>.
-        </div>
-      </div>
-    </div>
-
-    <!-- Panel -->
-    <div class="card" id="panelCard" style="display:none">
-      <div class="p" style="display:grid;gap:12px">
-        <div class="row3">
           <div class="field">
-            <label>اسم المستخدم</label>
-            <input id="newUser" placeholder="مثال: محمود" />
+            <label>اختر المستخدم (من النتائج)</label>
+            <select id="userSelect">
+              <option value="">— اختر المستخدم —</option>
+            </select>
           </div>
-          <div class="field">
-            <label>كلمة السر</label>
-            <input id="newPass" placeholder="مثال: 123456" />
-          </div>
-          <div class="field">
-            <label>توليد كلمة سر</label>
-            <button class="btn yellow" id="genBtn" type="button">توليد</button>
-          </div>
-        </div>
 
-        <div class="row3">
-          <button class="btn green" id="addBtn">حفظ المستخدم</button>
-          <button class="btn" id="refreshBtn">تحديث القائمة</button>
-          <button class="btn.red btn" id="logoutBtn">خروج</button>
-        </div>
-
-        <div class="row2">
           <div class="field">
-            <label>بحث بالاسم (اختياري)</label>
-            <input id="searchBox" placeholder="اكتب جزء من الاسم..." />
-          </div>
-          <div class="field">
-            <label>عرض</label>
-            <div class="row2">
-              <button class="btn" id="prevBtn">السابق</button>
-              <button class="btn" id="nextBtn">التالي</button>
+            <label>عرض (Paging)</label>
+            <div class="row3">
+              <button class="btn gray" id="prevUsers">السابق</button>
+              <button class="btn gray" id="nextUsers">التالي</button>
+              <button class="btn yellow" id="refreshUsers">تحديث</button>
             </div>
           </div>
         </div>
 
-        <div class="note">
-          ✅ يدعم 1000+ مستخدم (Paging).<br>
-          ✅ زر الحظر يمنع الدخول فورًا.
+        <div class="row2" style="margin-top:10px">
+          <button class="btn green" id="viewInvoice">عرض الفاتورة</button>
+          <button class="btn" id="printInvoice">تصدير PDF</button>
+        </div>
+
+        <div class="row2" style="margin-top:10px">
+          <input id="confirmName" placeholder="للحذف: اكتب اسم المستخدم حرفيًا هنا للتأكيد" />
+          <button class="btn red" id="deleteUserOps">حذف بيانات هذا المستخدم</button>
+        </div>
+
+        <div class="note" style="margin-top:8px">
+          ✅ العرض: “فاتورة المستخدم” مثل PDF <br>
+          ✅ الحذف: يحذف عمليات هذا المستخدم من جدول <b>app_operations</b> فقط لتوفير المساحة
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice -->
+    <div class="card" id="invoiceCard">
+      <div class="invoiceHead">
+        <div class="heroBox">
+          <div class="t1">شركة الحايك</div>
+          <div class="t2">HAYEK SPOT</div>
+          <div class="meta" style="margin-top:10px">
+            <div class="chip" id="chipUser">العميل: —</div>
+            <div class="chip" id="chipCount">عدد العمليات: 0</div>
+            <div class="chip" id="chipFrom">من: —</div>
+            <div class="chip" id="chipTo">إلى: —</div>
+          </div>
         </div>
       </div>
 
-      <div class="p" style="border-top:1px solid rgba(255,255,255,.12)">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
-          <b>قائمة المستخدمين</b>
-          <button class="btn" id="copyBtn">نسخ القائمة</button>
-        </div>
-
+      <div class="pad">
         <table>
           <thead>
             <tr>
-              <th>الاسم</th>
-              <th class="mono">كلمة السر</th>
-              <th>Admin</th>
-              <th>الحالة</th>
-              <th>إجراءات</th>
+              <th>الوقت</th>
+              <th>البيان</th>
+              <th class="num">العملية</th>
+              <th class="num">النتيجة</th>
             </tr>
           </thead>
-          <tbody id="tbody"></tbody>
+          <tbody id="opsBody"></tbody>
         </table>
+
+        <div style="margin-top:10px" class="total">
+          <span>إجمالي الفاتورة:</span>
+          <span id="sum">0</span>
+        </div>
+
+        <div class="noPrint" style="margin-top:12px">
+          <div class="note">
+            إذا بدك زر “حذف + أرشفة PDF تلقائيًا” قولي وبعملها.
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-<script type="module">
-  // =========================
-  // ✅ Supabase (مفاتيحك داخل الكود)
-  // =========================
-  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-  const REST = `${SUPABASE_URL}/rest/v1`;
-
-  // =========================
-  // Helpers
-  // =========================
-  const $ = (id) => document.getElementById(id);
-  const VIBRATE_MS = 12;
-  const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
-
-  const toast = (msg) => {
-    const d = document.createElement("div");
-    d.textContent = msg;
-    Object.assign(d.style, {
-      position:"fixed", bottom:"18px", left:"50%",
-      transform:"translateX(-50%)",
-      background:"rgba(17,19,21,.85)",
-      color:"#fff", padding:"10px 14px",
-      borderRadius:"14px", fontWeight:"1000",
-      zIndex:9999, backdropFilter:"blur(8px)",
-      border:"1px solid rgba(255,255,255,.18)"
-    });
-    document.body.appendChild(d);
-    setTimeout(()=>d.remove(), 1400);
-  };
-
-  const apiFetch = async (path, options = {}) => {
-    const res = await fetch(`${REST}${path}`, {
-      ...options,
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(options.headers || {})
-      }
-    });
-    if (!res.ok) {
-      const t = await res.text().catch(()=> "");
-      throw new Error(`API ${res.status}: ${t || res.statusText}`);
-    }
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  };
-
-  // =========================
-  // Admin session
-  // =========================
-  const K_ADMIN = "hs_admin_session_v2";
-  const saveAdmin = (obj) => localStorage.setItem(K_ADMIN, JSON.stringify(obj));
-  const loadAdmin = () => { try { return JSON.parse(localStorage.getItem(K_ADMIN) || "null"); } catch { return null; } };
-  const clearAdmin = () => localStorage.removeItem(K_ADMIN);
-
-  const pill = $("pill");
-  const loginCard = $("loginCard");
-  const panelCard = $("panelCard");
-
-  const setMode = (adminOn) => {
-    pill.textContent = adminOn ? "مفتوح" : "مقفل";
-    pill.style.background = adminOn ? "var(--green)" : "var(--yellow)";
-    pill.style.color = "var(--black)";
-    loginCard.style.display = adminOn ? "none" : "block";
-    panelCard.style.display = adminOn ? "block" : "none";
-  };
-
-  // =========================
-  // Auth: admin from app_users where is_admin=true
-  // =========================
-  const adminLogin = async (u, p) => {
-    const user = (u || "").trim();
-    const pass = (p || "").trim();
-    if (!user || !pass) { toast("اكتب اسم الأدمن وكلمة السر"); return false; }
-
-    const q =
-      `?select=id,username,is_admin,blocked` +
-      `&username=eq.${encodeURIComponent(user)}` +
-      `&pass=eq.${encodeURIComponent(pass)}` +
-      `&limit=1`;
-
-    const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
-    const admin = Array.isArray(rows) ? rows[0] : null;
-
-    if (!admin) { toast("بيانات الأدمن غير صحيحة"); return false; }
-    if (admin.blocked) { toast("الأدمن محظور ❌"); return false; }
-    if (!admin.is_admin) { toast("هذا المستخدم ليس أدمن"); return false; }
-
-    saveAdmin({ id: admin.id, username: admin.username, ts: Date.now() });
-    setMode(true);
-    toast("تم الدخول ✅");
-    return true;
-  };
-
-  const adminLogout = () => {
-    vibe();
-    clearAdmin();
-    setMode(false);
-    toast("تم الخروج");
-  };
-
-  // =========================
-  // Users CRUD
-  // =========================
-  let page = 0;
-  const PAGE_SIZE = 30;
-
-  const genPass = () => String(Math.floor(100000 + Math.random()*900000)); // 6 digits
-
-  const renderTable = (rows) => {
-    const tbody = $("tbody");
-    tbody.innerHTML = "";
-
-    for (const r of rows) {
-      const tr = document.createElement("tr");
-
-      const td1 = document.createElement("td");
-      td1.textContent = r.username;
-
-      const td2 = document.createElement("td");
-      td2.className = "mono";
-      td2.textContent = r.pass;
-
-      const td3 = document.createElement("td");
-      td3.innerHTML = r.is_admin ? `<span class="tag ok">YES</span>` : `<span class="tag">NO</span>`;
-
-      const td4 = document.createElement("td");
-      td4.innerHTML = r.blocked ? `<span class="tag bad">محظور</span>` : `<span class="tag ok">مفعل</span>`;
-
-      const td5 = document.createElement("td");
-      const box = document.createElement("div");
-      box.className = "actions";
-
-      const toggle = document.createElement("button");
-      toggle.className = r.blocked ? "btn green" : "btn yellow";
-      toggle.textContent = r.blocked ? "فك الحظر" : "حظر";
-      toggle.onclick = async () => {
-        vibe();
-        try{
-          await apiFetch(`/app_users?id=eq.${r.id}`, {
-            method:"PATCH",
-            headers: { "Prefer": "return=minimal" },
-            body: JSON.stringify({ blocked: !r.blocked })
-          });
-          toast(r.blocked ? "تم فك الحظر" : "تم الحظر");
-          await fetchUsers();
-        }catch(e){
-          console.error(e);
-          toast("فشل التعديل");
-        }
-      };
-
-      const del = document.createElement("button");
-      del.className = "btn red";
-      del.textContent = "حذف";
-      del.onclick = async () => {
-        vibe();
-        try{
-          await apiFetch(`/app_users?id=eq.${r.id}`, { method:"DELETE" });
-          toast("تم الحذف");
-          await fetchUsers();
-        }catch(e){
-          console.error(e);
-          toast("فشل الحذف");
-        }
-      };
-
-      box.append(toggle, del);
-      td5.appendChild(box);
-
-      tr.append(td1, td2, td3, td4, td5);
-      tbody.appendChild(tr);
-    }
-  };
-
-  const fetchUsers = async () => {
-    const search = ($("searchBox").value || "").trim();
-    const offset = page * PAGE_SIZE;
-
-    // filter username ilike
-    let filter = "";
-    if (search) filter = `&username=ilike.*${encodeURIComponent(search)}*`;
-
-    const q =
-      `?select=id,username,pass,is_admin,blocked,created_at` +
-      `&order=id.desc` +
-      `&limit=${PAGE_SIZE}&offset=${offset}` +
-      filter;
-
-    const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
-    renderTable(Array.isArray(rows) ? rows : []);
-  };
-
-  const upsertUser = async (username, pass) => {
-    const u = (username || "").trim();
-    const p = (pass || "").trim();
-    if (!u) { toast("اكتب اسم المستخدم"); return; }
-    if (!p) { toast("اكتب كلمة السر أو اضغط توليد"); return; }
-
-    // إذا الاسم موجود -> تحديث pass + فك الحظر
-    const existing = await apiFetch(`/app_users?select=id&username=eq.${encodeURIComponent(u)}&limit=1`, { method:"GET" });
-    if (Array.isArray(existing) && existing[0]?.id) {
-      const id = existing[0].id;
-      await apiFetch(`/app_users?id=eq.${id}`, {
-        method:"PATCH",
-        headers:{ "Prefer":"return=minimal" },
-        body: JSON.stringify({ pass: p, blocked: false })
-      });
-      toast("تم تحديث المستخدم ✅");
-      return;
-    }
-
-    // insert جديد
-    await apiFetch(`/app_users`, {
-      method:"POST",
-      headers:{ "Prefer":"return=minimal" },
-      body: JSON.stringify({
-        username: u,
-        pass: p,
-        is_admin: false,
-        blocked: false
-      })
-    });
-    toast("تمت الإضافة ✅");
-  };
-
-  const copyList = async () => {
-    try{
-      // نسخ أول 300 نتيجة كحد (حتى ما يتقل المتصفح)
-      const rows = await apiFetch(`/app_users?select=username,pass,is_admin,blocked&order=id.desc&limit=300`, { method:"GET" });
-      const text = (rows || []).map(r => `${r.username}\t${r.pass}\t${r.is_admin ? "admin" : "user"}\t${r.blocked ? "blocked" : "active"}`).join("\n") || "لا يوجد";
-      await navigator.clipboard.writeText(text);
-      toast("تم النسخ ✅");
-    }catch(e){
-      console.error(e);
-      toast("فشل النسخ");
-    }
-  };
-
-  // =========================
-  // Events
-  // =========================
-  $("adminLoginBtn").addEventListener("click", async () => {
-    vibe();
-    try{
-      const ok = await adminLogin($("adminUser").value, $("adminPass").value);
-      if (ok) await fetchUsers();
-    }catch(e){
-      console.error(e);
-      toast("خطأ اتصال بقاعدة البيانات");
-    }
-  }, { passive:true });
-
-  $("goClientBtn").addEventListener("click", () => { vibe(); location.href = "./index.html"; }, { passive:true });
-
-  $("logoutBtn").addEventListener("click", () => adminLogout(), { passive:true });
-
-  $("genBtn").addEventListener("click", () => { vibe(); $("newPass").value = genPass(); }, { passive:true });
-
-  $("addBtn").addEventListener("click", async () => {
-    vibe();
-    try{
-      await upsertUser($("newUser").value, $("newPass").value);
-      $("newUser").value = "";
-      $("newPass").value = "";
-      page = 0;
-      await fetchUsers();
-    }catch(e){
-      console.error(e);
-      toast("فشل الحفظ");
-    }
-  }, { passive:true });
-
-  $("refreshBtn").addEventListener("click", async () => { vibe(); await fetchUsers(); }, { passive:true });
-
-  $("searchBox").addEventListener("input", async () => {
-    page = 0;
-    try{ await fetchUsers(); }catch(e){ console.error(e); }
-  });
-
-  $("prevBtn").addEventListener("click", async () => {
-    vibe();
-    page = Math.max(0, page - 1);
-    await fetchUsers();
-  });
-
-  $("nextBtn").addEventListener("click", async () => {
-    vibe();
-    page = page + 1;
-    await fetchUsers();
-  });
-
-  $("copyBtn").addEventListener("click", async () => { vibe(); await copyList(); }, { passive:true });
-
-  // Boot
-  const sess = loadAdmin();
-  setMode(!!sess);
-  if (sess) {
-    fetchUsers().catch(e => { console.error(e); toast("خطأ تحميل القائمة"); });
-  }
-</script>
+  <script src="./admin.js"></script>
 </body>
 </html>
