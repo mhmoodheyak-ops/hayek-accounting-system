@@ -127,6 +127,7 @@
     .modal .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
     @media print{
+      /* المستخدم لا يطبع من هنا — الطباعة من invoice.html */
       body{background:#fff;color:#000}
     }
   </style>
@@ -157,720 +158,24 @@
 
       <div class="row2">
         <button class="btn green" id="loginBtn">دخول</button>
-
-        <!-- ✅ زر الأدمن صار “دخول أدمن” (يتحقق من الصلاحيات قبل فتح الأدمن) -->
-        <button class="btn yellow" id="adminBtn">دخول أدمن</button>
+        <button class="btn yellow" id="adminBtn">الأدمن</button>
       </div>
 
       <div class="note" id="loginNote">
         ✅ الدخول يعتمد على قاعدة البيانات ويعمل من أي جهاز.<br>
-        ✅ قبل الحساب: لازم إدخال اسم العميل لفتح فاتورة.<br>
-        ✅ في حال أي مشكلة: يتم المعالجة.
+        ✅ إذا كان المستخدم محظور، لن يتمكن من الدخول.<br>
+        ✅ في حال وجود مشكلة بالنظام سيتم المعالجة.<br>
+        ✅ قبل الحساب: لازم إدخال اسم العميل لفتح فاتورة.
       </div>
     </div>
-
-    <!-- APP -->
-    <div class="card app" id="appCard">
-      <div class="screen">
-        <div class="display">
-          <div class="expr" id="expr">0</div>
-          <div class="result" id="res">0</div>
-        </div>
-
-        <div class="labelWrap">
-          <div class="t">البيان (اختياري) — يضاف بجانب العملية</div>
-          <input id="labelInput" placeholder="مثال: دفعة زبون / مصروف / فاتورة..." />
-        </div>
-
-        <div style="margin-top:10px" class="total">
-          <span>الفاتورة الحالية:</span>
-          <span id="invMeta" style="direction:ltr">—</span>
-        </div>
-      </div>
-
-      <div class="keys" id="keys">
-        <button class="key warn" data-k="C">C</button>
-        <button class="key warn" data-k="CE">CE</button>
-        <button class="key warn" data-k="BK">⌫</button>
-        <button class="key op" data-k="/">÷</button>
-
-        <button class="key" data-k="7">7</button>
-        <button class="key" data-k="8">8</button>
-        <button class="key" data-k="9">9</button>
-        <button class="key op" data-k="*">×</button>
-
-        <button class="key" data-k="4">4</button>
-        <button class="key" data-k="5">5</button>
-        <button class="key" data-k="6">6</button>
-        <button class="key op" data-k="-">−</button>
-
-        <button class="key" data-k="1">1</button>
-        <button class="key" data-k="2">2</button>
-        <button class="key" data-k="3">3</button>
-        <button class="key op" data-k="+">+</button>
-
-        <button class="key" data-k="0">0</button>
-        <button class="key" data-k=".">.</button>
-
-        <!-- ✅ (=) يحفظ سطر مباشرة -->
-        <button class="key eq" data-k="=" style="grid-column: span 2; font-size:20px;">= حفظ</button>
-      </div>
-
-      <div class="footer">
-        <button class="bigline" id="newlineBtn">طف السطر (تسجيل العملية)</button>
-
-        <div class="row2">
-          <button class="btn" id="copyTableBtn">نسخ سجل كجدول</button>
-          <button class="btn" id="copyResBtn">نسخ النتيجة</button>
-        </div>
-
-        <div class="row2">
-          <button class="btn green" id="doneBtn">تم (إغلاق الفاتورة)</button>
-          <button class="btn yellow" id="printBtn">طباعة / PDF</button>
-        </div>
-
-        <div class="row2">
-          <button class="btn red" id="clearLocalBtn">مسح العرض (محلي)</button>
-          <button class="btn" id="newInvoiceBtn">فاتورة جديدة</button>
-        </div>
-      </div>
-
-      <div class="log">
-        <h3 style="margin:0;font-size:14px">تفاصيل الفاتورة</h3>
-
-        <table>
-          <thead>
-            <tr>
-              <th>الوقت</th>
-              <th>البيان</th>
-              <th class="num">العملية</th>
-              <th class="num">النتيجة</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-
-        <div class="total">
-          <span>إجمالي الكشف:</span>
-          <span id="grandTotal">0</span>
-        </div>
-
-        <div class="note" id="statusNote"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ✅ Modal: اسم العميل إلزامي -->
-  <div class="modalBack" id="modalBack">
-    <div class="modal">
-      <h3>ادخل اسم العميل (إلزامي)</h3>
-      <div class="hint">بعد إدخال الاسم سيتم فتح فاتورة تلقائياً، وبعدها تقدر تبدأ الحساب.</div>
-      <input id="customerName" placeholder="مثال: أبو أحمد" />
-      <div class="btnRow">
-        <button class="btn red" id="logoutBtn">إلغاء / خروج</button>
-        <button class="btn green" id="startInvoiceBtn">بدء الفاتورة</button>
-      </div>
-    </div>
-  </div>
-
-<script>
-  // =========================
-  // ✅ Supabase REST
-  // =========================
-  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-  const REST = `${SUPABASE_URL}/rest/v1`;
-
-  const $ = (id) => document.getElementById(id);
-  const VIBRATE_MS = 12;
-  const vibe = () => { try { navigator.vibrate?.(VIBRATE_MS); } catch(_){} };
-
-  const toast = (msg) => {
-    const d = document.createElement("div");
-    d.textContent = msg;
-    Object.assign(d.style, {
-      position:"fixed", bottom:"18px", left:"50%",
-      transform:"translateX(-50%)",
-      background:"rgba(17,19,21,.88)",
-      color:"#fff", padding:"10px 14px",
-      borderRadius:"14px", fontWeight:"1000",
-      zIndex:99999, backdropFilter:"blur(8px)",
-      border:"1px solid rgba(255,255,255,.18)"
-    });
-    document.body.appendChild(d);
-    setTimeout(()=>d.remove(), 1700);
-  };
-
-  const genericErr = () => toast("يوجد خطاء ب النظام جاري المعالجة");
-
-  const apiFetch = async (path, options = {}) => {
-    const res = await fetch(`${REST}${path}`, {
-      ...options,
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(options.headers || {})
-      }
-    });
-    if (!res.ok) {
-      const t = await res.text().catch(()=> "");
-      throw new Error(`API ${res.status}: ${t || res.statusText}`);
-    }
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  };
-
-  // =========================
-  // ✅ Device ID
-  // =========================
-  const K_DEVICE = "hs_device_id_v1";
-  function getDeviceId(){
-    let id = localStorage.getItem(K_DEVICE);
-    if (id) return id;
-    const rnd = crypto?.getRandomValues ? crypto.getRandomValues(new Uint32Array(4)) : [Date.now(), Math.random()*1e9, Math.random()*1e9, Math.random()*1e9];
-    id = `dev_${Array.from(rnd).map(n=>Number(n).toString(16)).join("")}_${Date.now().toString(16)}`;
-    localStorage.setItem(K_DEVICE, id);
-    return id;
-  }
-
-  // =========================
-  // ✅ Session + Invoice state
-  // =========================
-  const K_SESSION = "hs_session_v4";
-  const K_INV = "hs_current_invoice_v1"; // {invoice_id, customer_name, status}
-
-  const saveSession = (obj) => localStorage.setItem(K_SESSION, JSON.stringify(obj));
-  const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
-  const clearSession = () => { try { localStorage.removeItem(K_SESSION); } catch(_){} };
-
-  const saveInv = (obj)=> localStorage.setItem(K_INV, JSON.stringify(obj));
-  const loadInv = ()=> { try { return JSON.parse(localStorage.getItem(K_INV) || "null"); } catch { return null; } };
-  const clearInv = ()=> { try { localStorage.removeItem(K_INV); } catch(_){} };
-
-  const statusPill = $("statusPill");
-  const loginCard  = $("loginCard");
-  const appCard    = $("appCard");
-
-  const usernameEl = $("username");
-  const passwordEl = $("password");
-
-  const modalBack = $("modalBack");
-  const customerNameEl = $("customerName");
-
-  const labelInput = $("labelInput");
-  const exprEl = $("expr");
-  const resEl  = $("res");
-  const tbody  = $("tbody");
-  const grandTotalEl = $("grandTotal");
-  const invMetaEl = $("invMeta");
-  const statusNote = $("statusNote");
-
-  const setLocked = (locked) => {
-    statusPill.textContent = locked ? "مقفل" : "مفتوح";
-    statusPill.style.background = locked ? "var(--yellow)" : "var(--green)";
-    statusPill.style.color = "#111315";
-    loginCard.style.display = locked ? "grid" : "none";
-    appCard.style.display = locked ? "none" : "block";
-  };
-
-  function showCustomerModal(show){
-    modalBack.style.display = show ? "flex" : "none";
-  }
-
-  function forceLogout(msg){
-    clearSession();
-    clearInv();
-    setLocked(true);
-    showCustomerModal(false);
-    if (msg) toast(msg);
-  }
-
-  // =========================
-  // ✅ Auth + Device bind
-  // =========================
-  const loginUser = async (username, pass) => {
-    const u = (username || "").trim();
-    const p = (pass || "").trim();
-    if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return false; }
-
-    const deviceId = getDeviceId();
-
-    const q =
-      `?select=id,username,pass,is_admin,blocked,device_id` +
-      `&username=eq.${encodeURIComponent(u)}` +
-      `&pass=eq.${encodeURIComponent(p)}` +
-      `&limit=1`;
-
-    const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
+@@ -406,7 +406,9 @@
     const user = Array.isArray(rows) ? rows[0] : null;
 
     if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return false; }
+    if (user.blocked) { toast("هذا المستخدم محظور ❌"); return false; }
 
-    // ✅ لا نظهر كلمة "محظور"
-    if (user.blocked) { genericErr(); return false; }
+    // ✅ التعديل المطلوب: بدل "هذا المستخدم محظور"
+    if (user.blocked) { toast("يوجد خطاء ب النظام جاري المعالجة"); return false; }
 
     if (!user.device_id){
       await apiFetch(`/app_users?id=eq.${user.id}`, {
-        method:"PATCH",
-        headers:{ "Prefer":"return=minimal" },
-        body: JSON.stringify({ device_id: deviceId, last_seen: new Date().toISOString() })
-      });
-    } else if (user.device_id !== deviceId){
-      toast("هذا الحساب مرتبط بجهاز آخر ❌");
-      return false;
-    } else {
-      try{
-        await apiFetch(`/app_users?id=eq.${user.id}`, {
-          method:"PATCH",
-          headers:{ "Prefer":"return=minimal" },
-          body: JSON.stringify({ last_seen: new Date().toISOString() })
-        });
-      }catch(_){}
-    }
-
-    saveSession({ id: user.id, username: user.username, is_admin: !!user.is_admin, device_id: deviceId, ts: Date.now() });
-    return true;
-  };
-
-  // =========================
-  // ✅ دخول الأدمن (لا يفتح الأدمن إلا إذا الحساب أدمن فعلاً)
-  // =========================
-  async function loginAdminAndGo(){
-    vibe();
-    const u = (usernameEl.value || "").trim();
-    const p = (passwordEl.value || "").trim();
-    if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return; }
-
-    try{
-      const deviceId = getDeviceId();
-
-      const q =
-        `?select=id,username,pass,is_admin,blocked,device_id` +
-        `&username=eq.${encodeURIComponent(u)}` +
-        `&pass=eq.${encodeURIComponent(p)}` +
-        `&limit=1`;
-
-      const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
-      const user = Array.isArray(rows) ? rows[0] : null;
-
-      // أي حالة غير أدمن -> لا نفتح الأدمن
-      if (!user) return toast("غير مصرح");
-      if (user.blocked) return genericErr();
-      if (!user.is_admin) return toast("غير مصرح");
-
-      // device binding
-      if (!user.device_id){
-        await apiFetch(`/app_users?id=eq.${user.id}`, {
-          method:"PATCH",
-          headers:{ "Prefer":"return=minimal" },
-          body: JSON.stringify({ device_id: deviceId, last_seen: new Date().toISOString() })
-        });
-      } else if (user.device_id !== deviceId){
-        return genericErr();
-      }
-
-      // حفظ جلسة أدمن ثم فتح الأدمن
-      saveSession({ id: user.id, username: user.username, is_admin: true, device_id: deviceId, ts: Date.now() });
-      location.href = "./admin.html?v=999";
-    }catch(e){
-      console.error(e);
-      genericErr();
-    }
-  }
-
-  // =========================
-  // ✅ Invoice create/close
-  // =========================
-  async function createInvoiceForCustomer(customerName){
-    const sess = loadSession();
-    if (!sess?.username) throw new Error("No session");
-
-    const data = await apiFetch(`/rpc/create_invoice`, {
-      method:"POST",
-      body: JSON.stringify({
-        p_username: sess.username,
-        p_device_id: getDeviceId()
-      })
-    });
-
-    const invoiceId = (typeof data === "string") ? data : (data?.id || data);
-    if (!invoiceId) throw new Error("create_invoice failed");
-
-    await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(invoiceId)}`, {
-      method:"PATCH",
-      headers:{ "Prefer":"return=minimal" },
-      body: JSON.stringify({
-        customer_name: customerName,
-        status: "open"
-      })
-    });
-
-    saveInv({ invoice_id: invoiceId, customer_name: customerName, status:"open" });
-    invMetaEl.textContent = invoiceId;
-    statusNote.textContent = `فاتورة مفتوحة باسم: ${customerName}`;
-    toast("تم فتح فاتورة ✅");
-    return invoiceId;
-  }
-
-  async function closeInvoice(){
-    const sess = loadSession();
-    const inv = loadInv();
-    if (!sess?.id || !inv?.invoice_id) { toast("لا توجد فاتورة"); return; }
-    if ((inv.status || "open") !== "open") { toast("الفاتورة مغلقة أصلاً"); return; }
-
-    if (!logRows.length){
-      toast("لا يمكن إغلاق فاتورة فارغة");
-      return;
-    }
-
-    const total = computeTotal();
-    await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(inv.invoice_id)}`, {
-      method:"PATCH",
-      headers:{ "Prefer":"return=minimal" },
-      body: JSON.stringify({
-        status: "closed",
-        closed_at: new Date().toISOString(),
-        total: total
-      })
-    });
-
-    saveInv({ ...inv, status:"closed" });
-    toast("تم إغلاق الفاتورة ✅");
-    statusNote.textContent = `فاتورة مغلقة باسم: ${inv.customer_name}`;
-    render();
-  }
-
-  function openPrint(){
-    const inv = loadInv();
-    if (!inv?.invoice_id){ toast("افتح فاتورة أولاً"); return; }
-    if ((inv.status || "open") !== "closed"){
-      toast("لازم تضغط (تم) لإغلاق الفاتورة قبل الطباعة");
-      return;
-    }
-    const url = `./invoice.html?invoice_id=${encodeURIComponent(inv.invoice_id)}&print=1`;
-    window.open(url, "_blank");
-  }
-
-  // =========================
-  // ✅ Operations (per invoice)
-  // =========================
-  let expr = "";
-  let lastResult = 0;
-  let logRows = []; // from DB
-
-  function formatNumber(n){
-    const x = Number(n);
-    if (!Number.isFinite(x)) return "0";
-    const s = x.toString();
-    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
-  }
-  function safeEval(expression){
-    if (!/^[0-9+\-*/().\s]+$/.test(expression)) return null;
-    try{
-      const fn = Function(`"use strict"; return (${expression});`);
-      const val = fn();
-      return Number.isFinite(val) ? val : null;
-    }catch{ return null; }
-  }
-
-  function computeTotal(){
-    return logRows.reduce((acc,r)=>{
-      const v = Number(r.result);
-      return Number.isFinite(v) ? acc+v : acc;
-    }, 0);
-  }
-
-  function fmtTime(iso){
-    try{
-      const d = new Date(iso);
-      return d.toLocaleTimeString("ar", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-    }catch{ return ""; }
-  }
-
-  function render(){
-    exprEl.textContent = expr.trim() ? expr : "0";
-    const calc = safeEval(expr);
-    resEl.textContent = calc === null ? formatNumber(lastResult) : formatNumber(calc);
-
-    const inv = loadInv();
-    invMetaEl.textContent = inv?.invoice_id ? inv.invoice_id : "—";
-
-    const tb = tbody;
-    tb.innerHTML = "";
-
-    logRows.forEach(r=>{
-      const tr = document.createElement("tr");
-
-      const tdT = document.createElement("td");
-      tdT.textContent = fmtTime(r.created_at);
-
-      const tdL = document.createElement("td");
-      tdL.textContent = r.label || "عملية";
-
-      const tdO = document.createElement("td");
-      tdO.className = "num";
-      tdO.textContent = r.operation || "";
-
-      const tdR = document.createElement("td");
-      tdR.className = "num";
-      tdR.textContent = r.result ?? "";
-
-      tr.append(tdT, tdL, tdO, tdR);
-      tb.appendChild(tr);
-    });
-
-    grandTotalEl.textContent = formatNumber(computeTotal());
-
-    if (!inv?.invoice_id){
-      statusNote.textContent = "⚠️ ادخل اسم العميل لفتح فاتورة.";
-    } else if ((inv.status || "open") === "open"){
-      statusNote.textContent = `✅ فاتورة مفتوحة باسم: ${inv.customer_name || "—"} — اضغط (تم) عند الانتهاء.`;
-    } else {
-      statusNote.textContent = `🔒 فاتورة مغلقة باسم: ${inv.customer_name || "—"} — يمكنك الطباعة / PDF.`;
-    }
-  }
-
-  async function loadInvoiceOperations(){
-    const inv = loadInv();
-    if (!inv?.invoice_id){
-      logRows = [];
-      render();
-      return;
-    }
-    const rows = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(inv.invoice_id)}&order=created_at.asc`, { method:"GET" });
-    logRows = Array.isArray(rows) ? rows : [];
-    render();
-  }
-
-  async function addOperationRow(operation, result){
-    const sess = loadSession();
-    const inv = loadInv();
-    if (!sess?.id || !inv?.invoice_id){
-      toast("لازم تفتح فاتورة أولاً");
-      return;
-    }
-    if ((inv.status || "open") !== "open"){
-      toast("الفاتورة مغلقة — افتح فاتورة جديدة");
-      return;
-    }
-
-    const label = (labelInput.value || "").trim() || "عملية";
-    const payload = {
-      user_id: sess.id,
-      username: sess.username,
-      invoice_id: inv.invoice_id,
-      label,
-      operation,
-      result: String(result),
-      device_id: getDeviceId()
-    };
-
-    await apiFetch(`/app_operations`, {
-      method:"POST",
-      headers:{ "Prefer":"return=representation" },
-      body: JSON.stringify(payload)
-    });
-
-    labelInput.value = "";
-    await loadInvoiceOperations();
-  }
-
-  function newlineCommit(){
-    const inv = loadInv();
-    if (!inv?.invoice_id){
-      toast("ادخل اسم العميل أولاً");
-      showCustomerModal(true);
-      return;
-    }
-    if ((inv.status || "open") !== "open"){
-      toast("الفاتورة مغلقة — افتح فاتورة جديدة");
-      return;
-    }
-
-    const clean = expr.trim();
-    if (!clean) return;
-
-    const val = safeEval(clean);
-    if (val === null) return;
-
-    lastResult = val;
-
-    const opDisplay = clean.replace(/\*/g,"×").replace(/\//g,"÷");
-    const resultText = formatNumber(val);
-
-    expr = "";
-    render();
-
-    addOperationRow(opDisplay, resultText).catch(e=>{
-      console.error(e);
-      toast("فشل حفظ السطر");
-    });
-  }
-
-  function clearAll(){ expr=""; lastResult=0; render(); }
-  function backspace(){ expr = expr.slice(0,-1); render(); }
-  function clearEntry(){
-    const m = expr.match(/^(.*?)([+\-*/])\s*[^+\-*/]*$/);
-    expr = m ? (m[1] + m[2] + " ") : "";
-    render();
-  }
-  function appendChar(ch){ expr += ch; render(); }
-
-  const onKey = (k) => {
-    vibe();
-    if (k === "C") return clearAll();
-    if (k === "CE") return clearEntry();
-    if (k === "BK") return backspace();
-    if (k === "=") return newlineCommit();
-
-    if (["/","*","-","+"].includes(k)){
-      if (!expr.trim()) return;
-      if (/[+\-*/]\s*$/.test(expr)) expr = expr.replace(/[+\-*/]\s*$/,"");
-      expr += ` ${k} `;
-      return render();
-    }
-
-    if (k === "."){
-      const lastChunk = expr.split(/[+\-*/]/).pop() ?? "";
-      if (lastChunk.includes(".")) return;
-    }
-
-    appendChar(k);
-  };
-
-  async function copyText(text){
-    try{
-      await navigator.clipboard.writeText(text);
-      toast("تم النسخ ✅");
-    }catch{
-      const ta = document.createElement("textarea");
-      ta.value = text; ta.style.position="fixed"; ta.style.left="-9999px";
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      document.execCommand("copy");
-      ta.remove();
-      toast("تم النسخ ✅");
-    }
-  }
-
-  function logAsTSV(){
-    const header = ["الوقت","البيان","العملية","النتيجة"].join("\t");
-    const rows = logRows.map(r => [fmtTime(r.created_at), r.label, r.operation, r.result].join("\t"));
-    return [header, ...rows, `إجمالي الكشف:\t\t\t${grandTotalEl.textContent}`].join("\n");
-  }
-
-  // =========================
-  // ✅ UI Events
-  // =========================
-  $("loginBtn").addEventListener("click", async () => {
-    vibe();
-    try{
-      const ok = await loginUser(usernameEl.value, passwordEl.value);
-      if (!ok) return;
-      setLocked(false);
-
-      const inv = loadInv();
-      if (!inv || (inv.status !== "open")){
-        showCustomerModal(true);
-        customerNameEl.value = "";
-        customerNameEl.focus();
-      } else {
-        await loadInvoiceOperations();
-      }
-
-      toast("تم الدخول ✅");
-    }catch(e){
-      console.error(e);
-      genericErr();
-    }
-  }, { passive:true });
-
-  // ✅ زر الأدمن صار يتحقق من كون الحساب أدمن قبل فتح الأدمن
-  $("adminBtn").addEventListener("click", () => {
-    loginAdminAndGo();
-  }, { passive:true });
-
-  $("keys").addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-k]");
-    if (!btn) return;
-    onKey(btn.dataset.k);
-  }, { passive:true });
-
-  $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, { passive:true });
-
-  $("copyTableBtn").addEventListener("click", () => {
-    vibe();
-    const inv = loadInv();
-    if (!inv?.invoice_id) return toast("لا توجد فاتورة");
-    if ((inv.status || "open") !== "closed") return toast("لازم (تم) قبل النسخ");
-    copyText(logAsTSV());
-  }, { passive:true });
-
-  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, { passive:true });
-
-  $("doneBtn").addEventListener("click", async () => {
-    vibe();
-    try{ await closeInvoice(); }
-    catch(e){ console.error(e); toast("فشل إغلاق الفاتورة"); }
-  }, { passive:true });
-
-  $("printBtn").addEventListener("click", () => { vibe(); openPrint(); }, { passive:true });
-
-  $("clearLocalBtn").addEventListener("click", () => { vibe(); expr=""; lastResult=0; render(); toast("تم مسح العرض"); }, { passive:true });
-
-  $("newInvoiceBtn").addEventListener("click", () => {
-    vibe();
-    clearInv();
-    logRows = [];
-    expr = "";
-    lastResult = 0;
-    render();
-    showCustomerModal(true);
-    customerNameEl.value = "";
-    customerNameEl.focus();
-  }, { passive:true });
-
-  $("logoutBtn").addEventListener("click", () => { vibe(); forceLogout("تم الخروج"); }, { passive:true });
-
-  $("startInvoiceBtn").addEventListener("click", async () => {
-    vibe();
-    const name = (customerNameEl.value || "").trim();
-    if (!name) return toast("اسم العميل إلزامي");
-    try{
-      showCustomerModal(false);
-      await createInvoiceForCustomer(name);
-      await loadInvoiceOperations();
-    }catch(e){
-      console.error(e);
-      toast("فشل فتح فاتورة");
-      showCustomerModal(true);
-    }
-  }, { passive:true });
-
-  window.addEventListener("keydown", (e) => {
-    const map = { "Enter":"=", "Backspace":"BK", "Escape":"C", "/":"/", "*":"*", "-":"-", "+":"+",
-                  ".":"." };
-    if (e.key >= "0" && e.key <= "9") return onKey(e.key);
-    if (map[e.key]) return onKey(map[e.key]);
-  });
-
-  // Boot
-  (async function boot(){
-    const sess = loadSession();
-    setLocked(!sess);
-    render();
-
-    if (sess?.id){
-      const inv = loadInv();
-      if (!inv || inv.status !== "open"){
-        showCustomerModal(true);
-      } else {
-        await loadInvoiceOperations();
-      }
-    }
-  })();
-</script>
-</body>
-</html>
