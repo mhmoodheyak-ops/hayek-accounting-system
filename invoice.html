@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — صفحة المستخدم (فواتير)</title>
 
-  <link rel="stylesheet" href="style.css?v=2000" />
+  <link rel="stylesheet" href="style.css?v=4000" />
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,19 +14,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Config -->
-  <script src="config.js?v=2000"></script>
+  <script src="config.js?v=4000"></script>
 
   <!-- منطق الصفحة -->
-  <script defer src="app.js?v=2000"></script>
+  <script defer src="app.js?v=4000"></script>
 
   <style>
     :root{
-      --bg1:#07161b; --bg2:#0b1f25;
-      --card:rgba(255,255,255,.06);
-      --stroke:rgba(255,255,255,.10);
+      --bg1:#07161b; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
       --txt:#eaf2ff; --muted:rgba(234,242,255,.70);
       --good:#10b981; --bad:#ef4444; --warn:#f59e0b;
-      --btn:#0d2a39; --btn2:#1d4ed8; --btn3:#7f1d1d;
+      --btn:#0d2a39; --btn2:#1d4ed8;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:
@@ -41,11 +39,10 @@
     h1,h2{margin:0 0 10px}
     .muted{opacity:.78;font-size:13px}
     label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    input,select,textarea{
+    input{
       width:100%;padding:12px;border-radius:16px;border:1px solid var(--stroke);
       background:rgba(0,0,0,.20);color:#fff;outline:none
     }
-    textarea{min-height:44px;resize:vertical}
     .btn{
       padding:12px 14px;border-radius:16px;border:1px solid var(--stroke);
       background:var(--btn);color:#fff;cursor:pointer;font-weight:800
@@ -61,9 +58,7 @@
     .note.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
     .divider{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
     .kpi{display:flex;gap:10px;flex-wrap:wrap}
-    .kpi .pill b{font-size:14px}
 
-    /* جدول السطور */
     .tableWrap{overflow:auto;border-radius:18px;border:1px solid var(--stroke)}
     table{width:100%;border-collapse:collapse;min-width:760px;background:rgba(0,0,0,.12)}
     th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);text-align:right}
@@ -74,7 +69,6 @@
     .mini.gray{background:rgba(0,0,0,.15)}
     .center{text-align:center}
 
-    /* حاسبة */
     .calc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
     .display{
       padding:14px;border-radius:18px;border:1px solid var(--stroke);
@@ -86,18 +80,10 @@
     .key.danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
     .key.wide{grid-column:span 2}
     .key.wider{grid-column:span 4}
-    .shake{animation:shake .22s linear}
-    @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(3px)}50%{transform:translateX(-3px)}75%{transform:translateX(2px)}100%{transform:translateX(0)}}
 
-    /* منطقة الطباعة PDF */
     #printable{
-      background:#ffffff;
-      color:#111;
-      direction:rtl;
-      padding:18px;
-      border-radius:18px;
-      display:none;
-      font-family: "Segoe UI", Tahoma, Arial;
+      background:#ffffff;color:#111;direction:rtl;padding:18px;border-radius:18px;display:none;
+      font-family:"Segoe UI",Tahoma,Arial;
     }
     #printable h3{margin:0 0 8px}
     #printable .p-muted{color:#555;font-size:12px;margin:0 0 10px}
@@ -123,18 +109,16 @@
       </div>
     </div>
 
-    <!-- 1) تسجيل المستخدم -->
     <div class="card">
       <h2>تسجيل المستخدم</h2>
-
       <div class="grid">
         <div>
           <label>اسم المستخدم (إجباري)</label>
-          <input id="username" autocomplete="username" placeholder="مثال: user1" />
+          <input id="username" placeholder="مثال: محمود" />
         </div>
         <div>
           <label>كلمة السر (إجباري)</label>
-          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+          <input id="password" type="password" placeholder="••••••••" />
         </div>
         <div style="align-self:end">
           <button id="btnLogin" class="btn primary">دخول</button>
@@ -145,11 +129,10 @@
       </div>
 
       <div class="note warn" style="margin-top:10px">
-        ⚠️ إذا ظهر “بيانات خاطئة” معناها اسم/كلمة السر غير موجودين بقاعدة البيانات أو المستخدم محظور.
+        ✅ هذا النظام يقفل الحساب على جهاز واحد فقط (device_id). إذا حاول نفس الحساب من جهاز ثاني يُرفض الدخول.
       </div>
     </div>
 
-    <!-- 2) اسم الزبون وفتح فاتورة -->
     <div class="card">
       <h2>الفاتورة</h2>
       <div class="grid">
@@ -172,19 +155,17 @@
       </div>
 
       <div class="note" style="margin-top:10px">
-        ✅ لا يمكن النسخ أو PDF قبل الضغط على: <b>إنهاء الفاتورة</b>.  
-        عند الإنهاء: تُرفع تلقائيًا باسم <b>المستخدم + الزبون</b>.
+        ✅ لا يمكن النسخ أو PDF قبل الضغط على: <b>إنهاء الفاتورة</b>. عند الإنهاء تُرفع تلقائيًا على السيرفر.
       </div>
     </div>
 
-    <!-- 3) إضافة سطر (نص اختياري + مبلغ من الحاسبة) -->
     <div class="card">
       <h2>إضافة سطر</h2>
 
       <div class="grid">
         <div style="grid-column: span 2">
           <label>بيان / ملاحظة للسطر (اختياري)</label>
-          <input id="lineNote" placeholder="مثال: أجرة نقل / خصم / كمية..." />
+          <input id="lineNote" placeholder="مثال: أجرة / خصم / كمية..." />
         </div>
         <div>
           <label>المبلغ (من الحاسبة)</label>
@@ -198,12 +179,12 @@
       <div class="divider"></div>
 
       <div class="grid">
-        <!-- الحاسبة -->
         <div class="card" style="grid-column: span 2; padding:14px">
           <div class="row" style="justify-content:space-between">
             <h2 style="margin:0">الآلة الحاسبة</h2>
-            <span class="pill">اهتزاز خفيف عند الضغط ✅</span>
+            <span class="pill">اهتزاز خفيف ✅</span>
           </div>
+
           <div style="margin-top:10px" class="display" id="calcDisplay">0</div>
 
           <div class="calc" style="margin-top:10px">
@@ -212,7 +193,7 @@
             <button class="key" data-k=")">)</button>
             <button class="key op" data-k="/">÷</button>
 
-            <!-- ترتيب الأرقام مثل المطلوب سابقًا (1↔3،4↔6،7↔9) -->
+            <!-- ترتيب الأرقام (1↔3، 4↔6، 7↔9) -->
             <button class="key" data-k="3">3</button>
             <button class="key" data-k="2">2</button>
             <button class="key" data-k="1">1</button>
@@ -232,22 +213,16 @@
             <button class="key" data-k=".">.</button>
             <button class="key op" data-k="=">=</button>
 
-            <!-- زر “إنزال/قفل السطر” كبير بعرض الشاشة -->
+            <!-- زر إدخال النتيجة كبير -->
             <button class="key wider" data-k="PUT" style="background:rgba(16,185,129,.20);border-color:rgba(16,185,129,.35)">
               إدخال النتيجة في مبلغ السطر
             </button>
           </div>
-
-          <div class="muted" style="margin-top:10px">
-            كل ضغط يهتز خفيف + يتم حفظ العمليات في السجل.
-          </div>
         </div>
 
-        <!-- جدول السطور -->
         <div class="card" style="grid-column: span 2; padding:14px">
           <div class="row" style="justify-content:space-between">
             <h2 style="margin:0">سطور الفاتورة</h2>
-            <span class="pill">يُرفع كل تعديل تلقائيًا (إذا الفاتورة مفتوحة)</span>
           </div>
 
           <div class="tableWrap" style="margin-top:10px">
@@ -270,15 +245,13 @@
 
           <div class="row">
             <span class="pill">السجل: <b id="opsCount">0</b></span>
-            <button id="btnClearLines" class="btn danger">مسح السطور (للفاتورة المفتوحة)</button>
+            <button id="btnClearLines" class="btn danger">مسح السطور</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Printable area for PDF -->
     <div id="printable"></div>
-
   </div>
 </body>
 </html>
