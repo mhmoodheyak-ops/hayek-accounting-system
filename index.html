@@ -163,7 +163,7 @@
 
       <div class="note" id="loginNote">
         ✅ الدخول يعتمد على قاعدة البيانات ويعمل من أي جهاز.<br>
-        ✅ إذا كان المستخدم محظور، لن يتمكن من الدخول.<br>
+        ✅ في حال وجود مشكلة بالنظام سيتم المعالجة.<br>
         ✅ قبل الحساب: لازم إدخال اسم العميل لفتح فاتورة.
       </div>
     </div>
@@ -406,7 +406,9 @@
     const user = Array.isArray(rows) ? rows[0] : null;
 
     if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return false; }
-    if (user.blocked) { toast("هذا المستخدم محظور ❌"); return false; }
+
+    // ✅ التعديل المطلوب: بدل "هذا المستخدم محظور"
+    if (user.blocked) { toast("يوجد خطاء ب النظام جاري المعالجة"); return false; }
 
     if (!user.device_id){
       await apiFetch(`/app_users?id=eq.${user.id}`, {
