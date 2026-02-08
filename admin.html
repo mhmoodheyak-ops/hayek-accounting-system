@@ -9,19 +9,17 @@
   <style>
     :root{
       --white:#fff; --green:#19C37D; --yellow:#D6A628; --red:#ff505a;
-      --bg:#5F6368;
+      --bg:#5F6368; --black:#111315; --dark:#2F3337;
       --line: rgba(255,255,255,.18);
-      --text: var(--white);
-      --muted: rgba(255,255,255,.78);
+      --text:#fff; --muted: rgba(255,255,255,.78);
       --shadow: 0 14px 40px rgba(0,0,0,.35);
       --radius: 22px;
-      --black:#111315;
     }
     *{box-sizing:border-box}
     body{
       margin:0;background:var(--bg);color:var(--text);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
-      display:flex;justify-content:center;padding:16px
+      display:flex;justify-content:center;padding:16px;
     }
     .wrap{width:min(980px,100%);display:grid;gap:12px}
 
@@ -32,33 +30,16 @@
       box-shadow: var(--shadow);
       padding:14px;
       display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
+      gap:12px;
     }
     .brand{display:grid;gap:4px}
     .brand b{font-size:16px;letter-spacing:.4px}
     .brand span{font-size:12px;color:var(--muted)}
-
     .pill{
       font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;
       background: var(--yellow); color: var(--black);
       white-space:nowrap;
     }
-
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
-    .btn{
-      user-select:none;border:1px solid var(--line);background: rgba(255,255,255,.10);
-      color: var(--text);padding:10px 12px;border-radius:16px;font-weight:1000;font-size:13px;
-      cursor:pointer;touch-action:manipulation
-    }
-    .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
-    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
-    .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
-    .btn.gray{background: rgba(255,255,255,.08)}
-    .btn:disabled{opacity:.55; cursor:not-allowed}
-
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width: 920px){ .grid2{grid-template-columns:1fr} }
 
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -67,155 +48,191 @@
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-    .card h2{
-      margin:0;
-      padding:14px;
-      font-size:14px;
-      border-bottom:1px solid var(--line);
-      color: rgba(255,255,255,.9);
-      display:flex;align-items:center;justify-content:space-between;gap:8px;
+
+    .grid2{display:grid;grid-template-columns: 1fr 1.25fr; gap:12px}
+    @media (max-width: 900px){
+      .grid2{grid-template-columns: 1fr}
     }
-    .card .body{padding:14px;display:grid;gap:10px}
+
+    .sec{padding:14px;display:grid;gap:10px}
+    .sec h2{margin:0;font-size:14px}
+    .note{font-size:12px;color:var(--muted);line-height:1.7}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    @media (max-width: 520px){
+      .row2,.row3{grid-template-columns:1fr}
+    }
 
     .field{display:grid;gap:6px}
     .field label{font-size:12px;color:var(--muted);font-weight:1000}
+
     input, select{
       width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);
-      background: rgba(17,19,21,.45); color: var(--text); outline:none; font-size:14px
+      background: rgba(17,19,21,.45); color: var(--text); outline:none; font-size:14px;
     }
-    input:focus, select:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
-    .note{font-size:12px;color:var(--muted);line-height:1.7}
+    input:focus,select:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.18)}
 
-    table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
-    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right;vertical-align:top}
+    .btn{
+      user-select:none;border:1px solid var(--line);background: rgba(255,255,255,.10);
+      color: var(--text);padding:12px 12px;border-radius:16px;font-weight:1000;font-size:14px;
+      cursor:pointer;touch-action:manipulation;
+    }
+    .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
+    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
+    .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
+    .btn.gray{background: rgba(255,255,255,.08)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap}
+    .toolbar .btn{padding:10px 12px; font-size:13px}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background: rgba(17,19,21,.25);
+    }
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      font-size:13px;
+      text-align:right;
+      color: var(--text);
+    }
     th{color:var(--muted);font-weight:1000}
     td.num{text-align:left;direction:ltr;font-weight:1000}
     tr:last-child td{border-bottom:none}
 
     .badge{
       display:inline-block;
-      font-size:12px;
-      font-weight:1000;
       padding:6px 10px;
       border-radius:999px;
+      font-weight:1000;
+      font-size:12px;
       border:1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.10);
       color:#fff;
       white-space:nowrap;
     }
-    .badge.g{border-color: rgba(25,195,125,.45); background: rgba(25,195,125,.18)}
-    .badge.y{border-color: rgba(214,166,40,.45); background: rgba(214,166,40,.18); color:#111}
-    .badge.r{border-color: rgba(255,80,90,.35); background: rgba(255,80,90,.14)}
+    .badge.g{border-color: rgba(25,195,125,.55); background: rgba(25,195,125,.18)}
+    .badge.r{border-color: rgba(255,80,90,.45); background: rgba(255,80,90,.16)}
+    .badge.y{border-color: rgba(214,166,40,.55); background: rgba(214,166,40,.16); color:#111315}
 
-    /* ✅ حل مشكلة النص غير ظاهر إلا بالهوفر */
-    .invRowBtn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      min-width:92px;
-      color:#fff !important;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.22);
+    .totalBox{
+      display:grid;
+      gap:8px;
     }
-    .invRowBtn:hover{
-      background: rgba(25,195,125,.22);
-      border-color: rgba(25,195,125,.45);
-      color:#fff !important;
+    .totalLine{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 12px;
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius:16px;
+      background: rgba(255,255,255,.06);
+      font-weight:1000;
+      color:#fff;
     }
+    .totalLine span:last-child{direction:ltr}
 
-    .totals{
-      display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
-      border:1px dashed rgba(255,255,255,.22);border-radius:16px;background: rgba(255,255,255,.06);
-      font-weight:1000
-    }
-    .totals span:last-child{direction:ltr}
-
-    .toast{
-      position:fixed; bottom:18px; left:50%;
-      transform:translateX(-50%);
-      background:rgba(17,19,21,.88);
-      color:#fff; padding:10px 14px;
-      border-radius:14px; font-weight:1000;
-      z-index:99999; backdrop-filter:blur(8px);
-      border:1px solid rgba(255,255,255,.18);
-      display:none;
-    }
+    /* Admin login */
+    #adminApp{display:none}
+    .center{padding:14px; display:grid; gap:10px}
   </style>
 </head>
 
 <body>
   <div class="wrap">
+
     <div class="top">
       <div class="brand">
         <b>HAYEK SPOT — Admin</b>
-        <span>لوحة الأدمن © 2026</span>
+        <span>لوحة إدارة الفواتير والمستخدمين</span>
       </div>
+      <div class="pill" id="pill">مغلق</div>
+    </div>
 
-      <div class="row">
-        <div class="pill" id="pill">جارٍ التحقق…</div>
-        <button class="btn red" id="logoutBtn">تسجيل خروج</button>
+    <!-- ✅ Admin Login (ضروري) -->
+    <div class="card" id="adminLoginCard">
+      <div class="center">
+        <h2 style="margin:0;font-size:14px">دخول الأدمن</h2>
+        <div class="row2">
+          <div class="field">
+            <label>اسم الأدمن</label>
+            <input id="adminUser" placeholder="مثال: admin" autocomplete="username" />
+          </div>
+          <div class="field">
+            <label>كلمة السر</label>
+            <input id="adminPass" type="password" placeholder="••••" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <div class="row2">
+          <button class="btn green" id="adminLoginBtn">دخول</button>
+          <button class="btn yellow" id="goIndexBtn">رجوع للحاسبة</button>
+        </div>
+
+        <div class="note" id="adminNote">
+          ✅ هذه الصفحة لا تعمل إلا للأدمن الحقيقي (is_admin = true).<br>
+          ✅ إذا دخل مستخدم عادي بالخطأ لن تظهر له أي بيانات.
+        </div>
       </div>
     </div>
 
-    <div class="grid2">
-      <!-- USERS -->
+    <!-- ✅ Admin App -->
+    <div class="grid2" id="adminApp">
+
+      <!-- Users -->
       <div class="card">
-        <h2>
-          <span>المستخدمون</span>
-          <div class="row" style="justify-content:flex-end">
-            <button class="btn gray" id="refreshUsersBtn">تحديث</button>
-          </div>
-        </h2>
+        <div class="sec">
+          <h2>المستخدمين</h2>
 
-        <div class="body">
-          <div class="grid2">
+          <div class="row3">
             <div class="field">
-              <label>بحث المستخدم</label>
-              <input id="searchUser" placeholder="اكتب اسم المستخدم…" />
-            </div>
-            <div class="field">
-              <label>اختيار مستخدم</label>
-              <select id="userSelect">
-                <option value="">— اختر المستخدم —</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid2">
-            <div class="field">
-              <label>اسم مستخدم جديد</label>
-              <input id="newUsername" placeholder="مثال: user1" />
+              <label>اسم المستخدم</label>
+              <input id="newUsername" placeholder="مثال: محمود" />
             </div>
             <div class="field">
               <label>كلمة السر</label>
               <input id="newPass" placeholder="مثال: 123456" />
             </div>
-          </div>
-
-          <div class="grid2">
             <div class="field">
-              <label>صلاحية الأدمن</label>
+              <label>صلاحية</label>
               <select id="newIsAdmin">
-                <option value="false">NO</option>
-                <option value="true">YES</option>
+                <option value="false">User</option>
+                <option value="true">Admin</option>
               </select>
             </div>
-            <div class="row" style="align-items:flex-end">
-              <button class="btn gray" id="genPassBtn">توليد رقم</button>
-              <button class="btn green" id="addUserBtn">إضافة</button>
-            </div>
           </div>
 
-          <div class="note">⚠️ المستخدم العادي لا يمكنه فتح الأدمن (حتى لو كتب الرابط).</div>
+          <div class="toolbar">
+            <button class="btn gray" id="genPass">توليد كلمة سر</button>
+            <button class="btn green" id="addUser">إضافة مستخدم</button>
+            <button class="btn" id="refreshUsers">تحديث</button>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label>بحث</label>
+              <input id="searchUser" placeholder="ابحث بالاسم…" />
+            </div>
+            <div class="field">
+              <label>صفحات</label>
+              <div class="toolbar">
+                <button class="btn" id="prevUsers">السابق</button>
+                <button class="btn" id="nextUsers">التالي</button>
+              </div>
+            </div>
+          </div>
 
           <div style="overflow:auto">
             <table>
               <thead>
                 <tr>
-                  <th>اسم المستخدم</th>
-                  <th class="num">كلمة السر</th>
-                  <th>أدمن</th>
+                  <th>اسم</th>
+                  <th class="num">السر</th>
+                  <th>Admin</th>
                   <th>الحالة</th>
                   <th>إجراءات</th>
                 </tr>
@@ -223,583 +240,110 @@
               <tbody id="usersTbody"></tbody>
             </table>
           </div>
+
+          <div class="note">ملاحظة: الحظر يطبق فوراً على المستخدم عند التحقق الدوري.</div>
         </div>
       </div>
 
-      <!-- INVOICES -->
+      <!-- Invoices -->
       <div class="card">
-        <h2>
-          <span>الفواتير (قائمة)</span>
-          <div class="row" style="justify-content:flex-end">
-            <button class="btn gray" id="refreshInvBtn">تحديث</button>
-          </div>
-        </h2>
+        <div class="sec">
+          <h2>الفواتير</h2>
 
-        <div class="body">
-          <div class="grid2">
+          <div class="row2">
             <div class="field">
-              <label>من تاريخ</label>
-              <input type="date" id="fromDate" />
+              <label>اختر المستخدم</label>
+              <select id="userSelect">
+                <option value="">— اختر المستخدم —</option>
+              </select>
             </div>
             <div class="field">
-              <label>إلى تاريخ</label>
-              <input type="date" id="toDate" />
+              <label>فلترة تاريخ (اختياري)</label>
+              <div class="row2" style="gap:8px">
+                <input id="fromDate" type="date" />
+                <input id="toDate" type="date" />
+              </div>
             </div>
           </div>
 
-          <div class="row">
-            <button class="btn gray" id="todayBtn">اليوم</button>
-            <button class="btn gray" id="weekBtn">آخر 7 أيام</button>
-            <button class="btn gray" id="clearDatesBtn">مسح</button>
+          <div class="toolbar">
+            <button class="btn" id="quickToday">اليوم</button>
+            <button class="btn" id="quick7">آخر 7 أيام</button>
+            <button class="btn" id="clearDates">مسح الفلاتر</button>
+            <button class="btn green" id="loadInvoicesBtn">تحميل فواتير المستخدم</button>
           </div>
-
-          <div class="note">✅ اختر المستخدم أولاً → ستظهر فواتيره بالتسلسل (كل فاتورة لحالها).</div>
 
           <div style="overflow:auto">
             <table>
               <thead>
                 <tr>
-                  <th>الوقت</th>
+                  <th>التاريخ</th>
                   <th>اسم العميل</th>
-                  <th>الحالة</th>
                   <th class="num">الإجمالي</th>
-                  <th class="num">Invoice ID</th>
-                  <th>إجراءات</th>
+                  <th>الحالة</th>
+                  <th>إجراء</th>
                 </tr>
               </thead>
-              <tbody id="invTbody"></tbody>
+              <tbody id="invoicesTbody"></tbody>
             </table>
           </div>
 
-          <div class="totals">
-            <span>الفاتورة المحددة:</span>
-            <span id="selectedInv" style="direction:ltr">—</span>
+          <!-- Invoice Details -->
+          <div class="card" id="invoiceCard" style="margin-top:12px">
+            <div class="sec">
+              <h2>تفاصيل الفاتورة المختارة</h2>
+              <div class="toolbar" id="invoiceMeta"></div>
+
+              <div class="toolbar">
+                <button class="btn yellow" id="printInvoiceBtn">طباعة / PDF (نظيف)</button>
+                <button class="btn red" id="deleteInvoiceBtn">حذف الفاتورة</button>
+                <button class="btn red" id="archiveDeleteBtn">أرشفة PDF ثم حذف</button>
+              </div>
+
+              <div style="overflow:auto">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>الوقت</th>
+                      <th>البيان</th>
+                      <th class="num">العملية</th>
+                      <th class="num">النتيجة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="opsTbody"></tbody>
+                </table>
+              </div>
+
+              <div class="totalBox" style="margin-top:10px">
+                <div class="totalLine">
+                  <span>إجمالي الفاتورة:</span>
+                  <span id="grandTotal">0</span>
+                </div>
+                <div id="totalsByLabel"></div>
+              </div>
+
+              <div class="row2" style="margin-top:10px">
+                <div class="field">
+                  <label>تأكيد (اكتب Invoice ID للحذف)</label>
+                  <input id="confirmInvoiceId" placeholder="الصق Invoice ID هنا للتأكيد" style="direction:ltr" />
+                </div>
+                <div class="field">
+                  <label>حذف كل بيانات هذا المستخدم (اختياري)</label>
+                  <button class="btn red" id="deleteAllUserOpsBtn">حذف كل فواتير المستخدم</button>
+                </div>
+              </div>
+
+              <div class="note">⚠️ الحذف نهائي. الأرشفة = طباعة PDF ثم حذف.</div>
+            </div>
           </div>
 
-          <div class="row">
-            <button class="btn yellow" id="printSelectedBtn" disabled>طباعة / PDF (الفاتورة فقط)</button>
-            <button class="btn red" id="deleteSelectedBtn" disabled>حذف هذه الفاتورة</button>
-          </div>
-
-          <div class="note" id="invNote"></div>
-
-          <div style="overflow:auto">
-            <table>
-              <thead>
-                <tr>
-                  <th>الوقت</th>
-                  <th>البيان</th>
-                  <th class="num">العملية</th>
-                  <th class="num">النتيجة</th>
-                </tr>
-              </thead>
-              <tbody id="opsTbody"></tbody>
-            </table>
-          </div>
-
-          <div class="totals">
-            <span>إجمالي سطور الفاتورة:</span>
-            <span id="grandTotal" style="direction:ltr">0</span>
-          </div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
-
-<script>
-  // =========================
-  // ✅ Config
-  // =========================
-  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-  const REST = `${SUPABASE_URL}/rest/v1`;
-
-  const $ = (id) => document.getElementById(id);
-
-  const toast = (msg) => {
-    const t = $("toast");
-    t.textContent = msg;
-    t.style.display = "block";
-    clearTimeout(window.__tto);
-    window.__tto = setTimeout(()=> t.style.display="none", 1700);
-  };
-
-  const apiFetch = async (path, options = {}) => {
-    const res = await fetch(`${REST}${path}`, {
-      ...options,
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(options.headers || {})
-      }
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(()=> "");
-      throw new Error(`API ${res.status}: ${txt || res.statusText}`);
-    }
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  };
-
-  // =========================
-  // ✅ Session Guard (admin only)
-  // =========================
-  const K_SESSION = "hs_session_v4";
-
-  const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
-  const clearSession = () => { try { localStorage.removeItem(K_SESSION); } catch(_){} };
-
-  async function verifyAdminOrKick(){
-    const sess = loadSession();
-
-    if (!sess?.id || !sess?.is_admin){
-      location.href = "./index.html?v=999";
-      return false;
-    }
-
-    try{
-      const q = `?select=id,is_admin,blocked,device_id&limit=1&id=eq.${sess.id}`;
-      const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
-      const u = Array.isArray(rows) ? rows[0] : null;
-
-      if (!u || !u.is_admin || u.blocked){
-        clearSession();
-        location.href = "./index.html?v=999";
-        return false;
-      }
-
-      $("pill").textContent = "مفتوح";
-      $("pill").style.background = "var(--green)";
-      $("pill").style.color = "var(--black)";
-      return true;
-    }catch(e){
-      console.error(e);
-      $("pill").textContent = "خطأ اتصال";
-      $("pill").style.background = "var(--yellow)";
-      $("pill").style.color = "var(--black)";
-      return false;
-    }
-  }
-
-  $("logoutBtn").onclick = () => {
-    clearSession();
-    location.href = "./index.html?v=999";
-  };
-
-  // =========================
-  // ✅ Helpers
-  // =========================
-  function nowISODate(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
-  }
-  function daysAgoISO(n){
-    const d = new Date();
-    d.setDate(d.getDate()-n);
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
-  }
-  function fmtDateTime(ts){
-    try{
-      const d = new Date(ts);
-      return d.toLocaleString("ar-EG", { hour12:true });
-    }catch{ return String(ts||""); }
-  }
-  function safeNum(x){
-    const n = Number(x);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  // =========================
-  // ✅ State
-  // =========================
-  const state = {
-    users: [],
-    selectedUser: "",
-    invoices: [],
-    selectedInvoiceId: "",
-    selectedInvoiceCustomer: "",
-    selectedInvoiceTotal: 0,
-    ops: []
-  };
-
-  // =========================
-  // ✅ Users
-  // =========================
-  function genPassword(){
-    $("newPass").value = String(Math.floor(100000 + Math.random()*900000));
-  }
-
-  async function loadUsers(){
-    const q = ($("searchUser").value || "").trim();
-
-    let url = `/app_users?select=id,username,pass,is_admin,blocked,created_at&order=created_at.desc&limit=200`;
-    if (q) url += `&username=ilike.*${encodeURIComponent(q)}*`;
-
-    const rows = await apiFetch(url, { method:"GET" });
-    state.users = Array.isArray(rows) ? rows : [];
-    renderUsers();
-    fillUserSelect();
-  }
-
-  function fillUserSelect(){
-    const sel = $("userSelect");
-    const cur = sel.value;
-    sel.innerHTML = `<option value="">— اختر المستخدم —</option>` + state.users.map(u => `<option value="${u.username}">${u.username}</option>`).join("");
-    if (cur) sel.value = cur;
-  }
-
-  function renderUsers(){
-    const tb = $("usersTbody");
-    tb.innerHTML = "";
-
-    state.users.forEach(u => {
-      const tr = document.createElement("tr");
-
-      const tdU = document.createElement("td");
-      tdU.textContent = u.username;
-
-      const tdP = document.createElement("td");
-      tdP.className = "num";
-      tdP.textContent = u.pass;
-
-      const tdA = document.createElement("td");
-      tdA.innerHTML = u.is_admin ? `<span class="badge g">YES</span>` : `<span class="badge">NO</span>`;
-
-      const tdS = document.createElement("td");
-      tdS.innerHTML = u.blocked ? `<span class="badge r">مغلق</span>` : `<span class="badge g">مفتوح</span>`;
-
-      const tdAct = document.createElement("td");
-      tdAct.style.display="flex";
-      tdAct.style.gap="8px";
-      tdAct.style.flexWrap="wrap";
-
-      const pick = document.createElement("button");
-      pick.className = "btn gray";
-      pick.textContent = "اختيار";
-      pick.onclick = () => {
-        $("userSelect").value = u.username;
-        state.selectedUser = u.username;
-        clearInvoiceSelection();
-        loadInvoicesForUser().catch(console.error);
-      };
-
-      const toggle = document.createElement("button");
-      toggle.className = "btn yellow";
-      toggle.textContent = u.blocked ? "فك" : "قفل";
-      toggle.onclick = () => setBlocked(u.username, !u.blocked);
-
-      const del = document.createElement("button");
-      del.className = "btn red";
-      del.textContent = "حذف";
-      del.onclick = () => deleteUser(u.username);
-
-      tdAct.append(pick, toggle, del);
-      tr.append(tdU, tdP, tdA, tdS, tdAct);
-      tb.appendChild(tr);
-    });
-  }
-
-  async function addUser(){
-    const username = ($("newUsername").value || "").trim();
-    const pass = ($("newPass").value || "").trim();
-    const is_admin = $("newIsAdmin").value === "true";
-
-    if (!username || !pass) return toast("اكتب اسم المستخدم وكلمة السر");
-
-    try{
-      await apiFetch(`/app_users`, {
-        method:"POST",
-        headers:{ "Prefer":"return=minimal" },
-        body: JSON.stringify({ username, pass, is_admin, blocked:false })
-      });
-
-      $("newUsername").value = "";
-      toast("تم إضافة المستخدم ✅");
-      await loadUsers();
-    }catch(e){
-      console.error(e);
-      toast("فشل إضافة المستخدم");
-    }
-  }
-
-  async function setBlocked(username, blocked){
-    try{
-      await apiFetch(`/app_users?username=eq.${encodeURIComponent(username)}`, {
-        method:"PATCH",
-        headers:{ "Prefer":"return=minimal" },
-        body: JSON.stringify({ blocked })
-      });
-      await loadUsers();
-    }catch(e){
-      console.error(e);
-      toast("فشل تغيير الحالة");
-    }
-  }
-
-  async function deleteUser(username){
-    if (!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
-
-    try{
-      await apiFetch(`/app_users?username=eq.${encodeURIComponent(username)}`, {
-        method:"DELETE",
-        headers:{ "Prefer":"return=minimal" }
-      });
-      toast("تم الحذف ✅");
-      await loadUsers();
-    }catch(e){
-      console.error(e);
-      toast("فشل الحذف");
-    }
-  }
-
-  // =========================
-  // ✅ Invoices list
-  // =========================
-  function clearInvoiceSelection(){
-    state.selectedInvoiceId = "";
-    state.ops = [];
-    $("selectedInv").textContent = "—";
-    $("grandTotal").textContent = "0";
-    $("opsTbody").innerHTML = "";
-    $("invNote").textContent = "";
-    $("printSelectedBtn").disabled = true;
-    $("deleteSelectedBtn").disabled = true;
-  }
-
-  function getDateRangeFilter(){
-    const from = $("fromDate").value;
-    const to = $("toDate").value;
-    const fromISO = from ? new Date(from + "T00:00:00").toISOString() : null;
-    const toISO = to ? new Date(to + "T23:59:59").toISOString() : null;
-    return { fromISO, toISO };
-  }
-
-  async function loadInvoicesForUser(){
-    const username = $("userSelect").value;
-    if (!username) { toast("اختر المستخدم أولاً"); return; }
-    state.selectedUser = username;
-
-    clearInvoiceSelection();
-
-    const { fromISO, toISO } = getDateRangeFilter();
-
-    let url = `/app_invoices?select=id,invoice_id,username,customer_name,status,total,created_at,closed_at`
-            + `&username=eq.${encodeURIComponent(username)}`
-            + `&order=created_at.desc`
-            + `&limit=200`;
-
-    if (fromISO) url += `&created_at=gte.${encodeURIComponent(fromISO)}`;
-    if (toISO) url += `&created_at=lte.${encodeURIComponent(toISO)}`;
-
-    try{
-      const rows = await apiFetch(url, { method:"GET" });
-      state.invoices = Array.isArray(rows) ? rows : [];
-      renderInvoicesList();
-      $("invNote").textContent = state.invoices.length ? "اختر فاتورة لعرض تفاصيلها." : "لا توجد فواتير ضمن هذا النطاق.";
-    }catch(e){
-      console.error(e);
-      toast("فشل تحميل الفواتير");
-    }
-  }
-
-  function renderInvoicesList(){
-    const tb = $("invTbody");
-    tb.innerHTML = "";
-
-    state.invoices.forEach(inv => {
-      const tr = document.createElement("tr");
-
-      const tdT = document.createElement("td");
-      tdT.textContent = fmtDateTime(inv.created_at);
-
-      const tdC = document.createElement("td");
-      tdC.textContent = inv.customer_name || "—";
-
-      const tdS = document.createElement("td");
-      tdS.innerHTML = (inv.status === "closed")
-        ? `<span class="badge g">مغلقة</span>`
-        : `<span class="badge y">مفتوحة</span>`;
-
-      const tdTot = document.createElement("td");
-      tdTot.className = "num";
-      tdTot.textContent = String(inv.total ?? 0);
-
-      const tdId = document.createElement("td");
-      tdId.className = "num";
-      tdId.textContent = inv.invoice_id;
-
-      const tdAct = document.createElement("td");
-      tdAct.style.display="flex";
-      tdAct.style.gap="8px";
-      tdAct.style.flexWrap="wrap";
-
-      const pick = document.createElement("button");
-      pick.className = "btn invRowBtn";
-      pick.textContent = "اختيار فاتورة";
-      pick.onclick = () => selectInvoice(inv);
-
-      const pdf = document.createElement("button");
-      pdf.className = "btn yellow";
-      pdf.textContent = "PDF";
-      pdf.onclick = () => openInvoicePrint(inv.invoice_id);
-
-      tdAct.append(pick, pdf);
-      tr.append(tdT, tdC, tdS, tdTot, tdId, tdAct);
-      tb.appendChild(tr);
-    });
-  }
-
-  async function selectInvoice(inv){
-    state.selectedInvoiceId = inv.invoice_id;
-    $("selectedInv").textContent = inv.invoice_id;
-    $("printSelectedBtn").disabled = false;
-    $("deleteSelectedBtn").disabled = false;
-
-    try{
-      const rows = await apiFetch(
-        `/app_operations?select=created_at,label,operation,result`
-        + `&invoice_id=eq.${encodeURIComponent(inv.invoice_id)}`
-        + `&order=created_at.asc`,
-        { method:"GET" }
-      );
-
-      state.ops = Array.isArray(rows) ? rows : [];
-      renderInvoiceOps();
-      $("invNote").textContent = `فاتورة: ${inv.customer_name || "—"} — عدد السطور: ${state.ops.length}`;
-    }catch(e){
-      console.error(e);
-      toast("فشل تحميل تفاصيل الفاتورة");
-    }
-  }
-
-  function renderInvoiceOps(){
-    const tb = $("opsTbody");
-    tb.innerHTML = "";
-
-    let total = 0;
-
-    state.ops.forEach(r=>{
-      const tr = document.createElement("tr");
-
-      const tdT = document.createElement("td");
-      tdT.textContent = fmtDateTime(r.created_at);
-
-      const tdL = document.createElement("td");
-      tdL.textContent = r.label || "عملية";
-
-      const tdO = document.createElement("td");
-      tdO.className = "num";
-      tdO.textContent = r.operation || "";
-
-      const tdR = document.createElement("td");
-      tdR.className = "num";
-      tdR.textContent = r.result ?? "";
-
-      total += safeNum(r.result);
-
-      tr.append(tdT, tdL, tdO, tdR);
-      tb.appendChild(tr);
-    });
-
-    $("grandTotal").textContent = String(total);
-  }
-
-  function openInvoicePrint(invoiceId){
-    if (!invoiceId) return toast("اختر فاتورة");
-    const url = `./invoice.html?invoice_id=${encodeURIComponent(invoiceId)}&print=1`;
-    window.open(url, "_blank");
-  }
-
-  async function deleteSelectedInvoice(){
-    const invoiceId = state.selectedInvoiceId;
-    if (!invoiceId) return toast("اختر فاتورة");
-
-    if (!confirm(`تأكيد حذف الفاتورة بالكامل؟\nInvoice ID: ${invoiceId}`)) return;
-
-    try{
-      // 1) حذف السطور
-      await apiFetch(`/app_operations?invoice_id=eq.${encodeURIComponent(invoiceId)}`, {
-        method:"DELETE",
-        headers:{ "Prefer":"return=minimal" }
-      });
-
-      // 2) حذف الفاتورة نفسها
-      await apiFetch(`/app_invoices?invoice_id=eq.${encodeURIComponent(invoiceId)}`, {
-        method:"DELETE",
-        headers:{ "Prefer":"return=minimal" }
-      });
-
-      toast("تم حذف الفاتورة ✅");
-      await loadInvoicesForUser();
-    }catch(e){
-      console.error(e);
-      toast("فشل حذف الفاتورة");
-    }
-  }
-
-  // =========================
-  // ✅ UI wiring
-  // =========================
-  $("genPassBtn").onclick = genPassword;
-  $("addUserBtn").onclick = addUser;
-  $("refreshUsersBtn").onclick = loadUsers;
-  $("searchUser").addEventListener("input", () => loadUsers().catch(console.error));
-
-  $("userSelect").addEventListener("change", () => {
-    state.selectedUser = $("userSelect").value || "";
-    if (state.selectedUser) loadInvoicesForUser().catch(console.error);
-    else clearInvoiceSelection();
-  });
-
-  $("refreshInvBtn").onclick = loadInvoicesForUser;
-
-  $("todayBtn").onclick = () => {
-    const t = nowISODate();
-    $("fromDate").value = t;
-    $("toDate").value = t;
-    if (state.selectedUser) loadInvoicesForUser().catch(console.error);
-  };
-
-  $("weekBtn").onclick = () => {
-    $("fromDate").value = daysAgoISO(7);
-    $("toDate").value = nowISODate();
-    if (state.selectedUser) loadInvoicesForUser().catch(console.error);
-  };
-
-  $("clearDatesBtn").onclick = () => {
-    $("fromDate").value = "";
-    $("toDate").value = "";
-    if (state.selectedUser) loadInvoicesForUser().catch(console.error);
-  };
-
-  $("printSelectedBtn").onclick = () => openInvoicePrint(state.selectedInvoiceId);
-  $("deleteSelectedBtn").onclick = () => deleteSelectedInvoice();
-
-  // =========================
-  // ✅ Boot
-  // =========================
-  (async function boot(){
-    const ok = await verifyAdminOrKick();
-    if (!ok) return;
-
-    try{
-      await loadUsers();
-      toast("جاهز ✅");
-    }catch(e){
-      console.error(e);
-      toast("خطأ تحميل");
-    }
-  })();
-</script>
+  <!-- ✅ admin.js لازم يكون آخر شي + كسر كاش -->
+  <script src="./admin.js?v=999"></script>
 </body>
 </html>
