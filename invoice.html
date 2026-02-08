@@ -3,38 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK SPOT — فاتورة</title>
+  <title>HAYEK SPOT — صفحة المستخدم (فواتير)</title>
 
-  <!-- ستايل موحّد -->
-  <link rel="stylesheet" href="./style.css?v=999">
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css?v=1000">
 
-  <!-- Supabase UMD -->
+  <!-- Supabase (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
-  <!-- html2pdf (أفضل خيار للغة العربية لأنه يصوّر الصفحة) -->
+  <!-- html2pdf (PDF يحافظ على العربية + صفحات متعددة) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <style>
-    /* إضافات بسيطة خاصة بالصفحة */
-    .page-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
-    .kv{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .kv .badge{ font-weight:900; }
-    .monoSmall{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; opacity:.9; }
-    .empty{
-      border:1px dashed rgba(255,255,255,.18);
-      border-radius: 16px;
-      padding: 14px;
-      color: var(--muted);
-      margin-top: 12px;
-      line-height: 1.8;
-    }
-    @media print{
-      body{ padding:0; background:#fff !important; }
-      .topbar, .card.controls{ display:none !important; }
-      .card{ box-shadow:none !important; border:none !important; }
-      .print-area{ display:block !important; }
-    }
-  </style>
 </head>
 
 <body>
@@ -42,120 +20,201 @@
 
     <div class="topbar">
       <div class="brand">
-        <h1>فاتورة — HAYEK SPOT</h1>
-        <div class="sub">عرض الفاتورة + طباعة / PDF</div>
+        <h1>HAYEK SPOT — صفحة المستخدم</h1>
+        <div class="sub">تسجيل بسيط → اسم مشتري (إجباري) → آلة حاسبة → إنهاء الفاتورة (إجباري) → حفظ + PDF</div>
       </div>
-
-      <div class="page-actions">
-        <div id="pill" class="pill closed">غير متصل</div>
-        <a class="btn" href="./index.html?v=999">الرجوع</a>
+      <div class="right">
+        <div id="pill" class="pill closed">مغلق</div>
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="card controls">
+    <!-- LOGIN -->
+    <div id="loginCard" class="card">
       <div class="hd">
-        <h2>تحميل الفاتورة</h2>
-        <div class="muted">يمكنك تمرير المعطيات من الرابط أو إدخالها هنا</div>
+        <h2>تسجيل المستخدم</h2>
+        <div class="muted">اسم + كلمة سر فقط</div>
       </div>
-
       <div class="bd">
         <div class="row">
           <div class="field">
-            <label>اسم المستخدم (username)</label>
-            <input id="username" placeholder="مثال: محمود" />
+            <label>اسم المستخدم</label>
+            <input id="loginUser" placeholder="مثال: محمود" autocomplete="username" />
           </div>
-
           <div class="field">
-            <label>رقم الفاتورة (invoice_id)</label>
-            <input id="invoiceId" placeholder="مثال: 550e8400-e29b-41d4-a716-446655440000" />
+            <label>كلمة السر</label>
+            <input id="loginPass" placeholder="******" type="password" autocomplete="current-password" />
           </div>
         </div>
 
         <div class="row" style="margin-top:10px">
-          <button class="btn blue" id="btnLoad">تحميل</button>
-          <button class="btn" id="btnCopyLink">نسخ رابط الفاتورة</button>
-          <button class="btn green" id="btnPDF">تصدير PDF</button>
-          <button class="btn" id="btnPrint">طباعة</button>
+          <button class="btn green block" id="btnLogin">دخول</button>
         </div>
 
-        <div class="sep"></div>
-
-        <div class="kv">
-          <div class="badge" id="metaUser">المستخدم: —</div>
-          <div class="badge" id="metaInv">الفاتورة: —</div>
-          <div class="badge" id="metaDate">التاريخ: —</div>
-          <div class="badge" id="metaTotal">المجموع: 0</div>
-        </div>
-
-        <div class="empty" id="hintBox">
-          ✅ افتح الصفحة بهذا الشكل (مثال):<br>
-          <span class="monoSmall">invoice.html?v=999&u=Mahmood&id=INVOICE_ID</span><br>
-          أو اكتب القيم واضغط <b>تحميل</b>.
+        <div class="notice" style="margin-top:10px">
+          <div class="warn">⚠ إذا ظهرت رسالة “مغلق” بالأعلى: تأكد من مفاتيح Supabase.</div>
         </div>
       </div>
     </div>
 
-    <!-- Invoice view -->
-    <div class="card">
-      <div class="hd">
-        <h2>تفاصيل الفاتورة</h2>
-        <div class="muted">العمليات ضمن نفس invoice_id</div>
+    <!-- APP -->
+    <div id="appWrap" class="hidden">
+
+      <!-- Invoice start -->
+      <div class="card" style="margin-top:14px">
+        <div class="hd">
+          <h2>بدء فاتورة جديدة</h2>
+          <div class="row" style="gap:8px">
+            <span class="badge" id="whoBadge">—</span>
+            <span class="badge" id="invBadge">لا يوجد فاتورة مفتوحة</span>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="row">
+            <div class="field">
+              <label>اسم المشتري (إجباري)</label>
+              <input id="buyerName" placeholder="اكتب اسم المشتري..." />
+            </div>
+            <div class="field" style="flex:0 0 220px">
+              <label>&nbsp;</label>
+              <button class="btn blue block" id="btnStartInvoice">ابدأ الفاتورة</button>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="row">
+            <button class="btn red" id="btnCloseInvoice" disabled>إنهاء الفاتورة (حفظ)</button>
+            <button class="btn gray" id="btnCopyTable" disabled>نسخ الجدول</button>
+            <button class="btn yellow" id="btnMakePdf" disabled>تصدير PDF</button>
+          </div>
+
+          <div class="notice" style="margin-top:10px">
+            <div class="ok">✓ الفاتورة تُحفظ تلقائياً على النت حتى يشاهدها الأدمن عند الطلب.</div>
+            <div class="muted">ملاحظة: “بيان/ملاحظة” داخل السطر اختياري.</div>
+          </div>
+        </div>
       </div>
 
-      <div class="bd">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:22%">الوقت</th>
-                <th style="width:38%">البيان</th>
-                <th style="width:20%">العملية</th>
-                <th style="width:20%">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody id="opsTbody"></tbody>
-          </table>
+      <!-- Calculator + Table -->
+      <div class="calcWrap" style="margin-top:14px">
+        <div class="card">
+          <div class="hd">
+            <h2>الآلة الحاسبة</h2>
+            <div class="muted">كل ضغط (=) ينشئ سطر جديد بالفاتورة</div>
+          </div>
+
+          <div class="bd">
+            <div class="row">
+              <div class="field" style="flex:1 1 100%">
+                <label>بيان / ملاحظة لهذا السطر (اختياري)</label>
+                <input id="lineNote" placeholder="مثال: أجرة نقل / خصم / كمية..." />
+              </div>
+            </div>
+
+            <div class="display" style="margin-top:10px">
+              <div class="expr" id="expr">0</div>
+              <div class="mini" id="mini">جاهز…</div>
+            </div>
+
+            <div class="keypad" style="margin-top:10px" id="keypad">
+              <div class="key dng" data-k="C">C</div>
+              <div class="key" data-k="(">(</div>
+              <div class="key" data-k=")">)</div>
+              <div class="key op" data-k="⌫">⌫</div>
+
+              <div class="key" data-k="7">7</div>
+              <div class="key" data-k="8">8</div>
+              <div class="key" data-k="9">9</div>
+              <div class="key op" data-k="÷">÷</div>
+
+              <div class="key" data-k="4">4</div>
+              <div class="key" data-k="5">5</div>
+              <div class="key" data-k="6">6</div>
+              <div class="key op" data-k="×">×</div>
+
+              <div class="key" data-k="1">1</div>
+              <div class="key" data-k="2">2</div>
+              <div class="key" data-k="3">3</div>
+              <div class="key op" data-k="-">-</div>
+
+              <div class="key" data-k="0">0</div>
+              <div class="key" data-k=".">.</div>
+              <div class="key op" data-k="+">+</div>
+              <div class="key ok" data-k="=">=</div>
+
+              <div class="key wide" data-k="CLRLINE">مسح البيان</div>
+              <div class="key wide" data-k="NEG">+/-</div>
+            </div>
+
+            <div class="notice" style="margin-top:10px">
+              <div class="muted">⚠ لن تعمل الحاسبة قبل “ابدأ الفاتورة”.</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Printable area (يُستخدم للتصدير) -->
-        <div id="printArea" class="print-area" style="display:none; margin-top:12px;">
-          <h3 style="margin:0 0 10px 0;">فاتورة — HAYEK SPOT</h3>
-          <div id="printMeta" style="font-size:12px; color:#333; margin-bottom:8px;"></div>
-          <div id="printTotal" style="font-weight:900; margin-bottom:10px;"></div>
-          <div id="printTable"></div>
+        <div class="card">
+          <div class="hd">
+            <h2>عمليات الفاتورة</h2>
+            <div class="row" style="gap:8px">
+              <span class="badge" id="totalBadge">الإجمالي: 0</span>
+              <span class="badge" id="rowsBadge">السطور: 0</span>
+            </div>
+          </div>
+          <div class="bd">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:22%">الوقت</th>
+                  <th style="width:38%">البيان (اختياري)</th>
+                  <th style="width:20%">العملية</th>
+                  <th style="width:20%">النتيجة</th>
+                </tr>
+              </thead>
+              <tbody id="opsBody"></tbody>
+            </table>
+
+            <div class="notice" style="margin-top:10px">
+              <div class="ok">✓ يتم حفظ كل سطر مباشرة على النت.</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-  </div>
+      <!-- PRINT AREA (Hidden) -->
+      <div id="printArea">
+        <h2 style="text-align:center; margin:0 0 8px 0;">فاتورة — HAYEK SPOT</h2>
+        <div class="meta" id="printMeta"></div>
+        <div style="font-weight:900; margin-bottom:10px" id="printTotal"></div>
+        <div id="printTable"></div>
+        <div class="meta" style="margin-top:10px; text-align:center;">
+          تم تطوير الحاسبة من قبل الحايك للحلول الرقمية
+        </div>
+      </div>
+
+    </div><!-- /appWrap -->
+  </div><!-- /container -->
 
 <script>
-/* =========================
-   CONFIG
-   ========================= */
+/* =======================
+   CONFIG (لا تغيّر إلا إذا تغيّرت بياناتك)
+   ======================= */
 const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
 const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
-/* =========================
+/* =======================
    Helpers
-   ========================= */
+   ======================= */
 const $ = (id) => document.getElementById(id);
 
-function vibrate(ms=15){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
-
+function vibrate(ms=18){
+  try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){}
+}
 function setPill(ok, msg){
   const pill = $("pill");
-  pill.textContent = msg || (ok ? "متصل" : "غير متصل");
   pill.classList.toggle("open", !!ok);
   pill.classList.toggle("closed", !ok);
+  pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
 }
-
-function safeNum(x){
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-}
-
 function fmtDateTime(ts){
   try{
     const d = new Date(ts);
@@ -164,24 +223,369 @@ function fmtDateTime(ts){
     return String(ts || "");
   }
 }
+function nowISO(){
+  return new Date().toISOString();
+}
+function safeNum(x){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : 0;
+}
+function formatNumber(n){
+  const x = safeNum(n);
+  // إزالة أصفار زائدة
+  const s = x.toFixed(6);
+  return s.replace(/\.?0+$/,"");
+}
+function getDeviceId(){
+  const k = "hs_device_id";
+  let v = localStorage.getItem(k);
+  if(!v){
+    v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    localStorage.setItem(k, v);
+  }
+  return v;
+}
 
-function getQS(){
-  const p = new URLSearchParams(location.search);
-  return {
-    u: (p.get("u") || "").trim(),
-    id: (p.get("id") || "").trim()
+/* =======================
+   Supabase Client
+   ======================= */
+let client = null;
+(function init(){
+  try{
+    if(!window.supabase || !window.supabase.createClient) throw new Error("supabase not loaded");
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    setPill(true, "مفتوح");
+  }catch(e){
+    console.error(e);
+    setPill(false, "مغلق");
+  }
+})();
+
+/* =======================
+   State
+   ======================= */
+const state = {
+  loggedIn: false,
+  username: "",
+  invoiceOpen: false,
+  invoiceId: "",
+  buyerName: "",
+  ops: [],
+  total: 0
+};
+
+/* =======================
+   Auth (simple)
+   ======================= */
+async function login(){
+  if(!client) return alert("Supabase غير جاهز.");
+
+  const u = ($("loginUser").value || "").trim();
+  const p = ($("loginPass").value || "").trim();
+  if(!u || !p) return alert("اكتب اسم المستخدم وكلمة السر");
+
+  const { data, error } = await client
+    .from("app_users")
+    .select("username, pass, blocked")
+    .eq("username", u)
+    .maybeSingle();
+
+  if(error){
+    console.error(error);
+    return alert("خطأ اتصال: " + error.message);
+  }
+
+  if(!data || !data.username){
+    return alert("اسم المستخدم غير صحيح");
+  }
+  if(String(data.pass || "") !== p){
+    return alert("كلمة السر غير صحيحة");
+  }
+  if(data.blocked){
+    return alert("عذراً، حسابك موقوف. راجع الأدمن.");
+  }
+
+  state.loggedIn = true;
+  state.username = u;
+  localStorage.setItem("hs_last_user", u);
+
+  $("whoBadge").textContent = "المستخدم: " + u;
+  $("loginCard").classList.add("hidden");
+  $("appWrap").classList.remove("hidden");
+
+  $("mini").textContent = "تم تسجيل الدخول ✅";
+}
+
+function restoreLastUser(){
+  const u = localStorage.getItem("hs_last_user") || "";
+  if(u) $("loginUser").value = u;
+}
+restoreLastUser();
+
+/* =======================
+   Invoice
+   ======================= */
+function lockCalc(lock){
+  const kp = $("keypad");
+  kp.style.opacity = lock ? "0.55" : "1";
+  kp.style.pointerEvents = lock ? "none" : "auto";
+}
+lockCalc(true);
+
+async function startInvoice(){
+  if(!client) return alert("Supabase غير جاهز.");
+  if(!state.loggedIn) return alert("سجّل الدخول أولاً.");
+
+  const buyer = ($("buyerName").value || "").trim();
+  if(!buyer) return alert("اسم المشتري إجباري");
+
+  // reset local state
+  state.ops = [];
+  state.total = 0;
+  state.buyerName = buyer;
+
+  renderOps();
+
+  // create invoice row
+  const payload = {
+    username: state.username,
+    buyer_name: buyer,
+    device_id: getDeviceId(),
+    total: 0
   };
+
+  const { data, error } = await client
+    .from("app_invoices")
+    .insert(payload)
+    .select("id, created_at")
+    .maybeSingle();
+
+  if(error){
+    console.error(error);
+    return alert("فشل بدء الفاتورة: " + error.message);
+  }
+
+  state.invoiceId = data?.id || "";
+  state.invoiceOpen = true;
+
+  $("invBadge").textContent = state.invoiceId ? ("فاتورة مفتوحة: #" + String(state.invoiceId).slice(-6)) : "فاتورة مفتوحة";
+  $("btnCloseInvoice").disabled = false;
+
+  // خلال الفاتورة: نسخ/PDF غير إلزامي، نخليهم بعد الإنهاء
+  $("btnCopyTable").disabled = true;
+  $("btnMakePdf").disabled = true;
+
+  // clear calc
+  expr = "";
+  $("expr").textContent = "0";
+  $("mini").textContent = "فاتورة جديدة بدأت ✅ (اضغط = لتسجيل سطر)";
+
+  lockCalc(false);
+  vibrate(22);
 }
 
-function buildLink(username, invoiceId){
-  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/") + "invoice.html";
-  return `${base}?v=999&u=${encodeURIComponent(username)}&id=${encodeURIComponent(invoiceId)}`;
+async function closeInvoice(){
+  if(!client) return alert("Supabase غير جاهز.");
+  if(!state.invoiceOpen || !state.invoiceId) return alert("لا يوجد فاتورة مفتوحة.");
+
+  if(!confirm("تأكيد إنهاء الفاتورة وحفظها؟")) return;
+
+  // update invoice total فقط (حتى لو أعمدتك أقل)
+  const { error } = await client
+    .from("app_invoices")
+    .update({ total: state.total })
+    .eq("id", state.invoiceId)
+    .eq("username", state.username);
+
+  if(error){
+    console.error(error);
+    return alert("فشل إنهاء الفاتورة: " + error.message);
+  }
+
+  state.invoiceOpen = false;
+  $("invBadge").textContent = "فاتورة مغلقة ✅";
+  $("btnCloseInvoice").disabled = true;
+
+  // الآن نفعّل النسخ و PDF
+  $("btnCopyTable").disabled = false;
+  $("btnMakePdf").disabled = false;
+
+  lockCalc(true);
+  $("mini").textContent = "تم إغلاق الفاتورة وحفظها ✅";
+  vibrate(30);
 }
 
-async function copyText(txt){
+/* =======================
+   Calculator
+   ======================= */
+let expr = "";
+
+function isAllowedExpr(s){
+  // only digits/operators/./spaces/parentheses
+  return /^[0-9+\-*/().\s]*$/.test(s);
+}
+function normalizeExpr(s){
+  return s.replace(/×/g,"*").replace(/÷/g,"/").trim();
+}
+function evalExpr(raw){
+  const s = normalizeExpr(raw);
+  if(!isAllowedExpr(s)) throw new Error("صيغة غير مسموحة");
+  // منع أشياء فارغة أو تنتهي بمشغل
+  if(!s || /[+\-*/.]$/.test(s)) throw new Error("أكمل العملية");
+  // eslint-disable-next-line no-new-func
+  const v = Function("return (" + s + ")")();
+  if(!Number.isFinite(v)) throw new Error("نتيجة غير صالحة");
+  return v;
+}
+
+function setExprUI(){
+  $("expr").textContent = expr ? expr : "0";
+}
+
+async function addLineFromExpr(){
+  if(!state.invoiceOpen || !state.invoiceId) return alert("ابدأ الفاتورة أولاً");
+
+  const raw = expr;
+  let result;
+  try{
+    result = evalExpr(raw);
+  }catch(e){
+    return alert(e.message || "خطأ بالعملية");
+  }
+
+  const note = ($("lineNote").value || "").trim(); // optional
+  const row = {
+    created_at: nowISO(),
+    statement: note,
+    operation: raw,
+    result: result
+  };
+
+  // save to Supabase (كل سطر)
+  const payload = {
+    username: state.username,
+    invoice_id: state.invoiceId,
+    statement: note || null,
+    operation: raw,
+    result: result,
+    device_id: getDeviceId()
+  };
+
+  const { error } = await client.from("app_operations").insert(payload);
+  if(error){
+    console.error(error);
+    return alert("فشل حفظ السطر: " + error.message);
+  }
+
+  // local
+  state.ops.push(row);
+  state.total = state.ops.reduce((a,b)=>a + safeNum(b.result), 0);
+
+  renderOps();
+
+  // بعد التسجيل: اترك البيان مثل ما هو؟ حسب رغبتك… نخليه يمسح لتسهيل
+  $("lineNote").value = "";
+  expr = formatNumber(result); // خلي الناتج جاهز لسطر جديد
+  setExprUI();
+
+  $("mini").textContent = "تم حفظ السطر ✅";
+  vibrate(16);
+}
+
+function backspace(){
+  expr = expr.slice(0,-1);
+  setExprUI();
+}
+function clearAll(){
+  expr = "";
+  setExprUI();
+}
+function toggleNeg(){
+  // إذا expr رقم فقط
+  const s = normalizeExpr(expr);
+  if(!s) return;
+  if(/^[0-9.]+$/.test(s)){
+    expr = (s.startsWith("-") ? s.slice(1) : "-" + s);
+  }else{
+    // حول آخر رقم فقط (اختياري)، هنا نبسط: نلف الكل
+    expr = "-(" + expr + ")";
+  }
+  setExprUI();
+}
+function press(k){
+  if(!state.invoiceOpen) return;
+
+  if(k === "C"){ clearAll(); return; }
+  if(k === "⌫"){ backspace(); return; }
+  if(k === "="){ addLineFromExpr(); return; }
+  if(k === "CLRLINE"){ $("lineNote").value = ""; vibrate(10); return; }
+  if(k === "NEG"){ toggleNeg(); vibrate(10); return; }
+
+  // prevent double operators
+  const last = expr.slice(-1);
+  const ops = ["+","-","×","÷","*","/"];
+  if(ops.includes(k)){
+    if(!expr) return;
+    if(ops.includes(last)) expr = expr.slice(0,-1) + k;
+    else expr += k;
+  }else{
+    expr += k;
+  }
+  setExprUI();
+}
+
+/* =======================
+   Render table
+   ======================= */
+function renderOps(){
+  const body = $("opsBody");
+  body.innerHTML = "";
+
+  state.ops.forEach((r) => {
+    const tr = document.createElement("tr");
+
+    const tdT = document.createElement("td");
+    tdT.textContent = fmtDateTime(r.created_at);
+
+    const tdS = document.createElement("td");
+    tdS.textContent = r.statement || "";
+
+    const tdO = document.createElement("td");
+    tdO.style.direction = "ltr";
+    tdO.style.textAlign = "left";
+    tdO.textContent = r.operation || "";
+
+    const tdR = document.createElement("td");
+    tdR.style.direction = "ltr";
+    tdR.style.textAlign = "left";
+    tdR.textContent = formatNumber(r.result);
+
+    tr.append(tdT, tdS, tdO, tdR);
+    body.appendChild(tr);
+  });
+
+  $("totalBadge").textContent = "الإجمالي: " + formatNumber(state.total);
+  $("rowsBadge").textContent = "السطور: " + state.ops.length;
+}
+
+/* =======================
+   Copy + PDF
+   ======================= */
+async function copyTable(){
+  if(!state.ops.length) return alert("لا يوجد سطور لنسخها");
+  // نص منسق (TSV)
+  const lines = [];
+  lines.push(["الوقت","البيان","العملية","النتيجة"].join("\t"));
+  state.ops.forEach(r=>{
+    lines.push([fmtDateTime(r.created_at), (r.statement||""), (r.operation||""), formatNumber(r.result)].join("\t"));
+  });
+  lines.push("");
+  lines.push("تم تطوير الحاسبة من قبل الحايك للحلول الرقمية");
+
+  const txt = lines.join("\n");
   try{
     await navigator.clipboard.writeText(txt);
-    alert("✅ تم النسخ");
+    alert("تم النسخ ✅");
   }catch(e){
     // fallback
     const ta = document.createElement("textarea");
@@ -189,218 +593,88 @@ async function copyText(txt){
     document.body.appendChild(ta);
     ta.select();
     document.execCommand("copy");
-    ta.remove();
-    alert("✅ تم النسخ");
+    document.body.removeChild(ta);
+    alert("تم النسخ ✅");
   }
+  vibrate(14);
 }
 
-/* =========================
-   Supabase init
-   ========================= */
-let client = null;
-(function init(){
+async function makePdf(){
+  if(!state.ops.length) return alert("لا يوجد سطور لتصديرها");
+  // جهّز printArea
+  const meta =
+    `المستخدم: ${state.username}\n` +
+    `اسم المشتري: ${state.buyerName}\n` +
+    `رقم الفاتورة: ${state.invoiceId ? ("#" + String(state.invoiceId).slice(-6)) : "—"}\n` +
+    `التاريخ: ${fmtDateTime(nowISO())}`;
+
+  $("printMeta").textContent = meta;
+  $("printTotal").textContent = "الإجمالي: " + formatNumber(state.total);
+
+  // table HTML (احترافي + صفحات)
+  const rowsHtml = state.ops.map(r=>{
+    return `<tr>
+      <td>${fmtDateTime(r.created_at)}</td>
+      <td>${(r.statement||"").replace(/</g,"&lt;")}</td>
+      <td style="direction:ltr;text-align:left">${(r.operation||"").replace(/</g,"&lt;")}</td>
+      <td style="direction:ltr;text-align:left">${formatNumber(r.result)}</td>
+    </tr>`;
+  }).join("");
+
+  $("printTable").innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="width:22%">الوقت</th>
+          <th style="width:38%">البيان</th>
+          <th style="width:20%">العملية</th>
+          <th style="width:20%">النتيجة</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  `;
+
+  const el = $("printArea");
+  el.style.display = "block";
+
   try{
-    client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    setPill(true, "متصل");
+    const fileName = `invoice_${state.username}_${Date.now()}.pdf`;
+    const opt = {
+      margin: 8,
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css","legacy"] }
+    };
+    await html2pdf().set(opt).from(el).save();
   }catch(e){
     console.error(e);
-    setPill(false, "غير متصل");
-    alert("خطأ إعداد Supabase");
+    alert("فشل تصدير PDF. جرّب متصفح Chrome على الكمبيوتر.");
+  }finally{
+    el.style.display = "none";
   }
 
-  const qs = getQS();
-  if(qs.u) $("username").value = qs.u;
-  if(qs.id) $("invoiceId").value = qs.id;
-
-  // تحميل تلقائي لو موجودين بالرابط
-  if(qs.u && qs.id){
-    loadInvoice();
-  }
-})();
-
-/* =========================
-   Main
-   ========================= */
-async function loadInvoice(){
-  if(!client) return;
-
-  const username = ($("username").value || "").trim();
-  const invoiceId = ($("invoiceId").value || "").trim();
-
-  $("hintBox").style.display = "none";
-  $("opsTbody").innerHTML = "";
-
-  if(!username || !invoiceId){
-    $("hintBox").style.display = "block";
-    $("hintBox").innerHTML = "⚠️ اكتب اسم المستخدم ورقم الفاتورة ثم اضغط <b>تحميل</b>.";
-    return;
-  }
-
-  setPill(true, "جاري التحميل…");
-
-  // 1) invoice meta
-  let invRow = null;
-  try{
-    const { data, error } = await client
-      .from("app_invoices")
-      .select("id, username, total, created_at")
-      .eq("id", invoiceId)
-      .maybeSingle();
-
-    if(error) throw error;
-    invRow = data || null;
-  }catch(e){
-    console.warn("Invoice meta fetch:", e);
-  }
-
-  // 2) operations by invoice_id
-  const { data: ops, error } = await client
-    .from("app_operations")
-    .select("created_at, statement, operation, result, invoice_id, username")
-    .eq("username", username)
-    .eq("invoice_id", invoiceId)
-    .order("created_at", { ascending:true });
-
-  if(error){
-    console.error(error);
-    setPill(false, "خطأ");
-    alert("خطأ تحميل العمليات: " + error.message);
-    return;
-  }
-
-  // Render table
-  const rows = ops || [];
-  if(rows.length === 0){
-    const tr = document.createElement("tr");
-    const td = document.createElement("td");
-    td.colSpan = 4;
-    td.style.color = "var(--muted)";
-    td.style.padding = "14px";
-    td.textContent = "لا توجد عمليات ضمن هذه الفاتورة.";
-    tr.appendChild(td);
-    $("opsTbody").appendChild(tr);
-  }else{
-    rows.forEach(r=>{
-      const tr = document.createElement("tr");
-
-      const tdT = document.createElement("td");
-      tdT.textContent = fmtDateTime(r.created_at);
-
-      const tdS = document.createElement("td");
-      tdS.textContent = r.statement || "";
-
-      const tdO = document.createElement("td");
-      tdO.textContent = r.operation || "";
-
-      const tdR = document.createElement("td");
-      tdR.textContent = (r.result === null || r.result === undefined) ? "" : String(r.result);
-
-      tr.append(tdT, tdS, tdO, tdR);
-      $("opsTbody").appendChild(tr);
-    });
-  }
-
-  // Totals / meta
-  const calcTotal = rows.reduce((s,r)=> s + safeNum(r.result), 0);
-  const finalTotal = invRow ? safeNum(invRow.total) : calcTotal;
-  const createdAt = invRow?.created_at || (rows[0]?.created_at || null);
-
-  $("metaUser").textContent = "المستخدم: " + username;
-  $("metaInv").textContent = "الفاتورة: " + invoiceId;
-  $("metaDate").textContent = "التاريخ: " + (createdAt ? fmtDateTime(createdAt) : "—");
-  $("metaTotal").textContent = "المجموع: " + finalTotal.toFixed(2);
-
-  setPill(true, "جاهز");
   vibrate(20);
 }
 
-/* =========================
-   PDF / Print
-   ========================= */
-function buildPrint(){
-  const username = ($("username").value || "").trim();
-  const invoiceId = ($("invoiceId").value || "").trim();
-
-  const metaText = `المستخدم: ${username} | الفاتورة: ${invoiceId} | ${$("metaDate").textContent.replace("التاريخ:","").trim()}`;
-  $("printMeta").textContent = metaText;
-  $("printTotal").textContent = $("metaTotal").textContent;
-
-  const htmlTable = `
-    <table style="width:100%; border-collapse:collapse;">
-      <thead>
-        <tr>
-          <th style="text-align:right; padding:8px;">الوقت</th>
-          <th style="text-align:right; padding:8px;">البيان</th>
-          <th style="text-align:right; padding:8px;">العملية</th>
-          <th style="text-align:right; padding:8px;">النتيجة</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${Array.from($("opsTbody").querySelectorAll("tr")).map(tr=>{
-          const tds = tr.querySelectorAll("td");
-          if(tds.length < 4){
-            return `<tr><td colspan="4" style="padding:10px; color:#666;">${(tds[0]?.textContent||"")}</td></tr>`;
-          }
-          return `<tr>
-            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[0]?.textContent||""}</td>
-            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[1]?.textContent||""}</td>
-            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[2]?.textContent||""}</td>
-            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[3]?.textContent||""}</td>
-          </tr>`;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-  $("printTable").innerHTML = htmlTable;
-
-  $("printArea").style.display = "block";
-}
-
-async function exportPDF(){
-  const username = ($("username").value || "user").trim() || "user";
-  buildPrint();
-
-  try{
-    const opt = {
-      margin: 10,
-      filename: `invoice_${username}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-    };
-    await html2pdf().set(opt).from($("printArea")).save();
-  }catch(e){
-    console.error(e);
-    alert("فشل تصدير PDF. جرّب متصفح Chrome.");
-  }finally{
-    $("printArea").style.display = "none";
-  }
-}
-
-/* =========================
+/* =======================
    Events
-   ========================= */
-$("btnLoad").onclick = loadInvoice;
+   ======================= */
+$("btnLogin").onclick = login;
+$("btnStartInvoice").onclick = startInvoice;
+$("btnCloseInvoice").onclick = closeInvoice;
+$("btnCopyTable").onclick = copyTable;
+$("btnMakePdf").onclick = makePdf;
 
-$("btnCopyLink").onclick = async () => {
-  const username = ($("username").value || "").trim();
-  const invoiceId = ($("invoiceId").value || "").trim();
-  if(!username || !invoiceId){
-    alert("اكتب اسم المستخدم ورقم الفاتورة أولاً");
-    return;
-  }
-  await copyText(buildLink(username, invoiceId));
-  vibrate(15);
-};
-
-$("btnPDF").onclick = exportPDF;
-
-$("btnPrint").onclick = () => {
-  buildPrint();
-  window.print();
-  // نخفي بعد الطباعة
-  setTimeout(()=>{ $("printArea").style.display = "none"; }, 700);
-};
+$("keypad").addEventListener("click", (ev)=>{
+  const k = ev.target?.getAttribute?.("data-k");
+  if(!k) return;
+  press(k);
+  vibrate(8);
+});
 </script>
+
 </body>
 </html>
