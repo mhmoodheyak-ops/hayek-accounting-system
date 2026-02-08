@@ -8,8 +8,7 @@
 
   <style>
     :root{
-      --white:#FFFFFF; --green:#19C37D; --gray:#5F6368; --dark:#2F3337; --black:#111315; --yellow:#D6A628;
-      --bg: var(--gray);
+      --white:#fff; --green:#19C37D; --yellow:#D6A628; --bg:#5F6368;
       --line: rgba(255,255,255,.18);
       --text: var(--white);
       --muted: rgba(255,255,255,.78);
@@ -22,14 +21,13 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
       display:flex;justify-content:center;padding:16px
     }
-    .wrap{width:min(440px,100%);display:grid;gap:12px}
-
+    .wrap{width:min(460px,100%);display:grid;gap:12px}
     .top{
       background: linear-gradient(180deg, rgba(17,19,21,.95), rgba(47,51,55,.95));
       border:1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding:14px 14px;
+      padding:14px;
       display:flex; align-items:center; justify-content:space-between;
     }
     .brand{display:grid;gap:4px}
@@ -37,7 +35,7 @@
     .brand span{font-size:12px;color:var(--muted)}
     .pill{
       font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;
-      background: var(--yellow); color: var(--black);
+      background: var(--yellow); color: #111315;
     }
 
     .card{
@@ -46,130 +44,6 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
-    }
-
-    .heroWrap{
-      padding:14px;
-      display:grid;
-      gap:12px;
-      border-bottom:1px solid rgba(255,255,255,.12);
-      background:
-        radial-gradient(900px 260px at 50% 0%, rgba(214,166,40,.22), rgba(0,0,0,0) 70%),
-        radial-gradient(700px 240px at 20% 40%, rgba(25,195,125,.18), rgba(0,0,0,0) 65%),
-        rgba(17,19,21,.18);
-    }
-
-    .bannerBox{
-      position: relative;
-      text-align:center;
-      padding:16px 14px;
-      border-radius:20px;
-      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.88));
-      color:#111315;
-      box-shadow: 0 14px 34px rgba(0,0,0,.35);
-      border: 1px solid rgba(0,0,0,.10);
-      overflow:hidden;
-    }
-    .bannerBox::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(450px 160px at 50% -10%, rgba(214,166,40,.42), rgba(0,0,0,0) 70%);
-      pointer-events:none;
-      opacity: 1;
-    }
-    .bannerBox::after{
-      content:"";
-      position:absolute;
-      top:-60px; left:-60px;
-      width:160px; height:160px;
-      border-radius:50%;
-      background: rgba(25,195,125,.22);
-      opacity: .9;
-      pointer-events:none;
-    }
-
-    .bannerTitle{
-      position:relative;
-      font-weight:1000;
-      font-size:28px;
-      line-height:1.12;
-      letter-spacing:.3px;
-      color:#111315;
-      text-shadow: 0 1px 0 rgba(255,255,255,.5);
-    }
-    .bannerSub{
-      position:relative;
-      margin-top:6px;
-      font-weight:1000;
-      font-size:16px;
-      letter-spacing:2px;
-      color:#0f7d4f;
-    }
-    .badgeRow{
-      position:relative;
-      margin-top:10px;
-      display:flex;
-      justify-content:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .badge{
-      font-size:12px;
-      font-weight:1000;
-      padding:7px 10px;
-      border-radius:999px;
-      background: rgba(17,19,21,.08);
-      border:1px solid rgba(17,19,21,.10);
-      color:#111315;
-      box-shadow: 0 6px 16px rgba(0,0,0,.10);
-      white-space:nowrap;
-    }
-
-    .bannerFooter{
-      text-align:center;
-      padding:16px 14px;
-      border-radius:20px;
-      background: linear-gradient(135deg, rgba(17,19,21,.96), rgba(47,51,55,.96));
-      color:#FFFFFF;
-      box-shadow: 0 14px 34px rgba(0,0,0,.45);
-      border: 1px solid rgba(255,255,255,.16);
-      overflow:hidden;
-      position:relative;
-    }
-    .bannerFooter::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(520px 180px at 50% -10%, rgba(25,195,125,.28), rgba(0,0,0,0) 70%);
-      pointer-events:none;
-    }
-    .footerMain{
-      position:relative;
-      font-weight:1000;
-      font-size:16px;
-      line-height:1.7;
-      color:#FFFFFF;
-    }
-    .footerLine{
-      position:relative;
-      margin-top:6px;
-      font-weight:1000;
-      font-size:14px;
-      line-height:1.8;
-      color:#D6A628;
-    }
-    .footerPhone{
-      position:relative;
-      margin-top:10px;
-      font-weight:1000;
-      font-size:20px;
-      direction:ltr;
-      color:#19C37D;
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:14px;
-      padding:10px 12px;
-      display:inline-block;
-      box-shadow: 0 10px 22px rgba(0,0,0,.35);
     }
 
     .login{padding:14px;display:grid;gap:10px}
@@ -187,7 +61,7 @@
       cursor:pointer;touch-action:manipulation
     }
     .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
-    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color: var(--black)}
+    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color:#111315}
     .btn.red{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
     .note{font-size:12px;color:var(--muted);line-height:1.7}
 
@@ -197,11 +71,12 @@
       background: rgba(17,19,21,.55);
       border:1px solid var(--line);
       border-radius:20px;
-      padding:14px 14px;
+      padding:14px;
       display:grid; gap:6px;
     }
     .expr{font-size:13px;color:var(--muted);min-height:18px;text-align:left;direction:ltr}
     .result{font-size:30px;font-weight:1000;text-align:left;direction:ltr}
+
     .labelWrap{margin-top:10px;display:grid;gap:6px}
     .labelWrap .t{font-size:12px;color:var(--muted);font-weight:1000}
 
@@ -222,13 +97,13 @@
       background: rgba(255,255,255,.10);font-weight:1000;cursor:pointer;touch-action:manipulation
     }
 
-    .log{padding:0;display:grid;gap:10px;border-top:1px solid var(--line)}
-    .log h3{margin:0;font-size:14px}
+    .log{padding:14px;display:grid;gap:10px;border-top:1px solid var(--line)}
     table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right}
     th{color:var(--muted);font-weight:1000}
     td.num{text-align:left;direction:ltr;font-weight:1000}
     tr:last-child td{border-bottom:none}
+
     .total{
       display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
       border:1px dashed rgba(255,255,255,.22);border-radius:16px;background: rgba(255,255,255,.06);
@@ -236,26 +111,24 @@
     }
     .total span:last-child{direction:ltr}
 
+    /* Modal */
+    .modalBack{
+      position:fixed; inset:0; background:rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center; padding:16px; z-index:9999;
+    }
+    .modal{
+      width:min(420px,100%); background:rgba(17,19,21,.96);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:22px; box-shadow: 0 14px 40px rgba(0,0,0,.45);
+      padding:14px; display:grid; gap:10px;
+    }
+    .modal h3{margin:0;font-size:16px}
+    .modal .hint{font-size:12px;color:rgba(255,255,255,.75);line-height:1.7}
+    .modal .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
     @media print{
-      body{background:#fff;color:#000;padding:0;font-family: "Amiri", serif;}
-      .top,.login,.keys,.footer,.btn,.pill{display:none !important;}
-      .wrap{width:100%}
-      .card{box-shadow:none;border:none}
-      .screen{border:none}
-      .heroWrap{background:#fff !important;border-bottom:none !important;}
-      .bannerBox{background:#fff !important;color:#000 !important;border:2px solid #000 !important;box-shadow:none !important;}
-      .bannerFooter{background:#111 !important;color:#fff !important;border:2px solid #111 !important;box-shadow:none !important;}
-      .bannerSub{color:#0b7a4a !important}
-      .footerLine{color:#D6A628 !important}
-      .footerPhone{color:#19C37D !important;border:2px solid #19C37D !important;box-shadow:none !important;background:#fff !important}
-      .badge{border:1px solid #000 !important;box-shadow:none !important;background:#fff !important}
-      h3{color:#111;border-bottom:2px solid #000;padding-bottom:6px;}
-      table{width:100%;border-collapse:collapse;margin-top:10px;border:1px solid #000;margin-bottom: 14px !important;}
-      th{background:#f0f0f0;color:#000;font-weight:900;border:1px solid #000;}
-      td{border:1px solid #999;padding:8px;}
-      tr:nth-child(even){background:#fafafa;}
-      .total{margin-top:12px;margin-bottom: 14px !important;font-size:16px;font-weight:900;border:2px dashed #000;background:#fff;}
-      .bannerFooter{margin-top: 16px !important;break-inside: avoid !important;page-break-inside: avoid !important;}
+      /* المستخدم لا يطبع من هنا — الطباعة من invoice.html */
+      body{background:#fff;color:#000}
     }
   </style>
 </head>
@@ -290,7 +163,8 @@
 
       <div class="note" id="loginNote">
         ✅ الدخول يعتمد على قاعدة البيانات ويعمل من أي جهاز.<br>
-        ✅ إذا كان المستخدم محظور، لن يتمكن من الدخول.
+        ✅ إذا كان المستخدم محظور، لن يتمكن من الدخول.<br>
+        ✅ قبل الحساب: لازم إدخال اسم العميل لفتح فاتورة.
       </div>
     </div>
 
@@ -305,6 +179,11 @@
         <div class="labelWrap">
           <div class="t">البيان (اختياري) — يضاف بجانب العملية</div>
           <input id="labelInput" placeholder="مثال: دفعة زبون / مصروف / فاتورة..." />
+        </div>
+
+        <div style="margin-top:10px" class="total">
+          <span>الفاتورة الحالية:</span>
+          <span id="invMeta" style="direction:ltr">—</span>
         </div>
       </div>
 
@@ -332,8 +211,8 @@
         <button class="key" data-k="0">0</button>
         <button class="key" data-k=".">.</button>
 
-        <!-- ✅ (=) يسجل ويحفظ تلقائياً -->
-        <button class="key eq" data-k="=" style="grid-column: span 2; font-size:20px;">=</button>
+        <!-- ✅ (=) يحفظ سطر مباشرة -->
+        <button class="key eq" data-k="=" style="grid-column: span 2; font-size:20px;">= حفظ</button>
       </div>
 
       <div class="footer">
@@ -345,54 +224,59 @@
         </div>
 
         <div class="row2">
-          <button class="btn green" id="pdfBtn">تصدير PDF</button>
-          <button class="btn red" id="clearLogBtn">مسح السجل</button>
+          <!-- ✅ تم: يغلق الفاتورة إلزامي -->
+          <button class="btn green" id="doneBtn">تم (إغلاق الفاتورة)</button>
+          <!-- ✅ يفتح invoice.html للطباعة -->
+          <button class="btn yellow" id="printBtn">طباعة / PDF</button>
+        </div>
+
+        <div class="row2">
+          <button class="btn red" id="clearLocalBtn">مسح العرض (محلي)</button>
+          <button class="btn" id="newInvoiceBtn">فاتورة جديدة</button>
         </div>
       </div>
 
       <div class="log">
-        <div class="heroWrap">
-          <div class="bannerBox">
-            <div class="bannerTitle">شركة الحايك</div>
-            <div class="bannerSub">HAYEK SPOT</div>
-            <div class="badgeRow">
-              <div class="badge">حاسبة احترافية</div>
-              <div class="badge">سجل عمليات</div>
-              <div class="badge">تصدير PDF</div>
-            </div>
-          </div>
+        <h3 style="margin:0;font-size:14px">تفاصيل الفاتورة</h3>
 
-          <h3>سجل العمليات</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>الوقت</th>
+              <th>البيان</th>
+              <th class="num">العملية</th>
+              <th class="num">النتيجة</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
 
-          <table>
-            <thead>
-              <tr>
-                <th>البيان</th>
-                <th class="num">العملية</th>
-                <th class="num">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-
-          <div class="total">
-            <span>إجمالي الكشف:</span>
-            <span id="grandTotal">0</span>
-          </div>
-
-          <div class="bannerFooter">
-            <div class="footerMain">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-            <div class="footerLine">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية /</div>
-            <div class="footerPhone">05510217646</div>
-          </div>
+        <div class="total">
+          <span>إجمالي الكشف:</span>
+          <span id="grandTotal">0</span>
         </div>
+
+        <div class="note" id="statusNote"></div>
       </div>
     </div>
   </div>
 
-<script type="module">
+  <!-- ✅ Modal: اسم العميل إلزامي -->
+  <div class="modalBack" id="modalBack">
+    <div class="modal">
+      <h3>ادخل اسم العميل (إلزامي)</h3>
+      <div class="hint">بعد إدخال الاسم سيتم فتح فاتورة تلقائياً، وبعدها تقدر تبدأ الحساب.</div>
+      <input id="customerName" placeholder="مثال: أبو أحمد" />
+      <div class="btnRow">
+        <button class="btn red" id="logoutBtn">إلغاء / خروج</button>
+        <button class="btn green" id="startInvoiceBtn">بدء الفاتورة</button>
+      </div>
+    </div>
+  </div>
+
+<script>
   // =========================
-  // ✅ Supabase (Backend)
+  // ✅ Supabase REST
   // =========================
   const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
   const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
@@ -408,14 +292,14 @@
     Object.assign(d.style, {
       position:"fixed", bottom:"18px", left:"50%",
       transform:"translateX(-50%)",
-      background:"rgba(17,19,21,.85)",
+      background:"rgba(17,19,21,.88)",
       color:"#fff", padding:"10px 14px",
       borderRadius:"14px", fontWeight:"1000",
-      zIndex:9999, backdropFilter:"blur(8px)",
+      zIndex:99999, backdropFilter:"blur(8px)",
       border:"1px solid rgba(255,255,255,.18)"
     });
     document.body.appendChild(d);
-    setTimeout(()=>d.remove(), 1600);
+    setTimeout(()=>d.remove(), 1700);
   };
 
   const apiFetch = async (path, options = {}) => {
@@ -444,21 +328,25 @@
   function getDeviceId(){
     let id = localStorage.getItem(K_DEVICE);
     if (id) return id;
-    const rnd = crypto?.getRandomValues
-      ? crypto.getRandomValues(new Uint32Array(4))
-      : [Date.now(), Math.random()*1e9, Math.random()*1e9, Math.random()*1e9];
+    const rnd = crypto?.getRandomValues ? crypto.getRandomValues(new Uint32Array(4)) : [Date.now(), Math.random()*1e9, Math.random()*1e9, Math.random()*1e9];
     id = `dev_${Array.from(rnd).map(n=>Number(n).toString(16)).join("")}_${Date.now().toString(16)}`;
     localStorage.setItem(K_DEVICE, id);
     return id;
   }
 
   // =========================
-  // Session
+  // ✅ Session + Invoice state
   // =========================
-  const K_SESSION = "hs_session_v4"; // ✅ نسخة جديدة
+  const K_SESSION = "hs_session_v4";
+  const K_INV = "hs_current_invoice_v1"; // {invoice_id, customer_name, status}
+
   const saveSession = (obj) => localStorage.setItem(K_SESSION, JSON.stringify(obj));
   const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
   const clearSession = () => { try { localStorage.removeItem(K_SESSION); } catch(_){} };
+
+  const saveInv = (obj)=> localStorage.setItem(K_INV, JSON.stringify(obj));
+  const loadInv = ()=> { try { return JSON.parse(localStorage.getItem(K_INV) || "null"); } catch { return null; } };
+  const clearInv = ()=> { try { localStorage.removeItem(K_INV); } catch(_){} };
 
   const statusPill = $("statusPill");
   const loginCard  = $("loginCard");
@@ -466,34 +354,45 @@
 
   const usernameEl = $("username");
   const passwordEl = $("password");
-  const labelInput = $("labelInput");
 
+  const modalBack = $("modalBack");
+  const customerNameEl = $("customerName");
+
+  const labelInput = $("labelInput");
   const exprEl = $("expr");
   const resEl  = $("res");
   const tbody  = $("tbody");
   const grandTotalEl = $("grandTotal");
+  const invMetaEl = $("invMeta");
+  const statusNote = $("statusNote");
 
   const setLocked = (locked) => {
     statusPill.textContent = locked ? "مقفل" : "مفتوح";
     statusPill.style.background = locked ? "var(--yellow)" : "var(--green)";
-    statusPill.style.color = "var(--black)";
+    statusPill.style.color = "#111315";
     loginCard.style.display = locked ? "grid" : "none";
     appCard.style.display = locked ? "none" : "block";
   };
 
-  function forceLogout(reasonMsg){
+  function showCustomerModal(show){
+    modalBack.style.display = show ? "flex" : "none";
+  }
+
+  function forceLogout(msg){
     clearSession();
+    clearInv();
     setLocked(true);
-    if (reasonMsg) toast(reasonMsg);
+    showCustomerModal(false);
+    if (msg) toast(msg);
   }
 
   // =========================
-  // ✅ Auth + Device Binding
+  // ✅ Auth + Device bind
   // =========================
   const loginUser = async (username, pass) => {
     const u = (username || "").trim();
     const p = (pass || "").trim();
-    if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return; }
+    if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return false; }
 
     const deviceId = getDeviceId();
 
@@ -506,8 +405,8 @@
     const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
     const user = Array.isArray(rows) ? rows[0] : null;
 
-    if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return; }
-    if (user.blocked) { toast("هذا المستخدم محظور ❌"); return; }
+    if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return false; }
+    if (user.blocked) { toast("هذا المستخدم محظور ❌"); return false; }
 
     if (!user.device_id){
       await apiFetch(`/app_users?id=eq.${user.id}`, {
@@ -517,7 +416,7 @@
       });
     } else if (user.device_id !== deviceId){
       toast("هذا الحساب مرتبط بجهاز آخر ❌");
-      return;
+      return false;
     } else {
       try{
         await apiFetch(`/app_users?id=eq.${user.id}`, {
@@ -528,150 +427,92 @@
       }catch(_){}
     }
 
-    // ✅ نفتح بدون فاتورة جاهزة.. أول عملية تفتح فاتورة تلقائياً
-    saveSession({
-      id: user.id,
-      username: user.username,
-      is_admin: !!user.is_admin,
-      device_id: deviceId,
-      invoice_id: null,
-      ts: Date.now()
-    });
-
-    setLocked(false);
-    toast("تم الدخول ✅");
+    saveSession({ id: user.id, username: user.username, is_admin: !!user.is_admin, device_id: deviceId, ts: Date.now() });
+    return true;
   };
 
   // =========================
-  // ✅ Guard: حظر فوري + تحقق الجهاز
+  // ✅ Invoice create/close
   // =========================
-  let guardTimer = null;
-
-  async function guardTick(){
+  async function createInvoiceForCustomer(customerName){
     const sess = loadSession();
-    if (!sess?.id) return;
+    if (!sess?.username) throw new Error("No session");
 
-    try{
-      const q = `?select=id,blocked,device_id&limit=1&id=eq.${sess.id}`;
-      const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
-      const u = Array.isArray(rows) ? rows[0] : null;
-
-      if (!u) return forceLogout("تم تسجيل الخروج");
-      if (u.blocked) return forceLogout("تم حظرك من النظام ❌");
-
-      const myDevice = getDeviceId();
-      if (u.device_id && u.device_id !== myDevice) return forceLogout("هذا الحساب انتقل لجهاز آخر ❌");
-
-      try{
-        await apiFetch(`/app_users?id=eq.${sess.id}`, {
-          method:"PATCH",
-          headers:{ "Prefer":"return=minimal" },
-          body: JSON.stringify({ last_seen: new Date().toISOString() })
-        });
-      }catch(_){}
-    }catch(e){
-      console.warn("Guard error", e);
-    }
-  }
-
-  function startGuard(){
-    if (guardTimer) clearInterval(guardTimer);
-    guardTimer = setInterval(guardTick, 10000);
-    guardTick();
-  }
-
-  // =========================
-  // ✅ Invoices: create + keep current invoice_id
-  // =========================
-  async function ensureInvoice(){
-    const sess = loadSession();
-    if (!sess?.id || !sess?.username) throw new Error("No session");
-
-    if (sess.invoice_id) return sess.invoice_id;
-
-    const deviceId = getDeviceId();
-    const username = sess.username;
-
-    // 1) Try RPC create_invoice
-    try{
-      const rpcRes = await apiFetch(`/rpc/create_invoice`, {
-        method:"POST",
-        body: JSON.stringify({ p_username: username, p_device_id: deviceId })
-      });
-
-      // بعض المشاريع ترجع uuid مباشرة، وبعضها ترجع كائن
-      const invoiceId = (typeof rpcRes === "string")
-        ? rpcRes
-        : (rpcRes?.id || rpcRes?.invoice_id || rpcRes?.data || rpcRes);
-
-      if (invoiceId){
-        sess.invoice_id = invoiceId;
-        saveSession(sess);
-        toast("تم فتح فاتورة جديدة ✅");
-        return invoiceId;
-      }
-    }catch(e){
-      // نكمل بالفولباك
-      console.warn("RPC create_invoice failed, fallback insert", e);
-    }
-
-    // 2) Fallback: insert into app_invoices
-    const inserted = await apiFetch(`/app_invoices`, {
+    // RPC create_invoice(p_username, p_device_id) -> uuid
+    const data = await apiFetch(`/rpc/create_invoice`, {
       method:"POST",
-      headers:{ "Prefer":"return=representation" },
-      body: JSON.stringify({ username, device_id: deviceId, total: 0 })
+      body: JSON.stringify({
+        p_username: sess.username,
+        p_device_id: getDeviceId()
+      })
     });
 
-    const row = Array.isArray(inserted) ? inserted[0] : inserted;
-    const invoiceId = row?.id;
-    if (!invoiceId) throw new Error("Could not create invoice");
+    const invoiceId = (typeof data === "string") ? data : (data?.id || data);
+    if (!invoiceId) throw new Error("create_invoice failed");
 
-    sess.invoice_id = invoiceId;
-    saveSession(sess);
-    toast("تم فتح فاتورة جديدة ✅");
+    // update invoice with customer_name + status open
+    await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(invoiceId)}`, {
+      method:"PATCH",
+      headers:{ "Prefer":"return=minimal" },
+      body: JSON.stringify({
+        customer_name: customerName,
+        status: "open"
+      })
+    });
+
+    saveInv({ invoice_id: invoiceId, customer_name: customerName, status:"open" });
+    invMetaEl.textContent = invoiceId;
+    statusNote.textContent = `فاتورة مفتوحة باسم: ${customerName}`;
+    toast("تم فتح فاتورة ✅");
     return invoiceId;
   }
 
-  async function updateInvoiceTotal(invoice_id, totalNumber){
-    try{
-      await apiFetch(`/app_invoices?id=eq.${invoice_id}`, {
-        method:"PATCH",
-        headers:{ "Prefer":"return=minimal" },
-        body: JSON.stringify({ total: Number(totalNumber) || 0 })
-      });
-    }catch(e){
-      console.warn("Update invoice total failed", e);
-    }
-  }
-
-  async function startNewInvoiceAndReset(){
+  async function closeInvoice(){
     const sess = loadSession();
-    if (!sess?.id) return;
+    const inv = loadInv();
+    if (!sess?.id || !inv?.invoice_id) { toast("لا توجد فاتورة"); return; }
+    if ((inv.status || "open") !== "open") { toast("الفاتورة مغلقة أصلاً"); return; }
 
-    // فك ارتباط الفاتورة الحالية
-    sess.invoice_id = null;
-    saveSession(sess);
+    if (!logRows.length){
+      toast("لا يمكن إغلاق فاتورة فارغة");
+      return;
+    }
 
-    // فتح فاتورة جديدة عند أول عملية (أو مباشرة)
-    try{ await ensureInvoice(); } catch(_){}
+    const total = computeTotal();
+    await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(inv.invoice_id)}`, {
+      method:"PATCH",
+      headers:{ "Prefer":"return=minimal" },
+      body: JSON.stringify({
+        status: "closed",
+        closed_at: new Date().toISOString(),
+        total: total
+      })
+    });
 
-    // تفريغ السجل محلياً
-    log = [];
-    expr = "";
-    lastResult = 0;
+    saveInv({ ...inv, status:"closed" });
+    toast("تم إغلاق الفاتورة ✅");
+    statusNote.textContent = `فاتورة مغلقة باسم: ${inv.customer_name}`;
     render();
   }
 
+  function openPrint(){
+    const inv = loadInv();
+    if (!inv?.invoice_id){ toast("افتح فاتورة أولاً"); return; }
+    if ((inv.status || "open") !== "closed"){
+      toast("لازم تضغط (تم) لإغلاق الفاتورة قبل الطباعة");
+      return;
+    }
+    // ✅ طباعة نظيفة من صفحة الفاتورة
+    const url = `./invoice.html?invoice_id=${encodeURIComponent(inv.invoice_id)}&print=1`;
+    window.open(url, "_blank");
+  }
+
   // =========================
-  // Calculator + Log (local + central)
+  // ✅ Operations (per invoice)
   // =========================
-  const K_LOG = "hs_calc_log_v3";
   let expr = "";
   let lastResult = 0;
-  let log = loadLog();
-
-  function loadLog(){ try { return JSON.parse(localStorage.getItem(K_LOG) || "[]"); } catch { return []; } }
-  function saveLog(){ localStorage.setItem(K_LOG, JSON.stringify(log)); }
+  let logRows = []; // from DB
 
   function formatNumber(n){
     const x = Number(n);
@@ -682,7 +523,6 @@
   function safeEval(expression){
     if (!/^[0-9+\-*/().\s]+$/.test(expression)) return null;
     try{
-      // eslint-disable-next-line no-new-func
       const fn = Function(`"use strict"; return (${expression});`);
       const val = fn();
       return Number.isFinite(val) ? val : null;
@@ -690,12 +530,17 @@
   }
 
   function computeTotal(){
-    let total = 0;
-    for (const row of log){
-      const r = Number(row.result);
-      if (Number.isFinite(r)) total += r;
-    }
-    return total;
+    return logRows.reduce((acc,r)=>{
+      const v = Number(r.result);
+      return Number.isFinite(v) ? acc+v : acc;
+    }, 0);
+  }
+
+  function fmtTime(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleTimeString("ar", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+    }catch{ return ""; }
   }
 
   function render(){
@@ -703,78 +548,98 @@
     const calc = safeEval(expr);
     resEl.textContent = calc === null ? formatNumber(lastResult) : formatNumber(calc);
 
-    tbody.innerHTML = "";
-    const orderedLog = [...log].reverse(); // الأقدم فوق
-    for (const row of orderedLog){
+    const inv = loadInv();
+    invMetaEl.textContent = inv?.invoice_id ? inv.invoice_id : "—";
+
+    const tb = tbody;
+    tb.innerHTML = "";
+
+    logRows.forEach(r=>{
       const tr = document.createElement("tr");
 
-      const td1 = document.createElement("td");
-      td1.textContent = row.label || "عملية";
+      const tdT = document.createElement("td");
+      tdT.textContent = fmtTime(r.created_at);
 
-      const td2 = document.createElement("td");
-      td2.className = "num";
-      td2.textContent = row.op;
+      const tdL = document.createElement("td");
+      tdL.textContent = r.label || "عملية";
 
-      const td3 = document.createElement("td");
-      td3.className = "num";
-      td3.textContent = row.result;
+      const tdO = document.createElement("td");
+      tdO.className = "num";
+      tdO.textContent = r.operation || "";
 
-      tr.append(td1, td2, td3);
-      tbody.appendChild(tr);
+      const tdR = document.createElement("td");
+      tdR.className = "num";
+      tdR.textContent = r.result ?? "";
+
+      tr.append(tdT, tdL, tdO, tdR);
+      tb.appendChild(tr);
+    });
+
+    grandTotalEl.textContent = formatNumber(computeTotal());
+
+    if (!inv?.invoice_id){
+      statusNote.textContent = "⚠️ ادخل اسم العميل لفتح فاتورة.";
+    } else if ((inv.status || "open") === "open"){
+      statusNote.textContent = `✅ فاتورة مفتوحة باسم: ${inv.customer_name || "—"} — اضغط (تم) عند الانتهاء.`;
+    } else {
+      statusNote.textContent = `🔒 فاتورة مغلقة باسم: ${inv.customer_name || "—"} — يمكنك الطباعة / PDF.`;
     }
-
-    const total = computeTotal();
-    grandTotalEl.textContent = formatNumber(total);
-    saveLog();
   }
 
-  // ✅ إرسال عملية للسيرفر + invoice_id (ولو ما كان العمود موجود، يعمل fallback)
-  async function pushOperationToCentral({ user_id, username, label, operation, result, device_id, invoice_id }){
+  async function loadInvoiceOperations(){
+    const inv = loadInv();
+    if (!inv?.invoice_id){
+      logRows = [];
+      render();
+      return;
+    }
+    const rows = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(inv.invoice_id)}&order=created_at.asc`, { method:"GET" });
+    logRows = Array.isArray(rows) ? rows : [];
+    render();
+  }
+
+  async function addOperationRow(operation, result){
+    const sess = loadSession();
+    const inv = loadInv();
+    if (!sess?.id || !inv?.invoice_id){
+      toast("لازم تفتح فاتورة أولاً");
+      return;
+    }
+    if ((inv.status || "open") !== "open"){
+      toast("الفاتورة مغلقة — افتح فاتورة جديدة");
+      return;
+    }
+
+    const label = (labelInput.value || "").trim() || "عملية";
     const payload = {
-      user_id,
-      username,
-      label: label || null,
+      user_id: sess.id,
+      username: sess.username,
+      invoice_id: inv.invoice_id,
+      label,
       operation,
-      result,
-      device_id
+      result: String(result),
+      device_id: getDeviceId()
     };
 
-    // جرّب مع invoice_id أولاً
-    if (invoice_id) payload.invoice_id = invoice_id;
+    await apiFetch(`/app_operations`, {
+      method:"POST",
+      headers:{ "Prefer":"return=representation" },
+      body: JSON.stringify(payload)
+    });
 
-    try{
-      await apiFetch(`/app_operations`, {
-        method:"POST",
-        headers:{ "Prefer":"return=minimal" },
-        body: JSON.stringify(payload)
-      });
-      return;
-    }catch(e){
-      // لو فشل بسبب عمود invoice_id غير موجود: جرّب بدون invoice_id
-      const msg = String(e?.message || "");
-      if (invoice_id && (msg.includes("invoice_id") || msg.includes("column") || msg.includes("schema"))){
-        try{
-          delete payload.invoice_id;
-          await apiFetch(`/app_operations`, {
-            method:"POST",
-            headers:{ "Prefer":"return=minimal" },
-            body: JSON.stringify(payload)
-          });
-          return;
-        }catch(e2){
-          console.warn("Central log failed", e2);
-          return;
-        }
-      }
-      console.warn("Central log failed", e);
-    }
+    labelInput.value = "";
+    await loadInvoiceOperations();
   }
 
-  // ✅ تسجيل العملية + إنشاء فاتورة تلقائياً
-  async function newlineCommit(){
-    const sess = loadSession();
-    if (!sess?.id || !sess?.username){
-      toast("سجّل دخول أولاً");
+  function newlineCommit(){
+    const inv = loadInv();
+    if (!inv?.invoice_id){
+      toast("ادخل اسم العميل أولاً");
+      showCustomerModal(true);
+      return;
+    }
+    if ((inv.status || "open") !== "open"){
+      toast("الفاتورة مغلقة — افتح فاتورة جديدة");
       return;
     }
 
@@ -786,48 +651,16 @@
 
     lastResult = val;
 
-    const label = (labelInput.value || "").trim() || "عملية";
     const opDisplay = clean.replace(/\*/g,"×").replace(/\//g,"÷");
     const resultText = formatNumber(val);
 
-    // ✅ تأكد من وجود فاتورة قبل حفظ العملية
-    let invoiceId = null;
-    try{
-      invoiceId = await ensureInvoice();
-    }catch(e){
-      console.warn("ensureInvoice failed", e);
-      // حتى لو فشلت الفاتورة، منخلي المستخدم يكمل محلياً
-      toast("تنبيه: لم يتم فتح فاتورة على السيرفر");
-    }
-
-    // محلياً
-    log.unshift({
-      label,
-      op: opDisplay,
-      result: resultText,
-      ts: Date.now()
-    });
-
-    // مركزياً للأدمن
-    pushOperationToCentral({
-      user_id: sess.id,
-      username: sess.username,
-      label,
-      operation: opDisplay,
-      result: resultText,
-      device_id: getDeviceId(),
-      invoice_id: invoiceId
-    });
-
-    // تحديث total الفاتورة (لو موجودة)
-    if (invoiceId){
-      const total = computeTotal();
-      updateInvoiceTotal(invoiceId, total);
-    }
-
     expr = "";
-    labelInput.value = "";
     render();
+
+    addOperationRow(opDisplay, resultText).catch(e=>{
+      console.error(e);
+      toast("فشل حفظ السطر");
+    });
   }
 
   function clearAll(){ expr=""; lastResult=0; render(); }
@@ -844,16 +677,13 @@
     if (k === "C") return clearAll();
     if (k === "CE") return clearEntry();
     if (k === "BK") return backspace();
-
-    // ✅ (=) يسجل ويحفظ تلقائياً
-    if (k === "=") { newlineCommit(); return; }
+    if (k === "=") return newlineCommit(); // ✅ حفظ تلقائي
 
     if (["/","*","-","+"].includes(k)){
       if (!expr.trim()) return;
       if (/[+\-*/]\s*$/.test(expr)) expr = expr.replace(/[+\-*/]\s*$/,"");
       expr += ` ${k} `;
-      render();
-      return;
+      return render();
     }
 
     if (k === "."){
@@ -880,28 +710,41 @@
   }
 
   function logAsTSV(){
-    const header = ["البيان","العملية","النتيجة"].join("\t");
-    const orderedLog = [...log].reverse();
-    const rows = orderedLog.map(r => [r.label, r.op, r.result].join("\t"));
-    return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
+    const header = ["الوقت","البيان","العملية","النتيجة"].join("\t");
+    const rows = logRows.map(r => [fmtTime(r.created_at), r.label, r.operation, r.result].join("\t"));
+    return [header, ...rows, `إجمالي الكشف:\t\t\t${grandTotalEl.textContent}`].join("\n");
   }
 
-  // Events
+  // =========================
+  // ✅ UI Events
+  // =========================
   $("loginBtn").addEventListener("click", async () => {
     vibe();
     try{
-      await loginUser(usernameEl.value, passwordEl.value);
-      const s = loadSession();
-      if (s?.id) startGuard();
+      const ok = await loginUser(usernameEl.value, passwordEl.value);
+      if (!ok) return;
+      setLocked(false);
+
+      // إذا ما في فاتورة مفتوحة: اطلب اسم عميل
+      const inv = loadInv();
+      if (!inv || (inv.status !== "open")){
+        showCustomerModal(true);
+        customerNameEl.value = "";
+        customerNameEl.focus();
+      } else {
+        await loadInvoiceOperations();
+      }
+
+      toast("تم الدخول ✅");
     }catch(e){
-      toast("خطأ اتصال بقاعدة البيانات");
       console.error(e);
+      toast("خطأ اتصال بقاعدة البيانات");
     }
   }, { passive:true });
 
   $("adminBtn").addEventListener("click", () => {
     vibe();
-    location.href = "./admin.html";
+    location.href = "./admin.html?v=999";
   }, { passive:true });
 
   $("keys").addEventListener("click", (e) => {
@@ -911,25 +754,54 @@
   }, { passive:true });
 
   $("newlineBtn").addEventListener("click", () => { vibe(); newlineCommit(); }, { passive:true });
-  $("copyTableBtn").addEventListener("click", () => { vibe(); copyText(logAsTSV()); }, { passive:true });
-  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, { passive:true });
 
-  // ✅ PDF: بعد الطباعة افتح فاتورة جديدة وافرّغ السجل تلقائياً
-  $("pdfBtn").addEventListener("click", () => {
+  $("copyTableBtn").addEventListener("click", () => {
     vibe();
-    window.print();
+    const inv = loadInv();
+    if (!inv?.invoice_id) return toast("لا توجد فاتورة");
+    if ((inv.status || "open") !== "closed") return toast("لازم (تم) قبل النسخ");
+    copyText(logAsTSV());
   }, { passive:true });
 
-  window.addEventListener("afterprint", () => {
-    // إنهاء الفاتورة الحالية وبدء فاتورة جديدة تلقائياً
-    startNewInvoiceAndReset();
-    toast("تم حفظ الفاتورة وفتح فاتورة جديدة ✅");
-  });
+  $("copyResBtn").addEventListener("click", () => { vibe(); copyText(resEl.textContent); }, { passive:true });
 
-  $("clearLogBtn").addEventListener("click", () => {
+  $("doneBtn").addEventListener("click", async () => {
     vibe();
-    startNewInvoiceAndReset();
-    toast("تم مسح السجل وفتح فاتورة جديدة ✅");
+    try{ await closeInvoice(); }
+    catch(e){ console.error(e); toast("فشل إغلاق الفاتورة"); }
+  }, { passive:true });
+
+  $("printBtn").addEventListener("click", () => { vibe(); openPrint(); }, { passive:true });
+
+  $("clearLocalBtn").addEventListener("click", () => { vibe(); expr=""; lastResult=0; render(); toast("تم مسح العرض"); }, { passive:true });
+
+  $("newInvoiceBtn").addEventListener("click", () => {
+    vibe();
+    clearInv();
+    logRows = [];
+    expr = "";
+    lastResult = 0;
+    render();
+    showCustomerModal(true);
+    customerNameEl.value = "";
+    customerNameEl.focus();
+  }, { passive:true });
+
+  $("logoutBtn").addEventListener("click", () => { vibe(); forceLogout("تم الخروج"); }, { passive:true });
+
+  $("startInvoiceBtn").addEventListener("click", async () => {
+    vibe();
+    const name = (customerNameEl.value || "").trim();
+    if (!name) return toast("اسم العميل إلزامي");
+    try{
+      showCustomerModal(false);
+      await createInvoiceForCustomer(name);
+      await loadInvoiceOperations();
+    }catch(e){
+      console.error(e);
+      toast("فشل فتح فاتورة");
+      showCustomerModal(true);
+    }
   }, { passive:true });
 
   window.addEventListener("keydown", (e) => {
@@ -940,10 +812,20 @@
   });
 
   // Boot
-  const sess = loadSession();
-  setLocked(!sess);
-  render();
-  if (sess?.id) startGuard();
+  (async function boot(){
+    const sess = loadSession();
+    setLocked(!sess);
+    render();
+
+    if (sess?.id){
+      const inv = loadInv();
+      if (!inv || inv.status !== "open"){
+        showCustomerModal(true);
+      } else {
+        await loadInvoiceOperations();
+      }
+    }
+  })();
 </script>
 </body>
 </html>
