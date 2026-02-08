@@ -5,96 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <link rel="stylesheet" href="style.css?v=6000" />
+  <!-- خطوط/ستايل -->
+  <link rel="stylesheet" href="style.css?v=9001">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- jsPDF + AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <!-- Config -->
-  <script src="config.js?v=6000"></script>
-
-  <!-- Logic -->
-  <script defer src="admin.js?v=6000"></script>
+  <!-- خط عربي اختياري (إذا عندك amiri-font.js شغال) -->
+  <script src="amiri-font.js?v=9001"></script>
 
   <style>
-    :root{
-      --bg1:#07161b; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
-      --txt:#eaf2ff; --muted:rgba(234,242,255,.70);
-      --good:#10b981; --bad:#ef4444; --warn:#f59e0b;
-      --btn:#0d2a39; --btn2:#1d4ed8;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:
-      radial-gradient(1100px 600px at 50% -220px, #14333c, var(--bg1));
-      color:var(--txt);
-    }
-    .wrap{max-width:1200px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .card{background:var(--card);border:1px solid var(--stroke);border-radius:22px;padding:16px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
-    h1,h2{margin:0 0 10px}
-    .muted{opacity:.78;font-size:13px}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    input,select{
-      width:100%;padding:12px;border-radius:16px;border:1px solid var(--stroke);
-      background:rgba(0,0,0,.20);color:#fff;outline:none
-    }
-    .btn{
-      padding:12px 14px;border-radius:16px;border:1px solid var(--stroke);
-      background:var(--btn);color:#fff;cursor:pointer;font-weight:800
-    }
-    .btn.primary{background:rgba(29,78,216,.85)}
-    .btn.success{background:rgba(16,185,129,.22);border-color:rgba(16,185,129,.35)}
-    .btn.danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
-    .btn:disabled{opacity:.45;cursor:not-allowed}
-    .pill{padding:7px 12px;border-radius:999px;border:1px solid var(--stroke);background:rgba(0,0,0,.18);font-size:13px}
-    .pill.good{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.12);color:#bff7df}
-    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12);color:#ffd1d1}
-    .note{padding:10px 12px;border-radius:16px;border:1px solid var(--stroke);background:rgba(0,0,0,.14);font-size:13px}
-    .note.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
-    .divider{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
-
-    .tableWrap{overflow:auto;border-radius:18px;border:1px solid var(--stroke)}
-    table{width:100%;border-collapse:collapse;min-width:860px;background:rgba(0,0,0,.12)}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);text-align:right}
-    th{color:var(--muted);font-weight:800}
-    .tdActions{white-space:nowrap}
-    .mini{padding:8px 10px;border-radius:14px}
-    .mini.red{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
-    .mini.blue{background:rgba(29,78,216,.22);border-color:rgba(29,78,216,.35)}
-    .mini.green{background:rgba(16,185,129,.18);border-color:rgba(16,185,129,.35)}
-    .mini.gray{background:rgba(0,0,0,.15)}
-    .center{text-align:center}
-
-    /* printable (PDF) */
-    #printable{
-      background:#ffffff;color:#111;direction:rtl;padding:16mm;display:none;
-      font-family:"Segoe UI",Tahoma,Arial;
-    }
-    .p-head{
-      border:1px solid #0b2a39;border-radius:10px;padding:10px 12px;background:#0b2a39;color:#fff;margin-bottom:10px;
-    }
-    .p-head h3{margin:0;font-size:18px}
-    .p-sub{margin:6px 0 0;font-size:12px;opacity:.95}
-    .p-meta{
-      border:1px solid #e6e6e6;border-radius:10px;padding:10px 12px;margin:10px 0;background:#fafafa;font-size:12px;color:#222;
-    }
-    .p-meta b{color:#0b2a39}
-    .p-note{
-      margin:10px 0;padding:10px 12px;border-radius:10px;border:1px dashed #c9c9c9;font-size:12px;color:#333;
-    }
-    #printable table{width:100%;border-collapse:collapse;border:1px solid #ddd}
-    #printable th{background:#0b2a39;color:#fff;font-size:12px;padding:8px;border-bottom:1px solid #ddd}
-    #printable td{font-size:12px;padding:8px;border-bottom:1px solid #eee;color:#111}
-    .p-total{
-      margin-top:10px;border:1px solid #0b2a39;border-radius:10px;padding:10px 12px;background:#f3f7fa;font-size:13px;
-    }
-    .p-total b{color:#0b2a39}
-    .p-footer{margin-top:12px;font-size:12px;color:#333;border-top:1px solid #e6e6e6;padding-top:10px}
+    /* ستايل إضافي خفيف لضمان ترتيب الأدمن حتى لو style.css تغيّر */
+    body{margin:0;background:#0b1417;color:#e9f2f2;font-family:Arial}
+    .wrap{max-width:1100px;margin:20px auto;padding:16px}
+    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px;margin-bottom:14px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .row > *{flex:1}
+    .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
+    .btn-blue{background:#2b66ff;color:#fff}
+    .btn-dark{background:rgba(255,255,255,.08);color:#e9f2f2;border:1px solid rgba(255,255,255,.12)}
+    .btn-red{background:#b11a2a;color:#fff}
+    .btn-green{background:#1f8f5f;color:#fff}
+    .btn-small{padding:7px 10px;border-radius:10px;font-size:13px}
+    input,select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.2);color:#fff;outline:none}
+    table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    th,td{padding:10px 10px;text-align:right}
+    thead th{opacity:.85}
+    tbody tr{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+    tbody tr td:first-child{border-radius:12px 0 0 12px}
+    tbody tr td:last-child{border-radius:0 12px 12px 0}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+    .muted{opacity:.75}
+    .preview{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.20);border-radius:14px;padding:12px}
+    .title{font-size:26px;font-weight:900}
   </style>
 </head>
 
@@ -102,147 +46,112 @@
   <div class="wrap">
 
     <div class="card">
-      <h1>لوحة الأمن</h1>
-      <div class="muted">إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأدمن.</div>
-      <div class="divider"></div>
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="title">لوحة الأمن</div>
+          <div class="muted">إدارة المستخدمين + الفواتير — مع قفل الجهاز الواحد (device_id).</div>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <span class="pill" id="adminState">غير مسجل</span>
+          <button class="btn btn-dark" id="logoutBtn">تسجيل خروج</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- تسجيل دخول الأدمن -->
+    <div class="card">
       <div class="row">
-        <span id="pill" class="pill bad">غير مسجّل</span>
-        <span class="pill">الحالة: <b id="status">جاهز</b></span>
+        <div>
+          <div class="muted">اسم المستخدم</div>
+          <input id="username" placeholder="admin">
+        </div>
+        <div>
+          <div class="muted">كلمة السر</div>
+          <input id="password" type="password" placeholder="••••">
+        </div>
+        <div style="flex:0.6">
+          <div class="muted">&nbsp;</div>
+          <button class="btn btn-blue" id="loginBtn">تسجيل دخول</button>
+        </div>
       </div>
+      <div style="margin-top:10px" class="pill" id="loginStatus">جاهز</div>
+      <div style="margin-top:10px" class="muted">✅ الأدمن يقفل على جهاز واحد فقط (إذا سجل من جهاز ثاني يتم رفض الدخول).</div>
     </div>
 
+    <!-- إدارة المستخدمين -->
     <div class="card">
-      <h2>تسجيل الدخول (Admin)</h2>
-      <div class="grid">
-        <div>
-          <label>اسم المستخدم</label>
-          <input id="adminUser" placeholder="admin" />
-        </div>
-        <div>
-          <label>كلمة السر</label>
-          <input id="adminPass" type="password" placeholder="••••••••" />
-        </div>
-        <div style="align-self:end">
-          <button id="btnLogin" class="btn primary">تسجيل دخول</button>
-        </div>
-        <div style="align-self:end">
-          <button id="btnLogout" class="btn">تسجيل خروج</button>
-        </div>
+      <div class="row" style="justify-content:space-between">
+        <div class="title" style="font-size:20px">إدارة المستخدمين</div>
+        <button class="btn btn-dark" id="refreshUsersBtn">تحديث قائمة المستخدمين</button>
       </div>
 
-      <div class="note warn" style="margin-top:10px">
-        ✅ الأدمن يقفل على جهاز واحد فقط. (إذا سجل من جهاز ثاني سيتم رفض الدخول)
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>إدارة المستخدمين</h2>
-
-      <div class="grid">
-        <div>
-          <label>اسم مستخدم جديد</label>
-          <input id="newUser" placeholder="مثال: محمود" />
-        </div>
-        <div>
-          <label>كلمة السر</label>
-          <input id="newPass" placeholder="1234" />
-        </div>
-        <div>
-          <label>صلاحية</label>
-          <select id="newRole">
-            <option value="user">مستخدم</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div style="align-self:end">
-          <button id="btnAddUser" class="btn success">إضافة</button>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button id="btnRefreshUsers" class="btn">تحديث قائمة المستخدمين</button>
-        <span class="pill">عدد المستخدمين: <b id="usersCount">0</b></span>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="tableWrap">
+      <div style="margin-top:10px;overflow:auto">
         <table>
           <thead>
             <tr>
               <th>#</th>
               <th>المستخدم</th>
-              <th>Admin</th>
-              <th>محظور</th>
-              <th>قفل الجهاز</th>
+              <th>الصلاحية</th>
+              <th>الحالة</th>
+              <th>device_id</th>
               <th>إجراءات</th>
             </tr>
           </thead>
-          <tbody id="usersBody">
-            <tr><td colspan="6" class="center muted">لا يوجد بيانات بعد.</td></tr>
-          </tbody>
+          <tbody id="usersTbody"></tbody>
         </table>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <span class="pill">المستخدم المختار: <b id="selectedUserLabel">—</b></span>
       </div>
     </div>
 
+    <!-- فلاتر الفواتير -->
     <div class="card">
-      <h2>فلاتر الفواتير</h2>
-
-      <div class="grid">
-        <div>
-          <label>اختر المستخدم</label>
-          <select id="invUser">
-            <option value="">— كل المستخدمين —</option>
-          </select>
-        </div>
-        <div>
-          <label>الحالة</label>
-          <select id="invStatus">
-            <option value="">— الكل —</option>
-            <option value="open">مفتوحة</option>
-            <option value="final">منتهية</option>
-          </select>
-        </div>
-        <div>
-          <label>من تاريخ</label>
-          <input id="invFrom" type="date" />
-        </div>
-        <div>
-          <label>إلى تاريخ</label>
-          <input id="invTo" type="date" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button id="btnLoadInvoices" class="btn primary">جلب الفواتير</button>
-        <button id="btnExportListPdf" class="btn">PDF قائمة الفواتير</button>
+      <div class="row" style="justify-content:space-between">
+        <div class="title" style="font-size:20px">فلاتر الفواتير</div>
         <span class="pill">عدد النتائج: <b id="invCount">0</b></span>
       </div>
 
-      <div class="divider"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-dark" id="btnToday">فواتير اليوم</button>
+        <button class="btn btn-dark" id="btnLast7">فواتير آخر 7 أيام</button>
 
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>الرقم</th>
-              <th>المستخدم</th>
-              <th>الزبون</th>
-              <th>الحالة</th>
-              <th>الإجمالي</th>
-              <th>التاريخ</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="invBody">
-            <tr><td colspan="7" class="center muted">لا يوجد بيانات بعد.</td></tr>
-          </tbody>
-        </table>
+        <div>
+          <div class="muted">من تاريخ</div>
+          <input id="fromDate" type="date">
+        </div>
+        <div>
+          <div class="muted">إلى تاريخ</div>
+          <input id="toDate" type="date">
+        </div>
+
+        <div style="flex:0.8">
+          <div class="muted">&nbsp;</div>
+          <button class="btn btn-blue" id="btnLoadInvoices">جلب الفواتير</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div>
+          <div class="muted">قائمة الفواتير (اختر فاتورة)</div>
+          <select id="invoiceSelect">
+            <option value="">— اختر فاتورة —</option>
+          </select>
+        </div>
+        <div style="flex:0.8">
+          <div class="muted">&nbsp;</div>
+          <button class="btn btn-green" id="btnExportPdf" disabled>تصدير PDF</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="preview" id="invoicePreview">
+        <div class="muted">المعاينة ستظهر هنا بعد اختيار فاتورة.</div>
       </div>
     </div>
 
-    <div id="printable"></div>
-
   </div>
+
+  <script type="module" src="admin.js?v=9001"></script>
 </body>
 </html>
