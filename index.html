@@ -127,7 +127,6 @@
     .modal .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
     @media print{
-      /* المستخدم لا يطبع من هنا — الطباعة من invoice.html */
       body{background:#fff;color:#000}
     }
   </style>
@@ -158,13 +157,15 @@
 
       <div class="row2">
         <button class="btn green" id="loginBtn">دخول</button>
-        <button class="btn yellow" id="adminBtn">الأدمن</button>
+
+        <!-- ✅ زر الأدمن صار “دخول أدمن” (يتحقق من الصلاحيات قبل فتح الأدمن) -->
+        <button class="btn yellow" id="adminBtn">دخول أدمن</button>
       </div>
 
       <div class="note" id="loginNote">
         ✅ الدخول يعتمد على قاعدة البيانات ويعمل من أي جهاز.<br>
-        ✅ في حال وجود مشكلة بالنظام سيتم المعالجة.<br>
-        ✅ قبل الحساب: لازم إدخال اسم العميل لفتح فاتورة.
+        ✅ قبل الحساب: لازم إدخال اسم العميل لفتح فاتورة.<br>
+        ✅ في حال أي مشكلة: يتم المعالجة.
       </div>
     </div>
 
@@ -224,9 +225,7 @@
         </div>
 
         <div class="row2">
-          <!-- ✅ تم: يغلق الفاتورة إلزامي -->
           <button class="btn green" id="doneBtn">تم (إغلاق الفاتورة)</button>
-          <!-- ✅ يفتح invoice.html للطباعة -->
           <button class="btn yellow" id="printBtn">طباعة / PDF</button>
         </div>
 
@@ -301,6 +300,8 @@
     document.body.appendChild(d);
     setTimeout(()=>d.remove(), 1700);
   };
+
+  const genericErr = () => toast("يوجد خطاء ب النظام جاري المعالجة");
 
   const apiFetch = async (path, options = {}) => {
     const res = await fetch(`${REST}${path}`, {
@@ -407,8 +408,8 @@
 
     if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return false; }
 
-    // ✅ التعديل المطلوب: بدل "هذا المستخدم محظور"
-    if (user.blocked) { toast("يوجد خطاء ب النظام جاري المعالجة"); return false; }
+    // ✅ لا نظهر كلمة "محظور"
+    if (user.blocked) { genericErr(); return false; }
 
     if (!user.device_id){
       await apiFetch(`/app_users?id=eq.${user.id}`, {
@@ -434,13 +435,58 @@
   };
 
   // =========================
+  // ✅ دخول الأدمن (لا يفتح الأدمن إلا إذا الحساب أدمن فعلاً)
+  // =========================
+  async function loginAdminAndGo(){
+    vibe();
+    const u = (usernameEl.value || "").trim();
+    const p = (passwordEl.value || "").trim();
+    if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return; }
+
+    try{
+      const deviceId = getDeviceId();
+
+      const q =
+        `?select=id,username,pass,is_admin,blocked,device_id` +
+        `&username=eq.${encodeURIComponent(u)}` +
+        `&pass=eq.${encodeURIComponent(p)}` +
+        `&limit=1`;
+
+      const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
+      const user = Array.isArray(rows) ? rows[0] : null;
+
+      // أي حالة غير أدمن -> لا نفتح الأدمن
+      if (!user) return toast("غير مصرح");
+      if (user.blocked) return genericErr();
+      if (!user.is_admin) return toast("غير مصرح");
+
+      // device binding
+      if (!user.device_id){
+        await apiFetch(`/app_users?id=eq.${user.id}`, {
+          method:"PATCH",
+          headers:{ "Prefer":"return=minimal" },
+          body: JSON.stringify({ device_id: deviceId, last_seen: new Date().toISOString() })
+        });
+      } else if (user.device_id !== deviceId){
+        return genericErr();
+      }
+
+      // حفظ جلسة أدمن ثم فتح الأدمن
+      saveSession({ id: user.id, username: user.username, is_admin: true, device_id: deviceId, ts: Date.now() });
+      location.href = "./admin.html?v=999";
+    }catch(e){
+      console.error(e);
+      genericErr();
+    }
+  }
+
+  // =========================
   // ✅ Invoice create/close
   // =========================
   async function createInvoiceForCustomer(customerName){
     const sess = loadSession();
     if (!sess?.username) throw new Error("No session");
 
-    // RPC create_invoice(p_username, p_device_id) -> uuid
     const data = await apiFetch(`/rpc/create_invoice`, {
       method:"POST",
       body: JSON.stringify({
@@ -452,7 +498,6 @@
     const invoiceId = (typeof data === "string") ? data : (data?.id || data);
     if (!invoiceId) throw new Error("create_invoice failed");
 
-    // update invoice with customer_name + status open
     await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(invoiceId)}`, {
       method:"PATCH",
       headers:{ "Prefer":"return=minimal" },
@@ -504,7 +549,6 @@
       toast("لازم تضغط (تم) لإغلاق الفاتورة قبل الطباعة");
       return;
     }
-    // ✅ طباعة نظيفة من صفحة الفاتورة
     const url = `./invoice.html?invoice_id=${encodeURIComponent(inv.invoice_id)}&print=1`;
     window.open(url, "_blank");
   }
@@ -679,7 +723,7 @@
     if (k === "C") return clearAll();
     if (k === "CE") return clearEntry();
     if (k === "BK") return backspace();
-    if (k === "=") return newlineCommit(); // ✅ حفظ تلقائي
+    if (k === "=") return newlineCommit();
 
     if (["/","*","-","+"].includes(k)){
       if (!expr.trim()) return;
@@ -727,7 +771,6 @@
       if (!ok) return;
       setLocked(false);
 
-      // إذا ما في فاتورة مفتوحة: اطلب اسم عميل
       const inv = loadInv();
       if (!inv || (inv.status !== "open")){
         showCustomerModal(true);
@@ -740,13 +783,13 @@
       toast("تم الدخول ✅");
     }catch(e){
       console.error(e);
-      toast("خطأ اتصال بقاعدة البيانات");
+      genericErr();
     }
   }, { passive:true });
 
+  // ✅ زر الأدمن صار يتحقق من كون الحساب أدمن قبل فتح الأدمن
   $("adminBtn").addEventListener("click", () => {
-    vibe();
-    location.href = "./admin.html?v=999";
+    loginAdminAndGo();
   }, { passive:true });
 
   $("keys").addEventListener("click", (e) => {
