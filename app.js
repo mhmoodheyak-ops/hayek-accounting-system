@@ -1,396 +1,783 @@
-// app.js - نسخة HAYEK SPOT المحدثة (كاملة - مع تعديل دالة الدخول الذكية)
+/* =========================================================
+   HAYEK SPOT — app.js
+   صفحة المستخدم (حاسبة + تسجيل عمليات + فواتير + PDF)
+   Build: v2026.02.08
+   ========================================================= */
 
-// ===== عناصر الواجهة =====
-const loginView = document.getElementById("loginView") || document.getElementById("auth-overlay");
-const calcView  = document.getElementById("calcView") || document.querySelector(".main");
+(() => {
+  "use strict";
 
-const loginName = document.getElementById("loginName") || document.getElementById("auth-email");
-const loginPass = document.getElementById("loginPass") || document.getElementById("auth-pass");
-const loginBtn  = document.getElementById("loginBtn") || document.getElementById("btn-login");
-const loginMsg  = document.getElementById("loginMsg") || document.getElementById("auth-msg");
+  // شغّل هذا الملف فقط إذا كانت الصفحة هي صفحة المستخدم (وجود keypad أو display)
+  const isAppPage =
+    document.querySelector("[data-hayek-page='app']") ||
+    document.getElementById("keypad") ||
+    document.getElementById("display") ||
+    document.getElementById("calcDisplay") ||
+    document.getElementById("opsBody") ||
+    document.getElementById("opsTbody");
 
-const logoutBtn   = document.getElementById("logoutBtn");
-const welcomeUser = document.getElementById("welcomeUser");
+  if (!isAppPage) return;
 
-const exprEl  = document.getElementById("expr");
-const valueEl = document.getElementById("value");
-const keys    = document.getElementById("keys");
-const ceBtn   = document.getElementById("ceBtn");
+  /* =======================
+     CONFIG (عدّل إن لزم)
+     ======================= */
+  const CFG = (window.HAYEK_CONFIG || {});
+  const SUPABASE_URL =
+    CFG.SUPABASE_URL ||
+    "https://itidwqvyrjydmegjzuvn.supabase.co";
+  const SUPABASE_KEY =
+    CFG.SUPABASE_KEY ||
+    "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
-const noteInput = document.getElementById("noteInput");
-const invoiceNameInput = document.getElementById("invoiceName");
-const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
+  /* =======================
+     Helpers
+     ======================= */
+  const $ = (id) => document.getElementById(id);
 
-const historyBody = document.getElementById("historyBody");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
-const printPdfBtn = document.getElementById("printPdfBtn");
-const copyLastBtn = document.getElementById("copyLastBtn");
-
-const grandTotalEl = document.getElementById("grandTotal");
-const grandTotalBottomEl = document.getElementById("grandTotalBottom");
-
-// ===== تخزين محلي =====
-const HISTORY_KEY = "hs_history_v3";
-const INVOICE_LAST_KEY = "hs_invoice_last_v2";
-const SESSION_KEY = "hayek_auth_session_v1"; 
-
-let history = [];
-
-// ===== حالة الحاسبة =====
-let a = null;
-let op = null;
-let bStr = "0";
-let justEval = false;
-
-// ===== أدوات =====
-function vibrate(ms=12){
-  try{ if (navigator.vibrate) navigator.vibrate(ms); }catch(_){}
-}
-function trimZeros(s){
-  if (!String(s).includes(".")) return String(s);
-  return String(s).replace(/\.?0+$/, "");
-}
-function fmt(x){
-  if (!Number.isFinite(x)) return "خطأ";
-  const n = +x;
-  if (String(n).includes("e")) return n.toString();
-  return (Math.abs(n) >= 1e12) ? n.toExponential(6) : trimZeros(n.toString());
-}
-function symbol(o){
-  return ({"+":"+","-":"−","*":"×","/":"÷"}[o] || o);
-}
-function compute(x, operator, y){
-  switch(operator){
-    case "+": return x + y;
-    case "-": return x - y;
-    case "*": return x * y;
-    case "/": return (y === 0) ? NaN : x / y;
-    default: return y;
+  function vibrate(ms = 18) {
+    try { if (navigator.vibrate) navigator.vibrate(ms); } catch (_) {}
   }
-}
-function getB(){ return Number(bStr); }
-function setB(s){ bStr = String(s); valueEl.textContent = String(s); }
 
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-
-// ===== إظهار/إخفاء الصفحات =====
-function showLogin(){
-  if(calcView) calcView.classList.add("hidden");
-  if(calcView) calcView.style.display = "none";
-  if(loginView) loginView.classList.remove("hidden");
-  if(loginView) loginView.style.display = "flex";
-}
-function showCalc(){
-  if(loginView) loginView.classList.add("hidden");
-  if(loginView) loginView.style.display = "none";
-  if(calcView) calcView.classList.remove("hidden");
-  if(calcView) calcView.style.display = "block";
-
-  const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
-  if(welcomeUser) welcomeUser.textContent = s.username ? `المسؤول: ${s.username}` : "بائع عام";
-}
-
-// ===== تحميل/حفظ السجل =====
-function loadHistory(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    history = Array.isArray(saved) ? saved : [];
-  }catch(_){
-    history = [];
+  function safeNum(x) {
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
   }
-  renderHistory();
-}
-function saveHistory(){
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-}
-function calcGrandTotal(){
-  const total = history.reduce((sum, it) => sum + (Number(it.resultNumber) || 0), 0);
-  const t = fmt(total);
-  if(grandTotalEl) grandTotalEl.textContent = t;
-  if(grandTotalBottomEl) grandTotalBottomEl.textContent = t; 
-  return total;
-}
 
-function renderHistory(){
-  if(!historyBody) return;
-  historyBody.innerHTML = "";
-
-  history.forEach((it, idx) => {
-    const lineNo = idx + 1;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${lineNo}</td>
-      <td style="color: #d4af37; font-weight: bold;">${escapeHtml(it.note || "-")}</td>
-      <td class="ltr" style="color: #a0a0a0;">${escapeHtml(it.opFull || "")}</td>
-      <td class="ltr" style="color: #fff; font-weight: bold;">${escapeHtml(it.resultText || "")}
-        <div style="margin-top:6px;">
-          <button class="btn small gold-border copyBtn" data-copy="${it.id}">نسخ</button>
-        </div>
-      </td>
-    `;
-    historyBody.appendChild(tr);
-  });
-
-  historyBody.querySelectorAll("[data-copy]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      vibrate(10);
-      const id = btn.getAttribute("data-copy");
-      const row = history.find(x => String(x.id) === String(id));
-      if (!row) return;
-      await copyText(`#${history.indexOf(row)+1}\nالبيان: ${row.note || "-"}\n${row.opFull}\nالنتيجة: ${row.resultText}`);
-    });
-  });
-  calcGrandTotal();
-}
-
-async function copyText(text){
-  try{ await navigator.clipboard.writeText(text); }
-  catch(e){
-    const ta = document.createElement("textarea");
-    ta.value = text; document.body.appendChild(ta);
-    ta.select(); document.execCommand("copy");
-    document.body.removeChild(ta);
-  }
-}
-
-function addHistoryRow(note, opFull, resultNumber){
-  const now = new Date();
-  const time = now.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
-  const item = {
-    id: Date.now() + Math.random().toString(16).slice(2),
-    note: (note || "").trim() || "عملية بيع",
-    opFull,
-    resultNumber: Number(resultNumber),
-    resultText: fmt(resultNumber),
-    time
-  };
-  history.unshift(item);
-  history = history.slice(0, 80); 
-  saveHistory();
-  renderHistory();
-}
-
-// ===== منطق الحاسبة الأساسي =====
-function resetAll(){
-  a = null; op = null; bStr = "0"; justEval = false;
-  if(exprEl) exprEl.textContent = "";
-  if(valueEl) valueEl.textContent = "0";
-}
-function clearEntry(){
-  if (valueEl && valueEl.textContent === "خطأ") return resetAll();
-  setB("0"); justEval = false;
-}
-function inputNum(d){
-  if (valueEl && valueEl.textContent === "خطأ") resetAll();
-  if (justEval && !op) { a = null; if(exprEl) exprEl.textContent = ""; setB("0"); justEval = false; }
-  if (bStr === "0") setB(String(d)); else setB(bStr + d);
-}
-function inputDot(){
-  if (valueEl && valueEl.textContent === "خطأ") resetAll();
-  if (justEval && !op) { a = null; if(exprEl) exprEl.textContent = ""; setB("0"); justEval = false; }
-  if (!bStr.includes(".")) setB(bStr + ".");
-}
-function backspace(){
-  if (valueEl && valueEl.textContent === "خطأ") return resetAll();
-  if (justEval) return;
-  if (bStr.length <= 1) setB("0"); else setB(bStr.slice(0, -1));
-}
-function percent(){
-  if (valueEl && valueEl.textContent === "خطأ") return resetAll();
-  setB(trimZeros(String(getB() / 100)));
-}
-function chooseOp(nextOp){
-  if (valueEl && valueEl.textContent === "خطأ") resetAll();
-  const b = getB();
-  if (a === null) a = b; else if (op) a = compute(a, op, b);
-  op = nextOp;
-  if(exprEl) exprEl.textContent = `${fmt(a)} ${symbol(op)}`;
-  setB("0"); justEval = false;
-}
-function equals(){
-  if (valueEl && valueEl.textContent === "خطأ") return resetAll();
-  if (op === null || a === null) return;
-  const b = getB();
-  const res = compute(a, op, b);
-  const opFull = `${fmt(a)} ${symbol(op)} ${fmt(b)} = ${fmt(res)}`;
-  if(exprEl) exprEl.textContent = opFull;
-  if(valueEl) valueEl.textContent = fmt(res);
-  addHistoryRow(noteInput.value, opFull, res);
-  if(noteInput) noteInput.value = "";
-  a = (Number.isFinite(res) ? res : null);
-  op = null; bStr = String(Number.isFinite(res) ? res : "0");
-  justEval = true;
-}
-
-// ===== أحداث الأزرار =====
-if(keys){
-    keys.addEventListener("click", (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      vibrate(12);
-      if (btn.dataset.num !== undefined) return inputNum(btn.dataset.num);
-      if (btn.dataset.op) return chooseOp(btn.dataset.op);
-      switch(btn.dataset.action){
-        case "clear": return resetAll();
-        case "back": return backspace();
-        case "dot": return inputDot();
-        case "percent": return percent();
-        case "equals": return equals();
-      }
-    });
-}
-
-if(ceBtn) ceBtn.addEventListener("click", () => { vibrate(12); clearEntry(); });
-
-// ===== كيبورد الكمبيوتر =====
-window.addEventListener("keydown", (e) => {
-  const t = document.activeElement;
-  if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
-  const k = e.key;
-  if (k >= "0" && k <= "9") { vibrate(8); inputNum(k); }
-  else if (k === ".") { vibrate(8); inputDot(); }
-  else if (k === "Enter" || k === "=") { e.preventDefault(); vibrate(10); equals(); }
-  else if (k === "Backspace") { vibrate(8); backspace(); }
-  else if (k === "Escape") { vibrate(8); resetAll(); }
-  else if (k === "+" || k === "-" || k === "*" || k === "/") { vibrate(8); chooseOp(k); }
-  else if (k === "%") { vibrate(8); percent(); }
-  else if (k === "Delete") { vibrate(8); clearEntry(); }
-});
-
-// ===== الأدوات =====
-if(clearHistoryBtn) clearHistoryBtn.addEventListener("click", () => {
-  if (confirm("هل تريد مسح سجل النشاط بالكامل؟")) {
-    vibrate(20); history = []; localStorage.removeItem(HISTORY_KEY); renderHistory();
-  }
-});
-
-if(copyLastBtn) copyLastBtn.addEventListener("click", async () => {
-  vibrate(10); if (!history.length) return; await copyText(history[0].resultText);
-});
-
-if(saveInvoiceBtn) saveInvoiceBtn.addEventListener("click", () => {
-  vibrate(12);
-  const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
-  const userName = s.username || "بائع عام";
-  const name = (invoiceNameInput.value || "").trim() || `فاتورة-${new Date().toISOString().slice(0,10)}`;
-  const total = fmt(calcGrandTotal());
-  const payload = { name, user: userName, at: new Date().toISOString(), total, items: history };
-  localStorage.setItem(INVOICE_LAST_KEY, JSON.stringify(payload));
-  alert(`✅ تم حفظ الفاتورة بنجاح: ${name}`);
-});
-
-if(printPdfBtn) printPdfBtn.addEventListener("click", () => { vibrate(10); openPrintInvoice(); });
-
-function openPrintInvoice(){
-  const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "{}");
-  const userName = s.username || "بائع عام";
-  const invoiceName = (invoiceNameInput.value || "").trim() || "قائمة مبيعات";
-  const totalText = grandTotalEl ? grandTotalEl.textContent : "0";
-  const rows = history.slice().reverse();
-
-  const rowsHtml = rows.map((it, i) => `
-    <tr>
-      <td>${i+1}</td>
-      <td style="color:#d4af37; font-weight:bold;">${escapeHtml(it.note || "-")}</td>
-      <td style="direction:ltr;text-align:left">${escapeHtml(it.opFull || "")}</td>
-      <td style="direction:ltr;text-align:left; font-weight:bold;">${escapeHtml(it.resultText || "")}</td>
-    </tr>`).join("");
-
-  const html = `
-  <!doctype html>
-  <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <title>HAYEK SPOT - ${escapeHtml(invoiceName)}</title>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
-      body{font-family: 'Amiri', serif; margin:40px; color:#111; background:#fff;}
-      .header-box{text-align:center; border-bottom:3px solid #d4af37; padding-bottom:15px; margin-bottom:20px;}
-      h1{margin:0; color:#000; font-size:35px; letter-spacing:2px;}
-      .meta{margin-bottom:25px; font-size:16px; line-height:1.8;}
-      .meta b{color:#d4af37;}
-      table{width:100%; border-collapse:collapse;}
-      th,td{padding:12px; border:1px solid #eee; text-align:right;}
-      th{background:#111; color:#d4af37; font-size:16px;}
-      .totalBox{margin-top:20px; padding:15px; background:#111; color:#d4af37; display:flex; justify-content:space-between; align-items:center; font-size:22px; font-weight:bold;}
-      .footer{margin-top:40px; text-align:center; border-top:1px dashed #d4af37; padding-top:20px; font-size:15px; color:#444;}
-      @media print{ body{margin:20px;} .totalBox{background:#111 !important; color:#d4af37 !important; -webkit-print-color-adjust: exact;} }
-    </style>
-  </head>
-  <body>
-    <div class="header-box"><h1>HAYEK SPOT</h1><div style="font-size:18px; font-weight:bold;">شركة الحايك</div></div>
-    <div class="meta">
-      <div><b>اسم الفاتورة:</b> ${escapeHtml(invoiceName)}</div>
-      <div><b>المسؤول:</b> ${escapeHtml(userName)}</div>
-      <div><b>تاريخ التصدير:</b> ${escapeHtml(new Date().toLocaleString('ar-EG'))}</div>
-    </div>
-    <table>
-      <thead><tr><th>#</th><th>البيان</th><th>العملية الحسابية</th><th>النتيجة</th></tr></thead>
-      <tbody>${rowsHtml || `<tr><td colspan="4" style="text-align:center;">لا توجد بيانات مسجلة</td></tr>`}</tbody>
-    </table>
-    <div class="totalBox"><div>المجموع الإجمالي</div><div style="direction:ltr;">${escapeHtml(totalText)}</div></div>
-    <div class="footer"><b>شركة الحايك للتجارة والحلول الرقمية</b><br>هاتف: 05510217646</div>
-    <script>window.onload = () => { window.print(); };</script>
-  </body></html>`;
-
-  const w = window.open("", "_blank");
-  if (!w) { alert("يرجى تفعيل النوافذ المنبثقة."); return; }
-  w.document.write(html); w.document.close();
-}
-
-// ===== تسجيل الدخول / الخروج =====
-if(loginBtn) {
-    loginBtn.addEventListener("click", async () => {
-      if(loginMsg) loginMsg.textContent = "جاري التحقق...";
-      const r = await fetchUser(loginName.value.trim(), loginPass.value);
-      if (!r.ok) {
-        if(loginMsg) loginMsg.textContent = r.msg || "خطأ في بيانات الدخول";
-        return;
-      }
-      showCalc();
-    });
-}
-
-// دالة الدخول المعدلة للعمل مع Supabase Client مباشرة (تعديل منطق الربط)
-async function fetchUser(u, p) {
+  function fmtDateTime(ts) {
     try {
-        // نستخدم window.sb المعرف في ملف auth.js للبحث في الجدول
-        const { data, error } = await window.sb
-            .from('app_users') 
-            .select('*')
-            .eq('username', u)
-            .eq('pass', p)
-            .single(); // نتوقع نتيجة واحدة فقط
-
-        if (error || !data) {
-            console.error("Login Error:", error);
-            return { ok: false, msg: "الاسم أو كلمة السر خطأ" };
-        }
-
-        // حفظ الجلسة محلياً ليعرف التطبيق من هو المستخدم الحالي
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ username: data.username }));
-        return { ok: true };
-    } catch (e) {
-        console.error("System Error:", e);
-        return { ok: false, msg: "فشل الاتصال بالسيرفر" };
+      const d = new Date(ts);
+      return d.toLocaleString("ar-EG", { hour12: true });
+    } catch (_) {
+      return String(ts || "");
     }
-}
+  }
 
-if(logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem(SESSION_KEY);
-      showLogin();
+  function clampStr(s, n = 120) {
+    s = String(s ?? "");
+    return s.length > n ? s.slice(0, n) + "…" : s;
+  }
+
+  function uid(prefix = "hx") {
+    return (
+      prefix +
+      "_" +
+      Math.random().toString(16).slice(2) +
+      "_" +
+      Date.now().toString(16)
+    );
+  }
+
+  function setText(id, txt) {
+    const el = $(id);
+    if (el) el.textContent = txt;
+  }
+
+  function setValue(id, val) {
+    const el = $(id);
+    if (el) el.value = val;
+  }
+
+  function getValue(id) {
+    const el = $(id);
+    return el ? (el.value ?? "").toString() : "";
+  }
+
+  function getSession() {
+    // auth.js (لاحقاً) سيحفظ الجلسة هنا
+    try {
+      const raw = localStorage.getItem("hayek_session");
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (!s || !s.username) return null;
+      return s;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function setSession(username) {
+    const sess = { username: String(username || "").trim(), ts: Date.now() };
+    localStorage.setItem("hayek_session", JSON.stringify(sess));
+    return sess;
+  }
+
+  function clearSession() {
+    localStorage.removeItem("hayek_session");
+  }
+
+  function getDeviceId() {
+    let id = localStorage.getItem("hayek_device_id");
+    if (!id) {
+      id = uid("device");
+      localStorage.setItem("hayek_device_id", id);
+    }
+    return id;
+  }
+
+  /* =======================
+     Supabase client
+     ======================= */
+  let client = null;
+
+  function initClient() {
+    try {
+      const sb = (window.supabase && window.supabase.createClient)
+        ? window.supabase
+        : (typeof supabase !== "undefined" ? supabase : null);
+
+      if (!sb || !sb.createClient) return null;
+      if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+      client = sb.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return client;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  initClient();
+
+  /* =======================
+     State
+     ======================= */
+  const state = {
+    session: getSession(),
+    device_id: getDeviceId(),
+    currentInvoiceId: null,
+    ops: [],
+    total: 0,
+    expr: "",
+  };
+
+  const LS_KEYS = {
+    invoice: () => `hayek_current_invoice_${state.session?.username || "guest"}`,
+    ops: (invoiceId) => `hayek_ops_${state.session?.username || "guest"}_${invoiceId}`,
+  };
+
+  /* =======================
+     عناصر متوقعة بالصفحة
+     (إذا كانت IDs مختلفة، ما رح يخرب شيء—بس لازم توافقها لاحقاً)
+     ======================= */
+  const el = {
+    // شاشة/حقل العمليات
+    display: $("display") || $("calcDisplay"),
+    statement: $("statement") || $("desc") || $("note"),
+    opsBody: $("opsBody") || $("opsTbody"),
+    total: $("totalValue") || $("grandTotal") || $("sum") || $("totalBadge"),
+    invoiceBadge: $("invoiceBadge") || $("invId"),
+    // أزرار (إن وجدت)
+    btnNewInvoice: $("btnNewInvoice"),
+    btnExport: $("btnExportPDF") || $("btnPrintPdf") || $("btnPDF"),
+    btnCopy: $("btnCopyTable") || $("btnCopy"),
+    btnClearOps: $("btnClearOps") || $("btnClearAll"),
+    btnLogout: $("btnLogout"),
+    // Login (إن كانت نفس الصفحة فيها تسجيل دخول)
+    loginUser: $("username") || $("loginUser"),
+    loginPass: $("password") || $("loginPass"),
+    btnLogin: $("btnLogin"),
+    loginMsg: $("loginMsg"),
+    keypad: $("keypad"),
+  };
+
+  /* =======================
+     UI Rendering
+     ======================= */
+  function renderTotal() {
+    const t = state.total.toFixed(2);
+
+    if (!el.total) return;
+
+    // إذا عنصر totalBadge (div) استخدم textContent
+    if (el.total.tagName && el.total.tagName.toLowerCase() !== "input") {
+      el.total.textContent = `إجمالي الفاتورة: ${t}`;
+    } else {
+      el.total.value = t;
+    }
+  }
+
+  function renderInvoiceId() {
+    if (!state.currentInvoiceId) return;
+    if (el.invoiceBadge) {
+      el.invoiceBadge.textContent = `Invoice: ${state.currentInvoiceId}`;
+    }
+  }
+
+  function clearOpsTable() {
+    if (!el.opsBody) return;
+    el.opsBody.innerHTML = "";
+  }
+
+  function appendOpRow(row) {
+    if (!el.opsBody) return;
+
+    const tr = document.createElement("tr");
+
+    const tdTime = document.createElement("td");
+    tdTime.textContent = fmtDateTime(row.created_at);
+
+    const tdStmt = document.createElement("td");
+    tdStmt.textContent = row.statement || "";
+
+    const tdOp = document.createElement("td");
+    tdOp.textContent = row.operation || "";
+
+    const tdRes = document.createElement("td");
+    tdRes.textContent = String(row.result ?? "");
+
+    tr.append(tdTime, tdStmt, tdOp, tdRes);
+    el.opsBody.appendChild(tr);
+  }
+
+  function rerenderOps() {
+    clearOpsTable();
+    state.ops.forEach(appendOpRow);
+    renderTotal();
+    renderInvoiceId();
+  }
+
+  function setExpr(v) {
+    state.expr = String(v || "");
+    if (el.display) {
+      if (el.display.tagName && el.display.tagName.toLowerCase() === "input") {
+        el.display.value = state.expr;
+      } else {
+        el.display.textContent = state.expr;
+      }
+    }
+  }
+
+  function getExpr() {
+    if (!el.display) return state.expr;
+    const t = (el.display.tagName && el.display.tagName.toLowerCase() === "input")
+      ? el.display.value
+      : el.display.textContent;
+    state.expr = String(t || "");
+    return state.expr;
+  }
+
+  /* =======================
+     Local Storage restore/save
+     ======================= */
+  function saveLocal() {
+    if (!state.session?.username) return;
+
+    try {
+      localStorage.setItem(LS_KEYS.invoice(), JSON.stringify({
+        invoiceId: state.currentInvoiceId,
+        ts: Date.now(),
+      }));
+      if (state.currentInvoiceId) {
+        localStorage.setItem(LS_KEYS.ops(state.currentInvoiceId), JSON.stringify({
+          ops: state.ops,
+          total: state.total,
+        }));
+      }
+    } catch (_) {}
+  }
+
+  function restoreLocal() {
+    if (!state.session?.username) return;
+
+    try {
+      const invRaw = localStorage.getItem(LS_KEYS.invoice());
+      if (invRaw) {
+        const inv = JSON.parse(invRaw);
+        if (inv && inv.invoiceId) state.currentInvoiceId = inv.invoiceId;
+      }
+
+      if (state.currentInvoiceId) {
+        const opsRaw = localStorage.getItem(LS_KEYS.ops(state.currentInvoiceId));
+        if (opsRaw) {
+          const data = JSON.parse(opsRaw);
+          state.ops = Array.isArray(data?.ops) ? data.ops : [];
+          state.total = safeNum(data?.total);
+        }
+      }
+    } catch (_) {}
+  }
+
+  /* =======================
+     Supabase helpers (Invoices + Operations)
+     ======================= */
+  async function sbEnsureInvoice() {
+    if (!client) return null;
+    if (!state.session?.username) return null;
+
+    if (state.currentInvoiceId) return state.currentInvoiceId;
+
+    // إنشاء فاتورة جديدة
+    const payload = {
+      username: state.session.username,
+      device_id: state.device_id,
+      total: 0,
+      created_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await client
+      .from("app_invoices")
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    state.currentInvoiceId = data?.id || null;
+    saveLocal();
+    renderInvoiceId();
+    return state.currentInvoiceId;
+  }
+
+  async function sbInsertOperation(row) {
+    if (!client) return { ok: false, reason: "no_client" };
+    if (!state.session?.username) return { ok: false, reason: "no_session" };
+
+    const invoiceId = await sbEnsureInvoice();
+    if (!invoiceId) return { ok: false, reason: "no_invoice" };
+
+    const payload = {
+      username: state.session.username,
+      invoice_id: invoiceId,
+      statement: row.statement || "",
+      operation: row.operation || "",
+      result: safeNum(row.result),
+      created_at: row.created_at,
+    };
+
+    const { error } = await client.from("app_operations").insert(payload);
+    if (error) {
+      console.error(error);
+      return { ok: false, reason: "insert_failed", error };
+    }
+
+    // تحديث مجموع الفاتورة
+    const newTotal = safeNum(state.total);
+    const { error: upErr } = await client
+      .from("app_invoices")
+      .update({ total: newTotal })
+      .eq("id", invoiceId)
+      .eq("username", state.session.username);
+
+    if (upErr) console.warn("invoice total update failed:", upErr);
+
+    return { ok: true };
+  }
+
+  /* =======================
+     Expression evaluation (آمن)
+     يسمح فقط: أرقام + . + + - * / ( ) مسافات
+     ======================= */
+  function evalExpr(expr) {
+    const s = String(expr || "").trim();
+
+    if (!s) return { ok: false, error: "اكتب عملية أولاً" };
+
+    // سماحية محارف محددة
+    if (!/^[0-9+\-*/().\s]+$/.test(s)) {
+      return { ok: false, error: "يوجد رموز غير مسموحة" };
+    }
+
+    // منع تكرار نقاط غريبة (حماية إضافية بسيطة)
+    if (/\.\./.test(s)) {
+      return { ok: false, error: "صيغة غير صحيحة" };
+    }
+
+    try {
+      // eslint-disable-next-line no-new-func
+      const fn = new Function(`"use strict"; return (${s});`);
+      const r = fn();
+      const n = Number(r);
+      if (!Number.isFinite(n)) return { ok: false, error: "نتيجة غير صالحة" };
+      return { ok: true, value: n };
+    } catch (_) {
+      return { ok: false, error: "صيغة غير صحيحة" };
+    }
+  }
+
+  /* =======================
+     Add operation
+     ======================= */
+  async function addOperationFromUI() {
+    const expr = getExpr();
+    const ev = evalExpr(expr);
+    if (!ev.ok) {
+      alert(ev.error);
+      return;
+    }
+
+    const statement = el.statement ? clampStr(el.statement.value || "", 120) : "";
+    const result = ev.value;
+
+    const row = {
+      id: uid("op"),
+      created_at: new Date().toISOString(),
+      statement,
+      operation: expr,
+      result: Number(result.toFixed(6)),
+    };
+
+    state.ops.push(row);
+    state.total = safeNum(state.total) + safeNum(row.result);
+
+    // نظّف الحقول
+    setExpr("");
+    if (el.statement) el.statement.value = "";
+
+    rerenderOps();
+    saveLocal();
+    vibrate(15);
+
+    // Sync
+    const res = await sbInsertOperation(row);
+    if (!res.ok) {
+      // ما نوقف الشغل—بس نوضح أنه صار Offline/Sync لاحق
+      console.warn("sync failed:", res.reason, res.error || "");
+    }
+  }
+
+  /* =======================
+     New invoice
+     ======================= */
+  async function newInvoice() {
+    if (!state.session?.username) {
+      alert("سجّل دخول أولاً");
+      return;
+    }
+
+    // صفّر فقط على الجهاز (والفاتورة الجديدة ستنشأ عند أول عملية)
+    state.currentInvoiceId = null;
+    state.ops = [];
+    state.total = 0;
+    saveLocal();
+    rerenderOps();
+    vibrate(20);
+  }
+
+  /* =======================
+     Copy table (TSV) to clipboard
+     ======================= */
+  async function copyTable() {
+    if (!state.ops.length) {
+      alert("لا توجد عمليات لنسخها");
+      return;
+    }
+
+    const lines = [];
+    lines.push(["الوقت", "البيان", "العملية", "النتيجة"].join("\t"));
+    state.ops.forEach(r => {
+      lines.push([
+        fmtDateTime(r.created_at),
+        (r.statement || ""),
+        (r.operation || ""),
+        String(r.result ?? ""),
+      ].join("\t"));
     });
-}
+    lines.push(["", "", "الإجمالي", state.total.toFixed(2)].join("\t"));
 
-// ===== البداية (Initialization) =====
-(function init(){
-  if (localStorage.getItem(SESSION_KEY)) showCalc();
-  else showLogin();
-  loadHistory();
-  resetAll();
+    const text = lines.join("\n");
+
+    try {
+      await navigator.clipboard.writeText(text);
+      vibrate(18);
+      alert("✅ تم النسخ كجدول");
+    } catch (_) {
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      vibrate(18);
+      alert("✅ تم النسخ كجدول");
+    }
+  }
+
+  /* =======================
+     Export PDF (html2pdf إذا موجود)
+     يحتاج عنصر printable-area إن كان موجود، وإلا ننشئ واحد مؤقت
+     ======================= */
+  async function exportPDF() {
+    if (!state.ops.length) {
+      alert("لا توجد عمليات لتصديرها");
+      return;
+    }
+
+    const username = state.session?.username || "user";
+    const invoiceId = state.currentInvoiceId || "local";
+
+    const existing = document.getElementById("printable-area");
+    const wrap = existing || document.createElement("div");
+
+    if (!existing) {
+      wrap.id = "printable-area";
+      wrap.style.background = "#fff";
+      wrap.style.color = "#111";
+      wrap.style.padding = "16px";
+      wrap.style.borderRadius = "12px";
+      wrap.style.maxWidth = "900px";
+      wrap.style.margin = "12px auto";
+      wrap.style.direction = "rtl";
+      wrap.style.fontFamily = "Tahoma, Arial, sans-serif";
+      document.body.appendChild(wrap);
+    }
+
+    const rowsHtml = state.ops.map(r => `
+      <tr>
+        <td>${fmtDateTime(r.created_at)}</td>
+        <td>${(r.statement || "").replaceAll("<","&lt;")}</td>
+        <td>${(r.operation || "").replaceAll("<","&lt;")}</td>
+        <td>${String(r.result ?? "")}</td>
+      </tr>
+    `).join("");
+
+    wrap.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div>
+          <div style="font-weight:900;font-size:18px;">HAYEK SPOT — فاتورة</div>
+          <div style="font-size:12px;color:#444;margin-top:6px;">
+            المستخدم: <b>${username}</b><br/>
+            رقم الفاتورة: <b>${invoiceId}</b><br/>
+            التاريخ: <b>${fmtDateTime(new Date().toISOString())}</b>
+          </div>
+        </div>
+        <div style="font-weight:900;font-size:16px;">الإجمالي: ${state.total.toFixed(2)}</div>
+      </div>
+
+      <div style="height:10px;"></div>
+
+      <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;">
+        <thead>
+          <tr>
+            <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;background:#f3f3f3;">الوقت</th>
+            <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;background:#f3f3f3;">البيان</th>
+            <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;background:#f3f3f3;">العملية</th>
+            <th style="border-bottom:1px solid #eee;padding:8px;text-align:right;background:#f3f3f3;">النتيجة</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    `;
+
+    // html2pdf
+    if (typeof html2pdf !== "undefined") {
+      try {
+        const opt = {
+          margin: 10,
+          filename: `invoice_${username}_${String(invoiceId).slice(-6)}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        };
+        await html2pdf().set(opt).from(wrap).save();
+        vibrate(20);
+      } catch (e) {
+        console.error(e);
+        alert("فشل تصدير PDF. جرّب متصفح Chrome.");
+      } finally {
+        if (!existing) wrap.remove();
+      }
+      return;
+    }
+
+    // fallback: طباعة المتصفح
+    window.print();
+    if (!existing) wrap.remove();
+  }
+
+  /* =======================
+     Keypad generator (اختياري)
+     إذا عندك div#keypad فاضي، رح يبنيه تلقائياً
+     ترتيب الأرقام المطلوب:
+     3 بدل 1 / 6 بدل 4 / 9 بدل 7 (أي صفوف معكوسة)
+     ======================= */
+  function buildKeypadIfEmpty() {
+    if (!el.keypad) return;
+    if (el.keypad.children && el.keypad.children.length > 0) return;
+
+    const keys = [
+      "3", "2", "1", "+",
+      "6", "5", "4", "-",
+      "9", "8", "7", "×",
+      "0", ".", "⌫", "÷",
+      "C", "=", 
+    ];
+
+    keys.forEach(k => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn key";
+      b.dataset.key = k;
+      b.textContent = k;
+      el.keypad.appendChild(b);
+    });
+  }
+
+  function normalizeKey(k) {
+    if (k === "×") return "*";
+    if (k === "÷") return "/";
+    return k;
+  }
+
+  function onKeyPress(k) {
+    k = normalizeKey(k);
+
+    if (k === "C") {
+      setExpr("");
+      vibrate(12);
+      return;
+    }
+
+    if (k === "⌫") {
+      const s = getExpr();
+      setExpr(s.slice(0, -1));
+      vibrate(10);
+      return;
+    }
+
+    if (k === "=") {
+      addOperationFromUI();
+      return;
+    }
+
+    // default append
+    const cur = getExpr();
+    setExpr(cur + k);
+    vibrate(6);
+  }
+
+  function wireKeypad() {
+    if (!el.keypad) return;
+    el.keypad.addEventListener("click", (e) => {
+      const btn = e.target?.closest("button");
+      if (!btn) return;
+      const k = btn.dataset.key || btn.textContent;
+      if (!k) return;
+      onKeyPress(k);
+    });
+  }
+
+  /* =======================
+     Login handling (إذا كانت صفحة واحدة)
+     ======================= */
+  async function doLogin() {
+    const username = (el.loginUser?.value || "").trim();
+    const pass = (el.loginPass?.value || "").trim();
+
+    if (!username || !pass) {
+      if (el.loginMsg) el.loginMsg.textContent = "اكتب اسم المستخدم وكلمة السر";
+      alert("اكتب اسم المستخدم وكلمة السر");
+      return;
+    }
+
+    if (!client) {
+      // Offline login (غير مفضل) — فقط لعدم كسر الصفحة
+      state.session = setSession(username);
+      if (el.loginMsg) el.loginMsg.textContent = "✅ تم الدخول (بدون اتصال)";
+      restoreLocal();
+      rerenderOps();
+      return;
+    }
+
+    // تحقق من app_users + blocked
+    const { data, error } = await client
+      .from("app_users")
+      .select("username, pass, blocked")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      alert("خطأ اتصال: " + error.message);
+      return;
+    }
+
+    if (!data) {
+      alert("اسم المستخدم غير موجود");
+      return;
+    }
+
+    if (String(data.pass) !== String(pass)) {
+      alert("كلمة السر غير صحيحة");
+      return;
+    }
+
+    if (data.blocked) {
+      alert("هذا الحساب غير مفعّل حالياً");
+      return;
+    }
+
+    state.session = setSession(username);
+    if (el.loginMsg) el.loginMsg.textContent = "✅ تم الدخول";
+    vibrate(20);
+
+    restoreLocal();
+    rerenderOps();
+  }
+
+  /* =======================
+     Events wiring
+     ======================= */
+  function wireButtons() {
+    if (el.btnNewInvoice) el.btnNewInvoice.addEventListener("click", newInvoice);
+    if (el.btnExport) el.btnExport.addEventListener("click", exportPDF);
+    if (el.btnCopy) el.btnCopy.addEventListener("click", copyTable);
+
+    if (el.btnClearOps) {
+      el.btnClearOps.addEventListener("click", () => {
+        if (!confirm("مسح كل عمليات هذه الفاتورة من الشاشة؟")) return;
+        state.ops = [];
+        state.total = 0;
+        saveLocal();
+        rerenderOps();
+        vibrate(20);
+      });
+    }
+
+    if (el.btnLogout) {
+      el.btnLogout.addEventListener("click", () => {
+        clearSession();
+        location.reload();
+      });
+    }
+
+    // Enter = إضافة عملية إذا display input
+    if (el.display && el.display.tagName && el.display.tagName.toLowerCase() === "input") {
+      el.display.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addOperationFromUI();
+        }
+      });
+    }
+
+    // زر تسجيل الدخول إن وجد
+    if (el.btnLogin) el.btnLogin.addEventListener("click", doLogin);
+  }
+
+  /* =======================
+     Init
+     ======================= */
+  function init() {
+    // لو ما في جلسة ولسه في فورم login: خليه يشتغل
+    if (!state.session?.username) {
+      // إذا ما في login inputs، خليه يعمل guest بدون تخزين
+      if (!el.loginUser || !el.loginPass) {
+        state.session = { username: "guest", ts: Date.now() };
+      }
+    }
+
+    restoreLocal();
+    buildKeypadIfEmpty();
+    wireKeypad();
+    wireButtons();
+    rerenderOps();
+  }
+
+  init();
 })();
