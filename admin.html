@@ -5,153 +5,167 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <!-- خطوط/ستايل -->
-  <link rel="stylesheet" href="style.css?v=9001">
+  <link rel="stylesheet" href="./style.css?v=8000" />
+
+  <!-- Supabase UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- jsPDF + AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- خط عربي اختياري (إذا عندك amiri-font.js شغال) -->
-  <script src="amiri-font.js?v=9001"></script>
+  <!-- خط Amiri (عندك الملفات بالمشروع) -->
+  <script src="./amiri-font.js?v=8000"></script>
 
-  <style>
-    /* ستايل إضافي خفيف لضمان ترتيب الأدمن حتى لو style.css تغيّر */
-    body{margin:0;background:#0b1417;color:#e9f2f2;font-family:Arial}
-    .wrap{max-width:1100px;margin:20px auto;padding:16px}
-    .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px;margin-bottom:14px}
-    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    .row > *{flex:1}
-    .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700}
-    .btn-blue{background:#2b66ff;color:#fff}
-    .btn-dark{background:rgba(255,255,255,.08);color:#e9f2f2;border:1px solid rgba(255,255,255,.12)}
-    .btn-red{background:#b11a2a;color:#fff}
-    .btn-green{background:#1f8f5f;color:#fff}
-    .btn-small{padding:7px 10px;border-radius:10px;font-size:13px}
-    input,select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.2);color:#fff;outline:none}
-    table{width:100%;border-collapse:separate;border-spacing:0 8px}
-    th,td{padding:10px 10px;text-align:right}
-    thead th{opacity:.85}
-    tbody tr{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
-    tbody tr td:first-child{border-radius:12px 0 0 12px}
-    tbody tr td:last-child{border-radius:0 12px 12px 0}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
-    .muted{opacity:.75}
-    .preview{background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.20);border-radius:14px;padding:12px}
-    .title{font-size:26px;font-weight:900}
-  </style>
+  <!-- Config -->
+  <script src="./config.js?v=8000"></script>
 </head>
 
-<body>
-  <div class="wrap">
+<body class="app-body">
+  <div class="app-wrap">
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div class="title">لوحة الأمن</div>
-          <div class="muted">إدارة المستخدمين + الفواتير — مع قفل الجهاز الواحد (device_id).</div>
-        </div>
-        <div class="row" style="justify-content:flex-end">
-          <span class="pill" id="adminState">غير مسجل</span>
-          <button class="btn btn-dark" id="logoutBtn">تسجيل خروج</button>
-        </div>
-      </div>
+    <div class="card header-card">
+      <div class="header-title">لوحة الأمن</div>
+      <div class="header-sub">إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأمن.</div>
+      <div class="status-line" id="statusLine">الحالة: جاهز</div>
     </div>
 
     <!-- تسجيل دخول الأدمن -->
     <div class="card">
-      <div class="row">
-        <div>
-          <div class="muted">اسم المستخدم</div>
-          <input id="username" placeholder="admin">
+      <div class="card-title">تسجيل الدخول (Admin)</div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input id="adminUser" type="text" value="admin" autocomplete="username" />
         </div>
-        <div>
-          <div class="muted">كلمة السر</div>
-          <input id="password" type="password" placeholder="••••">
-        </div>
-        <div style="flex:0.6">
-          <div class="muted">&nbsp;</div>
-          <button class="btn btn-blue" id="loginBtn">تسجيل دخول</button>
+        <div class="field">
+          <label>كلمة السر</label>
+          <input id="adminPass" type="password" autocomplete="current-password" />
         </div>
       </div>
-      <div style="margin-top:10px" class="pill" id="loginStatus">جاهز</div>
-      <div style="margin-top:10px" class="muted">✅ الأدمن يقفل على جهاز واحد فقط (إذا سجل من جهاز ثاني يتم رفض الدخول).</div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="btnAdminLogin">تسجيل دخول</button>
+        <button class="btn" id="btnAdminLogout">تسجيل خروج</button>
+        <div class="pill" id="adminStatePill">غير مسجل</div>
+      </div>
+
+      <div class="note warn">
+        ✅ الأدمن يقفل على جهاز واحد فقط (إذا سجل من جهاز ثاني سيتم رفض الدخول).
+      </div>
     </div>
 
     <!-- إدارة المستخدمين -->
     <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div class="title" style="font-size:20px">إدارة المستخدمين</div>
-        <button class="btn btn-dark" id="refreshUsersBtn">تحديث قائمة المستخدمين</button>
+      <div class="card-title">إدارة المستخدمين</div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label>اسم مستخدم جديد</label>
+          <input id="newUsername" type="text" placeholder="مثال: محمود" />
+        </div>
+        <div class="field">
+          <label>كلمة السر</label>
+          <input id="newPassword" type="text" placeholder="1234" />
+        </div>
+        <div class="field">
+          <label>صلاحية</label>
+          <select id="newRole">
+            <option value="user">مستخدم</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
       </div>
 
-      <div style="margin-top:10px;overflow:auto">
-        <table>
+      <div class="btn-row">
+        <button class="btn green" id="btnAddUser">إضافة</button>
+        <button class="btn" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
+        <div class="pill">عدد المستخدمين: <span id="usersCount">0</span></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tbl" id="usersTable">
           <thead>
             <tr>
               <th>#</th>
               <th>المستخدم</th>
-              <th>الصلاحية</th>
-              <th>الحالة</th>
-              <th>device_id</th>
+              <th>Admin</th>
+              <th>محظور</th>
+              <th>قفل الجهاز</th>
               <th>إجراءات</th>
             </tr>
           </thead>
-          <tbody id="usersTbody"></tbody>
+          <tbody></tbody>
         </table>
-      </div>
-
-      <div class="row" style="margin-top:8px">
-        <span class="pill">المستخدم المختار: <b id="selectedUserLabel">—</b></span>
       </div>
     </div>
 
     <!-- فلاتر الفواتير -->
     <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div class="title" style="font-size:20px">فلاتر الفواتير</div>
-        <span class="pill">عدد النتائج: <b id="invCount">0</b></span>
+      <div class="card-title">فلاتر الفواتير</div>
+
+      <div class="grid-4">
+        <div class="field">
+          <label>اختر المستخدم</label>
+          <select id="pickUser">
+            <option value="">— اختر —</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>الحالة</label>
+          <select id="pickStatus">
+            <option value="">الكل</option>
+            <option value="منتهية">منتهية</option>
+            <option value="مفتوحة">مفتوحة</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>من تاريخ</label>
+          <input id="fromDate" type="date" />
+        </div>
+
+        <div class="field">
+          <label>إلى تاريخ</label>
+          <input id="toDate" type="date" />
+        </div>
       </div>
 
-      <div class="row" style="margin-top:10px">
-        <button class="btn btn-dark" id="btnToday">فواتير اليوم</button>
-        <button class="btn btn-dark" id="btnLast7">فواتير آخر 7 أيام</button>
-
-        <div>
-          <div class="muted">من تاريخ</div>
-          <input id="fromDate" type="date">
-        </div>
-        <div>
-          <div class="muted">إلى تاريخ</div>
-          <input id="toDate" type="date">
-        </div>
-
-        <div style="flex:0.8">
-          <div class="muted">&nbsp;</div>
-          <button class="btn btn-blue" id="btnLoadInvoices">جلب الفواتير</button>
-        </div>
+      <div class="btn-row">
+        <button class="btn" id="btnToday">فواتير اليوم</button>
+        <button class="btn" id="btnLast7">فواتير آخر 7 أيام</button>
+        <button class="btn primary" id="btnLoadInvoices">اعرض الفواتير</button>
+        <div class="pill">عدد النتائج: <span id="invCount">0</span></div>
       </div>
 
-      <div class="row" style="margin-top:12px">
-        <div>
-          <div class="muted">قائمة الفواتير (اختر فاتورة)</div>
+      <!-- قائمة منسدلة للفواتير -->
+      <div class="grid-2">
+        <div class="field">
+          <label>اختر فاتورة من القائمة</label>
           <select id="invoiceSelect">
             <option value="">— اختر فاتورة —</option>
           </select>
         </div>
-        <div style="flex:0.8">
-          <div class="muted">&nbsp;</div>
-          <button class="btn btn-green" id="btnExportPdf" disabled>تصدير PDF</button>
+
+        <div class="field">
+          <label>إجراءات الفاتورة</label>
+          <div class="btn-row">
+            <button class="btn" id="btnOpenInvoice">فتح</button>
+            <button class="btn green" id="btnExportInvoicePdf">تصدير PDF</button>
+          </div>
         </div>
       </div>
 
-      <div style="margin-top:12px" class="preview" id="invoicePreview">
-        <div class="muted">المعاينة ستظهر هنا بعد اختيار فاتورة.</div>
+      <!-- معاينة مختصرة -->
+      <div class="invoice-preview" id="invoicePreview">
+        <div class="muted">اختر فاتورة لعرض التفاصيل…</div>
       </div>
     </div>
 
   </div>
 
-  <script type="module" src="admin.js?v=9001"></script>
+  <script src="./admin.js?v=8000"></script>
 </body>
 </html>
