@@ -5,412 +5,403 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
+  <!-- Supabase JS (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root{
-      --bg1:#0b0f14;
-      --bg2:#121821;
-      --card:#0f1620cc;
-      --stroke:#2a3441;
-      --text:#e8eef7;
-      --muted:#a9b6c6;
-      --green:#30e3b7;
+      --bg:#0b1118;
+      --card:#0f1720;
+      --card2:#0c141d;
+      --border:rgba(255,255,255,.08);
+      --text:#eaf0f7;
+      --muted:rgba(234,240,247,.65);
+      --green:#55f5b5;
       --red:#ff5a6a;
-      --yellow:#ffcc55;
-      --blue:#5aa9ff;
-      --shadow: 0 18px 60px rgba(0,0,0,.45);
-      --radius: 22px;
+      --yellow:#ffd05a;
+      --blue:#65b7ff;
+      --dark:#071018;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --r:22px;
     }
-    *{ box-sizing:border-box; }
+
+    *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-      background: radial-gradient(1200px 700px at 70% 10%, #1b2736 0%, transparent 60%),
-                  radial-gradient(900px 600px at 20% 30%, #132033 0%, transparent 55%),
-                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(101,183,255,.25), transparent 60%),
+                  radial-gradient(1200px 600px at 10% 0%, rgba(85,245,181,.18), transparent 55%),
+                  var(--bg);
       color:var(--text);
-      padding:24px;
+      padding:20px;
     }
+
     .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; margin-bottom:18px;
+      max-width: 1200px;
+      margin: 0 auto 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
     }
+
     .brand{
-      display:flex; flex-direction:column; gap:4px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
     }
-    .brand h1{
-      margin:0;
-      font-size:20px;
-      letter-spacing:.5px;
-    }
-    .brand .sub{
-      color:var(--muted);
-      font-size:13px;
-    }
+
+    .brand .t1{font-size:22px; font-weight:800}
+    .brand .t2{font-size:13px; color:var(--muted)}
+
     #pill{
       padding:10px 16px;
       border-radius:999px;
-      font-weight:700;
-      min-width:88px;
+      font-weight:800;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      box-shadow:var(--shadow);
+      min-width:110px;
       text-align:center;
-      box-shadow: var(--shadow);
     }
 
     .grid{
+      max-width: 1200px;
+      margin:0 auto;
       display:grid;
-      grid-template-columns: 1.05fr .95fr;
+      grid-template-columns: 1fr 1fr;
       gap:18px;
       align-items:start;
-    }
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
     }
 
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
       box-shadow: var(--shadow);
+      padding:16px;
       overflow:hidden;
     }
-    .card .head{
-      padding:16px 18px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
+
+    .card h2{
+      margin:0 0 10px;
+      font-size:18px;
+      letter-spacing:.2px;
     }
-    .card .head h2{
-      margin:0;
-      font-size:16px;
-    }
-    .card .head .hint{
+
+    .sub{
+      margin:0 0 14px;
       color:var(--muted);
-      font-size:12px;
-    }
-    .card .body{
-      padding:18px;
+      font-size:13px;
+      line-height:1.5;
     }
 
     .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
+      display:flex;
       gap:10px;
-      margin-bottom:12px;
-    }
-    .row3{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    @media (max-width: 520px){
-      .row,.row3{ grid-template-columns:1fr; }
+      align-items:center;
+      flex-wrap:wrap;
+      margin:10px 0;
     }
 
-    label{
-      display:block;
-      color:var(--muted);
+    .field{
+      flex:1;
+      min-width:180px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      background:rgba(0,0,0,.25);
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:10px 12px;
+    }
+
+    .field label{
       font-size:12px;
-      margin-bottom:6px;
-    }
-    input, select{
-      width:100%;
-      padding:12px 14px;
-      border-radius:16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
-    }
-    input::placeholder{ color:#8898ad; }
-
-    .btn{
-      border:none;
-      padding:12px 14px;
-      border-radius:16px;
-      font-weight:800;
-      cursor:pointer;
-      color:#0b0f14;
-      box-shadow: 0 10px 28px rgba(0,0,0,.25);
-      user-select:none;
+      color:var(--muted);
       white-space:nowrap;
     }
-    .btn.gray{ background: rgba(255,255,255,.10); color:var(--text); border:1px solid rgba(255,255,255,.12); }
-    .btn.green{ background: var(--green); }
-    .btn.red{ background: var(--red); }
-    .btn.yellow{ background: var(--yellow); }
-    .btn.blue{ background: var(--blue); }
-    .btn.wide{ width:100%; }
 
-    .actions{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin:10px 0 0;
+    .field input, .field select{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:14px;
     }
+
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.15s;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); background:rgba(255,255,255,.09)}
+    .btn.green{background: rgba(85,245,181,.12); border-color: rgba(85,245,181,.35)}
+    .btn.red{background: rgba(255,90,106,.12); border-color: rgba(255,90,106,.35)}
+    .btn.yellow{background: rgba(255,208,90,.12); border-color: rgba(255,208,90,.35)}
+    .btn.blue{background: rgba(101,183,255,.12); border-color: rgba(101,183,255,.35)}
+    .btn.gray{background: rgba(255,255,255,.05)}
+    .btn.wide{width:90%}
 
     table{
       width:100%;
       border-collapse:separate;
-      border-spacing:0 10px;
-      margin-top:12px;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.22);
     }
-    th{
-      color:var(--muted);
-      font-size:12px;
-      text-align:right;
-      font-weight:700;
-      padding:0 10px;
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:13px;
+      vertical-align:middle;
     }
-    td{
-      background: rgba(0,0,0,.20);
-      border: 1px solid rgba(255,255,255,.08);
-      padding:12px 10px;
-      border-left:none;
-      border-right:none;
-    }
-    tr td:first-child{
-      border-right: 1px solid rgba(255,255,255,.08);
-      border-radius:16px 0 0 16px;
-    }
-    tr td:last-child{
-      border-left: 1px solid rgba(255,255,255,.08);
-      border-radius:0 16px 16px 0;
-    }
-    .num{ direction:ltr; text-align:right; font-variant-numeric: tabular-nums; }
+    th{color:var(--muted); font-weight:800}
+    tr:last-child td{border-bottom:none}
+
+    .num{font-variant-numeric: tabular-nums; direction:ltr}
 
     .badge{
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       padding:6px 10px;
       border-radius:999px;
-      font-size:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
       font-weight:800;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.10);
-      color:var(--text);
-    }
-    .badge.g{ background: rgba(48,227,183,.15); border-color: rgba(48,227,183,.35); }
-    .badge.r{ background: rgba(255,90,106,.15); border-color: rgba(255,90,106,.35); }
-
-    .chipbar{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top:12px;
-    }
-    .chip{
-      padding:8px 12px;
-      border-radius:999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      color:var(--text);
       font-size:12px;
+      min-width:54px;
+    }
+    .badge.g{border-color: rgba(85,245,181,.4); background: rgba(85,245,181,.12)}
+    .badge.r{border-color: rgba(255,90,106,.4); background: rgba(255,90,106,.12)}
+
+    .divider{
+      height:1px;
+      background:rgba(255,255,255,.08);
+      margin:14px 0;
     }
 
-    .totals{
-      margin-top:12px;
-      display:grid;
-      gap:8px;
-    }
-    .total{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:10px 12px;
-      border-radius:16px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.08);
-    }
-
-    .footerNote{
-      margin-top:14px;
-      color:var(--muted);
+    .smallNote{
+      color: var(--muted);
       font-size:12px;
-      line-height:1.6;
+      line-height:1.5;
     }
 
-    /* طباعة الفاتورة فقط */
+    /* Printable invoice area */
     @media print{
-      body{ background:#fff; color:#000; }
-      .topbar, .rightCard, .filtersCard .head, .filtersCard .row, .filtersCard .row3, .filtersCard .actions, .footerNote { display:none !important; }
-      .grid{ grid-template-columns:1fr; }
-      .card{ box-shadow:none; border:1px solid #ddd; background:#fff; }
-      td{ background:#fff; border:1px solid #ddd; }
-      th{ color:#333; }
+      body{background:#fff; color:#000; padding:0}
+      .topbar, .grid{display:none !important;}
+      #printArea{display:block !important;}
     }
+
+    #printArea{
+      display:none;
+      padding:24px;
+      font-family: Arial, sans-serif;
+      direction: rtl;
+    }
+    #printArea h1{margin:0 0 10px; font-size:18px}
+    #printArea .meta{margin:8px 0; font-size:12px}
+    #printArea table{border:1px solid #000; background:#fff}
+    #printArea th,#printArea td{border-bottom:1px solid #ddd; color:#000}
   </style>
 </head>
 
 <body>
+
   <div class="topbar">
     <div class="brand">
-      <h1>HAYEK SPOT — لوحة الأمن</h1>
-      <div class="sub">إدارة المستخدمين + فواتير متعددة + عرض/طباعة PDF</div>
+      <div class="t1">HAYEK SPOT — لوحة الأمن</div>
+      <div class="t2">إدارة المستخدمين + فواتير متعددة + عرض/طباعة</div>
     </div>
-    <div id="pill">مغلق</div>
+    <div id="pill">...</div>
   </div>
 
   <div class="grid">
 
     <!-- LEFT: Invoices -->
-    <div class="card filtersCard">
-      <div class="head">
-        <h2>فواتير متعددة للمستخدم</h2>
-        <div class="hint">اختر مستخدم → تحديث قائمة الفواتير → اختر فاتورة → فتح</div>
+    <section class="card">
+      <h2>فواتير متعددة للمستخدم</h2>
+      <p class="sub">اختر مستخدم → حدّد فترة → تحديث قائمة الفواتير → اختر فاتورة → افتح/احذف/طباعة.</p>
+
+      <div class="row">
+        <div class="field">
+          <label>اختر المستخدم</label>
+          <select id="userSelect">
+            <option value="">— اختر المستخدم —</option>
+          </select>
+        </div>
       </div>
-      <div class="body">
 
-        <div class="row">
-          <div>
-            <label>اختر المستخدم</label>
-            <select id="userSelect">
-              <option value="">— اختر المستخدم —</option>
-            </select>
-          </div>
-          <div>
-            <label>قائمة الفواتير (حسب التاريخ)</label>
-            <select id="invoiceSelect">
-              <option value="">— اختر فاتورة —</option>
-            </select>
-          </div>
+      <div class="row">
+        <div class="field" style="min-width:220px">
+          <label>من تاريخ</label>
+          <input id="fromDate" type="date" />
         </div>
-
-        <div class="row">
-          <div>
-            <label>من تاريخ</label>
-            <input id="fromDate" type="date" />
-          </div>
-          <div>
-            <label>إلى تاريخ</label>
-            <input id="toDate" type="date" />
-          </div>
+        <div class="field" style="min-width:220px">
+          <label>إلى تاريخ</label>
+          <input id="toDate" type="date" />
         </div>
-
-        <div class="actions">
-          <button class="btn blue" id="refreshInvoices">تحديث قائمة الفواتير</button>
-          <button class="btn gray" id="quickToday">اليوم</button>
-          <button class="btn gray" id="quick7">آخر 7 أيام</button>
-          <button class="btn gray" id="clearDates">مسح التواريخ</button>
-        </div>
-
-        <div class="actions" style="margin-top:12px;">
-          <button class="btn green" id="openInvoice">فتح الفاتورة المختارة</button>
-          <button class="btn gray" id="printInvoice">تصدير / طباعة PDF</button>
-          <button class="btn red" id="deleteInvoice">حذف الفاتورة المختارة</button>
-        </div>
-
-        <div class="row" style="margin-top:14px;">
-          <div>
-            <label>للحذف: اكتب اسم المستخدم حرفيًا للتأكيد</label>
-            <input id="confirmName" placeholder="اكتب اسم المستخدم هنا للتأكيد..." />
-          </div>
-          <div class="actions" style="align-items:end;">
-            <button class="btn red wide" id="deleteUserOps">حذف كل عمليات المستخدم (تنظيف قديم)</button>
-          </div>
-        </div>
-
-        <div class="chipbar" id="invoiceMeta"></div>
-
-        <div class="totals">
-          <div class="total">
-            <span>المجموع العام:</span>
-            <span class="num" id="grandTotal">0</span>
-          </div>
-        </div>
-
-        <div class="totals" id="totalsByLabel"></div>
-
-        <div class="footerNote">
-          ✓ الآن الفواتير تظهر كقائمة مستقلة (كل فاتورة لها invoice_id).<br/>
-          ⚠️ “فاتورة قديمة” تعني عمليات بدون invoice_id (قبل التحديث) وتظهر كخيار خاص.
-        </div>
-
-        <!-- Invoice table -->
-        <div class="card" id="invoiceCard" style="margin-top:14px;">
-          <div class="head">
-            <h2>تفاصيل الفاتورة</h2>
-            <div class="hint">العمليات داخل الفاتورة</div>
-          </div>
-          <div class="body">
-            <table>
-              <thead>
-                <tr>
-                  <th>الوقت</th>
-                  <th>البيان</th>
-                  <th>العملية</th>
-                  <th>النتيجة</th>
-                </tr>
-              </thead>
-              <tbody id="opsTbody"></tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
-    </div>
+
+      <div class="row">
+        <button class="btn gray" id="quickToday">اليوم</button>
+        <button class="btn gray" id="quick7">آخر 7 أيام</button>
+        <button class="btn gray" id="clearDates">مسح التواريخ</button>
+        <button class="btn blue" id="refreshInvoices">تحديث قائمة الفواتير</button>
+      </div>
+
+      <div class="row">
+        <div class="field" style="flex:1; min-width:260px">
+          <label>اختر فاتورة</label>
+          <select id="invoiceSelect">
+            <option value="">— اختر فاتورة —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn green" id="openInvoice">فتح الفاتورة المختارة</button>
+        <button class="btn red" id="deleteInvoice">حذف الفاتورة المختارة</button>
+        <button class="btn gray" id="printInvoice">تصدير / طباعة PDF</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <h2 style="margin-top:0">تفاصيل الفاتورة</h2>
+
+      <div class="row" id="invoiceMeta" style="gap:8px; margin-top:6px;"></div>
+
+      <div class="row">
+        <div class="field" style="flex:1">
+          <label>المجموع العام</label>
+          <input id="grandTotal" class="num" value="0" readonly />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:6px;">
+        <div style="width:100%">
+          <table>
+            <thead>
+              <tr>
+                <th>الوقت</th>
+                <th>البيان</th>
+                <th>العملية</th>
+                <th>النتيجة</th>
+              </tr>
+            </thead>
+            <tbody id="opsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div id="totalsByLabel" style="width:100%"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="smallNote">
+        ✅ الآن كل فاتورة مستقلة (invoice_id).<br>
+        ⚠️ العمليات القديمة التي بدون invoice_id لن تظهر ضمن قائمة الفواتير الجديدة.
+      </p>
+    </section>
 
     <!-- RIGHT: Users -->
-    <div class="card rightCard">
-      <div class="head">
-        <h2>إدارة المستخدمين</h2>
-        <div class="hint">إضافة + حظر/فك + حذف + Paging + بحث</div>
+    <section class="card">
+      <h2>إدارة المستخدمين</h2>
+      <p class="sub">إضافة + حظر/فك + حذف + بحث + Paging</p>
+
+      <div class="row">
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input id="newUsername" placeholder="مثال: محمود" />
+        </div>
+        <div class="field">
+          <label>كلمة السر</label>
+          <input id="newPass" placeholder="مثال: 123456" class="num" />
+        </div>
+        <div class="field" style="min-width:150px">
+          <label>صلاحية</label>
+          <select id="newIsAdmin">
+            <option value="false">مستخدم</option>
+            <option value="true">Admin</option>
+          </select>
+        </div>
       </div>
-      <div class="body">
 
-        <div class="row3">
-          <div>
-            <label>اسم المستخدم</label>
-            <input id="newUsername" placeholder="مثال: محمود" />
-          </div>
-          <div>
-            <label>كلمة السر</label>
-            <input id="newPass" placeholder="مثال: 123456" />
-          </div>
-          <div>
-            <label>صلاحية</label>
-            <select id="newIsAdmin">
-              <option value="false">مستخدم</option>
-              <option value="true">Admin</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="btn yellow" id="genPass">توليد كلمة سر</button>
-          <button class="btn green" id="addUser">حفظ المستخدم</button>
-          <button class="btn gray" id="refreshUsers">تحديث القائمة</button>
-        </div>
-
-        <div class="row" style="margin-top:14px;">
-          <div>
-            <label>بحث عن مستخدم</label>
-            <input id="searchUser" placeholder="اكتب جزء من الاسم..." />
-          </div>
-          <div class="actions" style="align-items:end;">
-            <button class="btn gray" id="prevUsers">السابق</button>
-            <button class="btn gray" id="nextUsers">التالي</button>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>الاسم</th>
-              <th>كلمة السر</th>
-              <th>Admin</th>
-              <th>الحالة</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="usersTbody"></tbody>
-        </table>
-
-        <div class="footerNote">
-          ✓ الحظر يقطع الدخول مباشرة (حسب منطق التحقق في صفحة المستخدم).<br/>
-          ⚠️ لا تشارك مفاتيح Supabase مع أي شخص.
-        </div>
-
+      <div class="row">
+        <button class="btn yellow" id="genPass">توليد كلمة سر</button>
+        <button class="btn green" id="addUser">حفظ المستخدم</button>
+        <button class="btn gray" id="refreshUsers">تحديث القائمة</button>
       </div>
-    </div>
+
+      <div class="row">
+        <div class="field" style="flex:1">
+          <label>بحث عن مستخدم</label>
+          <input id="searchUser" placeholder="اكتب جزء من الاسم..." />
+        </div>
+        <button class="btn gray" id="prevUsers">السابق</button>
+        <button class="btn gray" id="nextUsers">التالي</button>
+      </div>
+
+      <div class="row">
+        <div style="width:100%">
+          <table>
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>كلمة السر</th>
+                <th>Admin</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="smallNote">
+        ✓ الحظر يقطع الدخول مباشرة (حسب منطق التحقق في صفحة المستخدم).<br>
+        ⚠ لا تشارك مفاتيح Supabase مع أي شخص.
+      </p>
+    </section>
 
   </div>
 
-  <!-- IMPORTANT: Supabase first -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Admin JS -->
-  <script src="./admin.js?v=5"></script>
+  <!-- Hidden printable area -->
+  <div id="printArea">
+    <h1>فاتورة — HAYEK SPOT</h1>
+    <div class="meta" id="printMeta"></div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:right">الوقت</th>
+          <th style="text-align:right">البيان</th>
+          <th style="text-align:right">العملية</th>
+          <th style="text-align:right">النتيجة</th>
+        </tr>
+      </thead>
+      <tbody id="printBody"></tbody>
+    </table>
+    <div class="meta" style="margin-top:10px; font-weight:700" id="printTotal"></div>
+  </div>
+
+  <!-- IMPORTANT: keep last -->
+  <script src="./admin.js?v=99"></script>
 </body>
 </html>
