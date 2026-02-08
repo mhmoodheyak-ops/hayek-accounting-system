@@ -48,7 +48,7 @@
       overflow:hidden;
     }
 
-    /* ✅ Luxe banners (تظهر على الشاشة + PDF) */
+    /* ✅ Luxe banners */
     .heroWrap{
       padding:14px;
       display:grid;
@@ -85,7 +85,6 @@
       width:160px; height:160px;
       border-radius:50%;
       background: rgba(25,195,125,.22);
-      filter: blur(0px);
       opacity: .9;
       pointer-events:none;
     }
@@ -93,7 +92,7 @@
     .bannerTitle{
       position:relative;
       font-weight:1000;
-      font-size:28px;      /* ✅ أكبر */
+      font-size:28px;
       line-height:1.12;
       letter-spacing:.3px;
       color:#111315;
@@ -226,7 +225,7 @@
       background: rgba(255,255,255,.10);font-weight:1000;cursor:pointer;touch-action:manipulation
     }
 
-    .log{padding:0;display:grid;gap:10px;border-top:1px solid var(--line)} /* padding صار بالـ heroWrap */
+    .log{padding:0;display:grid;gap:10px;border-top:1px solid var(--line)}
     .log h3{margin:0;font-size:14px}
     table{width:100%;border-collapse:collapse;border-radius:16px;overflow:hidden;border:1px solid var(--line);background: rgba(17,19,21,.25)}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:right}
@@ -240,7 +239,7 @@
     }
     .total span:last-child{direction:ltr}
 
-    /* ✅ PDF Styling */
+    /* ✅ PDF Styling + Fix overlap */
     @media print{
       body{
         background:#fff;
@@ -285,6 +284,7 @@
         border-collapse:collapse;
         margin-top:10px;
         border:1px solid #000;
+        margin-bottom: 14px !important;
       }
       th{
         background:#f0f0f0;
@@ -301,10 +301,16 @@
       }
       .total{
         margin-top:12px;
+        margin-bottom: 14px !important;
         font-size:16px;
         font-weight:900;
         border:2px dashed #000;
         background:#fff;
+      }
+      .bannerFooter{
+        margin-top: 16px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
     }
   </style>
@@ -320,16 +326,16 @@
       <div class="pill" id="statusPill">مقفل</div>
     </div>
 
-    <!-- LOGIN (User) -->
+    <!-- LOGIN -->
     <div class="card login" id="loginCard">
       <div class="row2">
         <div class="field">
           <label>اسم المستخدم</label>
-          <input id="username" placeholder="مثال: محمود" />
+          <input id="username" placeholder="مثال: محمود" autocomplete="username" />
         </div>
         <div class="field">
           <label>كلمة السر</label>
-          <input id="password" type="password" placeholder="••••" />
+          <input id="password" type="password" placeholder="••••" autocomplete="current-password" />
         </div>
       </div>
 
@@ -339,7 +345,7 @@
       </div>
 
       <div class="note" id="loginNote">
-        ✅ الدخول يعتمد على قاعدة البيانات (Supabase) ويعمل من أي جهاز.<br>
+        ✅ الدخول يعتمد على قاعدة البيانات ويعمل من أي جهاز.<br>
         ✅ إذا كان المستخدم محظور، لن يتمكن من الدخول.
       </div>
     </div>
@@ -358,7 +364,6 @@
         </div>
       </div>
 
-      <!-- Keypad -->
       <div class="keys" id="keys">
         <button class="key warn" data-k="C">C</button>
         <button class="key warn" data-k="CE">CE</button>
@@ -383,7 +388,6 @@
         <button class="key" data-k="0">0</button>
         <button class="key" data-k=".">.</button>
 
-        <!-- ✅ = يأخذ مكان زرين -->
         <button class="key eq" data-k="=" style="grid-column: span 2; font-size:20px;">=</button>
       </div>
 
@@ -401,7 +405,6 @@
         </div>
       </div>
 
-      <!-- ✅ السجل + بوكسات على الشاشة + PDF -->
       <div class="log">
         <div class="heroWrap">
           <div class="bannerBox">
@@ -411,7 +414,6 @@
               <div class="badge">حاسبة احترافية</div>
               <div class="badge">سجل عمليات</div>
               <div class="badge">تصدير PDF</div>
-              <div class="badge">Supabase</div>
             </div>
           </div>
 
@@ -445,7 +447,7 @@
 
 <script type="module">
   // =========================
-  // ✅ Supabase (مفاتيحك داخل الكود)
+  // ✅ Supabase (Backend)
   // =========================
   const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
   const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
@@ -468,7 +470,7 @@
       border:"1px solid rgba(255,255,255,.18)"
     });
     document.body.appendChild(d);
-    setTimeout(()=>d.remove(), 1400);
+    setTimeout(()=>d.remove(), 1600);
   };
 
   const apiFetch = async (path, options = {}) => {
@@ -490,12 +492,28 @@
     return text ? JSON.parse(text) : null;
   };
 
+  // =========================
+  // ✅ Device ID (جهاز واحد فقط)
+  // =========================
+  const K_DEVICE = "hs_device_id_v1";
+  function getDeviceId(){
+    let id = localStorage.getItem(K_DEVICE);
+    if (id) return id;
+
+    const rnd = crypto?.getRandomValues ? crypto.getRandomValues(new Uint32Array(4)) : [Date.now(), Math.random()*1e9, Math.random()*1e9, Math.random()*1e9];
+    id = `dev_${Array.from(rnd).map(n=>Number(n).toString(16)).join("")}_${Date.now().toString(16)}`;
+    localStorage.setItem(K_DEVICE, id);
+    return id;
+  }
+
+  // =========================
   // Session
-  const K_SESSION = "hs_session_v2";
+  // =========================
+  const K_SESSION = "hs_session_v3";
   const saveSession = (obj) => localStorage.setItem(K_SESSION, JSON.stringify(obj));
   const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
+  const clearSession = () => { try { localStorage.removeItem(K_SESSION); } catch(_){} };
 
-  // UI refs
   const statusPill = $("statusPill");
   const loginCard  = $("loginCard");
   const appCard    = $("appCard");
@@ -517,14 +535,24 @@
     appCard.style.display = locked ? "none" : "block";
   };
 
-  // Auth
+  function forceLogout(reasonMsg){
+    clearSession();
+    setLocked(true);
+    if (reasonMsg) toast(reasonMsg);
+  }
+
+  // =========================
+  // ✅ Auth + Device Binding
+  // =========================
   const loginUser = async (username, pass) => {
     const u = (username || "").trim();
     const p = (pass || "").trim();
     if (!u || !p) { toast("اكتب الاسم وكلمة السر"); return; }
 
+    const deviceId = getDeviceId();
+
     const q =
-      `?select=id,username,is_admin,blocked` +
+      `?select=id,username,pass,is_admin,blocked,device_id` +
       `&username=eq.${encodeURIComponent(u)}` +
       `&pass=eq.${encodeURIComponent(p)}` +
       `&limit=1`;
@@ -535,12 +563,78 @@
     if (!user) { toast("الاسم أو كلمة المرور غير صحيحة"); return; }
     if (user.blocked) { toast("هذا المستخدم محظور ❌"); return; }
 
-    saveSession({ id: user.id, username: user.username, is_admin: !!user.is_admin, ts: Date.now() });
+    if (!user.device_id){
+      try{
+        await apiFetch(`/app_users?id=eq.${user.id}`, {
+          method:"PATCH",
+          headers:{ "Prefer":"return=minimal" },
+          body: JSON.stringify({ device_id: deviceId, last_seen: new Date().toISOString() })
+        });
+      }catch(e){
+        console.error(e);
+        toast("مشكلة ربط الجهاز");
+        return;
+      }
+    } else if (user.device_id !== deviceId){
+      toast("هذا الحساب مرتبط بجهاز آخر ❌");
+      return;
+    } else {
+      try{
+        await apiFetch(`/app_users?id=eq.${user.id}`, {
+          method:"PATCH",
+          headers:{ "Prefer":"return=minimal" },
+          body: JSON.stringify({ last_seen: new Date().toISOString() })
+        });
+      }catch(_){}
+    }
+
+    saveSession({ id: user.id, username: user.username, is_admin: !!user.is_admin, device_id: deviceId, ts: Date.now() });
     setLocked(false);
     toast("تم الدخول ✅");
   };
 
-  // Calculator + Log (local)
+  // =========================
+  // ✅ Guard: حظر فوري + تحقق الجهاز
+  // =========================
+  let guardTimer = null;
+
+  async function guardTick(){
+    const sess = loadSession();
+    if (!sess?.id) return;
+
+    try{
+      const q = `?select=id,blocked,device_id&limit=1&id=eq.${sess.id}`;
+      const rows = await apiFetch(`/app_users${q}`, { method:"GET" });
+      const u = Array.isArray(rows) ? rows[0] : null;
+
+      if (!u) return forceLogout("تم تسجيل الخروج");
+
+      if (u.blocked) return forceLogout("تم حظرك من النظام ❌");
+
+      const myDevice = getDeviceId();
+      if (u.device_id && u.device_id !== myDevice) return forceLogout("هذا الحساب انتقل لجهاز آخر ❌");
+
+      try{
+        await apiFetch(`/app_users?id=eq.${sess.id}`, {
+          method:"PATCH",
+          headers:{ "Prefer":"return=minimal" },
+          body: JSON.stringify({ last_seen: new Date().toISOString() })
+        });
+      }catch(_){}
+    }catch(e){
+      console.warn("Guard error", e);
+    }
+  }
+
+  function startGuard(){
+    if (guardTimer) clearInterval(guardTimer);
+    guardTimer = setInterval(guardTick, 10000);
+    guardTick();
+  }
+
+  // =========================
+  // Calculator + Log (local + central)
+  // =========================
   const K_LOG = "hs_calc_log_v2";
   let expr = "";
   let lastResult = 0;
@@ -573,7 +667,8 @@
     tbody.innerHTML = "";
     let total = 0;
 
-    for (const row of log){
+    const orderedLog = [...log].reverse(); // الأقدم فوق
+    for (const row of orderedLog){
       const tr = document.createElement("tr");
 
       const td1 = document.createElement("td");
@@ -597,7 +692,33 @@
     saveLog();
   }
 
+  async function pushOperationToCentral({ user_id, username, label, operation, result, device_id }){
+    try{
+      await apiFetch(`/app_operations`, {
+        method:"POST",
+        headers:{ "Prefer":"return=minimal" },
+        body: JSON.stringify({
+          user_id,
+          username,
+          label: label || null,
+          operation,
+          result,
+          device_id
+        })
+      });
+    }catch(e){
+      console.warn("Central log failed", e);
+      // ما بنوقف المستخدم إذا فشل الإرسال
+    }
+  }
+
   function newlineCommit(){
+    const sess = loadSession();
+    if (!sess?.id || !sess?.username){
+      toast("سجّل دخول أولاً");
+      return;
+    }
+
     const clean = expr.trim();
     if (!clean) return;
 
@@ -607,12 +728,25 @@
     lastResult = val;
 
     const label = (labelInput.value || "").trim() || "عملية";
+    const opDisplay = clean.replace(/\*/g,"×").replace(/\//g,"÷");
+    const resultText = formatNumber(val);
 
+    // محلياً
     log.unshift({
       label,
-      op: clean.replace(/\*/g,"×").replace(/\//g,"÷"),
-      result: formatNumber(val),
+      op: opDisplay,
+      result: resultText,
       ts: Date.now()
+    });
+
+    // مركزياً للأدمن
+    pushOperationToCentral({
+      user_id: sess.id,
+      username: sess.username,
+      label,
+      operation: opDisplay,
+      result: resultText,
+      device_id: getDeviceId()
     });
 
     expr = "";
@@ -668,7 +802,8 @@
 
   function logAsTSV(){
     const header = ["البيان","العملية","النتيجة"].join("\t");
-    const rows = log.map(r => [r.label, r.op, r.result].join("\t"));
+    const orderedLog = [...log].reverse();
+    const rows = orderedLog.map(r => [r.label, r.op, r.result].join("\t"));
     return [header, ...rows, `إجمالي الكشف:\t\t${grandTotalEl.textContent}`].join("\n");
   }
 
@@ -677,6 +812,8 @@
     vibe();
     try{
       await loginUser(usernameEl.value, passwordEl.value);
+      const s = loadSession();
+      if (s?.id) startGuard();
     }catch(e){
       toast("خطأ اتصال بقاعدة البيانات");
       console.error(e);
@@ -711,6 +848,7 @@
   const sess = loadSession();
   setLocked(!sess);
   render();
+  if (sess?.id) startGuard();
 </script>
 </body>
 </html>
