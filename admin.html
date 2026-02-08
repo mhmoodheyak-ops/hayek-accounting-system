@@ -1,547 +1,633 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأدمن</title>
+/* =========================
+   HAYEK SPOT — Admin Panel (Invoices v2)
+   - Users CRUD + block/unblock
+   - Per-user invoices list (app_invoices)
+   - Open selected invoice -> operations where invoice_id
+   - Delete selected invoice (cascade deletes ops via FK)
+   - Print / PDF
+   ========================= */
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+const SUPABASE_URL = "PUT_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_KEY = "PUT_YOUR_SB_PUBLISHABLE_KEY_HERE";
 
-  <style>
-    :root{
-      --bg:#0f1417;
-      --card:#1b232a;
-      --card2:#222c34;
-      --text:#f2f4f6;
-      --muted:#b7c0c8;
-      --line:rgba(255,255,255,.12);
-      --shadow:0 18px 45px rgba(0,0,0,.35);
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      --green:#2dd4bf;
-      --red:#fb7185;
-      --yellow:#fbbf24;
-      --blue:#60a5fa;
+const $ = (id) => document.getElementById(id);
 
-      --btn:#2a3640;
-      --btn2:#33424d;
-      --input:#11181d;
-    }
+const state = {
+  usersPage: 0,
+  pageSize: 15,
+  lastUsers: [],
+  currentUser: null,
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 80% -20%, rgba(45,212,191,.18), transparent 60%),
-                  radial-gradient(900px 500px at 10% 0%, rgba(96,165,250,.16), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      padding:18px;
-    }
+  invoices: [],
+  currentInvoiceId: null,
+  currentOps: [],
+};
 
-    .wrap{
-      width:min(1200px, 100%);
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
+function setPill(ok, msg){
+  const pill = $("pill");
+  if(!pill) return;
+  pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
+  pill.style.background = ok ? "var(--green)" : "var(--red)";
+  pill.style.color = ok ? "#0b0e12" : "var(--text)";
+}
 
-    .topbar{
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px 18px;
-      box-shadow: var(--shadow);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-    }
+function nowISODate(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
 
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-    .brand .t1{
-      font-weight:800;
-      letter-spacing:.4px;
-      font-size:18px;
-    }
-    .brand .t2{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.2;
-    }
+function daysAgoISO(n){
+  const d = new Date();
+  d.setDate(d.getDate()-n);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
 
-    .pill{
-      padding:10px 16px;
-      border-radius:999px;
-      font-weight:800;
-      background:var(--btn2);
-      border:1px solid var(--line);
-      min-width:92px;
-      text-align:center;
-      user-select:none;
-    }
+function safeNum(x){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : 0;
+}
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:16px;
-    }
+function fmtDateTime(ts){
+  try{
+    const d = new Date(ts);
+    return d.toLocaleString("ar-EG", { hour12: true });
+  }catch{
+    return String(ts || "");
+  }
+}
 
-    @media (max-width: 900px){
-      .grid{ grid-template-columns: 1fr; }
-    }
+/* =========================
+   Users (CRUD + block/unblock)
+   ========================= */
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
+function genPassword(){
+  const p = Math.floor(100000 + Math.random()*900000);
+  $("newPass").value = String(p);
+}
 
-    .card .head{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
+async function addUser(){
+  const username = ($("newUsername").value || "").trim();
+  const pass = ($("newPass").value || "").trim();
+  const is_admin = $("newIsAdmin").value === "true";
 
-    .card .head .h{
-      font-weight:900;
-      font-size:15px;
-    }
-    .card .head .sub{
-      color:var(--muted);
-      font-size:12px;
-    }
+  if(!username || !pass){
+    alert("اكتب اسم المستخدم وكلمة السر");
+    return;
+  }
 
-    .card .body{ padding:16px; }
+  const { error } = await client.from("app_users").insert({
+    username, pass, is_admin, blocked: false
+  });
 
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    @media (max-width: 900px){
-      .row{ grid-template-columns: 1fr; }
-    }
+  if(error){
+    alert("خطأ بالحفظ: " + error.message);
+    return;
+  }
 
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:7px;
-    }
-    label{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:700;
-    }
-    input, select{
-      width:100%;
-      background: rgba(0,0,0,.22);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px 12px;
-      color:var(--text);
-      outline:none;
-      font-size:14px;
-    }
-    input::placeholder{ color:rgba(255,255,255,.35); }
+  $("newUsername").value = "";
+  await loadUsers();
+  alert("تم حفظ المستخدم ✅");
+}
 
-    .btn{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
-      color:var(--text);
-      border-radius:16px;
-      padding:12px 14px;
-      font-weight:900;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .06s ease, filter .12s ease;
-    }
-    .btn:active{ transform: scale(.99); filter:brightness(.95); }
-    .btn.wide{ width:100%; }
-    .btn.gray{ background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); }
-    .btn.green{ background: linear-gradient(180deg, rgba(45,212,191,.25), rgba(45,212,191,.12)); border-color: rgba(45,212,191,.35); }
-    .btn.red{ background: linear-gradient(180deg, rgba(251,113,133,.22), rgba(251,113,133,.10)); border-color: rgba(251,113,133,.35); }
-    .btn.yellow{ background: linear-gradient(180deg, rgba(251,191,36,.22), rgba(251,191,36,.10)); border-color: rgba(251,191,36,.35); }
-    .btn.blue{ background: linear-gradient(180deg, rgba(96,165,250,.22), rgba(96,165,250,.10)); border-color: rgba(96,165,250,.35); }
+async function setBlocked(username, blocked){
+  const { error } = await client
+    .from("app_users")
+    .update({ blocked })
+    .eq("username", username);
 
-    .btns{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:10px;
-      margin-top:8px;
-    }
-    @media (max-width: 900px){
-      .btns{ grid-template-columns: 1fr; }
-    }
+  if(error){
+    alert("خطأ: " + error.message);
+    return;
+  }
+  await loadUsers();
+}
 
-    .tableWrap{
-      border:1px solid var(--line);
-      border-radius:18px;
-      overflow:hidden;
-      background: rgba(0,0,0,.15);
-    }
+async function deleteUser(username){
+  if(!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:14px;
-    }
-    thead th{
-      text-align:right;
-      padding:12px 12px;
-      color:var(--muted);
-      font-size:12px;
-      letter-spacing:.2px;
-      background: rgba(255,255,255,.04);
-      border-bottom:1px solid var(--line);
-      white-space:nowrap;
-    }
-    tbody td{
-      padding:12px 12px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      vertical-align:middle;
-    }
-    tbody tr:hover{ background: rgba(255,255,255,.04); }
+  const { error } = await client
+    .from("app_users")
+    .delete()
+    .eq("username", username);
 
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:12px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-    }
-    .badge.g{ border-color: rgba(45,212,191,.35); background: rgba(45,212,191,.12); }
-    .badge.r{ border-color: rgba(251,113,133,.35); background: rgba(251,113,133,.12); }
-    .num{ direction:ltr; text-align:left; font-weight:800; }
+  if(error){
+    alert("خطأ: " + error.message);
+    return;
+  }
+  await loadUsers();
+}
 
-    .hint{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .hint .ok{ color:#b8f7ea; font-weight:800; }
-    .hint .warn{ color:#ffe4a6; font-weight:800; }
+function renderUsersTable(users){
+  const tb = $("usersTbody");
+  tb.innerHTML = "";
 
-    /* Invoice preview card (also used for print) */
-    #invoiceCard{
-      margin-top:14px;
-      background:#f7f7f7;
-      color:#111;
-      border-radius:18px;
-      border:1px solid rgba(0,0,0,.08);
-      overflow:hidden;
-    }
-    #invoiceTop{
-      padding:20px 16px 12px;
-      text-align:center;
-    }
-    #invoiceTop .a{
-      font-size:34px;
-      font-weight:1000;
-      margin:0;
-    }
-    #invoiceTop .b{
-      margin:6px 0 0;
-      font-size:18px;
-      font-weight:900;
-      color:#0b7a57;
-      letter-spacing:2px;
-    }
-    #invoiceMeta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:center;
-      padding:10px 14px 18px;
-    }
-    .chip{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.10);
-      border-radius:999px;
-      padding:10px 12px;
-      font-weight:900;
-      box-shadow: 0 6px 18px rgba(0,0,0,.08);
-    }
+  users.forEach(u => {
+    const tr = document.createElement("tr");
 
-    #invoiceTable{
-      padding:0 14px 14px;
-    }
+    const tdName = document.createElement("td");
+    tdName.textContent = u.username;
 
-    #invoiceTable .tableWrap{
-      background:#fff;
-      border-color: rgba(0,0,0,.10);
-    }
-    #invoiceTable thead th{
-      background:#f2f2f2;
-      border-bottom:1px solid rgba(0,0,0,.08);
-      color:#444;
-    }
-    #invoiceTable tbody td{
-      border-bottom:1px solid rgba(0,0,0,.06);
-    }
+    const tdPass = document.createElement("td");
+    tdPass.className = "num";
+    tdPass.textContent = u.pass;
 
-    #totalsBar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px;
-      border-top:1px solid rgba(0,0,0,.08);
-      background:#fff;
-      font-weight:1000;
-    }
+    const tdAdmin = document.createElement("td");
+    tdAdmin.innerHTML = u.is_admin ? `<span class="badge g">YES</span>` : `<span class="badge">NO</span>`;
 
-    #totalsByLabel{
-      padding:0 14px 18px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    #totalsByLabel .total{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      background:#fff;
-      border:1px solid rgba(0,0,0,.10);
-      border-radius:14px;
-      padding:10px 12px;
-      font-weight:900;
-      box-shadow: 0 6px 18px rgba(0,0,0,.06);
-    }
+    const tdState = document.createElement("td");
+    tdState.innerHTML = u.blocked ? `<span class="badge r">محظور</span>` : `<span class="badge g">مفعّل</span>`;
 
-    /* Print */
-    @media print{
-      body{ padding:0; background:#fff; }
-      .topbar, .grid, .card:not(#invoiceCard){ display:none !important; }
-      .wrap{ width:100%; margin:0; }
-      #invoiceCard{ border:none; margin:0; border-radius:0; }
-    }
-  </style>
-</head>
+    const tdAct = document.createElement("td");
+    tdAct.style.display = "flex";
+    tdAct.style.gap = "8px";
+    tdAct.style.flexWrap = "wrap";
 
-<body>
-  <div class="wrap">
+    const btnToggle = document.createElement("button");
+    btnToggle.className = "btn yellow";
+    btnToggle.textContent = u.blocked ? "فك الحظر" : "حظر";
+    btnToggle.onclick = () => setBlocked(u.username, !u.blocked);
 
-    <div class="topbar">
-      <div class="pill" id="pill">مفتوح</div>
-      <div class="brand">
-        <div class="t1">HAYEK SPOT — لوحة الأدمن</div>
-        <div class="t2">إضافة/حظر/حذف مستخدمين + فواتير متعددة + تصدير PDF + حذف بيانات لتوفير المساحة</div>
-      </div>
-    </div>
+    const btnDel = document.createElement("button");
+    btnDel.className = "btn red";
+    btnDel.textContent = "حذف";
+    btnDel.onclick = () => deleteUser(u.username);
 
-    <div class="grid">
+    const btnPick = document.createElement("button");
+    btnPick.className = "btn gray";
+    btnPick.textContent = "اختيار";
+    btnPick.onclick = async () => {
+      $("userSelect").value = u.username;
+      state.currentUser = u.username;
+      await loadInvoicesForUser(); // تحديث الفواتير مباشرة عند اختيار مستخدم
+      window.scrollTo({ top: $("userSelect").getBoundingClientRect().top + window.scrollY - 80, behavior:"smooth" });
+    };
 
-      <!-- USERS CARD -->
-      <section class="card">
-        <div class="head">
-          <div>
-            <div class="h">إدارة المستخدمين</div>
-            <div class="sub">إضافة + حظر/فك + حذف + بحث + Paging</div>
-          </div>
-          <button class="btn gray" id="refreshUsers">تحديث القائمة</button>
-        </div>
+    tdAct.appendChild(btnPick);
+    tdAct.appendChild(btnToggle);
+    tdAct.appendChild(btnDel);
 
-        <div class="body">
-          <div class="row">
-            <div class="field">
-              <label>اسم المستخدم</label>
-              <input id="newUsername" placeholder="مثال: محمود" />
-            </div>
-            <div class="field">
-              <label>كلمة السر</label>
-              <input id="newPass" placeholder="مثال: 123456" />
-            </div>
-            <div class="field">
-              <label>صلاحية</label>
-              <select id="newIsAdmin">
-                <option value="false" selected>مستخدم</option>
-                <option value="true">Admin</option>
-              </select>
-            </div>
-          </div>
+    tr.appendChild(tdName);
+    tr.appendChild(tdPass);
+    tr.appendChild(tdAdmin);
+    tr.appendChild(tdState);
+    tr.appendChild(tdAct);
 
-          <div class="btns">
-            <button class="btn yellow" id="genPass">توليد كلمة سر</button>
-            <button class="btn green" id="addUser">حفظ المستخدم</button>
-            <button class="btn gray" id="scrollToInvoice">نزول للفواتير</button>
-          </div>
+    tb.appendChild(tr);
+  });
+}
 
-          <div style="height:14px"></div>
+async function loadUsers(){
+  const q = ($("searchUser").value || "").trim();
 
-          <div class="row">
-            <div class="field" style="grid-column: 1 / -1;">
-              <label>بحث عن مستخدم</label>
-              <input id="searchUser" placeholder="اكتب جزء من الاسم..." />
-            </div>
-          </div>
+  let query = client
+    .from("app_users")
+    .select("id, username, pass, is_admin, blocked, created_at")
+    .order("created_at", { ascending: false })
+    .range(
+      state.usersPage * state.pageSize,
+      state.usersPage * state.pageSize + state.pageSize - 1
+    );
 
-          <div class="btns">
-            <button class="btn gray" id="prevUsers">السابق</button>
-            <button class="btn gray" id="nextUsers">التالي</button>
-            <button class="btn blue" id="viewInvoice">عرض الفاتورة (حسب الاختيار)</button>
-          </div>
+  if(q){
+    query = query.ilike("username", `%${q}%`);
+  }
 
-          <div style="height:14px"></div>
+  const { data, error } = await query;
 
-          <div class="tableWrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>الاسم</th>
-                  <th>كلمة السر</th>
-                  <th>Admin</th>
-                  <th>الحالة</th>
-                  <th>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="usersTbody"></tbody>
-            </table>
-          </div>
+  if(error){
+    setPill(false, "خطأ اتصال");
+    alert("خطأ تحميل المستخدمين: " + error.message);
+    return;
+  }
 
-          <div class="hint">
-            <div class="ok">✅ الحظر يقطع الدخول مباشرة للمستخدم (حسب منطق التحقق في صفحة المستخدم).</div>
-            <div class="warn">⚠️ لا تشارك مفاتيح Supabase مع أي شخص.</div>
-          </div>
-        </div>
-      </section>
+  setPill(true, "مفتوح");
+  state.lastUsers = data || [];
+  renderUsersTable(state.lastUsers);
+  fillUserSelect(state.lastUsers);
+}
 
-      <!-- INVOICES + FILTERS CARD -->
-      <section class="card">
-        <div class="head">
-          <div>
-            <div class="h">فواتير متعددة للمستخدم</div>
-            <div class="sub">اختر مستخدم → تظهر قائمة الفواتير → اختر فاتورة → عرض / PDF / حذف</div>
-          </div>
-          <button class="btn gray" id="printInvoice">تصدير PDF</button>
-        </div>
+function fillUserSelect(users){
+  const sel = $("userSelect");
+  const current = sel.value;
 
-        <div class="body">
-          <div class="row">
-            <div class="field">
-              <label>اختر المستخدم</label>
-              <select id="userSelect">
-                <option value="">— اختر المستخدم —</option>
-              </select>
-            </div>
+  const base = `<option value="">— اختر المستخدم —</option>`;
+  const options = (users || []).map(u => `<option value="${u.username}">${u.username}</option>`).join("");
+  sel.innerHTML = base + options;
 
-            <div class="field">
-              <label>من تاريخ</label>
-              <input type="date" id="fromDate" />
-            </div>
+  if(current) sel.value = current;
+}
 
-            <div class="field">
-              <label>إلى تاريخ</label>
-              <input type="date" id="toDate" />
-            </div>
-          </div>
+/* =========================
+   Date filters
+   ========================= */
 
-          <div class="btns">
-            <button class="btn gray" id="quickToday">(Paging) اليوم</button>
-            <button class="btn gray" id="quick7">آخر 7 أيام</button>
-            <button class="btn gray" id="clearDates">مسح التواريخ</button>
-          </div>
+function getDateRangeFilter(){
+  const from = $("fromDate").value;
+  const to = $("toDate").value;
 
-          <div style="height:12px"></div>
+  const fromISO = from ? new Date(from + "T00:00:00").toISOString() : null;
+  const toISO = to ? new Date(to + "T23:59:59").toISOString() : null;
 
-          <div class="row">
-            <div class="field" style="grid-column: 1 / -1;">
-              <label>اختر فاتورة من القائمة</label>
-              <select id="invoiceSelect">
-                <option value="">— اختر فاتورة —</option>
-              </select>
-            </div>
-          </div>
+  return { fromISO, toISO, from, to };
+}
 
-          <div class="btns">
-            <button class="btn blue" id="loadInvoices">تحديث قائمة الفواتير</button>
-            <button class="btn green" id="openInvoice">فتح الفاتورة المختارة</button>
-            <button class="btn red" id="deleteInvoice">حذف الفاتورة المختارة</button>
-          </div>
+/* =========================
+   Invoices list (NEW)
+   ========================= */
 
-          <div style="height:12px"></div>
+async function loadInvoicesForUser(){
+  const username = $("userSelect").value;
+  if(!username){
+    state.invoices = [];
+    state.currentUser = null;
+    state.currentInvoiceId = null;
+    fillInvoiceSelect([]);
+    return;
+  }
+  state.currentUser = username;
 
-          <div class="row">
-            <div class="field" style="grid-column: 1 / -1;">
-              <label>للحذف: اكتب اسم المستخدم حرفيًا للتأكيد</label>
-              <input id="confirmName" placeholder="اكتب اسم المستخدم هنا للتأكيد..." />
-            </div>
-          </div>
+  const { fromISO, toISO } = getDateRangeFilter();
 
-          <div class="btns">
-            <button class="btn red wide" id="deleteUserOps">حذف كل عمليات المستخدم (تنظيف قديم)</button>
-            <button class="btn yellow wide" id="archiveAndDelete">أرشفة PDF ثم حذف عمليات المستخدم</button>
-            <button class="btn gray wide" id="scrollToInvoice2">نزول للمعاينة</button>
-          </div>
+  let query = client
+    .from("app_invoices")
+    .select("id, username, total, created_at")
+    .eq("username", username)
+    .order("created_at", { ascending: false })
+    .limit(200);
 
-          <div class="hint">
-            <div class="ok">✅ الآن صار في فواتير متعددة: كل فاتورة لها invoice_id مستقل.</div>
-            <div class="warn">⚠️ زر “حذف كل عمليات المستخدم” يبقى موجود كخيار تنظيف قديم، لكن الأفضل حذف الفاتورة المختارة فقط.</div>
-          </div>
-        </div>
-      </section>
+  if(fromISO) query = query.gte("created_at", fromISO);
+  if(toISO) query = query.lte("created_at", toISO);
 
-    </div>
+  const { data, error } = await query;
+  if(error){
+    alert("خطأ تحميل قائمة الفواتير: " + error.message);
+    return;
+  }
 
-    <!-- INVOICE PREVIEW (PRINT AREA) -->
-    <section id="invoiceCard">
-      <div id="invoiceTop">
-        <h1 class="a">شركة الحايك</h1>
-        <div class="b">HAYEK SPOT</div>
-      </div>
+  state.invoices = data || [];
+  fillInvoiceSelect(state.invoices);
 
-      <div id="invoiceMeta"></div>
+  // اختيار افتراضي: أحدث فاتورة
+  if(state.invoices.length){
+    $("invoiceSelect").value = state.invoices[0].id;
+    state.currentInvoiceId = state.invoices[0].id;
+  }
+}
 
-      <div id="invoiceTable">
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>الوقت</th>
-                <th>البيان</th>
-                <th>العملية</th>
-                <th>النتيجة</th>
-              </tr>
-            </thead>
-            <tbody id="opsTbody"></tbody>
-          </table>
-        </div>
-      </div>
+function fillInvoiceSelect(invoices){
+  const sel = $("invoiceSelect");
+  const base = `<option value="">— اختر فاتورة —</option>`;
 
-      <div id="totalsByLabel"></div>
+  const options = (invoices || []).map(inv => {
+    const dt = fmtDateTime(inv.created_at);
+    const total = safeNum(inv.total);
+    return `<option value="${inv.id}">فاتورة: ${dt} — إجمالي: ${total}</option>`;
+  }).join("");
 
-      <div id="totalsBar">
-        <div>إجمالي الفاتورة:</div>
-        <div class="num" id="grandTotal">0</div>
-      </div>
+  sel.innerHTML = base + options;
+}
 
-      <div style="padding:14px 14px 18px; text-align:center; color:#222; font-weight:900;">
-        تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-        شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية<br/>
-        <span style="color:#0b7a57;">05510217646</span>
-      </div>
-    </section>
+/* =========================
+   Open selected invoice (operations by invoice_id)
+   ========================= */
 
-  </div>
+async function openSelectedInvoice(){
+  const username = $("userSelect").value;
+  const invoiceId = $("invoiceSelect").value;
 
-  <!-- IMPORTANT: admin.js MUST be last -->
-  <script src="./admin.js"></script>
-</body>
-</html>
+  if(!username){
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+  if(!invoiceId){
+    alert("اختر فاتورة من القائمة أولاً");
+    return;
+  }
+
+  state.currentUser = username;
+  state.currentInvoiceId = invoiceId;
+
+  // 1) جلب العمليات لهذه الفاتورة فقط
+  const { data, error } = await client
+    .from("app_operations")
+    .select("id, username, label, operation, result, invoice_id, created_at")
+    .eq("username", username)
+    .eq("invoice_id", invoiceId)
+    .order("created_at", { ascending: true });
+
+  if(error){
+    alert("خطأ تحميل الفاتورة: " + error.message);
+    return;
+  }
+
+  state.currentOps = data || [];
+  renderInvoice();
+
+  // 2) تحديث إجمالي الفاتورة في جدول app_invoices (اختياري لكنه مفيد)
+  await updateInvoiceTotal(invoiceId);
+
+  $("invoiceCard").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+async function updateInvoiceTotal(invoiceId){
+  try{
+    const grand = state.currentOps.reduce((s, op) => s + safeNum(op.result), 0);
+    await client.from("app_invoices").update({ total: grand }).eq("id", invoiceId);
+  }catch(_e){}
+}
+
+/* =========================
+   Delete selected invoice (cascade deletes ops)
+   ========================= */
+
+async function deleteSelectedInvoice(){
+  const username = $("userSelect").value;
+  const invoiceId = $("invoiceSelect").value;
+
+  if(!username){
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+  if(!invoiceId){
+    alert("اختر فاتورة من القائمة أولاً");
+    return;
+  }
+
+  const confirmName = ($("confirmName").value || "").trim();
+  if(confirmName !== username){
+    alert("اكتب اسم المستخدم حرفيًا للتأكيد");
+    return;
+  }
+
+  if(!confirm("تأكيد حذف الفاتورة المختارة؟ سيتم حذف عملياتها تلقائياً.")) return;
+
+  const { error } = await client.from("app_invoices").delete().eq("id", invoiceId);
+  if(error){
+    alert("خطأ بالحذف: " + error.message);
+    return;
+  }
+
+  $("confirmName").value = "";
+  state.currentInvoiceId = null;
+  state.currentOps = [];
+  $("opsTbody").innerHTML = "";
+  $("invoiceMeta").innerHTML = "";
+  $("totalsByLabel").innerHTML = "";
+  $("grandTotal").textContent = "0";
+
+  await loadInvoicesForUser();
+  alert("تم حذف الفاتورة ✅");
+}
+
+/* =========================
+   Render invoice
+   ========================= */
+
+function renderInvoice(){
+  const tb = $("opsTbody");
+  tb.innerHTML = "";
+
+  let grand = 0;
+  const sums = {};
+
+  state.currentOps.forEach(op => {
+    const tr = document.createElement("tr");
+
+    const tdTime = document.createElement("td");
+    tdTime.textContent = fmtDateTime(op.created_at);
+
+    const tdLabel = document.createElement("td");
+    tdLabel.textContent = op.label || "عملية";
+
+    const tdOp = document.createElement("td");
+    tdOp.textContent = op.operation || "";
+
+    const tdRes = document.createElement("td");
+    tdRes.className = "num";
+    tdRes.textContent = op.result ?? "";
+
+    const r = safeNum(op.result);
+    grand += r;
+
+    const key = (op.label || "عملية").trim();
+    sums[key] = (sums[key] || 0) + r;
+
+    tr.appendChild(tdTime);
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdOp);
+    tr.appendChild(tdRes);
+    tb.appendChild(tr);
+  });
+
+  $("grandTotal").textContent = String(grand);
+
+  // Meta
+  const meta = $("invoiceMeta");
+  const username = state.currentUser || "—";
+  const invoiceId = state.currentInvoiceId || "—";
+  const count = state.currentOps.length;
+
+  let fromTxt = "—";
+  let toTxt = "—";
+  if(count){
+    fromTxt = fmtDateTime(state.currentOps[0].created_at);
+    toTxt = fmtDateTime(state.currentOps[count-1].created_at);
+  }
+
+  meta.innerHTML = `
+    <div class="chip">العميل: ${username}</div>
+    <div class="chip">رقم الفاتورة: <span style="direction:ltr">${invoiceId}</span></div>
+    <div class="chip">عدد العمليات: ${count}</div>
+    <div class="chip">من: ${fromTxt}</div>
+    <div class="chip">إلى: ${toTxt}</div>
+  `;
+
+  // Totals by label
+  const box = $("totalsByLabel");
+  box.innerHTML = "";
+  Object.keys(sums).sort().forEach(k => {
+    const v = sums[k];
+    const div = document.createElement("div");
+    div.className = "total";
+    div.innerHTML = `<span>إجمالي (${k}):</span><span class="num">${v}</span>`;
+    box.appendChild(div);
+  });
+}
+
+/* =========================
+   Print / Archive+Delete (selected invoice)
+   ========================= */
+
+function printInvoice(){
+  window.print();
+}
+
+async function archiveAndDelete(){
+  // اطبع ثم احذف الفاتورة المختارة
+  const username = $("userSelect").value;
+  const invoiceId = $("invoiceSelect").value;
+  if(!username || !invoiceId){
+    alert("اختر مستخدم + فاتورة أولاً");
+    return;
+  }
+
+  const confirmName = ($("confirmName").value || "").trim();
+  if(confirmName !== username){
+    alert("اكتب اسم المستخدم حرفيًا للتأكيد قبل الأرشفة/الحذف");
+    return;
+  }
+
+  // افتح الفاتورة أولاً (تأكيد أنها معروضة)
+  await openSelectedInvoice();
+
+  // اطبع
+  window.print();
+
+  // ثم حذف بعد لحظة
+  setTimeout(async () => {
+    await deleteSelectedInvoice();
+  }, 800);
+}
+
+/* =========================
+   Legacy cleanup (delete all ops for user)
+   ========================= */
+
+async function deleteOpsForUserLegacy(){
+  const username = $("userSelect").value;
+  if(!username){
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+  const confirmName = ($("confirmName").value || "").trim();
+  if(confirmName !== username){
+    alert("اكتب اسم المستخدم حرفيًا للتأكيد");
+    return;
+  }
+
+  if(!confirm(`⚠️ تأكيد حذف كل عمليات المستخدم "${username}" (تنظيف قديم)؟`)) return;
+
+  const { error } = await client
+    .from("app_operations")
+    .delete()
+    .eq("username", username);
+
+  if(error){
+    alert("خطأ بالحذف: " + error.message);
+    return;
+  }
+
+  $("confirmName").value = "";
+  await loadInvoicesForUser();
+  alert("تم حذف عمليات المستخدم (تنظيف قديم) ✅");
+}
+
+/* =========================
+   UI events
+   ========================= */
+
+function wire(){
+  // Users
+  $("genPass").onclick = genPassword;
+  $("addUser").onclick = addUser;
+
+  $("refreshUsers").onclick = async () => {
+    state.usersPage = 0;
+    await loadUsers();
+  };
+
+  $("searchUser").addEventListener("input", async () => {
+    state.usersPage = 0;
+    await loadUsers();
+  });
+
+  $("prevUsers").onclick = async () => {
+    if(state.usersPage > 0) state.usersPage--;
+    await loadUsers();
+  };
+
+  $("nextUsers").onclick = async () => {
+    state.usersPage++;
+    await loadUsers();
+  };
+
+  // Invoice filters
+  $("quickToday").onclick = async () => {
+    const today = nowISODate();
+    $("fromDate").value = today;
+    $("toDate").value = today;
+    await loadInvoicesForUser();
+  };
+
+  $("quick7").onclick = async () => {
+    $("fromDate").value = daysAgoISO(7);
+    $("toDate").value = nowISODate();
+    await loadInvoicesForUser();
+  };
+
+  $("clearDates").onclick = async () => {
+    $("fromDate").value = "";
+    $("toDate").value = "";
+    await loadInvoicesForUser();
+  };
+
+  // User selection
+  $("userSelect").addEventListener("change", async () => {
+    state.currentUser = $("userSelect").value || null;
+    state.currentInvoiceId = null;
+    await loadInvoicesForUser();
+  });
+
+  // Invoices list
+  $("loadInvoices").onclick = async () => {
+    await loadInvoicesForUser();
+  };
+
+  $("invoiceSelect").addEventListener("change", () => {
+    state.currentInvoiceId = $("invoiceSelect").value || null;
+  });
+
+  // Open/Delete invoice
+  $("openInvoice").onclick = async () => {
+    await openSelectedInvoice();
+  };
+
+  $("deleteInvoice").onclick = async () => {
+    await deleteSelectedInvoice();
+  };
+
+  $("printInvoice").onclick = () => {
+    printInvoice();
+  };
+
+  $("archiveAndDelete").onclick = async () => {
+    await archiveAndDelete();
+  };
+
+  // Legacy
+  $("deleteUserOps").onclick = async () => {
+    await deleteOpsForUserLegacy();
+  };
+}
+
+async function boot(){
+  try{
+    wire();
+    await loadUsers();
+    await loadInvoicesForUser();
+    setPill(true, "مفتوح");
+  }catch(e){
+    console.error(e);
+    setPill(false, "مغلق");
+  }
+}
+
+boot();
