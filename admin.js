@@ -1,70 +1,221 @@
-(() => {
-    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-    const SESSION_KEY = "hayek_auth_session_v1";
+// =========================
+// ✅ Supabase REST config
+// =========================
+const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+const REST = `${SUPABASE_URL}/rest/v1`;
 
-    const overlay = document.getElementById("auth-overlay");
-    const userEl = document.getElementById("auth-email");
-    const passEl = document.getElementById("auth-pass");
-    const msgEl  = document.getElementById("auth-msg");
-    const btnLogin = document.getElementById("btn-login");
+const $ = (id) => document.getElementById(id);
 
-    async function handleLogin() {
-        const u = userEl.value.trim();
-        const p = passEl.value.trim();
-
-        if (!u || !p) {
-            msgEl.innerText = "الرجاء إدخال اسم المستخدم وكلمة المرور";
-            msgEl.style.color = "#ff4d4d";
-            return;
-        }
-
-        btnLogin.disabled = true;
-        msgEl.innerText = "جاري الاتصال بقاعدة البيانات...";
-        msgEl.style.color = "#d4af37";
-
-        try {
-            const query = `${SUPABASE_URL}/rest/v1/app_users?username=eq.${encodeURIComponent(u)}&pass=eq.${encodeURIComponent(p)}&select=*`;
-            const response = await fetch(query, {
-                headers: { 
-                    "apikey": SUPABASE_ANON_KEY, 
-                    "Authorization": `Bearer ${SUPABASE_ANON_KEY}` 
-                }
-            });
-            const users = await response.json();
-
-            if (users && users.length > 0) {
-                const user = users[0];
-                if (user.blocked) {
-                    msgEl.innerText = "تم حظر هذا الحساب. راجع الإدارة.";
-                    msgEl.style.color = "red";
-                } else {
-                    localStorage.setItem(SESSION_KEY, JSON.stringify({
-                        username: user.username,
-                        is_admin: user.is_admin,
-                        loginTime: new Date().toISOString()
-                    }));
-                    msgEl.innerText = "تم التحقق.. جاري الدخول ✅";
-                    setTimeout(() => location.reload(), 800);
-                }
-            } else {
-                msgEl.innerText = "بيانات الدخول غير صحيحة";
-                msgEl.style.color = "red";
-            }
-        } catch (e) {
-            msgEl.innerText = "خطأ في الاتصال. تأكد من الإنترنت.";
-        } finally {
-            btnLogin.disabled = false;
-        }
+const apiFetch = async (path, options = {}) => {
+  const res = await fetch(`${REST}${path}`, {
+    ...options,
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...(options.headers || {}),
     }
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(()=> "");
+    throw new Error(`API ${res.status}: ${t || res.statusText}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+};
 
-    const session = localStorage.getItem(SESSION_KEY);
-    if (session) {
-        overlay.style.display = "none";
-        const data = JSON.parse(session);
-        document.getElementById("welcomeUser").innerText = "أهلاً، " + data.username;
-    }
+const toast = (msg) => {
+  const d = document.createElement("div");
+  d.textContent = msg;
+  Object.assign(d.style, {
+    position:"fixed", bottom:"18px", left:"50%",
+    transform:"translateX(-50%)",
+    background:"rgba(17,19,21,.85)",
+    color:"#fff", padding:"10px 14px",
+    borderRadius:"14px", fontWeight:"1000",
+    zIndex:9999, backdropFilter:"blur(8px)",
+    border:"1px solid rgba(255,255,255,.18)"
+  });
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 1600);
+};
 
-    btnLogin.addEventListener("click", handleLogin);
-    window.logout = () => { localStorage.removeItem(SESSION_KEY); location.reload(); };
-})();
+const formatNumber = (n) => {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "0";
+  const s = x.toString();
+  return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
+};
+
+const fmtDate = (iso) => {
+  try{
+    const d = new Date(iso);
+    return d.toLocaleString("ar", { hour12: true });
+  }catch{
+    return iso || "";
+  }
+};
+
+// =========================
+// Users Paging + Search
+// =========================
+let userOffset = 0;
+const userLimit = 30;
+
+async function loadUsers(){
+  const term = ($("searchUser").value || "").trim();
+
+  const baseSelect = `?select=username,is_admin&is_admin=eq.false&order=username.asc&limit=${userLimit}&offset=${userOffset}`;
+  const filtered = term ? `${baseSelect}&username=ilike.*${encodeURIComponent(term)}*` : baseSelect;
+
+  const rows = await apiFetch(`/app_users${filtered}`, { method:"GET" });
+  const sel = $("userSelect");
+  sel.innerHTML = `<option value="">— اختر المستخدم —</option>`;
+  (rows || []).forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r.username;
+    opt.textContent = r.username;
+    sel.appendChild(opt);
+  });
+
+  toast(`تم تحميل ${rows?.length || 0} مستخدم`);
+}
+
+// =========================
+// Invoice loader
+// =========================
+async function loadInvoice(username){
+  if (!username) { toast("اختر المستخدم"); return; }
+
+  // جلب العمليات
+  // (الترتيب: الأقدم فوق)
+  const q =
+    `?select=created_at,label,operation,result,device_id` +
+    `&username=eq.${encodeURIComponent(username)}` +
+    `&order=created_at.asc` +
+    `&limit=5000`;
+
+  const rows = await apiFetch(`/app_operations${q}`, { method:"GET" });
+
+  const body = $("opsBody");
+  body.innerHTML = "";
+
+  let sum = 0;
+  let first = null, last = null;
+
+  (rows || []).forEach(r => {
+    if (!first) first = r.created_at;
+    last = r.created_at;
+
+    const tr = document.createElement("tr");
+
+    const tdTime = document.createElement("td");
+    tdTime.textContent = fmtDate(r.created_at);
+
+    const tdLabel = document.createElement("td");
+    tdLabel.textContent = (r.label && String(r.label).trim()) ? r.label : "عملية";
+
+    const tdOp = document.createElement("td");
+    tdOp.className = "num";
+    tdOp.textContent = r.operation || "";
+
+    const tdRes = document.createElement("td");
+    tdRes.className = "num";
+    tdRes.textContent = r.result || "";
+
+    tr.append(tdTime, tdLabel, tdOp, tdRes);
+    body.appendChild(tr);
+
+    const v = Number(r.result);
+    if (Number.isFinite(v)) sum += v;
+  });
+
+  $("sum").textContent = formatNumber(sum);
+
+  $("chipUser").textContent = `العميل: ${username}`;
+  $("chipCount").textContent = `عدد العمليات: ${rows?.length || 0}`;
+  $("chipFrom").textContent = `من: ${first ? fmtDate(first) : "—"}`;
+  $("chipTo").textContent = `إلى: ${last ? fmtDate(last) : "—"}`;
+
+  toast("تم عرض الفاتورة ✅");
+}
+
+// =========================
+// Delete user operations (space saving)
+// =========================
+async function deleteInvoiceData(username){
+  if (!username) { toast("اختر المستخدم"); return; }
+
+  const confirmTyped = ($("confirmName").value || "").trim();
+  if (confirmTyped !== username){
+    toast("للحذف: اكتب اسم المستخدم حرفيًا في خانة التأكيد");
+    return;
+  }
+
+  const ok = confirm(`تأكيد نهائي:\nسيتم حذف كل عمليات "${username}" من app_operations.\nهل أنت متأكد؟`);
+  if (!ok) return;
+
+  try{
+    await apiFetch(`/app_operations?username=eq.${encodeURIComponent(username)}`, {
+      method:"DELETE",
+      headers:{ "Prefer":"return=minimal" }
+    });
+    toast("تم حذف بيانات المستخدم ✅");
+    $("confirmName").value = "";
+    await loadInvoice(username);
+  }catch(e){
+    console.error(e);
+    toast("فشل الحذف ❌");
+  }
+}
+
+// =========================
+// Events
+// =========================
+document.addEventListener("DOMContentLoaded", async () => {
+  // initial users load
+  await loadUsers();
+
+  $("refreshUsers").addEventListener("click", async () => {
+    userOffset = 0;
+    await loadUsers();
+  });
+
+  $("nextUsers").addEventListener("click", async () => {
+    userOffset += userLimit;
+    await loadUsers();
+  });
+
+  $("prevUsers").addEventListener("click", async () => {
+    userOffset = Math.max(0, userOffset - userLimit);
+    await loadUsers();
+  });
+
+  $("searchUser").addEventListener("input", async () => {
+    userOffset = 0;
+    // debounce بسيط
+    if (window.__t) clearTimeout(window.__t);
+    window.__t = setTimeout(loadUsers, 350);
+  });
+
+  $("viewInvoice").addEventListener("click", async () => {
+    const u = $("userSelect").value;
+    await loadInvoice(u);
+  });
+
+  $("printInvoice").addEventListener("click", () => {
+    window.print();
+  });
+
+  $("deleteUserOps").addEventListener("click", async () => {
+    const u = $("userSelect").value;
+    await deleteInvoiceData(u);
+  });
+
+  $("userSelect").addEventListener("change", async () => {
+    const u = $("userSelect").value;
+    if (u) await loadInvoice(u);
+  });
+});
