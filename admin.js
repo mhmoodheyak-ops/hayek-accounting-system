@@ -1,221 +1,484 @@
-// =========================
-// ✅ Supabase REST config
-// =========================
+/* =========================
+   HAYEK SPOT — Admin Panel
+   (Users + Block/Unblock + Invoice + Date Filter + Totals by Label + PDF + Archive+Delete)
+   ========================= */
+
 const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
 const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-const REST = `${SUPABASE_URL}/rest/v1`;
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
 
-const apiFetch = async (path, options = {}) => {
-  const res = await fetch(`${REST}${path}`, {
-    ...options,
-    headers: {
-      "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(options.headers || {}),
-    }
-  });
-  if (!res.ok) {
-    const t = await res.text().catch(()=> "");
-    throw new Error(`API ${res.status}: ${t || res.statusText}`);
-  }
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
+const state = {
+  usersPage: 0,
+  pageSize: 15,
+  lastUsers: [],
+  currentUser: null,
+  currentOps: [],
 };
 
-const toast = (msg) => {
-  const d = document.createElement("div");
-  d.textContent = msg;
-  Object.assign(d.style, {
-    position:"fixed", bottom:"18px", left:"50%",
-    transform:"translateX(-50%)",
-    background:"rgba(17,19,21,.85)",
-    color:"#fff", padding:"10px 14px",
-    borderRadius:"14px", fontWeight:"1000",
-    zIndex:9999, backdropFilter:"blur(8px)",
-    border:"1px solid rgba(255,255,255,.18)"
-  });
-  document.body.appendChild(d);
-  setTimeout(()=>d.remove(), 1600);
-};
+function setPill(ok, msg){
+  const pill = $("pill");
+  if (!pill) return;
+  pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
+  pill.style.background = ok ? "var(--green)" : "var(--red)";
+  pill.style.color = ok ? "var(--dark)" : "var(--text)";
+}
 
-const formatNumber = (n) => {
-  const x = Number(n);
-  if (!Number.isFinite(x)) return "0";
-  const s = x.toString();
-  return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
-};
+function nowISODate(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
 
-const fmtDate = (iso) => {
+function daysAgoISO(n){
+  const d = new Date();
+  d.setDate(d.getDate()-n);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function safeNum(x){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fmtDateTime(ts){
   try{
-    const d = new Date(iso);
-    return d.toLocaleString("ar", { hour12: true });
+    const d = new Date(ts);
+    return d.toLocaleString("ar-EG", { hour12: true });
   }catch{
-    return iso || "";
+    return String(ts || "");
   }
-};
-
-// =========================
-// Users Paging + Search
-// =========================
-let userOffset = 0;
-const userLimit = 30;
-
-async function loadUsers(){
-  const term = ($("searchUser").value || "").trim();
-
-  const baseSelect = `?select=username,is_admin&is_admin=eq.false&order=username.asc&limit=${userLimit}&offset=${userOffset}`;
-  const filtered = term ? `${baseSelect}&username=ilike.*${encodeURIComponent(term)}*` : baseSelect;
-
-  const rows = await apiFetch(`/app_users${filtered}`, { method:"GET" });
-  const sel = $("userSelect");
-  sel.innerHTML = `<option value="">— اختر المستخدم —</option>`;
-  (rows || []).forEach(r => {
-    const opt = document.createElement("option");
-    opt.value = r.username;
-    opt.textContent = r.username;
-    sel.appendChild(opt);
-  });
-
-  toast(`تم تحميل ${rows?.length || 0} مستخدم`);
 }
 
-// =========================
-// Invoice loader
-// =========================
-async function loadInvoice(username){
-  if (!username) { toast("اختر المستخدم"); return; }
+/* =========================
+   Users (CRUD + block/unblock)
+   ========================= */
 
-  // جلب العمليات
-  // (الترتيب: الأقدم فوق)
-  const q =
-    `?select=created_at,label,operation,result,device_id` +
-    `&username=eq.${encodeURIComponent(username)}` +
-    `&order=created_at.asc` +
-    `&limit=5000`;
-
-  const rows = await apiFetch(`/app_operations${q}`, { method:"GET" });
-
-  const body = $("opsBody");
-  body.innerHTML = "";
-
-  let sum = 0;
-  let first = null, last = null;
-
-  (rows || []).forEach(r => {
-    if (!first) first = r.created_at;
-    last = r.created_at;
-
-    const tr = document.createElement("tr");
-
-    const tdTime = document.createElement("td");
-    tdTime.textContent = fmtDate(r.created_at);
-
-    const tdLabel = document.createElement("td");
-    tdLabel.textContent = (r.label && String(r.label).trim()) ? r.label : "عملية";
-
-    const tdOp = document.createElement("td");
-    tdOp.className = "num";
-    tdOp.textContent = r.operation || "";
-
-    const tdRes = document.createElement("td");
-    tdRes.className = "num";
-    tdRes.textContent = r.result || "";
-
-    tr.append(tdTime, tdLabel, tdOp, tdRes);
-    body.appendChild(tr);
-
-    const v = Number(r.result);
-    if (Number.isFinite(v)) sum += v;
-  });
-
-  $("sum").textContent = formatNumber(sum);
-
-  $("chipUser").textContent = `العميل: ${username}`;
-  $("chipCount").textContent = `عدد العمليات: ${rows?.length || 0}`;
-  $("chipFrom").textContent = `من: ${first ? fmtDate(first) : "—"}`;
-  $("chipTo").textContent = `إلى: ${last ? fmtDate(last) : "—"}`;
-
-  toast("تم عرض الفاتورة ✅");
+function genPassword(){
+  const p = Math.floor(100000 + Math.random()*900000);
+  const el = $("newPass");
+  if (el) el.value = String(p);
 }
 
-// =========================
-// Delete user operations (space saving)
-// =========================
-async function deleteInvoiceData(username){
-  if (!username) { toast("اختر المستخدم"); return; }
+async function addUser(){
+  const username = ($("newUsername")?.value || "").trim();
+  const pass = ($("newPass")?.value || "").trim();
+  const is_admin = ($("newIsAdmin")?.value || "false") === "true";
 
-  const confirmTyped = ($("confirmName").value || "").trim();
-  if (confirmTyped !== username){
-    toast("للحذف: اكتب اسم المستخدم حرفيًا في خانة التأكيد");
+  if(!username || !pass){
+    alert("اكتب اسم المستخدم وكلمة السر");
     return;
   }
 
-  const ok = confirm(`تأكيد نهائي:\nسيتم حذف كل عمليات "${username}" من app_operations.\nهل أنت متأكد؟`);
-  if (!ok) return;
+  const { error } = await client.from("app_users").insert({
+    username, pass, is_admin, blocked: false
+  });
 
-  try{
-    await apiFetch(`/app_operations?username=eq.${encodeURIComponent(username)}`, {
-      method:"DELETE",
-      headers:{ "Prefer":"return=minimal" }
+  if(error){
+    alert("خطأ بالحفظ: " + error.message);
+    return;
+  }
+
+  if ($("newUsername")) $("newUsername").value = "";
+  await loadUsers();
+  alert("تم حفظ المستخدم ✅");
+}
+
+async function setBlocked(username, blocked){
+  const { error } = await client
+    .from("app_users")
+    .update({ blocked })
+    .eq("username", username);
+
+  if(error){
+    alert("خطأ: " + error.message);
+    return;
+  }
+  await loadUsers();
+}
+
+async function deleteUser(username){
+  if(!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
+
+  const { error } = await client
+    .from("app_users")
+    .delete()
+    .eq("username", username);
+
+  if(error){
+    alert("خطأ: " + error.message);
+    return;
+  }
+  await loadUsers();
+}
+
+function renderUsersTable(users){
+  const tb = $("usersTbody");
+  if (!tb) return;
+  tb.innerHTML = "";
+
+  users.forEach(u => {
+    const tr = document.createElement("tr");
+
+    const tdName = document.createElement("td");
+    tdName.textContent = u.username;
+
+    const tdPass = document.createElement("td");
+    tdPass.className = "num";
+    tdPass.textContent = u.pass;
+
+    const tdAdmin = document.createElement("td");
+    tdAdmin.innerHTML = u.is_admin ? `<span class="badge g">YES</span>` : `<span class="badge">NO</span>`;
+
+    const tdState = document.createElement("td");
+    tdState.innerHTML = u.blocked ? `<span class="badge r">محظور</span>` : `<span class="badge g">مفعّل</span>`;
+
+    const tdAct = document.createElement("td");
+    tdAct.style.display = "flex";
+    tdAct.style.gap = "8px";
+    tdAct.style.flexWrap = "wrap";
+
+    const btnToggle = document.createElement("button");
+    btnToggle.className = "btn yellow";
+    btnToggle.textContent = u.blocked ? "فك الحظر" : "حظر";
+    btnToggle.onclick = () => setBlocked(u.username, !u.blocked);
+
+    const btnDel = document.createElement("button");
+    btnDel.className = "btn red";
+    btnDel.textContent = "حذف";
+    btnDel.onclick = () => deleteUser(u.username);
+
+    const btnPick = document.createElement("button");
+    btnPick.className = "btn gray";
+    btnPick.textContent = "اختيار";
+    btnPick.onclick = () => {
+      const sel = $("userSelect");
+      if (sel) sel.value = u.username;
+      state.currentUser = u.username;
+      const anchor = $("userSelect");
+      if (anchor){
+        window.scrollTo({ top: anchor.getBoundingClientRect().top + window.scrollY - 80, behavior:"smooth" });
+      }
+    };
+
+    tdAct.appendChild(btnPick);
+    tdAct.appendChild(btnToggle);
+    tdAct.appendChild(btnDel);
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdPass);
+    tr.appendChild(tdAdmin);
+    tr.appendChild(tdState);
+    tr.appendChild(tdAct);
+
+    tb.appendChild(tr);
+  });
+}
+
+async function loadUsers(){
+  const q = ($("searchUser")?.value || "").trim();
+
+  let query = client
+    .from("app_users")
+    .select("id, username, pass, is_admin, blocked, created_at")
+    .order("created_at", { ascending: false })
+    .range(state.usersPage * state.pageSize, state.usersPage * state.pageSize + state.pageSize - 1);
+
+  if(q){
+    query = query.ilike("username", `%${q}%`);
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    setPill(false, "خطأ اتصال");
+    alert("خطأ تحميل المستخدمين: " + error.message);
+    return;
+  }
+
+  setPill(true, "مفتوح");
+  state.lastUsers = data || [];
+  renderUsersTable(state.lastUsers);
+  fillUserSelect(state.lastUsers);
+}
+
+function fillUserSelect(users){
+  const sel = $("userSelect");
+  if (!sel) return;
+
+  const current = sel.value;
+  const base = `<option value="">— اختر المستخدم —</option>`;
+  const options = (users || []).map(u => `<option value="${u.username}">${u.username}</option>`).join("");
+  sel.innerHTML = base + options;
+
+  if(current) sel.value = current;
+}
+
+/* =========================
+   Operations (Invoice + filters + totals)
+   ========================= */
+
+function getDateRangeFilter(){
+  const from = $("fromDate")?.value || "";
+  const to = $("toDate")?.value || "";
+
+  const fromISO = from ? new Date(from + "T00:00:00").toISOString() : null;
+  const toISO = to ? new Date(to + "T23:59:59").toISOString() : null;
+
+  return { fromISO, toISO, from, to };
+}
+
+async function loadInvoice(){
+  const username = $("userSelect")?.value || "";
+  if(!username){
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+  state.currentUser = username;
+
+  const { fromISO, toISO } = getDateRangeFilter();
+
+  let query = client
+    .from("app_operations")
+    .select("id, username, label, operation, result, created_at")
+    .eq("username", username)
+    .order("created_at", { ascending: true }); // الأقدم فوق
+
+  if(fromISO) query = query.gte("created_at", fromISO);
+  if(toISO) query = query.lte("created_at", toISO);
+
+  const { data, error } = await query;
+
+  if(error){
+    alert("خطأ تحميل الفاتورة: " + error.message);
+    return;
+  }
+
+  state.currentOps = data || [];
+  renderInvoice();
+}
+
+function renderInvoice(){
+  const tb = $("opsTbody");
+  if (!tb) return;
+  tb.innerHTML = "";
+
+  let grand = 0;
+  const sums = {}; // label => total
+
+  state.currentOps.forEach(op => {
+    const tr = document.createElement("tr");
+
+    const tdTime = document.createElement("td");
+    tdTime.textContent = fmtDateTime(op.created_at);
+
+    const tdLabel = document.createElement("td");
+    tdLabel.textContent = (op.label && String(op.label).trim()) ? op.label : "عملية";
+
+    const tdOp = document.createElement("td");
+    tdOp.textContent = op.operation || "";
+
+    const tdRes = document.createElement("td");
+    tdRes.className = "num";
+    tdRes.textContent = op.result ?? "";
+
+    const r = safeNum(op.result);
+    grand += r;
+    const key = (tdLabel.textContent || "عملية").trim();
+    sums[key] = (sums[key] || 0) + r;
+
+    tr.appendChild(tdTime);
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdOp);
+    tr.appendChild(tdRes);
+
+    tb.appendChild(tr);
+  });
+
+  const gt = $("grandTotal");
+  if (gt) gt.textContent = String(grand);
+
+  // Meta chips
+  const meta = $("invoiceMeta");
+  const username = state.currentUser || "—";
+  const count = state.currentOps.length;
+  let fromTxt = "—";
+  let toTxt = "—";
+  if(count){
+    fromTxt = fmtDateTime(state.currentOps[0].created_at);
+    toTxt = fmtDateTime(state.currentOps[count-1].created_at);
+  }
+
+  if (meta){
+    meta.innerHTML = `
+      <div class="chip">العميل: ${username}</div>
+      <div class="chip">عدد العمليات: ${count}</div>
+      <div class="chip">من: ${fromTxt}</div>
+      <div class="chip">إلى: ${toTxt}</div>
+    `;
+  }
+
+  // Totals by label
+  const box = $("totalsByLabel");
+  if (box){
+    box.innerHTML = "";
+    Object.keys(sums).sort().forEach(k => {
+      const v = sums[k];
+      const div = document.createElement("div");
+      div.className = "total";
+      div.innerHTML = `<span>إجمالي (${k}):</span><span style="direction:ltr">${v}</span>`;
+      box.appendChild(div);
     });
-    toast("تم حذف بيانات المستخدم ✅");
-    $("confirmName").value = "";
-    await loadInvoice(username);
-  }catch(e){
-    console.error(e);
-    toast("فشل الحذف ❌");
   }
 }
 
-// =========================
-// Events
-// =========================
-document.addEventListener("DOMContentLoaded", async () => {
-  // initial users load
-  await loadUsers();
+/* =========================
+   Delete operations + Archive PDF then delete
+   ========================= */
 
-  $("refreshUsers").addEventListener("click", async () => {
-    userOffset = 0;
+async function deleteOpsForUser(){
+  const username = $("userSelect")?.value || "";
+  if(!username){
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+
+  const confirmName = ($("confirmName")?.value || "").trim();
+  if(confirmName !== username){
+    alert("اكتب اسم المستخدم حرفيًا للتأكيد");
+    return;
+  }
+
+  if(!confirm(`تأكيد حذف عمليات المستخدم "${username}" من جدول app_operations ؟`)) return;
+
+  const { error } = await client
+    .from("app_operations")
+    .delete()
+    .eq("username", username);
+
+  if(error){
+    alert("خطأ بالحذف: " + error.message);
+    return;
+  }
+
+  if ($("confirmName")) $("confirmName").value = "";
+  await loadInvoice();
+  alert("تم حذف بيانات المستخدم ✅");
+}
+
+function printInvoice(){
+  window.print();
+}
+
+async function archiveAndDelete(){
+  const username = $("userSelect")?.value || "";
+  if(!username){
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+  const confirmName = ($("confirmName")?.value || "").trim();
+  if(confirmName !== username){
+    alert("اكتب اسم المستخدم حرفيًا للتأكيد قبل الأرشفة/الحذف");
+    return;
+  }
+
+  await loadInvoice();
+  window.print();
+
+  setTimeout(async () => {
+    await deleteOpsForUser();
+  }, 800);
+}
+
+/* =========================
+   UI events
+   ========================= */
+
+function wire(){
+  if ($("genPass")) $("genPass").onclick = genPassword;
+  if ($("addUser")) $("addUser").onclick = addUser;
+
+  if ($("refreshUsers")) $("refreshUsers").onclick = async () => {
+    state.usersPage = 0;
     await loadUsers();
-  });
+  };
 
-  $("nextUsers").addEventListener("click", async () => {
-    userOffset += userLimit;
+  if ($("searchUser")){
+    $("searchUser").addEventListener("input", async () => {
+      state.usersPage = 0;
+      await loadUsers();
+    });
+  }
+
+  if ($("prevUsers")) $("prevUsers").onclick = async () => {
+    if(state.usersPage > 0) state.usersPage--;
     await loadUsers();
-  });
+  };
 
-  $("prevUsers").addEventListener("click", async () => {
-    userOffset = Math.max(0, userOffset - userLimit);
+  if ($("nextUsers")) $("nextUsers").onclick = async () => {
+    state.usersPage++;
     await loadUsers();
-  });
+  };
 
-  $("searchUser").addEventListener("input", async () => {
-    userOffset = 0;
-    // debounce بسيط
-    if (window.__t) clearTimeout(window.__t);
-    window.__t = setTimeout(loadUsers, 350);
-  });
+  if ($("userSelect")){
+    $("userSelect").addEventListener("change", () => {
+      const u = $("userSelect").value;
+      state.currentUser = u || null;
+    });
+  }
 
-  $("viewInvoice").addEventListener("click", async () => {
-    const u = $("userSelect").value;
-    await loadInvoice(u);
-  });
+  if ($("quickToday")) $("quickToday").onclick = () => {
+    const today = nowISODate();
+    if ($("fromDate")) $("fromDate").value = today;
+    if ($("toDate")) $("toDate").value = today;
+  };
 
-  $("printInvoice").addEventListener("click", () => {
-    window.print();
-  });
+  if ($("quick7")) $("quick7").onclick = () => {
+    if ($("fromDate")) $("fromDate").value = daysAgoISO(7);
+    if ($("toDate")) $("toDate").value = nowISODate();
+  };
 
-  $("deleteUserOps").addEventListener("click", async () => {
-    const u = $("userSelect").value;
-    await deleteInvoiceData(u);
-  });
+  if ($("clearDates")) $("clearDates").onclick = () => {
+    if ($("fromDate")) $("fromDate").value = "";
+    if ($("toDate")) $("toDate").value = "";
+  };
 
-  $("userSelect").addEventListener("change", async () => {
-    const u = $("userSelect").value;
-    if (u) await loadInvoice(u);
-  });
-});
+  if ($("viewInvoice")) $("viewInvoice").onclick = async () => {
+    await loadInvoice();
+    $("invoiceCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+
+  if ($("printInvoice")) $("printInvoice").onclick = () => printInvoice();
+
+  if ($("deleteUserOps")) $("deleteUserOps").onclick = async () => {
+    await deleteOpsForUser();
+  };
+
+  if ($("archiveAndDelete")) $("archiveAndDelete").onclick = async () => {
+    await archiveAndDelete();
+  };
+
+  if ($("scrollToInvoice")) $("scrollToInvoice").onclick = () => {
+    $("invoiceCard")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+}
+
+async function boot(){
+  try{
+    wire();
+    await loadUsers();
+    setPill(true, "مفتوح");
+  }catch(e){
+    console.error(e);
+    setPill(false, "مغلق");
+  }
+}
+
+boot();
