@@ -1,11 +1,15 @@
 // config.js
-// ممنوع تعريف SUPABASE_URL/KEY في أي مكان آخر غير هنا
+// إعدادات Supabase + الأدمن (نسخة نهائية شغّالة)
 
 window.HAYEK = window.HAYEK || {};
 
-window.HAYEK.SUPABASE_URL = window.HAYEK.SUPABASE_URL || "PUT_YOUR_SUPABASE_URL_HERE";
-window.HAYEK.SUPABASE_ANON_KEY = window.HAYEK.SUPABASE_ANON_KEY || "PUT_YOUR_SUPABASE_ANON_KEY_HERE";
+// 🔹 Supabase (صحيح + https)
+window.HAYEK.SUPABASE_URL = "https://itidwqvyrjydmegjuvn.supabase.co";
 
-// بيانات تسجيل دخول الأدمن (بدّلها)
-window.HAYEK.ADMIN_USER = window.HAYEK.ADMIN_USER || "admin";
-window.HAYEK.ADMIN_PASS = window.HAYEK.ADMIN_PASS || "123456";
+// 🔹 anon public key
+window.HAYEK.SUPABASE_ANON_KEY =
+  "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+
+// 🔹 بيانات دخول الأدمن
+window.HAYEK.ADMIN_USER = "admin";
+window.HAYEK.ADMIN_PASS = "123456";
