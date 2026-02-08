@@ -2,240 +2,405 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>فاتورة — HAYEK SPOT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HAYEK SPOT — فاتورة</title>
+
+  <!-- ستايل موحّد -->
+  <link rel="stylesheet" href="./style.css?v=999">
+
+  <!-- Supabase UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+
+  <!-- html2pdf (أفضل خيار للغة العربية لأنه يصوّر الصفحة) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    :root{
-      --bg:#0f1214; --card:#151a1e; --line:rgba(255,255,255,.14);
-      --txt:#fff; --muted:rgba(255,255,255,.72);
-      --green:#19C37D; --yellow:#D6A628;
-      --radius:18px;
+    /* إضافات بسيطة خاصة بالصفحة */
+    .page-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .kv{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .kv .badge{ font-weight:900; }
+    .monoSmall{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; opacity:.9; }
+    .empty{
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius: 16px;
+      padding: 14px;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.8;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:var(--bg); color:var(--txt);
-      font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
-      padding:16px;
-    }
-    .wrap{max-width:720px;margin:0 auto;display:grid;gap:12px}
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:14px;
-    }
-    .top{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap
-    }
-    .brand{display:grid;gap:4px}
-    .brand b{font-size:18px}
-    .brand span{font-size:12px;color:var(--muted)}
-    .pill{
-      font-size:12px;font-weight:900;padding:7px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.08);
-    }
-    .pill.open{background:rgba(25,195,125,.18); border-color:rgba(25,195,125,.45)}
-    .pill.closed{background:rgba(214,166,40,.18); border-color:rgba(214,166,40,.45)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .kv{border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(0,0,0,.12)}
-    .kv b{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    .kv div{font-weight:900}
-    table{
-      width:100%;
-      border-collapse:collapse;
-      border-radius:14px;
-      overflow:hidden;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.10);
-    }
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);font-size:13px}
-    th{color:var(--muted);font-weight:900}
-    td.num{text-align:left;direction:ltr;font-weight:900}
-    tr:last-child td{border-bottom:none}
-    .total{
-      display:flex;justify-content:space-between;align-items:center;
-      border:1px dashed rgba(255,255,255,.22);
-      border-radius:14px;
-      padding:12px;
-      font-weight:900;
-      background:rgba(255,255,255,.06);
-    }
-    .total span:last-child{direction:ltr}
-    .note{color:var(--muted);font-size:12px;line-height:1.7}
-
-    /* ✅ PRINT: يطبع الفاتورة فقط (بدون ضبابية/سكرينشوت) */
     @media print{
-      body{background:#fff;color:#000;padding:0}
-      .card{background:#fff;border:0;box-shadow:none}
-      .pill{border:1px solid #000;background:#fff !important;color:#000 !important}
-      table{border:1px solid #000;background:#fff}
-      th{background:#f0f0f0;color:#000;border:1px solid #000}
-      td{border:1px solid #999;color:#000}
-      .total{border:2px dashed #000;background:#fff}
-      .note{color:#000}
+      body{ padding:0; background:#fff !important; }
+      .topbar, .card.controls{ display:none !important; }
+      .card{ box-shadow:none !important; border:none !important; }
+      .print-area{ display:block !important; }
     }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="top">
-        <div class="brand">
-          <b>HAYEK SPOT — فاتورة</b>
-          <span id="subLine">...</span>
+  <div class="container">
+
+    <div class="topbar">
+      <div class="brand">
+        <h1>فاتورة — HAYEK SPOT</h1>
+        <div class="sub">عرض الفاتورة + طباعة / PDF</div>
+      </div>
+
+      <div class="page-actions">
+        <div id="pill" class="pill closed">غير متصل</div>
+        <a class="btn" href="./index.html?v=999">الرجوع</a>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="card controls">
+      <div class="hd">
+        <h2>تحميل الفاتورة</h2>
+        <div class="muted">يمكنك تمرير المعطيات من الرابط أو إدخالها هنا</div>
+      </div>
+
+      <div class="bd">
+        <div class="row">
+          <div class="field">
+            <label>اسم المستخدم (username)</label>
+            <input id="username" placeholder="مثال: محمود" />
+          </div>
+
+          <div class="field">
+            <label>رقم الفاتورة (invoice_id)</label>
+            <input id="invoiceId" placeholder="مثال: 550e8400-e29b-41d4-a716-446655440000" />
+          </div>
         </div>
-        <div id="statusPill" class="pill">...</div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn blue" id="btnLoad">تحميل</button>
+          <button class="btn" id="btnCopyLink">نسخ رابط الفاتورة</button>
+          <button class="btn green" id="btnPDF">تصدير PDF</button>
+          <button class="btn" id="btnPrint">طباعة</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="kv">
+          <div class="badge" id="metaUser">المستخدم: —</div>
+          <div class="badge" id="metaInv">الفاتورة: —</div>
+          <div class="badge" id="metaDate">التاريخ: —</div>
+          <div class="badge" id="metaTotal">المجموع: 0</div>
+        </div>
+
+        <div class="empty" id="hintBox">
+          ✅ افتح الصفحة بهذا الشكل (مثال):<br>
+          <span class="monoSmall">invoice.html?v=999&u=Mahmood&id=INVOICE_ID</span><br>
+          أو اكتب القيم واضغط <b>تحميل</b>.
+        </div>
       </div>
     </div>
 
+    <!-- Invoice view -->
     <div class="card">
-      <div class="grid2">
-        <div class="kv"><b>اسم المستخدم</b><div id="username">—</div></div>
-        <div class="kv"><b>اسم العميل</b><div id="customer">—</div></div>
-        <div class="kv"><b>رقم الفاتورة</b><div id="invId" style="direction:ltr">—</div></div>
-        <div class="kv"><b>التاريخ</b><div id="createdAt">—</div></div>
+      <div class="hd">
+        <h2>تفاصيل الفاتورة</h2>
+        <div class="muted">العمليات ضمن نفس invoice_id</div>
+      </div>
+
+      <div class="bd">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:22%">الوقت</th>
+                <th style="width:38%">البيان</th>
+                <th style="width:20%">العملية</th>
+                <th style="width:20%">النتيجة</th>
+              </tr>
+            </thead>
+            <tbody id="opsTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Printable area (يُستخدم للتصدير) -->
+        <div id="printArea" class="print-area" style="display:none; margin-top:12px;">
+          <h3 style="margin:0 0 10px 0;">فاتورة — HAYEK SPOT</h3>
+          <div id="printMeta" style="font-size:12px; color:#333; margin-bottom:8px;"></div>
+          <div id="printTotal" style="font-weight:900; margin-bottom:10px;"></div>
+          <div id="printTable"></div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>الوقت</th>
-            <th>البيان</th>
-            <th class="num">العملية</th>
-            <th class="num">النتيجة</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-
-      <div style="height:10px"></div>
-
-      <div class="total">
-        <span>إجمالي الكشف:</span>
-        <span id="grandTotal">0</span>
-      </div>
-
-      <div style="height:10px"></div>
-
-      <div class="note">
-        تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
-      </div>
-    </div>
   </div>
 
 <script>
-  // ========= Supabase REST =========
-  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-  const REST = `${SUPABASE_URL}/rest/v1`;
+/* =========================
+   CONFIG
+   ========================= */
+const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
-  const $ = (id)=>document.getElementById(id);
+/* =========================
+   Helpers
+   ========================= */
+const $ = (id) => document.getElementById(id);
 
-  function qp(name){
-    const u = new URL(location.href);
-    return u.searchParams.get(name);
+function vibrate(ms=15){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+function setPill(ok, msg){
+  const pill = $("pill");
+  pill.textContent = msg || (ok ? "متصل" : "غير متصل");
+  pill.classList.toggle("open", !!ok);
+  pill.classList.toggle("closed", !ok);
+}
+
+function safeNum(x){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fmtDateTime(ts){
+  try{
+    const d = new Date(ts);
+    return d.toLocaleString("ar-EG", { hour12:true });
+  }catch(e){
+    return String(ts || "");
   }
+}
 
-  const apiFetch = async (path, options = {}) => {
-    const res = await fetch(`${REST}${path}`, {
-      ...options,
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(options.headers || {})
-      }
-    });
-    if (!res.ok) {
-      const t = await res.text().catch(()=> "");
-      throw new Error(`API ${res.status}: ${t || res.statusText}`);
-    }
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
+function getQS(){
+  const p = new URLSearchParams(location.search);
+  return {
+    u: (p.get("u") || "").trim(),
+    id: (p.get("id") || "").trim()
   };
+}
 
-  function fmt(n){
-    const x = Number(n);
-    if (!Number.isFinite(x)) return "0";
-    const s = x.toString();
-    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
+function buildLink(username, invoiceId){
+  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/") + "invoice.html";
+  return `${base}?v=999&u=${encodeURIComponent(username)}&id=${encodeURIComponent(invoiceId)}`;
+}
+
+async function copyText(txt){
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert("✅ تم النسخ");
+  }catch(e){
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    alert("✅ تم النسخ");
+  }
+}
+
+/* =========================
+   Supabase init
+   ========================= */
+let client = null;
+(function init(){
+  try{
+    client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    setPill(true, "متصل");
+  }catch(e){
+    console.error(e);
+    setPill(false, "غير متصل");
+    alert("خطأ إعداد Supabase");
   }
 
-  function fmtDate(iso){
-    try{
-      const d = new Date(iso);
-      return d.toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-    }catch{ return iso || "—"; }
+  const qs = getQS();
+  if(qs.u) $("username").value = qs.u;
+  if(qs.id) $("invoiceId").value = qs.id;
+
+  // تحميل تلقائي لو موجودين بالرابط
+  if(qs.u && qs.id){
+    loadInvoice();
+  }
+})();
+
+/* =========================
+   Main
+   ========================= */
+async function loadInvoice(){
+  if(!client) return;
+
+  const username = ($("username").value || "").trim();
+  const invoiceId = ($("invoiceId").value || "").trim();
+
+  $("hintBox").style.display = "none";
+  $("opsTbody").innerHTML = "";
+
+  if(!username || !invoiceId){
+    $("hintBox").style.display = "block";
+    $("hintBox").innerHTML = "⚠️ اكتب اسم المستخدم ورقم الفاتورة ثم اضغط <b>تحميل</b>.";
+    return;
   }
 
-  async function loadInvoice(){
-    const invoiceId = qp("invoice_id");
-    if (!invoiceId) {
-      $("subLine").textContent = "مفقود invoice_id في الرابط";
-      $("statusPill").textContent = "خطأ";
-      return;
-    }
+  setPill(true, "جاري التحميل…");
 
-    $("invId").textContent = invoiceId;
+  // 1) invoice meta
+  let invRow = null;
+  try{
+    const { data, error } = await client
+      .from("app_invoices")
+      .select("id, username, total, created_at")
+      .eq("id", invoiceId)
+      .maybeSingle();
 
-    const invRows = await apiFetch(`/app_invoices?select=id,username,customer_name,status,created_at,total,closed_at&limit=1&id=eq.${encodeURIComponent(invoiceId)}`, { method:"GET" });
-    const inv = Array.isArray(invRows) ? invRows[0] : null;
-    if (!inv) {
-      $("subLine").textContent = "لم يتم العثور على الفاتورة";
-      $("statusPill").textContent = "غير موجودة";
-      return;
-    }
+    if(error) throw error;
+    invRow = data || null;
+  }catch(e){
+    console.warn("Invoice meta fetch:", e);
+  }
 
-    $("username").textContent = inv.username || "—";
-    $("customer").textContent = inv.customer_name || "—";
-    $("createdAt").textContent = fmtDate(inv.created_at);
+  // 2) operations by invoice_id
+  const { data: ops, error } = await client
+    .from("app_operations")
+    .select("created_at, statement, operation, result, invoice_id, username")
+    .eq("username", username)
+    .eq("invoice_id", invoiceId)
+    .order("created_at", { ascending:true });
 
-    const pill = $("statusPill");
-    const st = (inv.status || "open").toLowerCase();
-    pill.textContent = st === "closed" ? "مغلقة" : "مفتوحة";
-    pill.className = `pill ${st === "closed" ? "closed" : "open"}`;
+  if(error){
+    console.error(error);
+    setPill(false, "خطأ");
+    alert("خطأ تحميل العمليات: " + error.message);
+    return;
+  }
 
-    $("subLine").textContent = st === "closed"
-      ? `فاتورة مغلقة — ${fmtDate(inv.closed_at)}`
-      : `فاتورة مفتوحة`;
-
-    const ops = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(invoiceId)}&order=created_at.asc`, { method:"GET" });
-
-    const tb = $("tbody");
-    tb.innerHTML = "";
-    let total = 0;
-
-    (ops || []).forEach(r=>{
+  // Render table
+  const rows = ops || [];
+  if(rows.length === 0){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.style.color = "var(--muted)";
+    td.style.padding = "14px";
+    td.textContent = "لا توجد عمليات ضمن هذه الفاتورة.";
+    tr.appendChild(td);
+    $("opsTbody").appendChild(tr);
+  }else{
+    rows.forEach(r=>{
       const tr = document.createElement("tr");
-      const tdTime = document.createElement("td"); tdTime.textContent = fmtDate(r.created_at);
-      const tdLabel = document.createElement("td"); tdLabel.textContent = r.label || "عملية";
-      const tdOp = document.createElement("td"); tdOp.className="num"; tdOp.textContent = r.operation || "";
-      const tdRes = document.createElement("td"); tdRes.className="num"; tdRes.textContent = r.result ?? "";
-      tr.append(tdTime, tdLabel, tdOp, tdRes);
-      tb.appendChild(tr);
 
-      const v = Number(r.result);
-      if (Number.isFinite(v)) total += v;
+      const tdT = document.createElement("td");
+      tdT.textContent = fmtDateTime(r.created_at);
+
+      const tdS = document.createElement("td");
+      tdS.textContent = r.statement || "";
+
+      const tdO = document.createElement("td");
+      tdO.textContent = r.operation || "";
+
+      const tdR = document.createElement("td");
+      tdR.textContent = (r.result === null || r.result === undefined) ? "" : String(r.result);
+
+      tr.append(tdT, tdS, tdO, tdR);
+      $("opsTbody").appendChild(tr);
     });
-
-    $("grandTotal").textContent = fmt(total);
-
-    // ✅ إذا الرابط فيه print=1 اطبع مباشرة
-    if (qp("print") === "1"){
-      setTimeout(()=>window.print(), 350);
-    }
   }
 
-  loadInvoice().catch(err=>{
-    console.error(err);
-    $("subLine").textContent = "خطأ تحميل الفاتورة";
-    $("statusPill").textContent = "خطأ";
-  });
+  // Totals / meta
+  const calcTotal = rows.reduce((s,r)=> s + safeNum(r.result), 0);
+  const finalTotal = invRow ? safeNum(invRow.total) : calcTotal;
+  const createdAt = invRow?.created_at || (rows[0]?.created_at || null);
+
+  $("metaUser").textContent = "المستخدم: " + username;
+  $("metaInv").textContent = "الفاتورة: " + invoiceId;
+  $("metaDate").textContent = "التاريخ: " + (createdAt ? fmtDateTime(createdAt) : "—");
+  $("metaTotal").textContent = "المجموع: " + finalTotal.toFixed(2);
+
+  setPill(true, "جاهز");
+  vibrate(20);
+}
+
+/* =========================
+   PDF / Print
+   ========================= */
+function buildPrint(){
+  const username = ($("username").value || "").trim();
+  const invoiceId = ($("invoiceId").value || "").trim();
+
+  const metaText = `المستخدم: ${username} | الفاتورة: ${invoiceId} | ${$("metaDate").textContent.replace("التاريخ:","").trim()}`;
+  $("printMeta").textContent = metaText;
+  $("printTotal").textContent = $("metaTotal").textContent;
+
+  const htmlTable = `
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:right; padding:8px;">الوقت</th>
+          <th style="text-align:right; padding:8px;">البيان</th>
+          <th style="text-align:right; padding:8px;">العملية</th>
+          <th style="text-align:right; padding:8px;">النتيجة</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Array.from($("opsTbody").querySelectorAll("tr")).map(tr=>{
+          const tds = tr.querySelectorAll("td");
+          if(tds.length < 4){
+            return `<tr><td colspan="4" style="padding:10px; color:#666;">${(tds[0]?.textContent||"")}</td></tr>`;
+          }
+          return `<tr>
+            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[0]?.textContent||""}</td>
+            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[1]?.textContent||""}</td>
+            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[2]?.textContent||""}</td>
+            <td style="padding:8px; border-bottom:1px solid #eee;">${tds[3]?.textContent||""}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+  $("printTable").innerHTML = htmlTable;
+
+  $("printArea").style.display = "block";
+}
+
+async function exportPDF(){
+  const username = ($("username").value || "user").trim() || "user";
+  buildPrint();
+
+  try{
+    const opt = {
+      margin: 10,
+      filename: `invoice_${username}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    };
+    await html2pdf().set(opt).from($("printArea")).save();
+  }catch(e){
+    console.error(e);
+    alert("فشل تصدير PDF. جرّب متصفح Chrome.");
+  }finally{
+    $("printArea").style.display = "none";
+  }
+}
+
+/* =========================
+   Events
+   ========================= */
+$("btnLoad").onclick = loadInvoice;
+
+$("btnCopyLink").onclick = async () => {
+  const username = ($("username").value || "").trim();
+  const invoiceId = ($("invoiceId").value || "").trim();
+  if(!username || !invoiceId){
+    alert("اكتب اسم المستخدم ورقم الفاتورة أولاً");
+    return;
+  }
+  await copyText(buildLink(username, invoiceId));
+  vibrate(15);
+};
+
+$("btnPDF").onclick = exportPDF;
+
+$("btnPrint").onclick = () => {
+  buildPrint();
+  window.print();
+  // نخفي بعد الطباعة
+  setTimeout(()=>{ $("printArea").style.display = "none"; }, 700);
+};
 </script>
 </body>
 </html>
