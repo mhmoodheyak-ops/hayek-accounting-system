@@ -1,19 +1,25 @@
 /* =========================
    HAYEK SPOT — Admin Panel (Invoices v2)
-   - Users CRUD + block/unblock
-   - Per-user invoices list (app_invoices)
-   - Open selected invoice -> operations where invoice_id
-   - Delete selected invoice (cascade deletes ops via FK)
-   - Print / PDF
+   Users CRUD + block/unblock
+   Per-user invoices list (app_invoices)
+   Open selected invoice -> operations by invoice_id
+   Delete selected invoice (cascade deletes ops via FK)
+   Print / PDF
    ========================= */
 
-
-const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-
+const SUPABASE_URL = "PUT_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_KEY = "PUT_YOUR_SB_PUBLISHABLE_KEY_HERE";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/* ---------- helpers ---------- */
 const $ = (id) => document.getElementById(id);
+const $any = (...ids) => {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el) return el;
+  }
+  return null;
+};
 
 const state = {
   usersPage: 0,
@@ -21,116 +27,131 @@ const state = {
   lastUsers: [],
   currentUser: null,
 
+  // invoice mode
   invoices: [],
   currentInvoiceId: null,
   currentOps: [],
 };
 
-function setPill(ok, msg){
-  const pill = $("pill");
-  if(!pill) return;
+function setPill(ok, msg) {
+  const pill = $any("pill");
+  if (!pill) return;
   pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
   pill.style.background = ok ? "var(--green)" : "var(--red)";
-  pill.style.color = ok ? "#0b0e12" : "var(--text)";
+  pill.style.color = ok ? "var(--dark)" : "var(--text)";
 }
 
-function nowISODate(){
+function nowISODate() {
   const d = new Date();
   const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
-function daysAgoISO(n){
+function daysAgoISO(n) {
   const d = new Date();
-  d.setDate(d.getDate()-n);
+  d.setDate(d.getDate() - n);
   const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
-function safeNum(x){
+function safeNum(x) {
   const n = Number(x);
   return Number.isFinite(n) ? n : 0;
 }
 
-function fmtDateTime(ts){
-  try{
+function fmtDateTime(ts) {
+  try {
     const d = new Date(ts);
     return d.toLocaleString("ar-EG", { hour12: true });
-  }catch{
+  } catch {
     return String(ts || "");
   }
+}
+
+function getDateRangeFilter() {
+  const fromEl = $any("fromDate");
+  const toEl = $any("toDate");
+  const from = fromEl ? fromEl.value : "";
+  const to = toEl ? toEl.value : "";
+
+  const fromISO = from ? new Date(from + "T00:00:00").toISOString() : null;
+  const toISO = to ? new Date(to + "T23:59:59").toISOString() : null;
+  return { from, to, fromISO, toISO };
+}
+
+function shortId(id) {
+  if (!id) return "";
+  const s = String(id);
+  return s.length > 10 ? `${s.slice(0, 6)}…${s.slice(-4)}` : s;
 }
 
 /* =========================
    Users (CRUD + block/unblock)
    ========================= */
 
-function genPassword(){
-  const p = Math.floor(100000 + Math.random()*900000);
-  $("newPass").value = String(p);
+function genPassword() {
+  const p = Math.floor(100000 + Math.random() * 900000);
+  const passEl = $any("newPass");
+  if (passEl) passEl.value = String(p);
 }
 
-async function addUser(){
-  const username = ($("newUsername").value || "").trim();
-  const pass = ($("newPass").value || "").trim();
-  const is_admin = $("newIsAdmin").value === "true";
+async function addUser() {
+  const username = (($any("newUsername")?.value) || "").trim();
+  const pass = (($any("newPass")?.value) || "").trim();
+  const is_admin = ($any("newIsAdmin")?.value || "false") === "true";
 
-  if(!username || !pass){
+  if (!username || !pass) {
     alert("اكتب اسم المستخدم وكلمة السر");
     return;
   }
 
   const { error } = await client.from("app_users").insert({
-    username, pass, is_admin, blocked: false
+    username,
+    pass,
+    is_admin,
+    blocked: false,
   });
 
-  if(error){
+  if (error) {
     alert("خطأ بالحفظ: " + error.message);
     return;
   }
 
-  $("newUsername").value = "";
+  if ($any("newUsername")) $any("newUsername").value = "";
   await loadUsers();
   alert("تم حفظ المستخدم ✅");
 }
 
-async function setBlocked(username, blocked){
-  const { error } = await client
-    .from("app_users")
-    .update({ blocked })
-    .eq("username", username);
-
-  if(error){
+async function setBlocked(username, blocked) {
+  const { error } = await client.from("app_users").update({ blocked }).eq("username", username);
+  if (error) {
     alert("خطأ: " + error.message);
     return;
   }
   await loadUsers();
 }
 
-async function deleteUser(username){
-  if(!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
+async function deleteUser(username) {
+  if (!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
 
-  const { error } = await client
-    .from("app_users")
-    .delete()
-    .eq("username", username);
-
-  if(error){
+  const { error } = await client.from("app_users").delete().eq("username", username);
+  if (error) {
     alert("خطأ: " + error.message);
     return;
   }
   await loadUsers();
 }
 
-function renderUsersTable(users){
-  const tb = $("usersTbody");
+function renderUsersTable(users) {
+  const tb = $any("usersTbody");
+  if (!tb) return;
   tb.innerHTML = "";
 
-  users.forEach(u => {
+  users.forEach((u) => {
     const tr = document.createElement("tr");
 
     const tdName = document.createElement("td");
@@ -165,10 +186,14 @@ function renderUsersTable(users){
     btnPick.className = "btn gray";
     btnPick.textContent = "اختيار";
     btnPick.onclick = async () => {
-      $("userSelect").value = u.username;
+      const sel = $any("userSelect");
+      if (sel) sel.value = u.username;
       state.currentUser = u.username;
-      await loadInvoicesForUser(); // تحديث الفواتير مباشرة عند اختيار مستخدم
-      window.scrollTo({ top: $("userSelect").getBoundingClientRect().top + window.scrollY - 80, behavior:"smooth" });
+      await loadInvoicesForUser(); // ✅ مهم للفواتير
+      window.scrollTo({
+        top: (sel?.getBoundingClientRect().top || 0) + window.scrollY - 80,
+        behavior: "smooth",
+      });
     };
 
     tdAct.appendChild(btnPick);
@@ -185,25 +210,20 @@ function renderUsersTable(users){
   });
 }
 
-async function loadUsers(){
-  const q = ($("searchUser").value || "").trim();
+async function loadUsers() {
+  const q = (($any("searchUser")?.value) || "").trim();
 
   let query = client
     .from("app_users")
     .select("id, username, pass, is_admin, blocked, created_at")
     .order("created_at", { ascending: false })
-    .range(
-      state.usersPage * state.pageSize,
-      state.usersPage * state.pageSize + state.pageSize - 1
-    );
+    .range(state.usersPage * state.pageSize, state.usersPage * state.pageSize + state.pageSize - 1);
 
-  if(q){
-    query = query.ilike("username", `%${q}%`);
-  }
+  if (q) query = query.ilike("username", `%${q}%`);
 
   const { data, error } = await query;
 
-  if(error){
+  if (error) {
     setPill(false, "خطأ اتصال");
     alert("خطأ تحميل المستخدمين: " + error.message);
     return;
@@ -215,189 +235,123 @@ async function loadUsers(){
   fillUserSelect(state.lastUsers);
 }
 
-function fillUserSelect(users){
-  const sel = $("userSelect");
-  const current = sel.value;
+function fillUserSelect(users) {
+  const sel = $any("userSelect");
+  if (!sel) return;
 
+  const current = sel.value;
   const base = `<option value="">— اختر المستخدم —</option>`;
-  const options = (users || []).map(u => `<option value="${u.username}">${u.username}</option>`).join("");
+  const options = (users || []).map((u) => `<option value="${u.username}">${u.username}</option>`).join("");
   sel.innerHTML = base + options;
 
-  if(current) sel.value = current;
+  if (current) sel.value = current;
 }
 
 /* =========================
-   Date filters
+   Invoices list (per user)
    ========================= */
 
-function getDateRangeFilter(){
-  const from = $("fromDate").value;
-  const to = $("toDate").value;
-
-  const fromISO = from ? new Date(from + "T00:00:00").toISOString() : null;
-  const toISO = to ? new Date(to + "T23:59:59").toISOString() : null;
-
-  return { fromISO, toISO, from, to };
+function getSelectedUser() {
+  return (($any("userSelect")?.value) || "").trim();
 }
 
-/* =========================
-   Invoices list (NEW)
-   ========================= */
+function getInvoiceSelectEl() {
+  return $any("invoiceSelect", "invoicesSelect", "invoice_id_select", "invoiceSelectEl");
+}
 
-async function loadInvoicesForUser(){
-  const username = $("userSelect").value;
-  if(!username){
+function setInvoiceHint(text) {
+  const el = $any("invoiceHint", "invoiceStatus", "invoiceNote");
+  if (el) el.textContent = text || "";
+}
+
+function renderInvoicesDropdown() {
+  const sel = getInvoiceSelectEl();
+  if (!sel) return;
+
+  const base = `<option value="">— اختر فاتورة —</option>`;
+  const opts = (state.invoices || [])
+    .map((inv) => {
+      const when = fmtDateTime(inv.created_at);
+      const totalTxt = (inv.total ?? 0);
+      const label = `${when} — ${totalTxt} — ${shortId(inv.id)}`;
+      return `<option value="${inv.id}">${label}</option>`;
+    })
+    .join("");
+
+  sel.innerHTML = base + opts;
+
+  // preserve selection if exists
+  if (state.currentInvoiceId) sel.value = state.currentInvoiceId;
+}
+
+async function loadInvoicesForUser() {
+  const username = getSelectedUser();
+  if (!username) {
     state.invoices = [];
-    state.currentUser = null;
     state.currentInvoiceId = null;
-    fillInvoiceSelect([]);
+    renderInvoicesDropdown();
+    setInvoiceHint("اختر المستخدم أولاً");
     return;
   }
-  state.currentUser = username;
 
+  state.currentUser = username;
   const { fromISO, toISO } = getDateRangeFilter();
 
-  let query = client
+  let q = client
     .from("app_invoices")
     .select("id, username, total, created_at")
     .eq("username", username)
-    .order("created_at", { ascending: false })
-    .limit(200);
+    .order("created_at", { ascending: false });
 
-  if(fromISO) query = query.gte("created_at", fromISO);
-  if(toISO) query = query.lte("created_at", toISO);
+  if (fromISO) q = q.gte("created_at", fromISO);
+  if (toISO) q = q.lte("created_at", toISO);
 
-  const { data, error } = await query;
-  if(error){
-    alert("خطأ تحميل قائمة الفواتير: " + error.message);
+  const { data, error } = await q;
+  if (error) {
+    alert("خطأ تحميل الفواتير: " + error.message);
     return;
   }
 
   state.invoices = data || [];
-  fillInvoiceSelect(state.invoices);
-
-  // اختيار افتراضي: أحدث فاتورة
-  if(state.invoices.length){
-    $("invoiceSelect").value = state.invoices[0].id;
-    state.currentInvoiceId = state.invoices[0].id;
+  // إذا ما في تحديد، خلّيها فاضية
+  if (state.invoices.length === 0) {
+    state.currentInvoiceId = null;
+    setInvoiceHint("لا توجد فواتير ضمن هذا التاريخ");
+  } else {
+    setInvoiceHint(`تم تحميل ${state.invoices.length} فاتورة ✅`);
   }
-}
-
-function fillInvoiceSelect(invoices){
-  const sel = $("invoiceSelect");
-  const base = `<option value="">— اختر فاتورة —</option>`;
-
-  const options = (invoices || []).map(inv => {
-    const dt = fmtDateTime(inv.created_at);
-    const total = safeNum(inv.total);
-    return `<option value="${inv.id}">فاتورة: ${dt} — إجمالي: ${total}</option>`;
-  }).join("");
-
-  sel.innerHTML = base + options;
+  renderInvoicesDropdown();
 }
 
 /* =========================
-   Open selected invoice (operations by invoice_id)
+   Operations by invoice
    ========================= */
 
-async function openSelectedInvoice(){
-  const username = $("userSelect").value;
-  const invoiceId = $("invoiceSelect").value;
-
-  if(!username){
-    alert("اختر المستخدم أولاً");
-    return;
-  }
-  if(!invoiceId){
-    alert("اختر فاتورة من القائمة أولاً");
-    return;
-  }
-
-  state.currentUser = username;
-  state.currentInvoiceId = invoiceId;
+async function loadOpsForInvoice(invoiceId) {
+  if (!invoiceId) return [];
 
   const { data, error } = await client
     .from("app_operations")
-    .select("id, username, label, operation, result, invoice_id, created_at")
-    .eq("username", username)
+    .select("id, username, invoice_id, label, operation, result, created_at")
     .eq("invoice_id", invoiceId)
     .order("created_at", { ascending: true });
 
-  if(error){
-    alert("خطأ تحميل الفاتورة: " + error.message);
-    return;
+  if (error) {
+    alert("خطأ تحميل عمليات الفاتورة: " + error.message);
+    return [];
   }
-
-  state.currentOps = data || [];
-  renderInvoice();
-
-  await updateInvoiceTotal(invoiceId);
-
-  $("invoiceCard").scrollIntoView({ behavior:"smooth", block:"start" });
+  return data || [];
 }
 
-async function updateInvoiceTotal(invoiceId){
-  try{
-    const grand = state.currentOps.reduce((s, op) => s + safeNum(op.result), 0);
-    await client.from("app_invoices").update({ total: grand }).eq("id", invoiceId);
-  }catch(_e){}
-}
-
-/* =========================
-   Delete selected invoice (cascade deletes ops)
-   ========================= */
-
-async function deleteSelectedInvoice(){
-  const username = $("userSelect").value;
-  const invoiceId = $("invoiceSelect").value;
-
-  if(!username){
-    alert("اختر المستخدم أولاً");
-    return;
-  }
-  if(!invoiceId){
-    alert("اختر فاتورة من القائمة أولاً");
-    return;
-  }
-
-  const confirmName = ($("confirmName").value || "").trim();
-  if(confirmName !== username){
-    alert("اكتب اسم المستخدم حرفيًا للتأكيد");
-    return;
-  }
-
-  if(!confirm("تأكيد حذف الفاتورة المختارة؟ سيتم حذف عملياتها تلقائياً.")) return;
-
-  const { error } = await client.from("app_invoices").delete().eq("id", invoiceId);
-  if(error){
-    alert("خطأ بالحذف: " + error.message);
-    return;
-  }
-
-  $("confirmName").value = "";
-  state.currentInvoiceId = null;
-  state.currentOps = [];
-  $("opsTbody").innerHTML = "";
-  $("invoiceMeta").innerHTML = "";
-  $("totalsByLabel").innerHTML = "";
-  $("grandTotal").textContent = "0";
-
-  await loadInvoicesForUser();
-  alert("تم حذف الفاتورة ✅");
-}
-
-/* =========================
-   Render invoice
-   ========================= */
-
-function renderInvoice(){
-  const tb = $("opsTbody");
+function renderInvoiceOps(ops) {
+  const tb = $any("opsTbody");
+  if (!tb) return;
   tb.innerHTML = "";
 
   let grand = 0;
   const sums = {};
 
-  state.currentOps.forEach(op => {
+  (ops || []).forEach((op) => {
     const tr = document.createElement("tr");
 
     const tdTime = document.createElement("td");
@@ -415,7 +369,6 @@ function renderInvoice(){
 
     const r = safeNum(op.result);
     grand += r;
-
     const key = (op.label || "عملية").trim();
     sums[key] = (sums[key] || 0) + r;
 
@@ -426,198 +379,271 @@ function renderInvoice(){
     tb.appendChild(tr);
   });
 
-  $("grandTotal").textContent = String(grand);
+  if ($any("grandTotal")) $any("grandTotal").textContent = String(grand);
 
-  const meta = $("invoiceMeta");
-  const username = state.currentUser || "—";
-  const invoiceId = state.currentInvoiceId || "—";
-  const count = state.currentOps.length;
-
-  let fromTxt = "—";
-  let toTxt = "—";
-  if(count){
-    fromTxt = fmtDateTime(state.currentOps[0].created_at);
-    toTxt = fmtDateTime(state.currentOps[count-1].created_at);
+  // meta chips
+  const meta = $any("invoiceMeta");
+  if (meta) {
+    const username = state.currentUser || "—";
+    const count = (ops || []).length;
+    let fromTxt = "—";
+    let toTxt = "—";
+    if (count) {
+      fromTxt = fmtDateTime(ops[0].created_at);
+      toTxt = fmtDateTime(ops[count - 1].created_at);
+    }
+    meta.innerHTML = `
+      <div class="chip">العميل: ${username}</div>
+      <div class="chip">عدد العمليات: ${count}</div>
+      <div class="chip">من: ${fromTxt}</div>
+      <div class="chip">إلى: ${toTxt}</div>
+      <div class="chip">فاتورة: ${shortId(state.currentInvoiceId)}</div>
+    `;
   }
 
-  meta.innerHTML = `
-    <div class="chip">العميل: ${username}</div>
-    <div class="chip">رقم الفاتورة: <span style="direction:ltr">${invoiceId}</span></div>
-    <div class="chip">عدد العمليات: ${count}</div>
-    <div class="chip">من: ${fromTxt}</div>
-    <div class="chip">إلى: ${toTxt}</div>
-  `;
+  // totals by label
+  const box = $any("totalsByLabel");
+  if (box) {
+    box.innerHTML = "";
+    Object.keys(sums)
+      .sort()
+      .forEach((k) => {
+        const div = document.createElement("div");
+        div.className = "total";
+        div.innerHTML = `<span>إجمالي (${k}):</span><span style="direction:ltr">${sums[k]}</span>`;
+        box.appendChild(div);
+      });
+  }
+}
 
-  const box = $("totalsByLabel");
-  box.innerHTML = "";
-  Object.keys(sums).sort().forEach(k => {
-    const v = sums[k];
-    const div = document.createElement("div");
-    div.className = "total";
-    div.innerHTML = `<span>إجمالي (${k}):</span><span class="num">${v}</span>`;
-    box.appendChild(div);
-  });
+async function openSelectedInvoice() {
+  const sel = getInvoiceSelectEl();
+  const invoiceId = (sel?.value || "").trim();
+
+  if (!getSelectedUser()) {
+    alert("اختر المستخدم أولاً");
+    return;
+  }
+  if (!invoiceId) {
+    alert("اختر فاتورة من القائمة");
+    return;
+  }
+
+  state.currentInvoiceId = invoiceId;
+  const ops = await loadOpsForInvoice(invoiceId);
+  state.currentOps = ops;
+  renderInvoiceOps(ops);
+
+  const card = $any("invoiceCard");
+  if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function printInvoice() {
+  window.print();
 }
 
 /* =========================
-   Print / Archive+Delete (selected invoice)
+   Delete selected invoice (cascade)
    ========================= */
 
-function printInvoice(){
-  window.print();
+function getConfirmNameValue() {
+  return (($any("confirmName")?.value) || "").trim();
 }
 
-async function archiveAndDelete(){
-  const username = $("userSelect").value;
-  const invoiceId = $("invoiceSelect").value;
-  if(!username || !invoiceId){
-    alert("اختر مستخدم + فاتورة أولاً");
+async function deleteSelectedInvoice() {
+  const username = getSelectedUser();
+  if (!username) {
+    alert("اختر المستخدم أولاً");
     return;
   }
 
-  const confirmName = ($("confirmName").value || "").trim();
-  if(confirmName !== username){
-    alert("اكتب اسم المستخدم حرفيًا للتأكيد قبل الأرشفة/الحذف");
+  const sel = getInvoiceSelectEl();
+  const invoiceId = (sel?.value || "").trim();
+  if (!invoiceId) {
+    alert("اختر فاتورة أولاً");
     return;
   }
 
+  const confirmName = getConfirmNameValue();
+  if (confirmName !== username) {
+    alert("اكتب اسم المستخدم حرفيًا للتأكيد");
+    return;
+  }
+
+  if (!confirm(`تأكيد حذف الفاتورة المختارة؟\nسيتم حذف عملياتها تلقائياً (CASCADE).`)) return;
+
+  const { error } = await client.from("app_invoices").delete().eq("id", invoiceId);
+  if (error) {
+    alert("خطأ بالحذف: " + error.message);
+    return;
+  }
+
+  // reset view
+  state.currentInvoiceId = null;
+  state.currentOps = [];
+  renderInvoiceOps([]);
+  if ($any("confirmName")) $any("confirmName").value = "";
+
+  await loadInvoicesForUser();
+  alert("تم حذف الفاتورة ✅");
+}
+
+async function archiveThenDeleteSelectedInvoice() {
+  // تأكد فاتورة مفتوحة/معروضة
   await openSelectedInvoice();
-
-  window.print();
-
+  // اطبع/احفظ PDF
+  printInvoice();
+  // بعدها احذف
   setTimeout(async () => {
     await deleteSelectedInvoice();
   }, 800);
 }
 
 /* =========================
-   Legacy cleanup (delete all ops for user)
+   (قديم) حذف كل عمليات المستخدم — تنظيف
    ========================= */
-
-async function deleteOpsForUserLegacy(){
-  const username = $("userSelect").value;
-  if(!username){
+async function deleteAllOpsForUserLegacy() {
+  const username = getSelectedUser();
+  if (!username) {
     alert("اختر المستخدم أولاً");
     return;
   }
-  const confirmName = ($("confirmName").value || "").trim();
-  if(confirmName !== username){
+  const confirmName = getConfirmNameValue();
+  if (confirmName !== username) {
     alert("اكتب اسم المستخدم حرفيًا للتأكيد");
     return;
   }
 
-  if(!confirm(`⚠️ تأكيد حذف كل عمليات المستخدم "${username}" (تنظيف قديم)؟`)) return;
+  if (!confirm(`تأكيد حذف كل عمليات المستخدم "${username}" (تنظيف قديم)؟`)) return;
 
-  const { error } = await client
-    .from("app_operations")
-    .delete()
-    .eq("username", username);
-
-  if(error){
+  const { error } = await client.from("app_operations").delete().eq("username", username);
+  if (error) {
     alert("خطأ بالحذف: " + error.message);
     return;
   }
 
-  $("confirmName").value = "";
-  await loadInvoicesForUser();
-  alert("تم حذف عمليات المستخدم (تنظيف قديم) ✅");
+  if ($any("confirmName")) $any("confirmName").value = "";
+  alert("تم حذف كل عمليات المستخدم ✅");
 }
 
 /* =========================
    UI events
    ========================= */
 
-function wire(){
-  // Users
-  $("genPass").onclick = genPassword;
-  $("addUser").onclick = addUser;
+function wire() {
+  // users
+  $any("genPass") && ($any("genPass").onclick = genPassword);
+  $any("addUser") && ($any("addUser").onclick = addUser);
 
-  $("refreshUsers").onclick = async () => {
-    state.usersPage = 0;
-    await loadUsers();
-  };
+  $any("refreshUsers") &&
+    ($any("refreshUsers").onclick = async () => {
+      state.usersPage = 0;
+      await loadUsers();
+    });
 
-  $("searchUser").addEventListener("input", async () => {
-    state.usersPage = 0;
-    await loadUsers();
-  });
+  $any("searchUser") &&
+    $any("searchUser").addEventListener("input", async () => {
+      state.usersPage = 0;
+      await loadUsers();
+    });
 
-  $("prevUsers").onclick = async () => {
-    if(state.usersPage > 0) state.usersPage--;
-    await loadUsers();
-  };
+  $any("prevUsers") &&
+    ($any("prevUsers").onclick = async () => {
+      if (state.usersPage > 0) state.usersPage--;
+      await loadUsers();
+    });
 
-  $("nextUsers").onclick = async () => {
-    state.usersPage++;
-    await loadUsers();
-  };
+  $any("nextUsers") &&
+    ($any("nextUsers").onclick = async () => {
+      state.usersPage++;
+      await loadUsers();
+    });
 
-  // Invoice filters
-  $("quickToday").onclick = async () => {
-    const today = nowISODate();
-    $("fromDate").value = today;
-    $("toDate").value = today;
-    await loadInvoicesForUser();
-  };
+  // user select -> load invoices immediately
+  $any("userSelect") &&
+    $any("userSelect").addEventListener("change", async () => {
+      state.currentUser = getSelectedUser() || null;
+      state.currentInvoiceId = null;
+      await loadInvoicesForUser();
+    });
 
-  $("quick7").onclick = async () => {
-    $("fromDate").value = daysAgoISO(7);
-    $("toDate").value = nowISODate();
-    await loadInvoicesForUser();
-  };
+  // quick dates
+  $any("quickToday") &&
+    ($any("quickToday").onclick = () => {
+      const today = nowISODate();
+      $any("fromDate") && ($any("fromDate").value = today);
+      $any("toDate") && ($any("toDate").value = today);
+    });
 
-  $("clearDates").onclick = async () => {
-    $("fromDate").value = "";
-    $("toDate").value = "";
-    await loadInvoicesForUser();
-  };
+  $any("quick7") &&
+    ($any("quick7").onclick = () => {
+      $any("fromDate") && ($any("fromDate").value = daysAgoISO(7));
+      $any("toDate") && ($any("toDate").value = nowISODate());
+    });
 
-  // User selection
-  $("userSelect").addEventListener("change", async () => {
-    state.currentUser = $("userSelect").value || null;
-    state.currentInvoiceId = null;
-    await loadInvoicesForUser();
-  });
+  $any("clearDates") &&
+    ($any("clearDates").onclick = () => {
+      $any("fromDate") && ($any("fromDate").value = "");
+      $any("toDate") && ($any("toDate").value = "");
+    });
 
-  // Invoices list
-  $("loadInvoices").onclick = async () => {
-    await loadInvoicesForUser();
-  };
+  // invoices list actions
+  $any("refreshInvoices", "refreshInvoicesBtn", "refreshInvoicesList", "updateInvoices") &&
+    ($any("refreshInvoices", "refreshInvoicesBtn", "refreshInvoicesList", "updateInvoices").onclick = async () => {
+      await loadInvoicesForUser();
+    });
 
-  $("invoiceSelect").addEventListener("change", () => {
-    state.currentInvoiceId = $("invoiceSelect").value || null;
-  });
+  // when invoice dropdown changes -> remember selection
+  const invSel = getInvoiceSelectEl();
+  invSel &&
+    invSel.addEventListener("change", () => {
+      state.currentInvoiceId = (invSel.value || "").trim() || null;
+    });
 
-  // Open/Delete invoice
-  $("openInvoice").onclick = async () => {
-    await openSelectedInvoice();
-  };
+  // open selected invoice
+  $any("openInvoice", "openSelectedInvoice", "viewInvoice", "openInvoiceBtn") &&
+    ($any("openInvoice", "openSelectedInvoice", "viewInvoice", "openInvoiceBtn").onclick = async () => {
+      await openSelectedInvoice();
+    });
 
-  $("deleteInvoice").onclick = async () => {
-    await deleteSelectedInvoice();
-  };
+  // print
+  $any("printInvoice") &&
+    ($any("printInvoice").onclick = () => {
+      printInvoice();
+    });
 
-  $("printInvoice").onclick = () => {
-    printInvoice();
-  };
+  // delete selected invoice
+  $any("deleteInvoice", "deleteSelectedInvoice", "deleteInvoiceBtn") &&
+    ($any("deleteInvoice", "deleteSelectedInvoice", "deleteInvoiceBtn").onclick = async () => {
+      await deleteSelectedInvoice();
+    });
 
-  $("archiveAndDelete").onclick = async () => {
-    await archiveAndDelete();
-  };
+  // archive + delete selected invoice
+  $any("archiveAndDelete", "archiveDeleteInvoice", "archiveThenDelete", "archiveAndDeleteBtn") &&
+    ($any("archiveAndDelete", "archiveDeleteInvoice", "archiveThenDelete", "archiveAndDeleteBtn").onclick = async () => {
+      await archiveThenDeleteSelectedInvoice();
+    });
 
-  // Legacy
-  $("deleteUserOps").onclick = async () => {
-    await deleteOpsForUserLegacy();
-  };
+  // legacy delete all ops
+  $any("deleteUserOps", "deleteAllOps", "deleteAllOpsBtn") &&
+    ($any("deleteUserOps", "deleteAllOps", "deleteAllOpsBtn").onclick = async () => {
+      await deleteAllOpsForUserLegacy();
+    });
+
+  // scroll to invoice
+  $any("scrollToInvoice") &&
+    ($any("scrollToInvoice").onclick = () => {
+      $any("invoiceCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 }
 
-async function boot(){
-  try{
+async function boot() {
+  try {
     wire();
     await loadUsers();
-    await loadInvoicesForUser();
+    await loadInvoicesForUser(); // إذا كان في user مختار مسبقاً
     setPill(true, "مفتوح");
-  }catch(e){
+  } catch (e) {
     console.error(e);
     setPill(false, "مغلق");
   }
