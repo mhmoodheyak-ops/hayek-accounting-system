@@ -5,676 +5,280 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — صفحة المستخدم (فواتير)</title>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css?v=1000">
+  <link rel="stylesheet" href="style.css?v=2000" />
 
-  <!-- Supabase (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- html2pdf (PDF يحافظ على العربية + صفحات متعددة) -->
+  <!-- PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Config -->
+  <script src="config.js?v=2000"></script>
+
+  <!-- منطق الصفحة -->
+  <script defer src="app.js?v=2000"></script>
+
+  <style>
+    :root{
+      --bg1:#07161b; --bg2:#0b1f25;
+      --card:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.10);
+      --txt:#eaf2ff; --muted:rgba(234,242,255,.70);
+      --good:#10b981; --bad:#ef4444; --warn:#f59e0b;
+      --btn:#0d2a39; --btn2:#1d4ed8; --btn3:#7f1d1d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:
+      radial-gradient(1100px 600px at 50% -220px, #14333c, var(--bg1));
+      color:var(--txt);
+    }
+    .wrap{max-width:1200px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+    .card{background:var(--card);border:1px solid var(--stroke);border-radius:22px;padding:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    h1,h2{margin:0 0 10px}
+    .muted{opacity:.78;font-size:13px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select,textarea{
+      width:100%;padding:12px;border-radius:16px;border:1px solid var(--stroke);
+      background:rgba(0,0,0,.20);color:#fff;outline:none
+    }
+    textarea{min-height:44px;resize:vertical}
+    .btn{
+      padding:12px 14px;border-radius:16px;border:1px solid var(--stroke);
+      background:var(--btn);color:#fff;cursor:pointer;font-weight:800
+    }
+    .btn.primary{background:rgba(29,78,216,.85)}
+    .btn.success{background:rgba(16,185,129,.22);border-color:rgba(16,185,129,.35)}
+    .btn.danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .pill{padding:7px 12px;border-radius:999px;border:1px solid var(--stroke);background:rgba(0,0,0,.18);font-size:13px}
+    .pill.good{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.12);color:#bff7df}
+    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12);color:#ffd1d1}
+    .note{padding:10px 12px;border-radius:16px;border:1px solid var(--stroke);background:rgba(0,0,0,.14);font-size:13px}
+    .note.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
+    .divider{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi .pill b{font-size:14px}
+
+    /* جدول السطور */
+    .tableWrap{overflow:auto;border-radius:18px;border:1px solid var(--stroke)}
+    table{width:100%;border-collapse:collapse;min-width:760px;background:rgba(0,0,0,.12)}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);text-align:right}
+    th{color:var(--muted);font-weight:800}
+    .tdActions{white-space:nowrap}
+    .mini{padding:8px 10px;border-radius:14px}
+    .mini.red{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
+    .mini.gray{background:rgba(0,0,0,.15)}
+    .center{text-align:center}
+
+    /* حاسبة */
+    .calc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .display{
+      padding:14px;border-radius:18px;border:1px solid var(--stroke);
+      background:rgba(0,0,0,.20);font-size:26px;font-weight:900;min-height:58px;
+      display:flex;align-items:center;justify-content:flex-end
+    }
+    .key{padding:14px;border-radius:18px;border:1px solid var(--stroke);background:rgba(0,0,0,.18);cursor:pointer;font-weight:900}
+    .key.op{background:rgba(29,78,216,.20);border-color:rgba(29,78,216,.35)}
+    .key.danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
+    .key.wide{grid-column:span 2}
+    .key.wider{grid-column:span 4}
+    .shake{animation:shake .22s linear}
+    @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(3px)}50%{transform:translateX(-3px)}75%{transform:translateX(2px)}100%{transform:translateX(0)}}
+
+    /* منطقة الطباعة PDF */
+    #printable{
+      background:#ffffff;
+      color:#111;
+      direction:rtl;
+      padding:18px;
+      border-radius:18px;
+      display:none;
+      font-family: "Segoe UI", Tahoma, Arial;
+    }
+    #printable h3{margin:0 0 8px}
+    #printable .p-muted{color:#555;font-size:12px;margin:0 0 10px}
+    #printable .p-footer{color:#444;font-size:12px;margin-top:12px}
+    #printable table{min-width:auto;background:#fff;border:1px solid #ddd}
+    #printable th{background:#0b2a39;color:#fff}
+    #printable td,#printable th{border-bottom:1px solid #ddd;padding:8px}
+  </style>
 </head>
 
 <body>
-  <div class="container">
+  <div class="wrap">
 
-    <div class="topbar">
-      <div class="brand">
-        <h1>HAYEK SPOT — صفحة المستخدم</h1>
-        <div class="sub">تسجيل بسيط → اسم مشتري (إجباري) → آلة حاسبة → إنهاء الفاتورة (إجباري) → حفظ + PDF</div>
-      </div>
-      <div class="right">
-        <div id="pill" class="pill closed">مغلق</div>
-      </div>
-    </div>
-
-    <!-- LOGIN -->
-    <div id="loginCard" class="card">
-      <div class="hd">
-        <h2>تسجيل المستخدم</h2>
-        <div class="muted">اسم + كلمة سر فقط</div>
-      </div>
-      <div class="bd">
-        <div class="row">
-          <div class="field">
-            <label>اسم المستخدم</label>
-            <input id="loginUser" placeholder="مثال: محمود" autocomplete="username" />
-          </div>
-          <div class="field">
-            <label>كلمة السر</label>
-            <input id="loginPass" placeholder="******" type="password" autocomplete="current-password" />
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn green block" id="btnLogin">دخول</button>
-        </div>
-
-        <div class="notice" style="margin-top:10px">
-          <div class="warn">⚠ إذا ظهرت رسالة “مغلق” بالأعلى: تأكد من مفاتيح Supabase.</div>
-        </div>
+    <div class="card">
+      <h1>صفحة المستخدم — HAYEK SPOT</h1>
+      <div class="muted">الترتيب الإجباري: (اسم + كلمة سر) ثم (اسم الزبون) ثم السطور… وبعدها إنهاء الفاتورة قبل النسخ أو PDF.</div>
+      <div class="divider"></div>
+      <div class="row kpi">
+        <span id="statePill" class="pill bad">غير مسجّل</span>
+        <span class="pill">الحالة: <b id="statusText">جاهز</b></span>
+        <span class="pill">الفاتورة: <b id="invoiceState">غير مفتوحة</b></span>
+        <span class="pill">الإجمالي: <b id="totalText">0</b></span>
       </div>
     </div>
 
-    <!-- APP -->
-    <div id="appWrap" class="hidden">
+    <!-- 1) تسجيل المستخدم -->
+    <div class="card">
+      <h2>تسجيل المستخدم</h2>
 
-      <!-- Invoice start -->
-      <div class="card" style="margin-top:14px">
-        <div class="hd">
-          <h2>بدء فاتورة جديدة</h2>
-          <div class="row" style="gap:8px">
-            <span class="badge" id="whoBadge">—</span>
-            <span class="badge" id="invBadge">لا يوجد فاتورة مفتوحة</span>
-          </div>
+      <div class="grid">
+        <div>
+          <label>اسم المستخدم (إجباري)</label>
+          <input id="username" autocomplete="username" placeholder="مثال: user1" />
         </div>
-        <div class="bd">
-          <div class="row">
-            <div class="field">
-              <label>اسم المشتري (إجباري)</label>
-              <input id="buyerName" placeholder="اكتب اسم المشتري..." />
-            </div>
-            <div class="field" style="flex:0 0 220px">
-              <label>&nbsp;</label>
-              <button class="btn blue block" id="btnStartInvoice">ابدأ الفاتورة</button>
-            </div>
-          </div>
-
-          <div class="sep"></div>
-
-          <div class="row">
-            <button class="btn red" id="btnCloseInvoice" disabled>إنهاء الفاتورة (حفظ)</button>
-            <button class="btn gray" id="btnCopyTable" disabled>نسخ الجدول</button>
-            <button class="btn yellow" id="btnMakePdf" disabled>تصدير PDF</button>
-          </div>
-
-          <div class="notice" style="margin-top:10px">
-            <div class="ok">✓ الفاتورة تُحفظ تلقائياً على النت حتى يشاهدها الأدمن عند الطلب.</div>
-            <div class="muted">ملاحظة: “بيان/ملاحظة” داخل السطر اختياري.</div>
-          </div>
+        <div>
+          <label>كلمة السر (إجباري)</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+        </div>
+        <div style="align-self:end">
+          <button id="btnLogin" class="btn primary">دخول</button>
+        </div>
+        <div style="align-self:end">
+          <button id="btnLogout" class="btn">خروج</button>
         </div>
       </div>
 
-      <!-- Calculator + Table -->
-      <div class="calcWrap" style="margin-top:14px">
-        <div class="card">
-          <div class="hd">
-            <h2>الآلة الحاسبة</h2>
-            <div class="muted">كل ضغط (=) ينشئ سطر جديد بالفاتورة</div>
+      <div class="note warn" style="margin-top:10px">
+        ⚠️ إذا ظهر “بيانات خاطئة” معناها اسم/كلمة السر غير موجودين بقاعدة البيانات أو المستخدم محظور.
+      </div>
+    </div>
+
+    <!-- 2) اسم الزبون وفتح فاتورة -->
+    <div class="card">
+      <h2>الفاتورة</h2>
+      <div class="grid">
+        <div style="grid-column: span 2">
+          <label>اسم الزبون (إجباري)</label>
+          <input id="customerName" placeholder="اكتب اسم الزبون ثم Enter لفتح فاتورة تلقائيًا" />
+        </div>
+        <div style="align-self:end">
+          <button id="btnOpenInvoice" class="btn success">فتح فاتورة</button>
+        </div>
+        <div style="align-self:end">
+          <button id="btnFinalize" class="btn primary">إنهاء الفاتورة (إجباري)</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="btnCopyTable" class="btn" disabled>نسخ الجدول</button>
+        <button id="btnPdf" class="btn" disabled>تصدير PDF للزبون</button>
+        <span class="pill">اسم الفاتورة على السيرفر: <b id="serverName">—</b></span>
+      </div>
+
+      <div class="note" style="margin-top:10px">
+        ✅ لا يمكن النسخ أو PDF قبل الضغط على: <b>إنهاء الفاتورة</b>.  
+        عند الإنهاء: تُرفع تلقائيًا باسم <b>المستخدم + الزبون</b>.
+      </div>
+    </div>
+
+    <!-- 3) إضافة سطر (نص اختياري + مبلغ من الحاسبة) -->
+    <div class="card">
+      <h2>إضافة سطر</h2>
+
+      <div class="grid">
+        <div style="grid-column: span 2">
+          <label>بيان / ملاحظة للسطر (اختياري)</label>
+          <input id="lineNote" placeholder="مثال: أجرة نقل / خصم / كمية..." />
+        </div>
+        <div>
+          <label>المبلغ (من الحاسبة)</label>
+          <input id="lineAmount" inputmode="decimal" placeholder="0" />
+        </div>
+        <div style="align-self:end">
+          <button id="btnAddLine" class="btn primary">إضافة السطر</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid">
+        <!-- الحاسبة -->
+        <div class="card" style="grid-column: span 2; padding:14px">
+          <div class="row" style="justify-content:space-between">
+            <h2 style="margin:0">الآلة الحاسبة</h2>
+            <span class="pill">اهتزاز خفيف عند الضغط ✅</span>
+          </div>
+          <div style="margin-top:10px" class="display" id="calcDisplay">0</div>
+
+          <div class="calc" style="margin-top:10px">
+            <button class="key danger" data-k="C">C</button>
+            <button class="key" data-k="(">(</button>
+            <button class="key" data-k=")">)</button>
+            <button class="key op" data-k="/">÷</button>
+
+            <!-- ترتيب الأرقام مثل المطلوب سابقًا (1↔3،4↔6،7↔9) -->
+            <button class="key" data-k="3">3</button>
+            <button class="key" data-k="2">2</button>
+            <button class="key" data-k="1">1</button>
+            <button class="key op" data-k="*">×</button>
+
+            <button class="key" data-k="6">6</button>
+            <button class="key" data-k="5">5</button>
+            <button class="key" data-k="4">4</button>
+            <button class="key op" data-k="-">−</button>
+
+            <button class="key" data-k="9">9</button>
+            <button class="key" data-k="8">8</button>
+            <button class="key" data-k="7">7</button>
+            <button class="key op" data-k="+">+</button>
+
+            <button class="key wide" data-k="0">0</button>
+            <button class="key" data-k=".">.</button>
+            <button class="key op" data-k="=">=</button>
+
+            <!-- زر “إنزال/قفل السطر” كبير بعرض الشاشة -->
+            <button class="key wider" data-k="PUT" style="background:rgba(16,185,129,.20);border-color:rgba(16,185,129,.35)">
+              إدخال النتيجة في مبلغ السطر
+            </button>
           </div>
 
-          <div class="bd">
-            <div class="row">
-              <div class="field" style="flex:1 1 100%">
-                <label>بيان / ملاحظة لهذا السطر (اختياري)</label>
-                <input id="lineNote" placeholder="مثال: أجرة نقل / خصم / كمية..." />
-              </div>
-            </div>
-
-            <div class="display" style="margin-top:10px">
-              <div class="expr" id="expr">0</div>
-              <div class="mini" id="mini">جاهز…</div>
-            </div>
-
-            <div class="keypad" style="margin-top:10px" id="keypad">
-              <div class="key dng" data-k="C">C</div>
-              <div class="key" data-k="(">(</div>
-              <div class="key" data-k=")">)</div>
-              <div class="key op" data-k="⌫">⌫</div>
-
-              <div class="key" data-k="7">7</div>
-              <div class="key" data-k="8">8</div>
-              <div class="key" data-k="9">9</div>
-              <div class="key op" data-k="÷">÷</div>
-
-              <div class="key" data-k="4">4</div>
-              <div class="key" data-k="5">5</div>
-              <div class="key" data-k="6">6</div>
-              <div class="key op" data-k="×">×</div>
-
-              <div class="key" data-k="1">1</div>
-              <div class="key" data-k="2">2</div>
-              <div class="key" data-k="3">3</div>
-              <div class="key op" data-k="-">-</div>
-
-              <div class="key" data-k="0">0</div>
-              <div class="key" data-k=".">.</div>
-              <div class="key op" data-k="+">+</div>
-              <div class="key ok" data-k="=">=</div>
-
-              <div class="key wide" data-k="CLRLINE">مسح البيان</div>
-              <div class="key wide" data-k="NEG">+/-</div>
-            </div>
-
-            <div class="notice" style="margin-top:10px">
-              <div class="muted">⚠ لن تعمل الحاسبة قبل “ابدأ الفاتورة”.</div>
-            </div>
+          <div class="muted" style="margin-top:10px">
+            كل ضغط يهتز خفيف + يتم حفظ العمليات في السجل.
           </div>
         </div>
 
-        <div class="card">
-          <div class="hd">
-            <h2>عمليات الفاتورة</h2>
-            <div class="row" style="gap:8px">
-              <span class="badge" id="totalBadge">الإجمالي: 0</span>
-              <span class="badge" id="rowsBadge">السطور: 0</span>
-            </div>
+        <!-- جدول السطور -->
+        <div class="card" style="grid-column: span 2; padding:14px">
+          <div class="row" style="justify-content:space-between">
+            <h2 style="margin:0">سطور الفاتورة</h2>
+            <span class="pill">يُرفع كل تعديل تلقائيًا (إذا الفاتورة مفتوحة)</span>
           </div>
-          <div class="bd">
+
+          <div class="tableWrap" style="margin-top:10px">
             <table>
               <thead>
                 <tr>
-                  <th style="width:22%">الوقت</th>
-                  <th style="width:38%">البيان (اختياري)</th>
-                  <th style="width:20%">العملية</th>
-                  <th style="width:20%">النتيجة</th>
+                  <th>#</th>
+                  <th>البيان</th>
+                  <th>المبلغ</th>
+                  <th>إجراءات</th>
                 </tr>
               </thead>
-              <tbody id="opsBody"></tbody>
+              <tbody id="linesBody">
+                <tr><td colspan="4" class="center muted">لا يوجد سطور بعد.</td></tr>
+              </tbody>
             </table>
+          </div>
 
-            <div class="notice" style="margin-top:10px">
-              <div class="ok">✓ يتم حفظ كل سطر مباشرة على النت.</div>
-            </div>
+          <div class="divider"></div>
+
+          <div class="row">
+            <span class="pill">السجل: <b id="opsCount">0</b></span>
+            <button id="btnClearLines" class="btn danger">مسح السطور (للفاتورة المفتوحة)</button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- PRINT AREA (Hidden) -->
-      <div id="printArea">
-        <h2 style="text-align:center; margin:0 0 8px 0;">فاتورة — HAYEK SPOT</h2>
-        <div class="meta" id="printMeta"></div>
-        <div style="font-weight:900; margin-bottom:10px" id="printTotal"></div>
-        <div id="printTable"></div>
-        <div class="meta" style="margin-top:10px; text-align:center;">
-          تم تطوير الحاسبة من قبل الحايك للحلول الرقمية
-        </div>
-      </div>
+    <!-- Printable area for PDF -->
+    <div id="printable"></div>
 
-    </div><!-- /appWrap -->
-  </div><!-- /container -->
-
-<script>
-/* =======================
-   CONFIG (لا تغيّر إلا إذا تغيّرت بياناتك)
-   ======================= */
-const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-
-/* =======================
-   Helpers
-   ======================= */
-const $ = (id) => document.getElementById(id);
-
-function vibrate(ms=18){
-  try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){}
-}
-function setPill(ok, msg){
-  const pill = $("pill");
-  pill.classList.toggle("open", !!ok);
-  pill.classList.toggle("closed", !ok);
-  pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
-}
-function fmtDateTime(ts){
-  try{
-    const d = new Date(ts);
-    return d.toLocaleString("ar-EG", { hour12:true });
-  }catch(e){
-    return String(ts || "");
-  }
-}
-function nowISO(){
-  return new Date().toISOString();
-}
-function safeNum(x){
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-}
-function formatNumber(n){
-  const x = safeNum(n);
-  // إزالة أصفار زائدة
-  const s = x.toFixed(6);
-  return s.replace(/\.?0+$/,"");
-}
-function getDeviceId(){
-  const k = "hs_device_id";
-  let v = localStorage.getItem(k);
-  if(!v){
-    v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-    localStorage.setItem(k, v);
-  }
-  return v;
-}
-
-/* =======================
-   Supabase Client
-   ======================= */
-let client = null;
-(function init(){
-  try{
-    if(!window.supabase || !window.supabase.createClient) throw new Error("supabase not loaded");
-    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    setPill(true, "مفتوح");
-  }catch(e){
-    console.error(e);
-    setPill(false, "مغلق");
-  }
-})();
-
-/* =======================
-   State
-   ======================= */
-const state = {
-  loggedIn: false,
-  username: "",
-  invoiceOpen: false,
-  invoiceId: "",
-  buyerName: "",
-  ops: [],
-  total: 0
-};
-
-/* =======================
-   Auth (simple)
-   ======================= */
-async function login(){
-  if(!client) return alert("Supabase غير جاهز.");
-
-  const u = ($("loginUser").value || "").trim();
-  const p = ($("loginPass").value || "").trim();
-  if(!u || !p) return alert("اكتب اسم المستخدم وكلمة السر");
-
-  const { data, error } = await client
-    .from("app_users")
-    .select("username, pass, blocked")
-    .eq("username", u)
-    .maybeSingle();
-
-  if(error){
-    console.error(error);
-    return alert("خطأ اتصال: " + error.message);
-  }
-
-  if(!data || !data.username){
-    return alert("اسم المستخدم غير صحيح");
-  }
-  if(String(data.pass || "") !== p){
-    return alert("كلمة السر غير صحيحة");
-  }
-  if(data.blocked){
-    return alert("عذراً، حسابك موقوف. راجع الأدمن.");
-  }
-
-  state.loggedIn = true;
-  state.username = u;
-  localStorage.setItem("hs_last_user", u);
-
-  $("whoBadge").textContent = "المستخدم: " + u;
-  $("loginCard").classList.add("hidden");
-  $("appWrap").classList.remove("hidden");
-
-  $("mini").textContent = "تم تسجيل الدخول ✅";
-}
-
-function restoreLastUser(){
-  const u = localStorage.getItem("hs_last_user") || "";
-  if(u) $("loginUser").value = u;
-}
-restoreLastUser();
-
-/* =======================
-   Invoice
-   ======================= */
-function lockCalc(lock){
-  const kp = $("keypad");
-  kp.style.opacity = lock ? "0.55" : "1";
-  kp.style.pointerEvents = lock ? "none" : "auto";
-}
-lockCalc(true);
-
-async function startInvoice(){
-  if(!client) return alert("Supabase غير جاهز.");
-  if(!state.loggedIn) return alert("سجّل الدخول أولاً.");
-
-  const buyer = ($("buyerName").value || "").trim();
-  if(!buyer) return alert("اسم المشتري إجباري");
-
-  // reset local state
-  state.ops = [];
-  state.total = 0;
-  state.buyerName = buyer;
-
-  renderOps();
-
-  // create invoice row
-  const payload = {
-    username: state.username,
-    buyer_name: buyer,
-    device_id: getDeviceId(),
-    total: 0
-  };
-
-  const { data, error } = await client
-    .from("app_invoices")
-    .insert(payload)
-    .select("id, created_at")
-    .maybeSingle();
-
-  if(error){
-    console.error(error);
-    return alert("فشل بدء الفاتورة: " + error.message);
-  }
-
-  state.invoiceId = data?.id || "";
-  state.invoiceOpen = true;
-
-  $("invBadge").textContent = state.invoiceId ? ("فاتورة مفتوحة: #" + String(state.invoiceId).slice(-6)) : "فاتورة مفتوحة";
-  $("btnCloseInvoice").disabled = false;
-
-  // خلال الفاتورة: نسخ/PDF غير إلزامي، نخليهم بعد الإنهاء
-  $("btnCopyTable").disabled = true;
-  $("btnMakePdf").disabled = true;
-
-  // clear calc
-  expr = "";
-  $("expr").textContent = "0";
-  $("mini").textContent = "فاتورة جديدة بدأت ✅ (اضغط = لتسجيل سطر)";
-
-  lockCalc(false);
-  vibrate(22);
-}
-
-async function closeInvoice(){
-  if(!client) return alert("Supabase غير جاهز.");
-  if(!state.invoiceOpen || !state.invoiceId) return alert("لا يوجد فاتورة مفتوحة.");
-
-  if(!confirm("تأكيد إنهاء الفاتورة وحفظها؟")) return;
-
-  // update invoice total فقط (حتى لو أعمدتك أقل)
-  const { error } = await client
-    .from("app_invoices")
-    .update({ total: state.total })
-    .eq("id", state.invoiceId)
-    .eq("username", state.username);
-
-  if(error){
-    console.error(error);
-    return alert("فشل إنهاء الفاتورة: " + error.message);
-  }
-
-  state.invoiceOpen = false;
-  $("invBadge").textContent = "فاتورة مغلقة ✅";
-  $("btnCloseInvoice").disabled = true;
-
-  // الآن نفعّل النسخ و PDF
-  $("btnCopyTable").disabled = false;
-  $("btnMakePdf").disabled = false;
-
-  lockCalc(true);
-  $("mini").textContent = "تم إغلاق الفاتورة وحفظها ✅";
-  vibrate(30);
-}
-
-/* =======================
-   Calculator
-   ======================= */
-let expr = "";
-
-function isAllowedExpr(s){
-  // only digits/operators/./spaces/parentheses
-  return /^[0-9+\-*/().\s]*$/.test(s);
-}
-function normalizeExpr(s){
-  return s.replace(/×/g,"*").replace(/÷/g,"/").trim();
-}
-function evalExpr(raw){
-  const s = normalizeExpr(raw);
-  if(!isAllowedExpr(s)) throw new Error("صيغة غير مسموحة");
-  // منع أشياء فارغة أو تنتهي بمشغل
-  if(!s || /[+\-*/.]$/.test(s)) throw new Error("أكمل العملية");
-  // eslint-disable-next-line no-new-func
-  const v = Function("return (" + s + ")")();
-  if(!Number.isFinite(v)) throw new Error("نتيجة غير صالحة");
-  return v;
-}
-
-function setExprUI(){
-  $("expr").textContent = expr ? expr : "0";
-}
-
-async function addLineFromExpr(){
-  if(!state.invoiceOpen || !state.invoiceId) return alert("ابدأ الفاتورة أولاً");
-
-  const raw = expr;
-  let result;
-  try{
-    result = evalExpr(raw);
-  }catch(e){
-    return alert(e.message || "خطأ بالعملية");
-  }
-
-  const note = ($("lineNote").value || "").trim(); // optional
-  const row = {
-    created_at: nowISO(),
-    statement: note,
-    operation: raw,
-    result: result
-  };
-
-  // save to Supabase (كل سطر)
-  const payload = {
-    username: state.username,
-    invoice_id: state.invoiceId,
-    statement: note || null,
-    operation: raw,
-    result: result,
-    device_id: getDeviceId()
-  };
-
-  const { error } = await client.from("app_operations").insert(payload);
-  if(error){
-    console.error(error);
-    return alert("فشل حفظ السطر: " + error.message);
-  }
-
-  // local
-  state.ops.push(row);
-  state.total = state.ops.reduce((a,b)=>a + safeNum(b.result), 0);
-
-  renderOps();
-
-  // بعد التسجيل: اترك البيان مثل ما هو؟ حسب رغبتك… نخليه يمسح لتسهيل
-  $("lineNote").value = "";
-  expr = formatNumber(result); // خلي الناتج جاهز لسطر جديد
-  setExprUI();
-
-  $("mini").textContent = "تم حفظ السطر ✅";
-  vibrate(16);
-}
-
-function backspace(){
-  expr = expr.slice(0,-1);
-  setExprUI();
-}
-function clearAll(){
-  expr = "";
-  setExprUI();
-}
-function toggleNeg(){
-  // إذا expr رقم فقط
-  const s = normalizeExpr(expr);
-  if(!s) return;
-  if(/^[0-9.]+$/.test(s)){
-    expr = (s.startsWith("-") ? s.slice(1) : "-" + s);
-  }else{
-    // حول آخر رقم فقط (اختياري)، هنا نبسط: نلف الكل
-    expr = "-(" + expr + ")";
-  }
-  setExprUI();
-}
-function press(k){
-  if(!state.invoiceOpen) return;
-
-  if(k === "C"){ clearAll(); return; }
-  if(k === "⌫"){ backspace(); return; }
-  if(k === "="){ addLineFromExpr(); return; }
-  if(k === "CLRLINE"){ $("lineNote").value = ""; vibrate(10); return; }
-  if(k === "NEG"){ toggleNeg(); vibrate(10); return; }
-
-  // prevent double operators
-  const last = expr.slice(-1);
-  const ops = ["+","-","×","÷","*","/"];
-  if(ops.includes(k)){
-    if(!expr) return;
-    if(ops.includes(last)) expr = expr.slice(0,-1) + k;
-    else expr += k;
-  }else{
-    expr += k;
-  }
-  setExprUI();
-}
-
-/* =======================
-   Render table
-   ======================= */
-function renderOps(){
-  const body = $("opsBody");
-  body.innerHTML = "";
-
-  state.ops.forEach((r) => {
-    const tr = document.createElement("tr");
-
-    const tdT = document.createElement("td");
-    tdT.textContent = fmtDateTime(r.created_at);
-
-    const tdS = document.createElement("td");
-    tdS.textContent = r.statement || "";
-
-    const tdO = document.createElement("td");
-    tdO.style.direction = "ltr";
-    tdO.style.textAlign = "left";
-    tdO.textContent = r.operation || "";
-
-    const tdR = document.createElement("td");
-    tdR.style.direction = "ltr";
-    tdR.style.textAlign = "left";
-    tdR.textContent = formatNumber(r.result);
-
-    tr.append(tdT, tdS, tdO, tdR);
-    body.appendChild(tr);
-  });
-
-  $("totalBadge").textContent = "الإجمالي: " + formatNumber(state.total);
-  $("rowsBadge").textContent = "السطور: " + state.ops.length;
-}
-
-/* =======================
-   Copy + PDF
-   ======================= */
-async function copyTable(){
-  if(!state.ops.length) return alert("لا يوجد سطور لنسخها");
-  // نص منسق (TSV)
-  const lines = [];
-  lines.push(["الوقت","البيان","العملية","النتيجة"].join("\t"));
-  state.ops.forEach(r=>{
-    lines.push([fmtDateTime(r.created_at), (r.statement||""), (r.operation||""), formatNumber(r.result)].join("\t"));
-  });
-  lines.push("");
-  lines.push("تم تطوير الحاسبة من قبل الحايك للحلول الرقمية");
-
-  const txt = lines.join("\n");
-  try{
-    await navigator.clipboard.writeText(txt);
-    alert("تم النسخ ✅");
-  }catch(e){
-    // fallback
-    const ta = document.createElement("textarea");
-    ta.value = txt;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    alert("تم النسخ ✅");
-  }
-  vibrate(14);
-}
-
-async function makePdf(){
-  if(!state.ops.length) return alert("لا يوجد سطور لتصديرها");
-  // جهّز printArea
-  const meta =
-    `المستخدم: ${state.username}\n` +
-    `اسم المشتري: ${state.buyerName}\n` +
-    `رقم الفاتورة: ${state.invoiceId ? ("#" + String(state.invoiceId).slice(-6)) : "—"}\n` +
-    `التاريخ: ${fmtDateTime(nowISO())}`;
-
-  $("printMeta").textContent = meta;
-  $("printTotal").textContent = "الإجمالي: " + formatNumber(state.total);
-
-  // table HTML (احترافي + صفحات)
-  const rowsHtml = state.ops.map(r=>{
-    return `<tr>
-      <td>${fmtDateTime(r.created_at)}</td>
-      <td>${(r.statement||"").replace(/</g,"&lt;")}</td>
-      <td style="direction:ltr;text-align:left">${(r.operation||"").replace(/</g,"&lt;")}</td>
-      <td style="direction:ltr;text-align:left">${formatNumber(r.result)}</td>
-    </tr>`;
-  }).join("");
-
-  $("printTable").innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th style="width:22%">الوقت</th>
-          <th style="width:38%">البيان</th>
-          <th style="width:20%">العملية</th>
-          <th style="width:20%">النتيجة</th>
-        </tr>
-      </thead>
-      <tbody>${rowsHtml}</tbody>
-    </table>
-  `;
-
-  const el = $("printArea");
-  el.style.display = "block";
-
-  try{
-    const fileName = `invoice_${state.username}_${Date.now()}.pdf`;
-    const opt = {
-      margin: 8,
-      filename: fileName,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css","legacy"] }
-    };
-    await html2pdf().set(opt).from(el).save();
-  }catch(e){
-    console.error(e);
-    alert("فشل تصدير PDF. جرّب متصفح Chrome على الكمبيوتر.");
-  }finally{
-    el.style.display = "none";
-  }
-
-  vibrate(20);
-}
-
-/* =======================
-   Events
-   ======================= */
-$("btnLogin").onclick = login;
-$("btnStartInvoice").onclick = startInvoice;
-$("btnCloseInvoice").onclick = closeInvoice;
-$("btnCopyTable").onclick = copyTable;
-$("btnMakePdf").onclick = makePdf;
-
-$("keypad").addEventListener("click", (ev)=>{
-  const k = ev.target?.getAttribute?.("data-k");
-  if(!k) return;
-  press(k);
-  vibrate(8);
-});
-</script>
-
+  </div>
 </body>
 </html>
