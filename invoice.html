@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — صفحة المستخدم (فواتير)</title>
 
-  <link rel="stylesheet" href="style.css?v=4000" />
+  <link rel="stylesheet" href="style.css?v=5000" />
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,10 +14,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Config -->
-  <script src="config.js?v=4000"></script>
+  <script src="config.js?v=5000"></script>
 
   <!-- منطق الصفحة -->
-  <script defer src="app.js?v=4000"></script>
+  <script defer src="app.js?v=5000"></script>
 
   <style>
     :root{
@@ -81,16 +81,56 @@
     .key.wide{grid-column:span 2}
     .key.wider{grid-column:span 4}
 
+    /* printable (PDF) */
     #printable{
-      background:#ffffff;color:#111;direction:rtl;padding:18px;border-radius:18px;display:none;
+      background:#ffffff;color:#111;direction:rtl;padding:16mm;display:none;
       font-family:"Segoe UI",Tahoma,Arial;
     }
-    #printable h3{margin:0 0 8px}
-    #printable .p-muted{color:#555;font-size:12px;margin:0 0 10px}
-    #printable .p-footer{color:#444;font-size:12px;margin-top:12px}
-    #printable table{min-width:auto;background:#fff;border:1px solid #ddd}
-    #printable th{background:#0b2a39;color:#fff}
-    #printable td,#printable th{border-bottom:1px solid #ddd;padding:8px}
+    .p-head{
+      border:1px solid #0b2a39;
+      border-radius:10px;
+      padding:10px 12px;
+      background:#0b2a39;
+      color:#fff;
+      margin-bottom:10px;
+    }
+    .p-head h3{margin:0;font-size:18px}
+    .p-sub{margin:6px 0 0;font-size:12px;opacity:.95}
+    .p-meta{
+      border:1px solid #e6e6e6;border-radius:10px;padding:10px 12px;margin:10px 0;
+      background:#fafafa;font-size:12px;color:#222;
+    }
+    .p-meta b{color:#0b2a39}
+    .p-note{
+      margin:10px 0;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px dashed #c9c9c9;
+      font-size:12px;color:#333;
+    }
+    #printable table{width:100%;border-collapse:collapse;border:1px solid #ddd}
+    #printable th{
+      background:#0b2a39;color:#fff;font-size:12px;padding:8px;border-bottom:1px solid #ddd
+    }
+    #printable td{
+      font-size:12px;padding:8px;border-bottom:1px solid #eee;color:#111
+    }
+    .p-total{
+      margin-top:10px;
+      border:1px solid #0b2a39;
+      border-radius:10px;
+      padding:10px 12px;
+      background:#f3f7fa;
+      font-size:13px;
+    }
+    .p-total b{color:#0b2a39}
+    .p-footer{
+      margin-top:12px;
+      font-size:12px;
+      color:#333;
+      border-top:1px solid #e6e6e6;
+      padding-top:10px;
+    }
   </style>
 </head>
 
@@ -129,7 +169,7 @@
       </div>
 
       <div class="note warn" style="margin-top:10px">
-        ✅ هذا النظام يقفل الحساب على جهاز واحد فقط (device_id). إذا حاول نفس الحساب من جهاز ثاني يُرفض الدخول.
+        ✅ الحساب يقفل على جهاز واحد فقط (device_id). إذا حاول من جهاز ثاني يتم رفض الدخول.
       </div>
     </div>
 
@@ -138,10 +178,10 @@
       <div class="grid">
         <div style="grid-column: span 2">
           <label>اسم الزبون (إجباري)</label>
-          <input id="customerName" placeholder="اكتب اسم الزبون ثم Enter لفتح فاتورة تلقائيًا" />
+          <input id="customerName" placeholder="اكتب اسم الزبون ثم Enter — تُفتح فاتورة تلقائيًا" />
         </div>
         <div style="align-self:end">
-          <button id="btnOpenInvoice" class="btn success">فتح فاتورة</button>
+          <button id="btnOpenInvoice" class="btn success">فتح فاتورة (احتياطي)</button>
         </div>
         <div style="align-self:end">
           <button id="btnFinalize" class="btn primary">إنهاء الفاتورة (إجباري)</button>
@@ -155,7 +195,7 @@
       </div>
 
       <div class="note" style="margin-top:10px">
-        ✅ لا يمكن النسخ أو PDF قبل الضغط على: <b>إنهاء الفاتورة</b>. عند الإنهاء تُرفع تلقائيًا على السيرفر.
+        ✅ لا يمكن النسخ أو PDF قبل الضغط على: <b>إنهاء الفاتورة</b>.
       </div>
     </div>
 
@@ -193,7 +233,6 @@
             <button class="key" data-k=")">)</button>
             <button class="key op" data-k="/">÷</button>
 
-            <!-- ترتيب الأرقام (1↔3، 4↔6، 7↔9) -->
             <button class="key" data-k="3">3</button>
             <button class="key" data-k="2">2</button>
             <button class="key" data-k="1">1</button>
@@ -213,7 +252,6 @@
             <button class="key" data-k=".">.</button>
             <button class="key op" data-k="=">=</button>
 
-            <!-- زر إدخال النتيجة كبير -->
             <button class="key wider" data-k="PUT" style="background:rgba(16,185,129,.20);border-color:rgba(16,185,129,.35)">
               إدخال النتيجة في مبلغ السطر
             </button>
