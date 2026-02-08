@@ -5,278 +5,265 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
 
-  <!-- خط عربي (محلي) -->
-  <style>
-    @font-face{
-      font-family: "AmiriLocal";
-      src: url("./Amiri-Regular.ttf") format("truetype");
-      font-display: swap;
-    }
+  <!-- Supabase UMD (نسخة واحدة فقط) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
+  <style>
     :root{
       --bg:#0b0f14;
       --card:#111823;
-      --card2:#0f1620;
+      --line:rgba(255,255,255,.10);
       --txt:#e9f0ff;
       --muted:#9fb0c9;
-      --line:rgba(255,255,255,.10);
       --green:#24d18f;
       --red:#ff5a6b;
-      --yellow:#f6c34b;
-      --blue:#4ea1ff;
       --shadow: 0 18px 40px rgba(0,0,0,.45);
       --r:22px;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
       min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
       color:var(--txt);
-      font-family: "AmiriLocal", "Segoe UI", Tahoma, Arial, sans-serif;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
       background:
         radial-gradient(1200px 800px at 20% 10%, rgba(36,209,143,.18), transparent 55%),
         radial-gradient(900px 700px at 80% 20%, rgba(78,161,255,.16), transparent 55%),
         var(--bg);
-      padding:18px;
+    }
+    .wrap{
+      width:min(920px, 100%);
       display:flex;
-      align-items:center;
       justify-content:center;
     }
-
-    .wrap{
-      width:100%;
-      max-width: 720px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-    }
-
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      width:min(760px, 100%);
+      background: rgba(255,255,255,.04);
       border:1px solid var(--line);
       border-radius: var(--r);
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-
     .hd{
-      padding:16px 16px 12px;
-      border-bottom:1px solid var(--line);
+      padding:18px 18px 12px 18px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
+      gap:12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
     }
-
-    .brand h1{ margin:0; font-size:20px; letter-spacing:.2px; }
-    .brand p{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.6; }
-
-    .pill{
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      font-weight:800;
-      min-width:120px;
-      text-align:center;
+    .brand{
       display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
+      flex-direction:column;
+      gap:6px;
     }
-    .pill.ok{ background: rgba(36,209,143,.14); border-color: rgba(36,209,143,.35); color:#bfffe8;}
-    .pill.no{ background: rgba(255,90,107,.14); border-color: rgba(255,90,107,.35); color:#ffd2d7;}
-
-    .bd{ padding:16px; }
-
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .field{ flex:1 1 220px; display:flex; flex-direction:column; gap:6px; }
-    label{ font-size:12px; color:var(--muted); }
-
-    input{
-      width:100%;
-      padding:12px 14px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color:var(--txt);
-      outline:none;
-      font-size:14px;
-    }
-    input::placeholder{ color: rgba(233,240,255,.45); }
-
-    .btn{
-      padding:12px 14px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color:var(--txt);
-      cursor:pointer;
+    .brand .title{
+      margin:0;
+      font-size:20px;
+      letter-spacing:.3px;
       font-weight:800;
-      transition: .15s transform, .15s opacity;
-      user-select:none;
-      white-space:nowrap;
     }
-    .btn:active{ transform: scale(.98); opacity:.9; }
-    .btn.green{ background: rgba(36,209,143,.18); border-color: rgba(36,209,143,.35); }
-    .btn.blue{ background: rgba(78,161,255,.14); border-color: rgba(78,161,255,.35); }
-    .btn.red{ background: rgba(255,90,107,.16); border-color: rgba(255,90,107,.35); }
-
-    .hint{
-      margin-top:10px;
+    .brand .sub{
+      margin:0;
+      font-size:12px;
       color:var(--muted);
-      font-size:12px;
-      line-height:1.7;
-    }
-
-    #loginMsg{
-      margin-top:10px;
-      font-size:12px;
       line-height:1.6;
-      opacity:0;
-      transition:.2s;
     }
-
-    .footer{
-      text-align:center;
-      color:rgba(233,240,255,.75);
-      font-size:12px;
-      padding:12px 10px;
-    }
-
-    .split{
+    .bd{ padding:18px; }
+    .row{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       align-items:center;
-      justify-content:space-between;
     }
-
-    .links .btn{ flex:1 1 220px; }
+    .field{
+      flex:1 1 240px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    label{
+      font-size:12px;
+      color:var(--muted);
+    }
+    input{
+      width:100%;
+      padding:12px 14px;
+      border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--txt);
+      outline:none;
+    }
+    input::placeholder{ color: rgba(233,240,255,.45); }
+    .btn{
+      padding:12px 14px;
+      border-radius:999px;
+      border:1px solid rgba(36,209,143,.35);
+      background: rgba(36,209,143,.16);
+      color: var(--txt);
+      cursor:pointer;
+      font-weight:800;
+      min-width:160px;
+      transition: .15s transform, .15s opacity;
+    }
+    .btn:active{ transform: scale(.98); opacity:.9; }
+    .msg{
+      margin-top:12px;
+      font-size:13px;
+      line-height:1.7;
+      color:var(--muted);
+      min-height:24px;
+      white-space:pre-wrap;
+    }
+    .msg.ok{ color: rgba(36,209,143,.95); }
+    .msg.bad{ color: rgba(255,90,107,.95); }
+    .footer{
+      padding:14px 18px;
+      border-top:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      color:rgba(233,240,255,.78);
+      text-align:center;
+    }
+    .hint{
+      margin-top:14px;
+      font-size:12px;
+      color:rgba(233,240,255,.70);
+      line-height:1.7;
+    }
   </style>
-
-  <!-- Supabase UMD (نسخة واحدة فقط) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-
-  <!-- auth.js -->
-  <script src="./auth.js" defer></script>
 </head>
 
 <body>
   <div class="wrap">
-
     <div class="card">
       <div class="hd">
         <div class="brand">
-          <h1>HAYEK SPOT</h1>
-          <p>تسجيل دخول المستخدمين + الوصول للفاتورة / لوحة الأدمن حسب الصلاحية.</p>
+          <h1 class="title">HAYEK SPOT — تسجيل الدخول</h1>
+          <p class="sub">سجّل دخولك للوصول إلى صفحة الفاتورة.</p>
         </div>
-        <div id="sessionPill" class="pill no">غير مسجّل</div>
       </div>
 
       <div class="bd">
-        <div id="loginBox">
-          <div class="row">
-            <div class="field">
-              <label>اسم المستخدم</label>
-              <input id="username" placeholder="مثال: محمود" autocomplete="username" />
-            </div>
-            <div class="field">
-              <label>كلمة السر</label>
-              <input id="password" type="password" placeholder="******" autocomplete="current-password" />
-            </div>
+        <div class="row">
+          <div class="field">
+            <label>اسم المستخدم</label>
+            <input id="username" placeholder="مثال: محمود" autocomplete="username" />
           </div>
-
-          <div class="row" style="margin-top:10px">
-            <button class="btn green" id="btnLogin">تسجيل الدخول</button>
-            <button class="btn" id="btnGoInvoice" type="button">فتح صفحة الفواتير</button>
-            <button class="btn" id="btnGoAdmin" type="button">فتح لوحة الأدمن</button>
+          <div class="field">
+            <label>كلمة السر</label>
+            <input id="password" type="password" placeholder="••••••" autocomplete="current-password" />
           </div>
-
-          <div id="loginMsg"></div>
-
-          <div class="hint">
-            ⚠️ إذا فتحت لوحة الأدمن بدون صلاحية أدمن سيتم إرجاعك تلقائياً.<br>
-            ✅ صفحة الفواتير تعمل للمستخدمين بعد تسجيل الدخول.
-          </div>
+          <button class="btn" id="btnLogin">تسجيل دخول</button>
         </div>
 
-        <div id="afterLoginBox" style="display:none">
-          <div class="split">
-            <div>
-              <div style="font-weight:900; font-size:14px">أهلاً <span id="who"></span> 👋</div>
-              <div class="hint" style="margin:6px 0 0">اختر الصفحة التي تريد فتحها:</div>
-            </div>
-            <button class="btn red" id="btnLogout" type="button">تسجيل خروج</button>
-          </div>
+        <div class="msg" id="msg"></div>
 
-          <div class="row links" style="margin-top:12px">
-            <button class="btn blue" id="btnOpenInvoice2" type="button">فتح صفحة الفواتير (invoice.html)</button>
-            <button class="btn" id="btnOpenAdmin2" type="button">فتح لوحة الأدمن (admin.html)</button>
-          </div>
+        <div class="hint">
+          ملاحظة: إذا نسيت كلمة السر، راجع الأدمن ليتم تعديلها.
         </div>
-
       </div>
 
-      <div class="footer">
-        تم تطوير النظام من قبل <b>الحايك للحلول الرقمية</b>
-      </div>
+      <div class="footer">تم تطوير النظام من قبل الحايك للحلول الرقمية</div>
     </div>
-
   </div>
 
-  <script>
-    // واجهة بسيطة: إظهار حالة الجلسة + أزرار انتقال
-    function readSession(){
-      try{
-        return JSON.parse(localStorage.getItem("hayek_session") || "null");
-      }catch(e){
-        return null;
-      }
-    }
+<script>
+/* =======================
+   CONFIG (غيّر فقط هنا)
+   ======================= */
+const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
-    function refreshUI(){
-      const s = readSession();
-      const pill = document.getElementById("sessionPill");
-      const loginBox = document.getElementById("loginBox");
-      const afterBox = document.getElementById("afterLoginBox");
-      const who = document.getElementById("who");
+/* =======================
+   Helpers
+   ======================= */
+const $ = (id) => document.getElementById(id);
+function setMsg(text, ok=null){
+  const el = $("msg");
+  el.textContent = text || "";
+  el.classList.remove("ok","bad");
+  if(ok === true) el.classList.add("ok");
+  if(ok === false) el.classList.add("bad");
+}
+function vibrate(ms=18){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 
-      if(s && s.username){
-        pill.classList.remove("no");
-        pill.classList.add("ok");
-        pill.textContent = s.is_admin ? "أدمن" : "مستخدم";
-        loginBox.style.display = "none";
-        afterBox.style.display = "block";
-        who.textContent = s.username + (s.is_admin ? " (Admin)" : "");
-      }else{
-        pill.classList.remove("ok");
-        pill.classList.add("no");
-        pill.textContent = "غير مسجّل";
-        loginBox.style.display = "block";
-        afterBox.style.display = "none";
-        who.textContent = "";
-      }
-    }
+/* =======================
+   Supabase
+   ======================= */
+let client = null;
+try{
+  client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}catch(e){
+  console.error(e);
+  setMsg("خطأ إعداد Supabase.", false);
+}
 
-    // أزرار الانتقال
-    document.getElementById("btnGoInvoice").onclick = () => location.href = "invoice.html";
-    document.getElementById("btnGoAdmin").onclick   = () => location.href = "admin.html";
-    document.getElementById("btnOpenInvoice2").onclick = () => location.href = "invoice.html";
-    document.getElementById("btnOpenAdmin2").onclick   = () => location.href = "admin.html";
+/* =======================
+   Login
+   ======================= */
+async function doLogin(){
+  const username = ($("username").value || "").trim();
+  const pass = ($("password").value || "").trim();
+  if(!username || !pass){
+    setMsg("اكتب اسم المستخدم وكلمة السر.", false);
+    vibrate(25);
+    return;
+  }
+  if(!client){
+    setMsg("Supabase غير جاهز.", false);
+    return;
+  }
 
-    // زر تسجيل خروج (auth.js يلتقطه أيضاً، بس خلّيناه هون كمان)
-    document.getElementById("btnLogout").onclick = () => {
-      localStorage.removeItem("hayek_session");
-      refreshUI();
-      location.href = "index.html";
-    };
+  setMsg("جاري التحقق...", null);
 
-    refreshUI();
+  const { data, error } = await client
+    .from("app_users")
+    .select("username, pass, blocked")
+    .eq("username", username)
+    .maybeSingle();
 
-    // مهم جداً: إذا GitHub Pages ما عم يحدث عندك
-    // جرّب فتح الرابط مع ?v=1 أو Ctrl+F5 (Hard refresh)
-  </script>
+  if(error){
+    console.error(error);
+    setMsg("خطأ اتصال. تحقق من الإنترنت.", false);
+    return;
+  }
+  if(!data){
+    setMsg("بيانات الدخول غير صحيحة.", false);
+    vibrate(25);
+    return;
+  }
+  if(data.blocked){
+    setMsg("تم إيقاف هذا المستخدم. راجع الأدمن.", false);
+    vibrate(25);
+    return;
+  }
+  if(String(data.pass) !== String(pass)){
+    setMsg("بيانات الدخول غير صحيحة.", false);
+    vibrate(25);
+    return;
+  }
+
+  // نجاح: خزّن جلسة بسيطة للصفحات الأخرى
+  localStorage.setItem("hs_username", username);
+  localStorage.setItem("hs_logged_in", "1");
+  setMsg("تم تسجيل الدخول ✅", true);
+  vibrate(15);
+
+  // انتقال مباشر لصفحة الفاتورة/الحاسبة
+  setTimeout(() => {
+    location.href = "invoice.html?v=1000";
+  }, 350);
+}
+
+$("btnLogin").addEventListener("click", doLogin);
+$("password").addEventListener("keydown", (e) => {
+  if(e.key === "Enter") doLogin();
+});
+</script>
 </body>
 </html>
