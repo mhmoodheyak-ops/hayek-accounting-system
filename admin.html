@@ -1,476 +1,356 @@
-/* =========================
-   HAYEK SPOT — Admin Panel
-   ========================= */
-
-const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const $ = (id) => document.getElementById(id);
-
-const state = {
-  usersPage: 0,
-  pageSize: 15,
-  lastUsers: [],
-  currentUser: null,
-  currentOps: [],
-};
-
-function setPill(ok, msg){
-  const pill = $("pill");
-  pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
-  pill.style.background = ok ? "var(--green)" : "var(--red)";
-  pill.style.color = ok ? "var(--dark)" : "var(--text)";
-}
-
-function nowISODate(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
-
-function daysAgoISO(n){
-  const d = new Date();
-  d.setDate(d.getDate()-n);
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-}
-
-function safeNum(x){
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function fmtDateTime(ts){
-  try{
-    const d = new Date(ts);
-    return d.toLocaleString("ar-EG", { hour12: true });
-  }catch{ return String(ts || ""); }
-}
-
-/* =========================
-   Users (CRUD + block/unblock)
-   ========================= */
-
-function genPassword(){
-  const p = Math.floor(100000 + Math.random()*900000);
-  $("newPass").value = String(p);
-}
-
-async function addUser(){
-  const username = ($("newUsername").value || "").trim();
-  const pass = ($("newPass").value || "").trim();
-  const is_admin = $("newIsAdmin").value === "true";
-
-  if(!username || !pass){
-    alert("اكتب اسم المستخدم وكلمة السر");
-    return;
-  }
-
-  // Insert
-  const { error } = await client.from("app_users").insert({
-    username, pass, is_admin, blocked: false
-  });
-
-  if(error){
-    alert("خطأ بالحفظ: " + error.message);
-    return;
-  }
-
-  $("newUsername").value = "";
-  // لا نمسح الباس إذا بدك تعطيه للعميل، بس انت حر:
-  // $("newPass").value = "";
-
-  await loadUsers();
-  alert("تم حفظ المستخدم ✅");
-}
-
-async function setBlocked(username, blocked){
-  const { error } = await client
-    .from("app_users")
-    .update({ blocked })
-    .eq("username", username);
-
-  if(error){
-    alert("خطأ: " + error.message);
-    return;
-  }
-  await loadUsers();
-}
-
-async function deleteUser(username){
-  if(!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
-
-  const { error } = await client
-    .from("app_users")
-    .delete()
-    .eq("username", username);
-
-  if(error){
-    alert("خطأ: " + error.message);
-    return;
-  }
-  await loadUsers();
-}
-
-function renderUsersTable(users){
-  const tb = $("usersTbody");
-  tb.innerHTML = "";
-
-  users.forEach(u => {
-    const tr = document.createElement("tr");
-
-    const tdName = document.createElement("td");
-    tdName.textContent = u.username;
-
-    const tdPass = document.createElement("td");
-    tdPass.className = "num";
-    tdPass.textContent = u.pass;
-
-    const tdAdmin = document.createElement("td");
-    tdAdmin.innerHTML = u.is_admin ? `<span class="badge g">YES</span>` : `<span class="badge">NO</span>`;
-
-    const tdState = document.createElement("td");
-    tdState.innerHTML = u.blocked ? `<span class="badge r">محظور</span>` : `<span class="badge g">مفعّل</span>`;
-
-    const tdAct = document.createElement("td");
-    tdAct.style.display = "flex";
-    tdAct.style.gap = "8px";
-    tdAct.style.flexWrap = "wrap";
-
-    const btnToggle = document.createElement("button");
-    btnToggle.className = "btn yellow";
-    btnToggle.textContent = u.blocked ? "فك الحظر" : "حظر";
-    btnToggle.onclick = () => setBlocked(u.username, !u.blocked);
-
-    const btnDel = document.createElement("button");
-    btnDel.className = "btn red";
-    btnDel.textContent = "حذف";
-    btnDel.onclick = () => deleteUser(u.username);
-
-    const btnPick = document.createElement("button");
-    btnPick.className = "btn gray";
-    btnPick.textContent = "اختيار";
-    btnPick.onclick = () => {
-      $("userSelect").value = u.username;
-      state.currentUser = u.username;
-      window.scrollTo({ top: $("userSelect").getBoundingClientRect().top + window.scrollY - 80, behavior:"smooth" });
-    };
-
-    tdAct.appendChild(btnPick);
-    tdAct.appendChild(btnToggle);
-    tdAct.appendChild(btnDel);
-
-    tr.appendChild(tdName);
-    tr.appendChild(tdPass);
-    tr.appendChild(tdAdmin);
-    tr.appendChild(tdState);
-    tr.appendChild(tdAct);
-
-    tb.appendChild(tr);
-  });
-}
-
-async function loadUsers(){
-  const q = ($("searchUser").value || "").trim();
-
-  let query = client
-    .from("app_users")
-    .select("id, username, pass, is_admin, blocked, created_at")
-    .order("created_at", { ascending: false })
-    .range(state.usersPage * state.pageSize, state.usersPage * state.pageSize + state.pageSize - 1);
-
-  if(q){
-    query = query.ilike("username", `%${q}%`);
-  }
-
-  const { data, error } = await query;
-
-  if(error){
-    setPill(false, "خطأ اتصال");
-    alert("خطأ تحميل المستخدمين: " + error.message);
-    return;
-  }
-
-  setPill(true, "مفتوح");
-  state.lastUsers = data || [];
-  renderUsersTable(state.lastUsers);
-  fillUserSelect(state.lastUsers);
-}
-
-function fillUserSelect(users){
-  const sel = $("userSelect");
-  const current = sel.value;
-
-  const base = `<option value="">— اختر المستخدم —</option>`;
-  const options = (users || []).map(u => `<option value="${u.username}">${u.username}</option>`).join("");
-  sel.innerHTML = base + options;
-
-  if(current) sel.value = current;
-}
-
-/* =========================
-   Operations (Invoice + filters + totals)
-   ========================= */
-
-function getDateRangeFilter(){
-  const from = $("fromDate").value;
-  const to = $("toDate").value;
-
-  // inclusive to end of day
-  const fromISO = from ? new Date(from + "T00:00:00").toISOString() : null;
-  const toISO = to ? new Date(to + "T23:59:59").toISOString() : null;
-
-  return { fromISO, toISO, from, to };
-}
-
-async function loadInvoice(){
-  const username = $("userSelect").value;
-  if(!username){
-    alert("اختر المستخدم أولاً");
-    return;
-  }
-  state.currentUser = username;
-
-  const { fromISO, toISO } = getDateRangeFilter();
-
-  let query = client
-    .from("app_operations")
-    .select("id, username, label, operation, result, created_at")
-    .eq("username", username)
-    .order("created_at", { ascending: true }); // ✅ الأقدم فوق، الجديد تحت
-
-  if(fromISO) query = query.gte("created_at", fromISO);
-  if(toISO) query = query.lte("created_at", toISO);
-
-  const { data, error } = await query;
-
-  if(error){
-    alert("خطأ تحميل الفاتورة: " + error.message);
-    return;
-  }
-
-  state.currentOps = data || [];
-  renderInvoice();
-}
-
-function renderInvoice(){
-  const tb = $("opsTbody");
-  tb.innerHTML = "";
-
-  let grand = 0;
-  const sums = {}; // label => total
-
-  state.currentOps.forEach(op => {
-    const tr = document.createElement("tr");
-
-    const tdTime = document.createElement("td");
-    tdTime.textContent = fmtDateTime(op.created_at);
-
-    const tdLabel = document.createElement("td");
-    tdLabel.textContent = op.label || "عملية";
-
-    const tdOp = document.createElement("td");
-    tdOp.textContent = op.operation || "";
-
-    const tdRes = document.createElement("td");
-    tdRes.className = "num";
-    tdRes.textContent = op.result ?? "";
-
-    const r = safeNum(op.result);
-    grand += r;
-    const key = (op.label || "عملية").trim();
-    sums[key] = (sums[key] || 0) + r;
-
-    tr.appendChild(tdTime);
-    tr.appendChild(tdLabel);
-    tr.appendChild(tdOp);
-    tr.appendChild(tdRes);
-
-    tb.appendChild(tr);
-  });
-
-  $("grandTotal").textContent = String(grand);
-
-  // Meta chips
-  const meta = $("invoiceMeta");
-  const username = state.currentUser || "—";
-  const count = state.currentOps.length;
-  let fromTxt = "—";
-  let toTxt = "—";
-  if(count){
-    fromTxt = fmtDateTime(state.currentOps[0].created_at);
-    toTxt = fmtDateTime(state.currentOps[count-1].created_at);
-  }
-
-  meta.innerHTML = `
-    <div class="chip">العميل: ${username}</div>
-    <div class="chip">عدد العمليات: ${count}</div>
-    <div class="chip">من: ${fromTxt}</div>
-    <div class="chip">إلى: ${toTxt}</div>
-  `;
-
-  // Totals by label
-  const box = $("totalsByLabel");
-  box.innerHTML = "";
-  Object.keys(sums).sort().forEach(k => {
-    const v = sums[k];
-    const div = document.createElement("div");
-    div.className = "total";
-    div.innerHTML = `<span>إجمالي (${k}):</span><span style="direction:ltr">${v}</span>`;
-    box.appendChild(div);
-  });
-}
-
-/* =========================
-   Delete operations + Archive PDF then delete
-   ========================= */
-
-async function deleteOpsForUser(){
-  const username = $("userSelect").value;
-  if(!username){
-    alert("اختر المستخدم أولاً");
-    return;
-  }
-  const confirmName = ($("confirmName").value || "").trim();
-  if(confirmName !== username){
-    alert("اكتب اسم المستخدم حرفيًا للتأكيد");
-    return;
-  }
-
-  if(!confirm(`تأكيد حذف عمليات المستخدم "${username}" من جدول app_operations ؟`)) return;
-
-  const { error } = await client
-    .from("app_operations")
-    .delete()
-    .eq("username", username);
-
-  if(error){
-    alert("خطأ بالحذف: " + error.message);
-    return;
-  }
-
-  $("confirmName").value = "";
-  await loadInvoice();
-  alert("تم حذف بيانات المستخدم ✅");
-}
-
-function printInvoice(){
-  // فقط يفتح نافذة الطباعة
-  window.print();
-}
-
-async function archiveAndDelete(){
-  const username = $("userSelect").value;
-  if(!username){
-    alert("اختر المستخدم أولاً");
-    return;
-  }
-  const confirmName = ($("confirmName").value || "").trim();
-  if(confirmName !== username){
-    alert("اكتب اسم المستخدم حرفيًا للتأكيد قبل الأرشفة/الحذف");
-    return;
-  }
-
-  // تأكد أن الفاتورة معروضة ومحدثة
-  await loadInvoice();
-
-  // افتح print
-  window.print();
-
-  // بعد إغلاق نافذة الطباعة، ننفذ الحذف
-  // (أفضل تقريب في المتصفح: تنفيذ بعد تأخير بسيط)
-  setTimeout(async () => {
-    await deleteOpsForUser();
-  }, 800);
-}
-
-/* =========================
-   UI events
-   ========================= */
-
-function wire(){
-  $("genPass").onclick = genPassword;
-  $("addUser").onclick = addUser;
-
-  $("refreshUsers").onclick = async () => {
-    state.usersPage = 0;
-    await loadUsers();
-  };
-
-  $("searchUser").addEventListener("input", async () => {
-    state.usersPage = 0;
-    await loadUsers();
-  });
-
-  $("prevUsers").onclick = async () => {
-    if(state.usersPage > 0) state.usersPage--;
-    await loadUsers();
-  };
-
-  $("nextUsers").onclick = async () => {
-    state.usersPage++;
-    await loadUsers();
-  };
-
-  $("userSelect").addEventListener("change", async () => {
-    const u = $("userSelect").value;
-    state.currentUser = u || null;
-  });
-
-  $("quickToday").onclick = () => {
-    const today = nowISODate();
-    $("fromDate").value = today;
-    $("toDate").value = today;
-  };
-
-  $("quick7").onclick = () => {
-    $("fromDate").value = daysAgoISO(7);
-    $("toDate").value = nowISODate();
-  };
-
-  $("clearDates").onclick = () => {
-    $("fromDate").value = "";
-    $("toDate").value = "";
-  };
-
-  $("viewInvoice").onclick = async () => {
-    await loadInvoice();
-    $("invoiceCard").scrollIntoView({ behavior:"smooth", block:"start" });
-  };
-
-  $("printInvoice").onclick = () => {
-    printInvoice();
-  };
-
-  $("deleteUserOps").onclick = async () => {
-    await deleteOpsForUser();
-  };
-
-  $("archiveAndDelete").onclick = async () => {
-    await archiveAndDelete();
-  };
-
-  $("scrollToInvoice").onclick = () => {
-    $("invoiceCard").scrollIntoView({ behavior:"smooth", block:"start" });
-  };
-}
-
-async function boot(){
-  try{
-    wire();
-    await loadUsers();
-    setPill(true, "مفتوح");
-  }catch(e){
-    console.error(e);
-    setPill(false, "مغلق");
-  }
-}
-
-boot();
-
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HAYEK SPOT — Admin Panel</title>
+
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card: rgba(255,255,255,.08);
+      --card2: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.12);
+      --text:#e5e7eb;
+      --muted:#a7b0bf;
+      --dark:#0b1020;
+
+      --green:#34d399;
+      --red:#fb7185;
+      --yellow:#fbbf24;
+      --blue:#60a5fa;
+      --gray:#94a3b8;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Kufi Arabic", "Amiri", sans-serif;
+      background: radial-gradient(1100px 600px at 70% -10%, rgba(96,165,250,.25), transparent 60%),
+                  radial-gradient(900px 500px at 20% 10%, rgba(52,211,153,.18), transparent 55%),
+                  radial-gradient(900px 600px at 80% 80%, rgba(251,191,36,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      padding:18px;
+    }
+
+    .wrap{max-width:1100px;margin:0 auto}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.06);
+      border:1px solid var(--stroke); box-shadow: var(--shadow);
+      position:sticky; top:10px; z-index:5; backdrop-filter: blur(10px);
+    }
+    .title{display:flex;flex-direction:column;gap:4px}
+    .title b{font-size:18px}
+    .title span{font-size:13px;color:var(--muted)}
+    .pill{
+      padding:10px 14px;border-radius:999px;font-weight:800;font-size:14px;
+      background:var(--red); color:var(--text);
+      border:1px solid rgba(255,255,255,.18);
+      min-width:88px;text-align:center;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (min-width: 980px){
+      .grid{grid-template-columns: 1fr 1fr;}
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      padding:14px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h3{
+      margin:0 0 10px 0;
+      font-size:16px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    @media (min-width: 520px){
+      .row.two{grid-template-columns: 1fr 1fr;}
+      .row.three{grid-template-columns: 1fr 1fr 1fr;}
+    }
+
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline:none;
+    }
+    input::placeholder{color: rgba(229,231,235,.45)}
+    .btn{
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      padding:12px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      transition:.15s transform, .15s opacity;
+      user-select:none;
+    }
+    .btn:active{transform: scale(.98)}
+    .btn.green{background: rgba(52,211,153,.18); border-color: rgba(52,211,153,.30)}
+    .btn.red{background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30)}
+    .btn.yellow{background: rgba(251,191,36,.18); border-color: rgba(251,191,36,.30); color:#111827}
+    .btn.blue{background: rgba(96,165,250,.18); border-color: rgba(96,165,250,.30)}
+    .btn.gray{background: rgba(148,163,184,.16); border-color: rgba(148,163,184,.28)}
+    .btn.wide{width:100%}
+
+    .tableWrap{
+      margin-top:12px;
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      overflow:auto;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    th, td{
+      padding:12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      text-align:right;
+      vertical-align: middle;
+      font-size:14px;
+      white-space: nowrap;
+    }
+    th{color:var(--muted);font-weight:900;background: rgba(0,0,0,.15)}
+    .num{font-weight:900; direction:ltr; text-align:left}
+    .badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      font-weight:900; font-size:12px;
+      min-width:60px;
+    }
+    .badge.g{background: rgba(52,211,153,.18); border-color: rgba(52,211,153,.30)}
+    .badge.r{background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .chip{
+      padding:8px 10px;border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      font-weight:800; font-size:13px;
+    }
+    .totals{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:8px;
+    }
+    @media (min-width: 520px){ .totals{grid-template-columns: 1fr 1fr;} }
+    .total{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      display:flex;justify-content:space-between;gap:10px;
+      font-weight:900;
+    }
+
+    /* ✅ طباعة PDF للفاتورة فقط */
+    @media print{
+      body{background:#fff;color:#000;padding:0}
+      .topbar, .grid .card:first-child{display:none !important;}
+      .grid{grid-template-columns:1fr !important; gap:0; margin:0}
+      .card{box-shadow:none;border:none;background:#fff}
+      #invoiceCard{display:block !important;}
+      #invoiceCard *{color:#000 !important}
+      .tableWrap{border:1px solid #ddd}
+      th{background:#f3f4f6;color:#111}
+      .chip, .total{border:1px solid #ddd;background:#f9fafb}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <b>HAYEK SPOT — Admin Panel</b>
+        <span>إضافة مستخدمين + كلمات مرور + حظر/فك حظر + عرض فاتورة + PDF + حذف لتوفير المساحة</span>
+      </div>
+      <div id="pill" class="pill">مغلق</div>
+    </div>
+
+    <div class="grid">
+      <!-- Users card -->
+      <section class="card">
+        <h3>المستخدمين (إضافة + حظر/فك حظر + حذف)</h3>
+
+        <div class="row three">
+          <div>
+            <label>اسم المستخدم</label>
+            <input id="newUsername" placeholder="مثال: محمود" />
+          </div>
+          <div>
+            <label>كلمة السر</label>
+            <input id="newPass" placeholder="مثال: 123456" />
+          </div>
+          <div>
+            <label>هل هو Admin؟</label>
+            <select id="newIsAdmin">
+              <option value="false">NO</option>
+              <option value="true">YES</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row two">
+          <button id="genPass" class="btn yellow wide">توليد كلمة سر</button>
+          <button id="addUser" class="btn green wide">حفظ المستخدم</button>
+        </div>
+
+        <div class="row three">
+          <div>
+            <label>بحث</label>
+            <input id="searchUser" placeholder="اكتب جزء من الاسم..." />
+          </div>
+          <div style="display:flex;gap:8px;align-items:end">
+            <button id="refreshUsers" class="btn blue" style="width:100%">تحديث</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:end">
+            <button id="prevUsers" class="btn gray" style="width:50%">السابق</button>
+            <button id="nextUsers" class="btn gray" style="width:50%">التالي</button>
+          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>كلمة السر</th>
+                <th>Admin</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Invoice/Admin ops card -->
+      <section class="card">
+        <h3>فاتورة مستخدم (عرض + PDF + حذف بيانات)</h3>
+
+        <div class="row two">
+          <div>
+            <label>اختيار المستخدم</label>
+            <select id="userSelect">
+              <option value="">— اختر المستخدم —</option>
+            </select>
+          </div>
+          <div>
+            <label>تأكيد الاسم للحذف</label>
+            <input id="confirmName" placeholder="اكتب اسم المستخدم حرفيًا للتأكيد" />
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label>من تاريخ</label>
+            <input id="fromDate" type="date" />
+          </div>
+          <div>
+            <label>إلى تاريخ</label>
+            <input id="toDate" type="date" />
+          </div>
+        </div>
+
+        <div class="row three">
+          <button id="quickToday" class="btn gray">اليوم</button>
+          <button id="quick7" class="btn gray">آخر 7 أيام</button>
+          <button id="clearDates" class="btn gray">مسح</button>
+        </div>
+
+        <div class="row two">
+          <button id="viewInvoice" class="btn green wide">عرض الفاتورة</button>
+          <button id="scrollToInvoice" class="btn blue wide">نزّل للفواتير</button>
+        </div>
+
+        <div class="row two">
+          <button id="printInvoice" class="btn gray wide">تصدير PDF</button>
+          <button id="archiveAndDelete" class="btn yellow wide">أرشفة PDF ثم حذف</button>
+        </div>
+
+        <div class="row">
+          <button id="deleteUserOps" class="btn red wide">حذف بيانات هذا المستخدم</button>
+        </div>
+
+        <!-- Invoice card (print area) -->
+        <section id="invoiceCard" class="card" style="margin-top:12px;background:var(--card2)">
+          <div style="text-align:center;margin-bottom:10px">
+            <div style="font-size:30px;font-weight:1000;color:#111;background:#fff;border-radius:16px;padding:12px 10px;box-shadow:0 10px 30px rgba(0,0,0,.12)">
+              شركة الحايك
+              <div style="font-size:18px;font-weight:900;color:#16a34a;margin-top:6px;letter-spacing:2px">HAYEK SPOT</div>
+            </div>
+          </div>
+
+          <div id="invoiceMeta" class="chips"></div>
+
+          <div class="tableWrap" style="margin-top:12px">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>البيان</th>
+                  <th>العملية</th>
+                  <th>النتيجة</th>
+                </tr>
+              </thead>
+              <tbody id="opsTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="totals" id="totalsByLabel"></div>
+
+          <div class="card" style="margin-top:12px;background:rgba(255,255,255,.06)">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+              <div style="font-size:18px;font-weight:1000">إجمالي الفاتورة:</div>
+              <div id="grandTotal" class="num" style="font-size:22px;font-weight:1100">0</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;text-align:center">
+            <div style="display:inline-block;padding:12px 14px;border-radius:16px;background:#fff;color:#111;box-shadow:0 10px 30px rgba(0,0,0,.12);font-weight:1000">
+              تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك
+              <div style="margin-top:8px;font-weight:900">
+                شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية
+              </div>
+              <div style="margin-top:8px;font-weight:1100;color:#16a34a;direction:ltr">05510217646</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+
+    <!-- Supabase + admin.js (لازم يكونوا آخر شي) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./admin.js"></script>
+  </div>
+</body>
+</html>
