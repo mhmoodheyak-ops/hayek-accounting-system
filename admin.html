@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <!-- Supabase JS (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ✅ Supabase UMD الصحيح -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
   <style>
     :root{
       --bg:#0b1118;
       --card:#0f1720;
-      --card2:#0c141d;
       --border:rgba(255,255,255,.08);
       --text:#eaf0f7;
       --muted:rgba(234,240,247,.65);
@@ -24,7 +23,6 @@
       --shadow: 0 10px 30px rgba(0,0,0,.35);
       --r:22px;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -35,7 +33,6 @@
       color:var(--text);
       padding:20px;
     }
-
     .topbar{
       max-width: 1200px;
       margin: 0 auto 14px;
@@ -44,16 +41,9 @@
       align-items:center;
       gap:12px;
     }
-
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .brand .t1{font-size:22px; font-weight:800}
-    .brand .t2{font-size:13px; color:var(--muted)}
-
+    .brand{display:flex;flex-direction:column;gap:4px}
+    .brand .t1{font-size:22px;font-weight:800}
+    .brand .t2{font-size:13px;color:var(--muted)}
     #pill{
       padding:10px 16px;
       border-radius:999px;
@@ -65,7 +55,6 @@
       min-width:110px;
       text-align:center;
     }
-
     .grid{
       max-width: 1200px;
       margin:0 auto;
@@ -74,7 +63,6 @@
       gap:18px;
       align-items:start;
     }
-
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border: 1px solid var(--border);
@@ -83,55 +71,18 @@
       padding:16px;
       overflow:hidden;
     }
-
-    .card h2{
-      margin:0 0 10px;
-      font-size:18px;
-      letter-spacing:.2px;
-    }
-
-    .sub{
-      margin:0 0 14px;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin:10px 0;
-    }
-
+    .card h2{margin:0 0 10px;font-size:18px}
+    .sub{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.5}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
     .field{
-      flex:1;
-      min-width:180px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      background:rgba(0,0,0,.25);
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:10px 12px;
+      flex:1;min-width:180px;display:flex;gap:8px;align-items:center;
+      background:rgba(0,0,0,.25);border:1px solid var(--border);
+      border-radius:999px;padding:10px 12px;
     }
-
-    .field label{
-      font-size:12px;
-      color:var(--muted);
-      white-space:nowrap;
+    .field label{font-size:12px;color:var(--muted);white-space:nowrap}
+    .field input,.field select{
+      width:100%;border:0;outline:none;background:transparent;color:var(--text);font-size:14px;
     }
-
-    .field input, .field select{
-      width:100%;
-      border:0;
-      outline:none;
-      background:transparent;
-      color:var(--text);
-      font-size:14px;
-    }
-
     .btn{
       border:1px solid var(--border);
       background:rgba(255,255,255,.06);
@@ -149,8 +100,6 @@
     .btn.yellow{background: rgba(255,208,90,.12); border-color: rgba(255,208,90,.35)}
     .btn.blue{background: rgba(101,183,255,.12); border-color: rgba(101,183,255,.35)}
     .btn.gray{background: rgba(255,255,255,.05)}
-    .btn.wide{width:90%}
-
     table{
       width:100%;
       border-collapse:separate;
@@ -160,66 +109,33 @@
       border:1px solid var(--border);
       background: rgba(0,0,0,.22);
     }
-    th, td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:13px;
-      vertical-align:middle;
-    }
-    th{color:var(--muted); font-weight:800}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+    th{color:var(--muted);font-weight:800}
     tr:last-child td{border-bottom:none}
-
     .num{font-variant-numeric: tabular-nums; direction:ltr}
-
     .badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.06);
-      font-weight:800;
-      font-size:12px;
-      min-width:54px;
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:6px 10px;border-radius:999px;border:1px solid var(--border);
+      background:rgba(255,255,255,.06);font-weight:800;font-size:12px;min-width:54px;
     }
     .badge.g{border-color: rgba(85,245,181,.4); background: rgba(85,245,181,.12)}
     .badge.r{border-color: rgba(255,90,106,.4); background: rgba(255,90,106,.12)}
-
-    .divider{
-      height:1px;
-      background:rgba(255,255,255,.08);
-      margin:14px 0;
-    }
-
-    .smallNote{
-      color: var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    /* Printable invoice area */
+    .divider{height:1px;background:rgba(255,255,255,.08);margin:14px 0}
+    .smallNote{color: var(--muted);font-size:12px;line-height:1.5}
     @media print{
-      body{background:#fff; color:#000; padding:0}
-      .topbar, .grid{display:none !important;}
+      body{background:#fff;color:#000;padding:0}
+      .topbar,.grid{display:none !important;}
       #printArea{display:block !important;}
     }
-
-    #printArea{
-      display:none;
-      padding:24px;
-      font-family: Arial, sans-serif;
-      direction: rtl;
-    }
-    #printArea h1{margin:0 0 10px; font-size:18px}
-    #printArea .meta{margin:8px 0; font-size:12px}
-    #printArea table{border:1px solid #000; background:#fff}
-    #printArea th,#printArea td{border-bottom:1px solid #ddd; color:#000}
+    #printArea{display:none;padding:24px;font-family:Arial,sans-serif;direction:rtl}
+    #printArea h1{margin:0 0 10px;font-size:18px}
+    #printArea .meta{margin:8px 0;font-size:12px}
+    #printArea table{border:1px solid #000;background:#fff}
+    #printArea th,#printArea td{border-bottom:1px solid #ddd;color:#000}
   </style>
 </head>
 
 <body>
-
   <div class="topbar">
     <div class="brand">
       <div class="t1">HAYEK SPOT — لوحة الأمن</div>
@@ -229,8 +145,6 @@
   </div>
 
   <div class="grid">
-
-    <!-- LEFT: Invoices -->
     <section class="card">
       <h2>فواتير متعددة للمستخدم</h2>
       <p class="sub">اختر مستخدم → حدّد فترة → تحديث قائمة الفواتير → اختر فاتورة → افتح/احذف/طباعة.</p>
@@ -280,7 +194,6 @@
       <div class="divider"></div>
 
       <h2 style="margin-top:0">تفاصيل الفاتورة</h2>
-
       <div class="row" id="invoiceMeta" style="gap:8px; margin-top:6px;"></div>
 
       <div class="row">
@@ -311,14 +224,12 @@
       </div>
 
       <div class="divider"></div>
-
       <p class="smallNote">
         ✅ الآن كل فاتورة مستقلة (invoice_id).<br>
         ⚠️ العمليات القديمة التي بدون invoice_id لن تظهر ضمن قائمة الفواتير الجديدة.
       </p>
     </section>
 
-    <!-- RIGHT: Users -->
     <section class="card">
       <h2>إدارة المستخدمين</h2>
       <p class="sub">إضافة + حظر/فك + حذف + بحث + Paging</p>
@@ -374,16 +285,13 @@
       </div>
 
       <div class="divider"></div>
-
       <p class="smallNote">
         ✓ الحظر يقطع الدخول مباشرة (حسب منطق التحقق في صفحة المستخدم).<br>
         ⚠ لا تشارك مفاتيح Supabase مع أي شخص.
       </p>
     </section>
-
   </div>
 
-  <!-- Hidden printable area -->
   <div id="printArea">
     <h1>فاتورة — HAYEK SPOT</h1>
     <div class="meta" id="printMeta"></div>
@@ -401,7 +309,7 @@
     <div class="meta" style="margin-top:10px; font-weight:700" id="printTotal"></div>
   </div>
 
-  <!-- IMPORTANT: keep last -->
+  <!-- ✅ مهم جداً -->
   <script src="./admin.js?v=99"></script>
 </body>
 </html>
