@@ -1,1297 +1,1097 @@
-@@ -3,814 +3,749 @@
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأمن</title>
-  <title>HAYEK SPOT — لوحة الأمن (فواتير)</title>
-
-  <!-- Supabase (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- html2pdf (اختياري للتصدير) -->
-  <!-- Supabase UMD -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-
-  <!-- html2pdf (اختياري للتصدير PDF) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <meta name="theme-color" content="#111315" />
+  <title>لوحة الأمن — HAYEK SPOT</title>
+  <title>HAYEK SPOT | لوحة الأدمن</title>
 
   <style>
     :root{
-      --bg:#0b1116;
-      --card:rgba(255,255,255,.06);
-      --card2:rgba(255,255,255,.04);
-      --line:rgba(255,255,255,.10);
-      --txt:#e8eef5;
-      --muted:#9db0c3;
-      --green:#2ecc71;
-      --red:#ff5d5d;
-      --yellow:#f1c40f;
-      --blue:#4aa3ff;
-      --shadow:0 18px 50px rgba(0,0,0,.45);
-      --radius:22px;
-      --bg:#0b0f14;
-      --card:#111823;
-      --card2:#0f1620;
-      --txt:#e9f0ff;
-      --muted:#9fb0c9;
-      --line:rgba(255,255,255,.08);
-      --green:#24d18f;
-      --red:#ff5a6b;
-      --yellow:#f6c34b;
-      --blue:#4ea1ff;
-      --shadow: 0 18px 40px rgba(0,0,0,.45);
-      --r:22px;
+      --bg:#0f1214; --card:#151a1e; --line:rgba(255,255,255,.14);
+      --txt:#fff; --muted:rgba(255,255,255,.72);
+      --green:#19C37D; --yellow:#D6A628; --red:#ff505a;
+      --radius:22px; --shadow:0 14px 40px rgba(0,0,0,.35);
+      --white:#fff; --green:#19C37D; --yellow:#D6A628; --red:#ff505a;
+      --bg:#0f1214;
+      --line: rgba(255,255,255,.14);
+      --text:#fff;
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 14px 40px rgba(0,0,0,.42);
+      --radius: 22px;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.04);
+      --inp: rgba(17,19,21,.55);
     }
-
     *{box-sizing:border-box}
     body{
-      margin:0;
-      background: radial-gradient(1200px 700px at 70% -10%, rgba(0,255,170,.18), transparent 60%),
-                  radial-gradient(900px 600px at 0% 20%, rgba(74,163,255,.14), transparent 55%),
-                  var(--bg);
-      margin:0; background: radial-gradient(1200px 800px at 20% 10%, rgba(36,209,143,.18), transparent 55%),
-                      radial-gradient(900px 700px at 80% 20%, rgba(78,161,255,.16), transparent 55%),
-                      var(--bg);
+      margin:0;background:linear-gradient(180deg,#1b2126,#0f1214);
       color:var(--txt);
-      font-family: system-ui, -apple-system, Segoe UI, Tahoma, Arial, sans-serif;
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      margin:0;background: radial-gradient(1200px 700px at 30% 0%, rgba(25,195,125,.10), transparent 55%),
+                         radial-gradient(900px 600px at 70% 20%, rgba(214,166,40,.10), transparent 50%),
+                         var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
       padding:18px;
+      padding:16px;
+      display:flex;
+      justify-content:center;
     }
+    .wrap{max-width:1200px;margin:0 auto;display:grid;gap:12px}
+    .wrap{width:min(1120px,100%);display:grid;gap:12px}
 
-    .topbar{
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-      margin-bottom:14px;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; margin-bottom:14px;
-    }
-    .brand{
-      display:flex; flex-direction:column; gap:6px;
-    }
-    .brand h1{
-      margin:0; font-size:20px; letter-spacing:.3px;
-      display:flex; flex-direction:column; gap:4px;
-    }
-    .brand .sub{color:var(--muted); font-size:12px}
-    .brand h1{ margin:0; font-size:20px; letter-spacing:.3px;}
-    .brand p{ margin:0; color:var(--muted); font-size:13px;}
-
-    .pill{
-      padding:10px 14px; border-radius:999px;
-      background:rgba(46,204,113,.18);
-      border:1px solid rgba(46,204,113,.35);
-      color:#c9ffdf; font-weight:700;
-      min-width:110px; text-align:center;
-      background: rgba(255,255,255,.08);
+    .top{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+      padding:14px;border:1px solid var(--line);border-radius:var(--radius);
+      background:rgba(0,0,0,.15);box-shadow:var(--shadow);
+      background: linear-gradient(180deg, rgba(17,19,21,.96), rgba(35,40,44,.92));
       border:1px solid var(--line);
-      display:flex; align-items:center; gap:8px;
-      font-weight:700;
-      min-width:120px; justify-content:center;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
     }
-    .pill.open{ background: rgba(36,209,143,.14); border-color: rgba(36,209,143,.35); color: #bfffe8;}
-    .pill.closed{ background: rgba(255,90,107,.14); border-color: rgba(255,90,107,.35); color:#ffd2d7;}
+    .brand b{font-size:18px}
+    .brand span{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+    .brand{display:grid;gap:4px}
+    .brand b{font-size:16px;letter-spacing:.4px}
+    .brand span{font-size:12px;color:var(--muted)}
+    .pill{
+      font-size:12px;font-weight:900;padding:8px 12px;border-radius:999px;
+      background:rgba(25,195,125,.18);border:1px solid rgba(25,195,125,.45);
+      font-size:12px;font-weight:1000;padding:7px 10px;border-radius:999px;
+      background: var(--yellow); color:#111315;
+      white-space:nowrap;
+    }
+    .btn{
+      user-select:none;border:1px solid var(--line);background: rgba(255,255,255,.10);
+      color: var(--text);padding:10px 12px;border-radius:16px;font-weight:1000;font-size:13px;
+      cursor:pointer;touch-action:manipulation;
+    }
+    .btn.green{background: rgba(25,195,125,.20); border-color: rgba(25,195,125,.45)}
+    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color:#111315}
+    .btn.red{background: rgba(255,80,90,.16); border-color: rgba(255,80,90,.35)}
+    .btn.gray{background: rgba(255,255,255,.08)}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
 
     .grid{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
+      grid-template-columns: 1.05fr .95fr;
+      gap:12px;
     }
     @media (max-width: 980px){
       .grid{grid-template-columns:1fr}
-      .grid{ grid-template-columns:1fr; }
     }
+
+    .grid{display:grid;grid-template-columns:1fr 1.1fr;gap:12px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
 
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      background: linear-gradient(180deg, var(--card), var(--card2));
       border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
       border-radius: var(--radius);
-      border-radius: var(--r);
       box-shadow: var(--shadow);
-      padding:16px;
       overflow:hidden;
     }
-
     .card h2{
-      margin:0 0 10px 0;
-      font-size:16px;
-      color:#dff6ff;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-    .card .hd{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
+      margin:0;padding:14px;border-bottom:1px solid rgba(255,255,255,.12);
+      font-size:16px
+    .cardHead{
+      padding:12px 14px;
       display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom:1px solid var(--line);
+      background: rgba(17,19,21,.35);
     }
-    .muted{color:var(--muted); font-size:12px}
-    .card .hd h2{ margin:0; font-size:16px; }
-    .card .bd{ padding:14px 16px; }
+    .pad{padding:14px;display:grid;gap:10px}
+    .cardHead b{font-size:14px}
+    .cardBody{padding:14px;display:grid;gap:10px}
 
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .row + .row{ margin-top:10px; }
-
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    .field{
-      flex:1 1 160px;
-      display:flex; flex-direction:column; gap:6px;
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    @media (max-width: 520px){ .row2,.row3{grid-template-columns:1fr} }
+    @media(max-width:560px){
+      .row2,.row3{grid-template-columns:1fr}
     }
-    label{font-size:12px; color:var(--muted)}
+
+    input,select{
+    .field{display:grid;gap:6px}
+    .field label{font-size:12px;color:var(--muted);font-weight:1000}
     input, select{
       width:100%;
+      padding:12px;border-radius:16px;
       padding:12px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.12);
-      color: var(--txt);
-      background: rgba(255,255,255,.06);
+      border-radius:16px;
       border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
       color:var(--txt);
-      padding:10px 12px;
-      border-radius: 999px;
+      background: var(--inp);
+      color: var(--text); /* ✅ النص واضح */
       outline:none;
-      min-width: 180px;
+      font-weight:900;
+      font-size:14px;
     }
-    input::placeholder{color:rgba(157,176,195,.65)}
-    input::placeholder{ color: rgba(233,240,255,.45); }
+    /* ✅ حل مشكلة النص داخل select */
+    select, option{
+      color:#fff;
+      background:#111315;
+    select{
+      appearance:none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(255,255,255,.70) 50%),
+        linear-gradient(135deg, rgba(255,255,255,.70) 50%, transparent 50%);
+      background-position:
+        calc(14px) calc(50% - 3px),
+        calc(8px) calc(50% - 3px);
+      background-size:6px 6px, 6px 6px;
+      background-repeat:no-repeat;
+      padding-right:36px;
+    }
+    option{color:#111315; background:#fff} /* ✅ نص الخيارات واضح */
+    input:focus, select:focus{border-color: rgba(25,195,125,.55); box-shadow: 0 0 0 4px rgba(25,195,125,.16)}
 
     .btn{
-      padding:12px 14px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.16);
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--txt);
-      color:var(--txt);
-      padding:10px 14px;
-      border-radius: 999px;
-      cursor:pointer;
-      font-weight:700;
-      transition:.15s;
-      transition: .15s transform, .15s opacity;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn:active{ transform: scale(.98); opacity:.9; }
-    .btn.green{ background: rgba(36,209,143,.18); border-color: rgba(36,209,143,.35); }
-    .btn.red{ background: rgba(255,90,107,.16); border-color: rgba(255,90,107,.35); }
-    .btn.yellow{ background: rgba(246,195,75,.14); border-color: rgba(246,195,75,.35); }
-    .btn.blue{ background: rgba(78,161,255,.14); border-color: rgba(78,161,255,.35); }
-
-    .hint{
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-      margin-top:10px;
-    }
-    .btn:hover{transform: translateY(-1px)}
-    .btn:active{transform: translateY(0px)}
-    .btn.green{background: rgba(46,204,113,.16); border-color: rgba(46,204,113,.35)}
-    .btn.red{background: rgba(255,93,93,.16); border-color: rgba(255,93,93,.35)}
-    .btn.yellow{background: rgba(241,196,15,.14); border-color: rgba(241,196,15,.35)}
-    .btn.blue{background: rgba(74,163,255,.14); border-color: rgba(74,163,255,.35)}
-    .btn.block{width:100%}
+    .note{font-size:12px;color:var(--muted);line-height:1.7}
+    .hr{height:1px;background:var(--line);margin:6px 0}
 
     table{
       width:100%;
-      border-collapse: collapse;
-      border-collapse:separate;
-      border-spacing:0;
-      margin-top:12px;
+      border-collapse:collapse;
+      border-radius:16px;
       overflow:hidden;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
       border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
+      color:var(--txt);
+      padding:12px;border-radius:16px;
+      font-weight:900;cursor:pointer;
+      background: rgba(17,19,21,.25);
     }
-    th, td{
+    .btn.green{background:rgba(25,195,125,.18);border-color:rgba(25,195,125,.45)}
+    .btn.yellow{background:rgba(214,166,40,.16);border-color:rgba(214,166,40,.45);color:#111315}
+    .btn.red{background:rgba(255,80,90,.14);border-color:rgba(255,80,90,.35)}
+    .btn.small{padding:8px 10px;border-radius:14px;font-size:12px}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);font-size:13px}
+    th{color:var(--muted);text-align:right}
+    td.num{text-align:left;direction:ltr;font-weight:900}
+    .pillSmall{
+      font-size:12px;font-weight:900;padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      display:inline-block;
+    th,td{
       padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      text-align:right;
-      border-bottom:1px solid var(--line);
+      border-bottom:1px solid rgba(255,255,255,.10);
       font-size:13px;
       text-align:right;
       vertical-align:middle;
     }
-    th{color:#cfe7ff; font-size:12px; background: rgba(255,255,255,.05)}
-    tr:hover td{background: rgba(255,255,255,.03)}
+    .pillOpen{background:rgba(25,195,125,.18);border-color:rgba(25,195,125,.45)}
+    .pillClosed{background:rgba(214,166,40,.18);border-color:rgba(214,166,40,.45);color:#fff}
+    .note{font-size:12px;color:var(--muted);line-height:1.7}
+    .hr{height:1px;background:rgba(255,255,255,.10);margin:6px 0}
+    th{color:var(--muted);font-weight:1000}
+    tr:last-child td{border-bottom:none}
+    td.num{text-align:left;direction:ltr;font-weight:1000}
 
-    .actions{display:flex; gap:8px; justify-content:flex-start; flex-wrap:wrap}
-    .tag{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-    th{ color: #cfe0ff; background: rgba(255,255,255,.04); }
-    tr:last-child td{ border-bottom:none; }
-
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
     .badge{
-      display:inline-flex;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      font-weight:800;
-      font-size:12px;
+      font-size:12px;font-weight:1000;padding:6px 10px;border-radius:999px;
+      border:1px solid var(--line); background: rgba(255,255,255,.08);
+      display:inline-flex; gap:8px; align-items:center;
     }
-    .tag.ok{border-color: rgba(46,204,113,.35); background: rgba(46,204,113,.14)}
-    .tag.bad{border-color: rgba(255,93,93,.35); background: rgba(255,93,93,.14)}
+    .badge.green{border-color: rgba(25,195,125,.45); background: rgba(25,195,125,.16)}
+    .badge.red{border-color: rgba(255,80,90,.35); background: rgba(255,80,90,.12)}
+    .badge.yellow{border-color: rgba(214,166,40,.45); background: rgba(214,166,40,.14)}
 
-    .sep{height:1px; background: rgba(255,255,255,.10); margin:12px 0}
-    .notice{font-size:12px; color:var(--muted); line-height:1.7}
-    .warn{color:#ffd08a}
-    .ok{color:#b9ffd2}
+    .pager{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:6px}
+    .pager .btn{padding:8px 10px;border-radius:14px}
 
-    /* printable area */
-    #printable-area{
-      background:white;
-      color:#111;
+    /* شاشة الحماية */
+    .gate{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.55);
+      z-index:99999;
       padding:16px;
-      border-radius:14px;
-      margin-top:12px;
-      display:none;
-    .badge.ok{ border-color: rgba(36,209,143,.35); background: rgba(36,209,143,.12); }
-    .badge.no{ border-color: rgba(255,90,107,.35); background: rgba(255,90,107,.12); }
-
-    .split{
-      display:flex; gap:14px; flex-wrap:wrap;
-      align-items:flex-start;
     }
-
-    .box{
-      flex: 1 1 320px;
-      background: rgba(0,0,0,.12);
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding:12px;
+    .gateCard{
+      width:min(520px,100%);
+      background: rgba(17,19,21,.96);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:22px;
+      box-shadow: 0 14px 40px rgba(0,0,0,.55);
+      padding:14px;
+      display:grid; gap:10px;
+      text-align:center;
     }
-    .box h3{ margin:0 0 10px; font-size:14px; color:#d7e6ff; }
-
-    .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      color:#cfe0ff;
-      white-space:pre-wrap;
-      word-break:break-word;
-      opacity:.95;
-    }
-
-    .footerNote{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:16px;
-      border:1px dashed rgba(255,255,255,.12);
-      color:rgba(233,240,255,.8);
-      font-size:12px;
-    }
-    #printable-area table{border:1px solid #ddd}
-    #printable-area th{background:#f2f2f2; color:#111}
-    #printable-area td,#printable-area th{border-bottom:1px solid #eee}
+    .gateCard b{font-size:15px}
   </style>
 </head>
 
 <body>
-
-  <div class="topbar">
-    <div class="brand">
-      <h1>لوحة الأمن — HAYEK SPOT</h1>
-      <div class="sub">إدارة المستخدمين + فواتير متعددة + عرض/طباعة PDF</div>
-      <p>إدارة المستخدمين + فواتير متعددة + عرض/حذف/طباعة</p>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <b>لوحة الأمن — HAYEK SPOT</b>
+        <span>إدارة المستخدمين + فواتير متعددة + طباعة PDF (فاتورة فقط)</span>
+        <b>لوحة الأدمن — HAYEK SPOT</b>
+        <span id="who">—</span>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
+        <span class="pill" id="statusPill">تدقيق الصلاحيات...</span>
+        <button class="btn gray" id="goHomeBtn">العودة للرئيسية</button>
+        <button class="btn red" id="logoutBtn">خروج</button>
+      </div>
+      <div class="pill" id="build">ADMIN build v999</div>
     </div>
-    <div id="pill" class="pill">...</div>
-    <div id="pill" class="pill closed">مغلق</div>
-  </div>
 
-  <div class="grid">
+    <div class="grid">
+      <!-- USERS -->
+    <div class="grid" id="app" style="display:none">
 
-    <!-- USERS -->
-    <div class="card">
-      <h2>إدارة المستخدمين <span class="muted">إضافة + حظر/فك + حذف + بحث + Paging</span></h2>
-
-      <div class="row">
-        <div class="field">
-          <label>اسم المستخدم</label>
-          <input id="newUsername" placeholder="مثال: محمود" />
-      <div class="hd">
+      <!-- ✅ الفواتير -->
+      <div class="card">
         <h2>إدارة المستخدمين</h2>
-        <div class="row" style="gap:8px">
-          <button class="btn" id="btnReloadUsers">تحديث القائمة</button>
+        <div class="pad">
+        <div class="cardHead">
+          <b>فواتير متعددة للمستخدم</b>
+          <div class="actions">
+            <button class="btn" id="refreshInvoicesBtn">تحديث قائمة الفواتير</button>
+            <button class="btn yellow" id="openInvoiceBtn" disabled>فتح الفاتورة المختارة</button>
+            <button class="btn red" id="deleteInvoiceBtn" disabled>حذف الفاتورة المختارة</button>
+            <button class="btn green" id="exportPdfBtn" disabled>تصدير / طباعة PDF</button>
+          </div>
         </div>
-        <div class="field">
-          <label>كلمة السر</label>
-          <input id="newPass" placeholder="مثال: 123456" />
+
+        <div class="cardBody">
+          <div class="row3">
+            <input id="uName" placeholder="اسم المستخدم" />
+            <input id="uPass" placeholder="كلمة السر" />
+            <select id="uRole">
+              <option value="user">مستخدم</option>
+              <option value="admin">Admin</option>
+            </select>
+            <div class="field">
+              <label>المستخدم</label>
+              <select id="invUserSelect">
+                <option value="">كل المستخدمين</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>من تاريخ</label>
+              <input type="date" id="fromDate" />
+            </div>
+
+            <div class="field">
+              <label>إلى تاريخ</label>
+              <input type="date" id="toDate" />
+            </div>
+          </div>
+
+          <div class="row2">
+            <button class="btn green" id="saveUser">حفظ المستخدم</button>
+            <button class="btn yellow" id="genPass">توليد كلمة سر</button>
+          <div class="actions">
+            <button class="btn" id="todayBtn">اليوم</button>
+            <button class="btn" id="last7Btn">آخر 7 أيام</button>
+            <button class="btn" id="clearDatesBtn">مسح التواريخ</button>
+          </div>
+
+          <div class="row2">
+            <button class="btn" id="refreshUsers">تحديث القائمة</button>
+            <input id="searchUser" placeholder="بحث عن مستخدم (جزء من الاسم)..." />
+          <div class="field">
+            <label>اختر فاتورة</label>
+            <select id="invoiceSelect">
+              <option value="">— اختر فاتورة —</option>
+            </select>
+          </div>
+
+          <div class="row3">
+            <div class="badge" id="invMeta1">الفاتورة: —</div>
+            <div class="badge" id="invMeta2">العميل: —</div>
+            <div class="badge" id="invMeta3">الحالة: —</div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th class="num">كلمة السر</th>
+                  <th>Admin</th>
+                  <th>الحالة</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+          <b style="font-size:14px;margin-top:2px">تفاصيل الفاتورة</b>
+
+          <div class="note">
+            ✓ زر (اختيار) يحدد المستخدم ويجلب فواتيره.<br>
+            ⚠ لا تشارك مفاتيح Supabase مع أي شخص.
+          <table>
+            <thead>
+              <tr>
+                <th>الوقت</th>
+                <th>البيان</th>
+                <th class="num">العملية</th>
+                <th class="num">النتيجة</th>
+              </tr>
+            </thead>
+            <tbody id="opsTbody"></tbody>
+          </table>
+
+          <div class="row2">
+            <div class="badge green" id="opsCount">عدد العمليات: 0</div>
+            <div class="badge yellow" id="opsTotal">المجموع العام: 0</div>
+          </div>
+
+          <div class="note" id="invNote"></div>
         </div>
-        <div class="field" style="max-width:160px">
-          <label>صلاحية</label>
-      </div>
-      <div class="bd">
-        <div class="row">
-          <input id="newUsername" placeholder="اسم المستخدم" />
-          <input id="newPass" placeholder="كلمة السر" />
-          <select id="newIsAdmin">
-            <option value="false">مستخدم</option>
-            <option value="true">أدمن</option>
-          </select>
-          <button class="btn yellow" id="btnGenPass">توليد كلمة سر</button>
-          <button class="btn green" id="btnSaveUser">حفظ المستخدم</button>
-        </div>
       </div>
 
-      <div class="row" style="margin-top:10px">
-        <button class="btn yellow" id="btnGenPass">توليد كلمة سر</button>
-        <button class="btn green" id="btnSaveUser">حفظ المستخدم</button>
-        <button class="btn" id="btnRefreshUsers">تحديث القائمة</button>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div class="field">
-          <label>بحث عن مستخدم (جزء من الاسم)</label>
-          <input id="searchUser" placeholder="اكتب جزء من الاسم..." />
-        <div class="row">
-          <input id="searchUser" placeholder="بحث عن مستخدم (جزء من الاسم)..." style="min-width:260px" />
-          <button class="btn" id="btnPrevUsers">السابق</button>
-          <button class="btn" id="btnNextUsers">التالي</button>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="btnPrevUsers">السابق</button>
-        <button class="btn" id="btnNextUsers">التالي</button>
-      </div>
-
-      <div class="sep"></div>
-
-      <table>
-        <thead>
-          <tr>
-            <th style="width:28%">الاسم</th>
-            <th style="width:18%">كلمة السر</th>
-            <th style="width:12%">Admin</th>
-            <th style="width:12%">الحالة</th>
-            <th>إجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="usersTbody"></tbody>
-      </table>
-
-      <div class="notice" style="margin-top:10px">
-        <div class="ok">✓ الحظر يمنع الدخول (حسب منطقك بصفحة المستخدم).</div>
-        <div class="warn">⚠ لا تشارك مفاتيح Supabase مع أي شخص.</div>
-        <table>
-          <thead>
-            <tr>
-              <th>الاسم</th>
-              <th>كلمة السر</th>
-              <th>Admin</th>
-              <th>الحالة</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="usersBody"></tbody>
-        </table>
-
-        <div class="hint">
-          ✓ الحظر يقطع الدخول مباشرة (حسب منطق التحقق في صفحة المستخدم).<br>
-          ⚠️ لا تشارك مفاتيح Supabase مع أي شخص.
-        </div>
-      </div>
-    </div>
-
-    <!-- INVOICES -->
-    <div class="card">
-      <h2>فواتير متعددة للمستخدم <span class="muted">قائمة فواتير لكل مستخدم + فتح/حذف</span></h2>
-    <div class="card" id="printableArea">
-      <div class="hd">
+      <!-- INVOICES -->
+      <!-- ✅ المستخدمين -->
+      <div class="card">
         <h2>فواتير متعددة للمستخدم</h2>
-        <div class="row" style="gap:8px">
-          <button class="btn blue" id="btnPDF">تصدير / طباعة PDF</button>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>اختر المستخدم</label>
-          <select id="userSelect">
-      <div class="bd">
-        <div class="row">
-          <select id="userSelect" style="min-width:260px">
-            <option value="">— اختر المستخدم —</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>من تاريخ</label>
-
-          <input id="fromDate" type="date" />
-        </div>
-        <div class="field">
-          <label>إلى تاريخ</label>
-          <input id="toDate" type="date" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn blue" id="btnInvoicesRefresh">تحديث قائمة الفواتير</button>
-        <button class="btn" id="btnLast7">آخر 7 أيام</button>
-        <button class="btn" id="btnToday">اليوم</button>
-        <button class="btn" id="btnClearDates">مسح التواريخ</button>
-      </div>
-          <button class="btn" id="btnLast7">آخر 7 أيام</button>
-          <button class="btn" id="btnToday">اليوم</button>
-          <button class="btn" id="btnClearDates">مسح التواريخ</button>
-          <button class="btn blue" id="btnLoadInvoices">تحديث قائمة الفواتير</button>
+        <div class="pad">
+          <div class="row3">
+            <input id="fromDate" type="date" />
+            <input id="toDate" type="date" />
+            <button class="btn" id="todayBtn">اليوم</button>
+        <div class="cardHead">
+          <b>إدارة المستخدمين</b>
+          <div class="actions">
+            <button class="btn" id="refreshUsersBtn">تحديث القائمة</button>
+            <button class="btn" id="genPassBtn">توليد كلمة سر</button>
+            <button class="btn green" id="saveUserBtn">حفظ المستخدم</button>
+          </div>
         </div>
 
-      <div class="row" style="margin-top:10px">
-        <div class="field">
-          <label>اختر فاتورة (حسب التاريخ)</label>
-          <select id="invoiceSelect">
-        <div class="row" style="margin-top:10px">
-          <select id="invoiceSelect" style="min-width:320px">
-            <option value="">— اختر فاتورة —</option>
-          </select>
-        </div>
-      </div>
+          <div class="row3">
+            <button class="btn" id="last7Btn">آخر 7 أيام</button>
+            <button class="btn" id="clearDates">مسح التواريخ</button>
+            <button class="btn green" id="refreshInv">تحديث قائمة الفواتير</button>
+        <div class="cardBody">
+          <div class="row2">
+            <div class="field">
+              <label>اسم المستخدم</label>
+              <input id="uName" placeholder="مثال: محمود" />
+            </div>
+            <div class="field">
+              <label>كلمة السر</label>
+              <input id="uPass" placeholder="مثال: 123123" />
+            </div>
+          </div>
 
-      <div class="row" style="margin-top:10px">
-        <button class="btn green" id="btnOpenInvoice">فتح الفاتورة المختارة</button>
-        <button class="btn red" id="btnDeleteInvoice">حذف الفاتورة المختارة</button>
-        <button class="btn" id="btnPrintPdf">تصدير / طباعة PDF</button>
-      </div>
+          <div class="row2">
+            <select id="invoiceSelect">
+              <option value="">— اختر فاتورة —</option>
+            </select>
+            <button class="btn green" id="openInv">فتح الفاتورة المختارة</button>
+            <div class="field">
+              <label>الدور</label>
+              <select id="uRole">
+                <option value="user">مستخدم</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>بحث عن مستخدم (جزء من الاسم)</label>
+              <input id="userSearch" placeholder="اكتب للبحث..." />
+            </div>
+          </div>
 
-      <div class="sep"></div>
+          <div class="row2">
+            <button class="btn yellow" id="printInv">تصدير / طباعة PDF (فاتورة فقط)</button>
+            <button class="btn red" id="deleteInv">حذف الفاتورة المختارة</button>
+          <div class="note">
+            ⚠️ ملاحظة: لا يتم السماح بالدخول للأدمن إلا للحسابات المصرح لها فقط.
+          </div>
 
-      <h2 style="margin-top:0">تفاصيل الفاتورة <span class="muted">العمليات داخل invoice_id فقط</span></h2>
-          <button class="btn green" id="btnOpenInvoice">فتح الفاتورة المختارة</button>
-          <button class="btn red" id="btnDeleteInvoice">حذف الفاتورة المختارة</button>
-        </div>
+          <div class="hr"></div>
 
-      <div class="row">
-        <div class="field" style="max-width:240px">
-          <label>المجموع العام</label>
-          <input id="grandTotal" readonly value="0" />
-        <div class="row" style="margin-top:10px">
-          <div class="badge" id="totalBadge">المجموع العام: 0</div>
-          <div class="badge" id="invMeta">—</div>
-        </div>
-      </div>
+          <div class="row2">
+            <div class="pillSmall pillOpen" id="invStatus">—</div>
+            <div class="pillSmall" id="invTotal" style="direction:ltr">المجموع: 0</div>
+          <table>
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th class="num">كلمة السر</th>
+                <th class="num">Admin</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody"></tbody>
+          </table>
 
-      <table>
-        <thead>
-          <tr>
-            <th style="width:25%">الوقت</th>
-            <th style="width:35%">البيان</th>
-            <th style="width:20%">العملية</th>
-            <th style="width:20%">النتيجة</th>
-          </tr>
-        </thead>
-        <tbody id="opsTbody"></tbody>
-      </table>
+          <div class="pager">
+            <button class="btn" id="prevUsersBtn">السابق</button>
+            <span class="note" id="pageInfo">—</span>
+            <button class="btn" id="nextUsersBtn">التالي</button>
+          </div>
 
-      <div id="printable-area">
-        <h3 style="margin:0 0 10px 0">فاتورة — HAYEK SPOT</h3>
-        <div id="printMeta" style="font-size:12px; color:#333; margin-bottom:8px"></div>
-        <div id="printTotal" style="font-weight:800; margin-bottom:10px"></div>
-        <div id="printTable"></div>
-      </div>
-        <div class="split" style="margin-top:12px">
-          <div class="box">
-            <h3>تفاصيل الفاتورة</h3>
+          <div style="overflow:auto">
             <table>
               <thead>
                 <tr>
                   <th>الوقت</th>
                   <th>البيان</th>
-                  <th>العملية</th>
-                  <th>النتيجة</th>
+                  <th class="num">العملية</th>
+                  <th class="num">النتيجة</th>
                 </tr>
               </thead>
               <tbody id="opsBody"></tbody>
             </table>
           </div>
 
-          <div class="box">
-            <h3>ملاحظات</h3>
-            <div class="mono" id="debugBox">جاهز…</div>
-
-            <div class="footerNote">
-              ✅ الفواتير الآن منفصلة: كل فاتورة لها <b>invoice_id</b> مستقل وتُعرض كقائمة.<br>
-              ⚠️ إذا زر "فتح الفاتورة" ما يعرض عمليات: يعني عمليات المستخدم القديمة ما فيها invoice_id (Legacy).
-            </div>
-          </div>
+          <div class="note" id="hint">اختر مستخدم أولاً ثم “تحديث قائمة الفواتير”.</div>
         </div>
-
-      <div class="notice" style="margin-top:10px">
-        <div class="ok">✓ كل فاتورة مستقلة (id). الفتح والحذف يعتمد على invoice_id.</div>
-        <div class="warn">⚠ إذا عندك عمليات قديمة بدون invoice_id ستظهر فقط إذا عملت لها ترحيل لاحقاً.</div>
       </div>
-    </div>
 
+    </div>
+  </div>
+
+  <!-- ✅ شاشة الحماية -->
+  <div class="gate" id="gate">
+    <div class="gateCard">
+      <b>جاري التحقق من الصلاحيات...</b>
+      <div class="note">إذا لم تكن أدمن سيتم تحويلك للرئيسية.</div>
+    </div>
   </div>
 
 <script>
-/* =======================
-   CONFIG (غيّر فقط هنا)
-   ======================= */
-const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";   // مثال: https://xxxx.supabase.co
-const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_"; // anon/publishable key
-/* =============================
-   HAYEK SPOT — Single-file Admin
-   build v999
-   ============================= */
+  // ========= Supabase REST =========
+  // =========================
+  // ✅ Supabase REST
+  // =========================
+  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+  const REST = `${SUPABASE_URL}/rest/v1`;
 
-const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+  const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-// علامة إصدار للتأكد أنك فتحت النسخة الصحيحة
-console.log("HAYEK ADMIN single-file build v999");
+  const toast = (msg) => {
+    const d = document.createElement("div");
+@@ -224,7 +359,7 @@ <h2>فواتير متعددة للمستخدم</h2>
+      background:"rgba(17,19,21,.88)",
+      color:"#fff", padding:"10px 14px",
+      borderRadius:"14px", fontWeight:"1000",
+      zIndex:99999, backdropFilter:"blur(8px)",
+      zIndex:999999, backdropFilter:"blur(8px)",
+      border:"1px solid rgba(255,255,255,.18)"
+    });
+    document.body.appendChild(d);
+@@ -250,267 +385,415 @@ <h2>فواتير متعددة للمستخدم</h2>
+    return text ? JSON.parse(text) : null;
+  };
 
-/* =======================
-   Helpers
-   ======================= */
-const $ = (id) => document.getElementById(id);
-
-function setPill(ok, msg){
-  const pill = $("pill");
-  pill.textContent = msg || (ok ? "مفتوح" : "مغلق");
-  pill.style.background = ok ? "rgba(46,204,113,.18)" : "rgba(255,93,93,.18)";
-  pill.style.borderColor = ok ? "rgba(46,204,113,.35)" : "rgba(255,93,93,.35)";
-  pill.style.color = ok ? "#c9ffdf" : "#ffd1d1";
-}
-
-function nowISODate(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-  pill.classList.toggle("open", !!ok);
-  pill.classList.toggle("closed", !ok);
-}
-
-function daysAgoISO(n){
-  const d = new Date();
-  d.setDate(d.getDate()-n);
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
-function safeNum(x){
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function fmtDateTime(ts){
-  try{
-    const d = new Date(ts);
-    return d.toLocaleString("ar-EG", { hour12:true });
-  }catch(e){
-    return String(ts||"");
-    return String(ts || "");
+  function fmtDate(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }catch{ return ""; }
+  // =========================
+  // ✅ Device ID
+  // =========================
+  const K_DEVICE = "hs_device_id_v1";
+  function getDeviceId(){
+    let id = localStorage.getItem(K_DEVICE);
+    if (id) return id;
+    const rnd = crypto?.getRandomValues ? crypto.getRandomValues(new Uint32Array(4)) : [Date.now(), Math.random()*1e9, Math.random()*1e9, Math.random()*1e9];
+    id = `dev_${Array.from(rnd).map(n=>Number(n).toString(16)).join("")}_${Date.now().toString(16)}`;
+    localStorage.setItem(K_DEVICE, id);
+    return id;
   }
-}
+  function fmt(n){
+    const x = Number(n);
+    if (!Number.isFinite(x)) return "0";
+    const s = x.toString();
+    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
 
-function safeNum(x){
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-function ymd(d){
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+  // =========================
+  // ✅ Session
+  // =========================
+  const K_SESSION = "hs_session_v4";
+  const loadSession = () => { try { return JSON.parse(localStorage.getItem(K_SESSION) || "null"); } catch { return null; } };
+  const clearSession = () => { try { localStorage.removeItem(K_SESSION); } catch(_){} };
 
-function vibrate(ms=20){
-  try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){}
-function logDbg(...args){
-  const s = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, null, 2))).join("\n");
-  $("debugBox").textContent = s;
-}
-
-function requireUser(){
-  const u = $("userSelect").value;
-  if(!u){ alert("اختر مستخدم أولاً"); return null; }
-  return u;
-}
-function requireInvoice(){
-  const id = $("invoiceSelect").value;
-  if(!id){ alert("اختر فاتورة أولاً"); return null; }
-  return id;
-if (!window.supabase || !window.supabase.createClient){
-  setPill(false, "مغلق");
-  logDbg("خطأ: مكتبة supabase لم تُحمّل.");
-} else {
-  // IMPORTANT: create client after supabase is ready
-  var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
-
-/* =======================
-   Supabase client
-   ======================= */
-let client = null;
-function initClient(){
-  try{
-    if(!SUPABASE_URL.startsWith("http")) throw new Error("SUPABASE_URL غير صحيح");
-    client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    setPill(true, "مفتوح");
-  }catch(e){
-    console.error(e);
-    setPill(false, "مغلق");
-    alert("خطأ إعداد Supabase: تأكد من SUPABASE_URL و SUPABASE_KEY");
-  }
-}
-
-/* =======================
-   State
-   ======================= */
-const state = {
-  usersPage: 0,
-  pageSize: 15,
-  pageSize: 10,
-  lastUsers: [],
-  currentUser: "",
-  invoices: [],
-  currentInvoiceId: "",
-  ops: []
-};
-
-/* =======================
-/* =============================
-   USERS CRUD
-   Table: app_users (username, pass, is_admin, blocked, created_at)
-   ======================= */
-   ============================= */
-
-function genPassword(){
-  const p = Math.floor(100000 + Math.random()*900000);
-  $("newPass").value = String(p);
-  vibrate(10);
-}
-
-async function loadUsers(){
-  if(!client) return;
-
-  const search = ($("searchUser").value || "").trim();
-  let q = client
-    .from("app_users")
-    .select("id, username, pass, is_admin, blocked, created_at")
-    .order("created_at", { ascending: false })
-    .range(state.usersPage * state.pageSize, state.usersPage * state.pageSize + state.pageSize - 1);
-
-  if(search){
-    // ilike on username
-    q = q.ilike("username", `%${search}%`);
-  }
-  const q = ($("searchUser").value || "").trim();
-  let query = client.from("app_users")
-    .select("id,username,pass,is_admin,blocked,created_at", { count:"exact" })
-    .order("created_at", { ascending:false })
-    .range(state.usersPage*state.pageSize, state.usersPage*state.pageSize + state.pageSize - 1);
-
-  const { data, error } = await q;
-  if(error){
-    console.error(error);
-  if (q) query = query.ilike("username", `%${q}%`);
-
-  const { data, error } = await query;
-  if (error){
-    setPill(false, "مغلق");
-    alert("خطأ تحميل المستخدمين: " + error.message);
-    logDbg("خطأ تحميل المستخدمين:", error);
-    return;
+  function denyAccess(){
+    $("statusPill").textContent = "غير مصرح";
+    $("statusPill").style.background = "rgba(255,80,90,.95)";
+    $("statusPill").style.color = "#111315";
+    $("gate").querySelector("b").textContent = "يوجد خطاء ب النظام جاري المعالجة";
+    $("gate").querySelector(".note").textContent = "سيتم تحويلك للرئيسية...";
+    setTimeout(()=>{ location.href = "./index.html?v=999"; }, 1200);
   }
 
-  setPill(true, "مفتوح");
-  state.lastUsers = data || [];
-  renderUsersTable(state.lastUsers);
-  fillUserSelect(state.lastUsers);
-}
+  const state = {
+    selectedUser: null, // {id, username}
+    invoices: [],
+    selectedInvoiceId: null
+  };
+  async function adminGuard(){
+    const sess = loadSession();
+    if (!sess || !sess.is_admin) return denyAccess();
 
-function renderUsersTable(users){
-  const tb = $("usersTbody");
-  tb.innerHTML = "";
-  (users || []).forEach(u=>{
-  const body = $("usersBody");
-  body.innerHTML = "";
-  (users || []).forEach(u => {
-    const tr = document.createElement("tr");
-
-    const tdName = document.createElement("td");
-    tdName.textContent = u.username;
-
-    const tdPass = document.createElement("td");
-    tdPass.textContent = u.pass;
-
-    const tdAdmin = document.createElement("td");
-    tdAdmin.innerHTML = u.is_admin ? `<span class="tag ok">YES</span>` : `<span class="tag">NO</span>`;
-
-    const tdName = document.createElement("td"); tdName.textContent = u.username ?? "";
-    const tdPass = document.createElement("td"); tdPass.textContent = u.pass ?? "";
-    const tdAdmin = document.createElement("td"); tdAdmin.textContent = u.is_admin ? "YES" : "NO";
-    const tdState = document.createElement("td");
-    tdState.innerHTML = u.blocked ? `<span class="tag bad">محظور</span>` : `<span class="tag ok">مفعل</span>`;
-    tdState.innerHTML = u.blocked ? `<span class="badge no">محظور</span>` : `<span class="badge ok">مفعل</span>`;
-
-    const tdAct = document.createElement("td");
-    tdAct.className = "actions";
-    tdAct.style.display="flex";
-    tdAct.style.gap="8px";
-    tdAct.style.flexWrap="wrap";
-
-    const btnPick = document.createElement("button");
-    btnPick.className = "btn";
-    btnPick.textContent = "اختيار";
-    btnPick.className="btn";
-    btnPick.textContent="اختيار";
-    btnPick.onclick = async () => {
-      $("userSelect").value = u.username;
-      $("userSelect").value = u.username || "";
-      state.currentUser = u.username || "";
-      await loadInvoicesForUser();
-      window.scrollTo({ top: 0, behavior:"smooth" });
-      vibrate(15);
-      window.scrollTo({ top:0, behavior:"smooth" });
-    };
-
-    const btnToggle = document.createElement("button");
-    btnToggle.className = "btn yellow";
-    btnToggle.className="btn yellow";
-    btnToggle.textContent = u.blocked ? "فك الحظر" : "حظر";
-    btnToggle.onclick = () => setBlocked(u.username, !u.blocked);
-    btnToggle.onclick = async () => {
-      const { error } = await client.from("app_users")
-        .update({ blocked: !u.blocked })
-        .eq("username", u.username);
-      if (error){ alert("خطأ: " + error.message); return; }
-      await loadUsers();
-    };
-
-    const btnDel = document.createElement("button");
-    btnDel.className = "btn red";
-    btnDel.textContent = "حذف";
-    btnDel.onclick = () => deleteUser(u.username);
-    btnDel.className="btn red";
-    btnDel.textContent="حذف";
-    btnDel.onclick = async () => {
-      if(!confirm(`تأكيد حذف المستخدم "${u.username}" ؟`)) return;
-      const { error } = await client.from("app_users").delete().eq("username", u.username);
-      if (error){ alert("خطأ: " + error.message); return; }
-      await loadUsers();
-    };
-
-    tdAct.appendChild(btnPick);
-    tdAct.appendChild(btnToggle);
-    tdAct.appendChild(btnDel);
-
-    tdAct.append(btnPick, btnToggle, btnDel);
-    tr.appendChild(tdName);
-    tr.appendChild(tdPass);
-    tr.appendChild(tdAdmin);
-    tr.appendChild(tdState);
-    tr.appendChild(tdAct);
-
-    tr.append(tdName, tdPass, tdAdmin, tdState, tdAct);
-    tb.appendChild(tr);
-    body.appendChild(tr);
-  });
-}
-
-function fillUserSelect(users){
-  const sel = $("userSelect");
-  const current = sel.value;
-  sel.innerHTML = `<option value="">— اختر المستخدم —</option>`;
-  (users || []).forEach(u=>{
-  const unique = Array.from(new Set((users||[]).map(u => u.username).filter(Boolean)));
-  unique.forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = u.username;
-    opt.textContent = u.username;
-    opt.value = name;
-    opt.textContent = name;
-    sel.appendChild(opt);
-  });
-  if(current) sel.value = current;
-  if (current) sel.value = current;
-}
-
-async function addUser(){
-  if(!client) return;
-
-  const username = ($("newUsername").value || "").trim();
-  const pass = ($("newPass").value || "").trim();
-  const is_admin = $("newIsAdmin").value === "true";
-
-  if(!username || !pass){
-    alert("اكتب اسم المستخدم وكلمة السر");
-    return;
-  }
-  const is_admin = ($("newIsAdmin").value === "true");
-  if(!username || !pass){ alert("اكتب اسم المستخدم وكلمة السر"); return; }
-
-  const { error } = await client
-    .from("app_users")
-    .insert({ username, pass, is_admin, blocked:false });
-  const { error } = await client.from("app_users").insert({
-    username, pass, is_admin, blocked:false
-  });
-
-  if(error){
-    console.error(error);
-    alert("خطأ بالحفظ: " + error.message);
-    return;
-  }
-  if (error){ alert("خطأ: " + error.message); return; }
-
-  $("newUsername").value = "";
-  $("newPass").value = "";
-  alert("تم حفظ المستخدم ✅");
-  vibrate(20);
-  alert("✅ تم حفظ المستخدم");
-  await loadUsers();
-}
-
-async function setBlocked(username, blocked){
-  if(!client) return;
-  const { error } = await client
-    .from("app_users")
-    .update({ blocked })
-    .eq("username", username);
-/* =============================
-   INVOICES LIST + OPEN
-   ============================= */
-
-  if(error){
-    console.error(error);
-    alert("خطأ: " + error.message);
-    return;
-  }
-  vibrate(15);
-  await loadUsers();
-function setLast7(){
-  const now = new Date();
-  const from = new Date(now); from.setDate(from.getDate()-7);
-  $("fromDate").value = ymd(from);
-  $("toDate").value = ymd(now);
-}
-
-async function deleteUser(username){
-  if(!client) return;
-  if(!confirm(`تأكيد حذف المستخدم "${username}" ؟`)) return;
-
-  const { error } = await client
-    .from("app_users")
-    .delete()
-    .eq("username", username);
-function setToday(){
-  const now = new Date();
-  $("fromDate").value = ymd(now);
-  $("toDate").value = ymd(now);
-}
-
-  if(error){
-    console.error(error);
-    alert("خطأ: " + error.message);
-    return;
-  }
-  vibrate(20);
-  await loadUsers();
-function clearDates(){
-  $("fromDate").value = "";
-  $("toDate").value = "";
-}
-
-/* =======================
-   INVOICES
-   Tables:
-   - app_invoices(id, username, device_id, total, created_at)
-   - app_operations(..., username, invoice_id, created_at)
-   ======================= */
-function invoiceLabel(inv){
-  // inv: {id, total, created_at}
-  const dt = fmtDateTime(inv.created_at);
-  const t = safeNum(inv.total).toFixed(2);
-  return `${dt} — مجموع: ${t}`;
-  const total = safeNum(inv.total).toFixed(2);
-  // نعرض آخر 6 من uuid للتفريق
-  const shortId = String(inv.id || "").slice(-6);
-  return `${dt} — مجموع: ${total} — #${shortId}`;
-}
-
-async function loadInvoicesForUser(){
-  if(!client) return;
-
-  const username = requireUser();
-  if(!username) return;
-  const username = ($("userSelect").value || "").trim();
-  state.currentUser = username;
-  state.currentInvoiceId = "";
-  $("invoiceSelect").innerHTML = `<option value="">— اختر فاتورة —</option>`;
-  $("opsBody").innerHTML = "";
-  $("totalBadge").textContent = "المجموع العام: 0";
-  $("invMeta").textContent = "—";
-
-  const from = $("fromDate").value;
-  const to = $("toDate").value;
-  if(!username){
-    logDbg("اختر مستخدم أولاً.");
-    return;
-  }
-
-  let q = client
-    .from("app_invoices")
-  let q = client.from("app_invoices")
-    .select("id, username, total, created_at")
-    .eq("username", username)
-    .order("created_at", { ascending:false });
-
-  // فلترة بالتاريخ (اختياري)
-  if(from) q = q.gte("created_at", from + "T00:00:00");
-  if(to)   q = q.lte("created_at",   to   + "T23:59:59");
-  // date filter (inclusive)
-  const from = ($("fromDate").value || "").trim();
-  const to = ($("toDate").value || "").trim();
-  if (from) q = q.gte("created_at", from + "T00:00:00Z");
-  if (to)   q = q.lte("created_at", to   + "T23:59:59Z");
-
-  const { data, error } = await q;
-
-  if(error){
-    console.error(error);
-    alert("خطأ تحميل الفواتير: " + error.message);
-    logDbg("خطأ تحميل الفواتير:", error);
-    return;
-  }
-
-  state.invoices = data || [];
-  const sel = $("invoiceSelect");
-  sel.innerHTML = `<option value="">— اختر فاتورة —</option>`;
-
-  (data || []).forEach(inv=>{
-  state.invoices.forEach(inv => {
-    const opt = document.createElement("option");
-    opt.value = inv.id;
-    opt.textContent = invoiceLabel(inv);
-    sel.appendChild(opt);
-  });
-
-  // امسح التفاصيل السابقة
-  $("opsTbody").innerHTML = "";
-  $("grandTotal").value = "0";
-
-  vibrate(10);
-  logDbg(
-    `تم تحميل ${state.invoices.length} فاتورة للمستخدم: ${username}`,
-    state.invoices.slice(0,5)
-  );
-}
-
-async function openSelectedInvoice(){
-  if(!client) return;
-
-  const username = requireUser();
-  if(!username) return;
-  const username = state.currentUser;
-  const invoiceId = ($("invoiceSelect").value || "").trim();
-  if(!username){ alert("اختر مستخدم أولاً"); return; }
-  if(!invoiceId){ alert("اختر فاتورة"); return; }
-
-  const invoiceId = requireInvoice();
-  if(!invoiceId) return;
-  state.currentInvoiceId = invoiceId;
-
-  // اجلب العمليات الخاصة بهذه الفاتورة فقط
-  const { data, error } = await client
-    .from("app_operations")
-    .select("id, username, operation, statement, result, created_at, invoice_id")
-  // جلب عمليات الفاتورة
-  const { data, error } = await client.from("app_operations")
-    .select("*")
-    .eq("username", username)
-    .eq("invoice_id", invoiceId)
-    .order("created_at", { ascending:true });
-
-  if(error){
-    console.error(error);
-    alert("خطأ فتح الفاتورة: " + error.message);
-    logDbg("خطأ تحميل عمليات الفاتورة:", error);
-    return;
-  }
-
-  renderOps(data || []);
-
-  // اجلب مجموع الفاتورة من جدول الفواتير (أضمن)
-  const inv = await client
-    .from("app_invoices")
-    .select("total, created_at")
-    .eq("id", invoiceId)
-    .maybeSingle();
-  state.ops = data || [];
-  renderOps(state.ops);
-
-  const inv = state.invoices.find(x => x.id === invoiceId);
-  const invTotal = inv ? safeNum(inv.total) : calcOpsTotal(state.ops);
-  $("totalBadge").textContent = "المجموع العام: " + invTotal.toFixed(2);
-  $("invMeta").textContent = inv ? ("فاتورة: " + fmtDateTime(inv.created_at)) : "فاتورة";
-
-  logDbg(
-    `تم فتح الفاتورة ${invoiceId} للمستخدم ${username}`,
-    `عدد العمليات: ${state.ops.length}`
-  );
-
-  // إذا ما في عمليات، ننبّه احتمال Legacy
-  if(state.ops.length === 0){
-    logDbg(
-      "⚠️ لا توجد عمليات بهذه الفاتورة.",
-      "إذا كان هذا المستخدم لديه عمليات قديمة بدون invoice_id فهذا طبيعي (Legacy).",
-      "الحل: التطبيق يجب أن يكتب invoice_id لكل عملية جديدة."
-    );
-  }
-}
-
-  const total = safeNum(inv.data?.total);
-  $("grandTotal").value = String(total);
-function pickField(row, names){
-  for (const n of names){
-    if (row && row[n] !== undefined && row[n] !== null) return row[n];
-  }
-  return "";
-}
-
-  vibrate(15);
-function calcOpsTotal(ops){
-  let sum = 0;
-  (ops || []).forEach(r => {
-    // جرّب أكثر من اسم محتمل
-    const v = pickField(r, ["result", "amount", "total", "value"]);
-    sum += safeNum(v);
-  });
-  return sum;
-}
-
-function renderOps(ops){
-  const tb = $("opsTbody");
-  tb.innerHTML = "";
-  (ops || []).forEach(o=>{
-  const body = $("opsBody");
-  body.innerHTML = "";
-
-  (ops || []).forEach(r => {
-    const tr = document.createElement("tr");
-    const tdT = document.createElement("td"); tdT.textContent = fmtDateTime(o.created_at);
-    const tdS = document.createElement("td"); tdS.textContent = o.statement || "";
-    const tdO = document.createElement("td"); tdO.textContent = o.operation || "";
-    const tdR = document.createElement("td"); tdR.textContent = String(o.result ?? "");
-    tr.append(tdT, tdS, tdO, tdR);
-    tb.appendChild(tr);
-  });
-}
-
-async function deleteSelectedInvoice(){
-  if(!client) return;
-    const tdTime = document.createElement("td");
-    tdTime.textContent = fmtDateTime(pickField(r, ["created_at","time","ts"]));
-
-  const username = requireUser();
-  if(!username) return;
-    const tdDesc = document.createElement("td");
-    tdDesc.textContent = String(pickField(r, ["desc","description","label","note","text","item","name"]) || "");
-
-  const invoiceId = requireInvoice();
-  if(!invoiceId) return;
-    const tdOp = document.createElement("td");
-    tdOp.textContent = String(pickField(r, ["op","operation","expr","expression","type"]) || "");
-
-  if(!confirm("تأكيد حذف الفاتورة المختارة؟ (سيحذف العمليات تلقائياً إذا FK موجود)")) return;
-    const tdRes = document.createElement("td");
-    const v = pickField(r, ["result","amount","value","total"]);
-    tdRes.textContent = (v === "" ? "" : String(v));
-
-  const { error } = await client
-    .from("app_invoices")
-    .delete()
-    .eq("id", invoiceId)
-    .eq("username", username);
-    // إذا كلهم فاضيين، نعرض مختصر JSON
-    if(!tdDesc.textContent && !tdOp.textContent && !tdRes.textContent){
-      tdDesc.textContent = "(بيانات)";
-      tdOp.textContent = "—";
-      tdRes.textContent = "—";
+  // ========= USERS =========
+  async function loadUsers(){
+    const rows = await apiFetch(`/app_users?select=id,username,pass,is_admin,blocked&order=username.asc`, { method:"GET" });
+    const q = ($("searchUser").value || "").trim().toLowerCase();
+    const list = (rows || []).filter(u => !q || (u.username || "").toLowerCase().includes(q));
+    // تحقق فعلي من قاعدة البيانات
+    try{
+      const rows = await apiFetch(`/app_users?select=id,username,is_admin,blocked,device_id&username=eq.${encodeURIComponent(sess.username)}&limit=1`, { method:"GET" });
+      const u = Array.isArray(rows) ? rows[0] : null;
+      if (!u) return denyAccess();
+      if (u.blocked) return denyAccess();
+      if (!u.is_admin) return denyAccess();
+      if (u.device_id && u.device_id !== getDeviceId()) return denyAccess();
+    }catch(e){
+      console.error(e);
+      return denyAccess();
     }
 
-  if(error){
-    console.error(error);
-    alert("خطأ حذف الفاتورة: " + error.message);
-    return;
+    const tb = $("usersBody");
+    tb.innerHTML = "";
+    list.forEach(u=>{
+      const tr = document.createElement("tr");
+    // ✅ السماح
+    $("gate").style.display = "none";
+    $("app").style.display = "grid";
+    $("statusPill").textContent = "أدمن";
+    $("statusPill").style.background = "var(--green)";
+    $("statusPill").style.color = "#111315";
+    $("who").textContent = `الدخول: ${sess.username} — جهاز: ${getDeviceId().slice(0,10)}…`;
   }
-    tr.appendChild(tdTime);
-    tr.appendChild(tdDesc);
-    tr.appendChild(tdOp);
-    tr.appendChild(tdRes);
-    body.appendChild(tr);
-  });
-}
 
-async function deleteSelectedInvoice(){
-  const username = state.currentUser;
-  const invoiceId = ($("invoiceSelect").value || "").trim();
-  if(!username){ alert("اختر مستخدم أولاً"); return; }
-  if(!invoiceId){ alert("اختر فاتورة"); return; }
+      const tdName = document.createElement("td");
+      tdName.textContent = u.username || "";
+  // =========================
+  // ✅ Users
+  // =========================
+  let users = [];
+  let usersPage = 0;
+  const PAGE_SIZE = 6;
 
-  alert("تم حذف الفاتورة ✅");
-  $("invoiceSelect").value = "";
-  $("opsTbody").innerHTML = "";
-  $("grandTotal").value = "0";
-  vibrate(25);
-  if(!confirm("تأكيد حذف الفاتورة المختارة؟ سيتم حذف عملياتها تلقائياً إذا FK مفعل.")) return;
-
-  // حذف الفاتورة (لو FK ON DELETE CASCADE موجود رح يحذف العمليات)
-  const { error } = await client.from("app_invoices").delete().eq("id", invoiceId);
-  if(error){ alert("خطأ: " + error.message); return; }
-
-  alert("✅ تم حذف الفاتورة");
-  await loadInvoicesForUser();
-  $("opsBody").innerHTML = "";
-  $("totalBadge").textContent = "المجموع العام: 0";
-  $("invMeta").textContent = "—";
-}
-
-async function exportPdf(){
-  const username = $("userSelect").value || "";
-  const invoiceOpt = $("invoiceSelect").selectedOptions?.[0]?.textContent || "";
-  const total = $("grandTotal").value;
-
-  // جهّز printable
-  const area = $("printable-area");
-  $("printMeta").textContent = `المستخدم: ${username} | ${invoiceOpt}`;
-  $("printTotal").textContent = `المجموع: ${total}`;
-
-  // انسخ الجدول
-  const htmlTable = `
-    <table>
-      <thead>
-        <tr>
-          <th>الوقت</th>
-          <th>البيان</th>
-          <th>العملية</th>
-          <th>النتيجة</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${Array.from($("opsTbody").querySelectorAll("tr")).map(tr=>{
-          const tds = tr.querySelectorAll("td");
-          return `<tr>
-            <td>${tds[0]?.textContent||""}</td>
-            <td>${tds[1]?.textContent||""}</td>
-            <td>${tds[2]?.textContent||""}</td>
-            <td>${tds[3]?.textContent||""}</td>
-          </tr>`;
-        }).join("")}
-      </tbody>
-    </table>
-  `;
-  $("printTable").innerHTML = htmlTable;
-  area.style.display = "block";
-
-  try{
-    const opt = {
-      margin: 10,
-      filename: `invoice_${username}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(area).save();
-  }catch(e){
-    console.error(e);
-    alert("فشل تصدير PDF. جرّب متصفح Chrome.");
-  }finally{
-    area.style.display = "none";
+      const tdPass = document.createElement("td");
+      tdPass.className="num";
+      tdPass.textContent = u.pass || "";
+  function randPass(){
+    const n = () => Math.floor(Math.random()*10);
+    return `${n()}${n()}${n()}${n()}${n()}${n()}`;
   }
-/* =============================
-   PDF
-   ============================= */
 
-function exportPDF(){
-  const el = document.getElementById("printableArea");
-  if(!el) return;
+      const tdAdmin = document.createElement("td");
+      tdAdmin.textContent = u.is_admin ? "YES" : "NO";
+  function usersFiltered(){
+    const q = ($("userSearch").value || "").trim().toLowerCase();
+    if (!q) return users;
+    return users.filter(u => String(u.username||"").toLowerCase().includes(q));
+  }
 
-  const opt = {
-    margin: 8,
-    filename: "HAYEK-SPOT-admin.pdf",
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-  };
-  html2pdf().set(opt).from(el).save();
-}
+      const tdState = document.createElement("td");
+      const pill = document.createElement("span");
+      pill.className = "pillSmall " + (u.blocked ? "" : "pillOpen");
+      pill.textContent = u.blocked ? "محظور" : "مفعّل";
+      tdState.appendChild(pill);
+  function renderUsers(){
+    const list = usersFiltered();
+    const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+    usersPage = Math.min(usersPage, totalPages-1);
 
-/* =======================
-   UI events
-   ======================= */
-/* =============================
-   EVENTS
-   ============================= */
+      const tdAct = document.createElement("td");
+    const start = usersPage * PAGE_SIZE;
+    const slice = list.slice(start, start + PAGE_SIZE);
 
-$("btnGenPass").onclick = genPassword;
-$("btnSaveUser").onclick = addUser;
-$("btnRefreshUsers").onclick = () => { state.usersPage = 0; loadUsers(); };
+      const btnPick = document.createElement("button");
+      btnPick.className="btn small";
+      btnPick.textContent="اختيار";
+      btnPick.onclick = async ()=>{
+        state.selectedUser = { id: u.id, username: u.username };
+        $("hint").textContent = `المستخدم المحدد: ${u.username}`;
+        await loadInvoices();
+      };
+    const tb = $("usersTbody");
+    tb.innerHTML = "";
 
-$("btnPrevUsers").onclick = () => { state.usersPage = Math.max(0, state.usersPage - 1); loadUsers(); };
-$("btnReloadUsers").onclick = () => { state.usersPage = 0; loadUsers(); };
-$("btnPrevUsers").onclick = () => { state.usersPage = Math.max(0, state.usersPage-1); loadUsers(); };
-$("btnNextUsers").onclick = () => { state.usersPage += 1; loadUsers(); };
+      const btnBlock = document.createElement("button");
+      btnBlock.className="btn small yellow";
+      btnBlock.textContent = u.blocked ? "فك" : "حظر";
+      btnBlock.onclick = async ()=>{
+        await apiFetch(`/app_users?id=eq.${u.id}`, {
+          method:"PATCH",
+          headers:{ "Prefer":"return=minimal" },
+          body: JSON.stringify({ blocked: !u.blocked })
+        });
+        toast("تم ✅");
+        await loadUsers();
+      };
+    slice.forEach(u=>{
+      const tr = document.createElement("tr");
 
-$("searchUser").addEventListener("input", () => { state.usersPage = 0; loadUsers(); });
+      const btnDel = document.createElement("button");
+      btnDel.className="btn small red";
+      btnDel.textContent="حذف";
+      btnDel.onclick = async ()=>{
+        await apiFetch(`/app_users?id=eq.${u.id}`, { method:"DELETE" });
+        toast("تم الحذف");
+        await loadUsers();
+      const tdN = document.createElement("td");
+      tdN.textContent = u.username || "";
 
-$("userSelect").addEventListener("change", async () => {
-  $("invoiceSelect").innerHTML = `<option value="">— اختر فاتورة —</option>`;
-  $("opsTbody").innerHTML = "";
-  $("grandTotal").value = "0";
-  if($("userSelect").value) await loadInvoicesForUser();
-});
-$("userSelect").onchange = async () => { await loadInvoicesForUser(); };
+      const tdP = document.createElement("td");
+      tdP.className = "num";
+      tdP.textContent = u.pass || "";
 
-$("btnLast7").onclick = () => { setLast7(); };
-$("btnToday").onclick = () => { setToday(); };
-$("btnClearDates").onclick = () => { clearDates(); };
-$("btnLoadInvoices").onclick = () => { loadInvoicesForUser(); };
+      const tdA = document.createElement("td");
+      tdA.className = "num";
+      tdA.textContent = u.is_admin ? "YES" : "NO";
 
-$("btnInvoicesRefresh").onclick = loadInvoicesForUser;
-$("btnOpenInvoice").onclick = openSelectedInvoice;
-$("btnDeleteInvoice").onclick = deleteSelectedInvoice;
-$("btnPrintPdf").onclick = exportPdf;
-$("btnPDF").onclick = exportPDF;
+      const tdS = document.createElement("td");
+      const badge = document.createElement("span");
+      badge.className = "badge " + (u.blocked ? "red" : "green");
+      badge.textContent = u.blocked ? "محظور" : "مفعل";
+      tdS.appendChild(badge);
 
-$("btnToday").onclick = () => {
-  const d = nowISODate();
-  $("fromDate").value = d;
-  $("toDate").value = d;
-  loadInvoicesForUser();
-};
-$("btnLast7").onclick = () => {
-  $("fromDate").value = daysAgoISO(7);
-  $("toDate").value = nowISODate();
-  loadInvoicesForUser();
-};
-$("btnClearDates").onclick = () => {
-  $("fromDate").value = "";
-  $("toDate").value = "";
-  loadInvoicesForUser();
-};
-/* =============================
-   INIT
-   ============================= */
+      const tdX = document.createElement("td");
+      const box = document.createElement("div");
+      box.className = "actions";
 
-/* =======================
-   Boot
-   ======================= */
-initClient();
-loadUsers();
-(async function init(){
-  try{
-    setPill(true, "مفتوح");
+      const pick = document.createElement("button");
+      pick.className = "btn";
+      pick.textContent = "اختيار";
+      pick.onclick = ()=>{
+        $("uName").value = u.username || "";
+        $("uPass").value = u.pass || "";
+        $("uRole").value = u.is_admin ? "admin" : "user";
+        toast("تم اختيار المستخدم");
+      };
+
+      tdAct.append(btnPick, document.createTextNode(" "), btnBlock, document.createTextNode(" "), btnDel);
+      const toggle = document.createElement("button");
+      toggle.className = "btn yellow";
+      toggle.textContent = u.blocked ? "إلغاء الحظر" : "حظر";
+      toggle.onclick = ()=> toggleBlock(u);
+
+      const del = document.createElement("button");
+      del.className = "btn red";
+      del.textContent = "حذف";
+      del.onclick = ()=> deleteUser(u);
+
+      box.append(pick, toggle, del);
+      tdX.appendChild(box);
+
+      tr.append(tdName, tdPass, tdAdmin, tdState, tdAct);
+      tr.append(tdN, tdP, tdA, tdS, tdX);
+      tb.appendChild(tr);
+    });
+
+    $("pageInfo").textContent = `صفحة ${usersPage+1} / ${totalPages}`;
+    $("prevUsersBtn").disabled = usersPage <= 0;
+    $("nextUsersBtn").disabled = usersPage >= totalPages-1;
+
+    // تحديث قائمة المستخدمين للفواتير
+    rebuildUserSelects();
+  }
+
+  async function loadUsers(){
+    const rows = await apiFetch(`/app_users?select=id,username,pass,is_admin,blocked&order=created_at.desc&limit=500`, { method:"GET" });
+    users = Array.isArray(rows) ? rows : [];
+    renderUsers();
+  }
+
+  async function saveUser(){
+    const username = ($("uName").value||"").trim();
+    const pass = ($("uPass").value||"").trim();
+    const name = ($("uName").value || "").trim();
+    const pass = ($("uPass").value || "").trim();
+    const role = $("uRole").value;
+    if (!name || !pass) return toast("اكتب الاسم وكلمة السر");
+
+    if (!username || !pass) return toast("اكتب الاسم وكلمة السر");
+    // هل موجود؟
+    const exist = await apiFetch(`/app_users?select=id&username=eq.${encodeURIComponent(name)}&limit=1`, { method:"GET" });
+    const id = Array.isArray(exist) && exist[0]?.id ? exist[0].id : null;
+
+    // upsert by username (إذا موجود: حدّث، إذا لا: أضف)
+    const existing = await apiFetch(`/app_users?select=id&limit=1&username=eq.${encodeURIComponent(username)}`, { method:"GET" });
+    const found = Array.isArray(existing) ? existing[0] : null;
+    const payload = { username: name, pass: pass, is_admin: (role === "admin") };
+
+    if (!found){
+      await apiFetch(`/app_users`, {
+        method:"POST",
+    if (id){
+      await apiFetch(`/app_users?id=eq.${id}`, {
+        method:"PATCH",
+        headers:{ "Prefer":"return=minimal" },
+        body: JSON.stringify({
+          username, pass,
+          is_admin: role === "admin",
+          blocked: false
+        })
+        body: JSON.stringify(payload)
+      });
+      toast("تم تحديث المستخدم ✅");
+    }else{
+      await apiFetch(`/app_users?id=eq.${found.id}`, {
+        method:"PATCH",
+      await apiFetch(`/app_users`, {
+        method:"POST",
+        headers:{ "Prefer":"return=minimal" },
+        body: JSON.stringify({
+          pass,
+          is_admin: role === "admin"
+        })
+        body: JSON.stringify(payload)
+      });
+      toast("تم إنشاء المستخدم ✅");
+    }
+
+    toast("تم حفظ المستخدم ✅");
     await loadUsers();
-    logDbg("تم تشغيل لوحة الأدمن (single-file v999).");
-  } catch(e){
-    setPill(false, "مغلق");
-    logDbg("خطأ غير متوقع:", String(e));
   }
-})();
-</script>
 
+  function genPass(){
+    const p = String(Math.floor(100000 + Math.random()*900000));
+    $("uPass").value = p;
+    toast("تم توليد كلمة سر");
+  async function toggleBlock(u){
+    await apiFetch(`/app_users?id=eq.${u.id}`, {
+      method:"PATCH",
+      headers:{ "Prefer":"return=minimal" },
+      body: JSON.stringify({ blocked: !u.blocked })
+    });
+    toast("تم تحديث الحالة");
+    await loadUsers();
+  }
+
+  // ========= INVOICES =========
+  function setDateRange(fromISO, toISO){
+    $("fromDate").value = fromISO || "";
+    $("toDate").value = toISO || "";
+  }
+  function isoDate(d){
+    const x = new Date(d);
+    const y = x.getFullYear();
+    const m = String(x.getMonth()+1).padStart(2,"0");
+    const day = String(x.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  async function deleteUser(u){
+    if (!confirm(`حذف المستخدم: ${u.username} ؟`)) return;
+    await apiFetch(`/app_users?id=eq.${u.id}`, { method:"DELETE" });
+    toast("تم حذف المستخدم");
+    await loadUsers();
+  }
+
+  async function loadInvoices(){
+    if (!state.selectedUser?.username){
+      $("hint").textContent = "اختر مستخدم أولاً.";
+      return;
+    }
+
+    const u = state.selectedUser.username;
+    const from = $("fromDate").value;
+    const to = $("toDate").value;
+
+    let query = `/app_invoices?select=id,username,customer_name,status,total,created_at,closed_at&username=eq.${encodeURIComponent(u)}&order=created_at.desc&limit=200`;
+    if (from) query += `&created_at=gte.${from}T00:00:00.000Z`;
+    if (to) query += `&created_at=lte.${to}T23:59:59.999Z`;
+  function rebuildUserSelects(){
+    const sel = $("invUserSelect");
+    const current = sel.value;
+    const opts = [`<option value="">كل المستخدمين</option>`]
+      .concat(users.map(u => `<option value="${String(u.username||"").replace(/"/g,'&quot;')}">${u.username}</option>`));
+    sel.innerHTML = opts.join("");
+    sel.value = current || "";
+  }
+
+    const rows = await apiFetch(query, { method:"GET" });
+    state.invoices = Array.isArray(rows) ? rows : [];
+  // =========================
+  // ✅ Invoices
+  // =========================
+  let invoices = [];
+  let selectedInvoice = null;
+  let opsRows = [];
+
+    // fill select
+    const sel = $("invoiceSelect");
+    sel.innerHTML = `<option value="">— اختر فاتورة —</option>`;
+  function isoStartOfDay(ymd){
+    // ymd = YYYY-MM-DD
+    return new Date(ymd + "T00:00:00").toISOString();
+  }
+  function isoEndOfDay(ymd){
+    return new Date(ymd + "T23:59:59.999").toISOString();
+  }
+  function fmtNum(n){
+    const x = Number(n);
+    if (!Number.isFinite(x)) return "0";
+    const s = x.toString();
+    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
+  }
+  function fmtTime(iso){
+    try{
+      const d = new Date(iso);
+      const dd = d.toLocaleDateString("ar", { year:"numeric", month:"2-digit", day:"2-digit" });
+      const tt = d.toLocaleTimeString("ar", { hour:"2-digit", minute:"2-digit" });
+      return `${dd} — ${tt}`;
+    }catch{ return ""; }
+  }
+
+    state.invoices.forEach(inv=>{
+      const opt = document.createElement("option");
+      opt.value = inv.id;
+  function setInvoiceButtons(enabled){
+    $("openInvoiceBtn").disabled = !enabled;
+    $("deleteInvoiceBtn").disabled = !enabled;
+    $("exportPdfBtn").disabled = !enabled;
+  }
+
+      const st = (inv.status || "open").toLowerCase();
+      const label = `${inv.customer_name || "بدون اسم"} — ${fmtDate(inv.created_at)} — ${st} — total ${fmt(inv.total)}`;
+  async function loadInvoices(){
+    const u = ($("invUserSelect").value || "").trim();
+    const from = ($("fromDate").value || "").trim();
+    const to = ($("toDate").value || "").trim();
+
+      opt.textContent = label;
+    const filters = [];
+    if (u) filters.push(`username=eq.${encodeURIComponent(u)}`);
+    if (from) filters.push(`created_at=gte.${encodeURIComponent(isoStartOfDay(from))}`);
+    if (to) filters.push(`created_at=lte.${encodeURIComponent(isoEndOfDay(to))}`);
+
+      // ✅ حل “النص ما بيبين” داخل dropdown
+      opt.style.color = "#fff";
+      opt.style.background = "#111315";
+    const qs = `?select=id,created_at,username,customer_name,status,total&order=created_at.desc&limit=250`
+      + (filters.length ? "&" + filters.join("&") : "");
+
+      sel.appendChild(opt);
+    });
+    const rows = await apiFetch(`/app_invoices${qs}`, { method:"GET" });
+    invoices = Array.isArray(rows) ? rows : [];
+
+    $("hint").textContent = `تم جلب ${state.invoices.length} فاتورة للمستخدم: ${u}`;
+    const sel = $("invoiceSelect");
+    sel.innerHTML = `<option value="">— اختر فاتورة —</option>` + invoices.map(inv=>{
+      const t = fmtTime(inv.created_at);
+      const total = fmtNum(inv.total);
+      const label = `${inv.username || "-"} — ${t} — مجموع: ${total}`;
+      return `<option value="${inv.id}">${label}</option>`;
+    }).join("");
+
+    selectedInvoice = null;
+    opsRows = [];
+    renderInvoiceMeta(null);
+    renderOps();
+    setInvoiceButtons(false);
+
+    $("invNote").textContent = `تم تحميل ${invoices.length} فاتورة.`;
+  }
+
+  async function openInvoice(){
+    const id = $("invoiceSelect").value;
+    if (!id) return toast("اختر فاتورة");
+  function renderInvoiceMeta(inv){
+    $("invMeta1").textContent = `الفاتورة: ${inv?.id ? inv.id : "—"}`;
+    $("invMeta2").textContent = `العميل: ${inv?.customer_name ? inv.customer_name : "—"}`;
+    $("invMeta3").textContent = `الحالة: ${inv?.status ? inv.status : "—"}`;
+  }
+
+    state.selectedInvoiceId = id;
+  function renderOps(){
+    const tb = $("opsTbody");
+    tb.innerHTML = "";
+    opsRows.forEach(r=>{
+      const tr = document.createElement("tr");
+
+    const inv = state.invoices.find(x=>x.id===id);
+    const st = (inv?.status || "open").toLowerCase();
+      const tdT = document.createElement("td");
+      tdT.textContent = fmtTime(r.created_at);
+
+    $("invStatus").textContent = st === "closed" ? "مغلقة" : "مفتوحة";
+    $("invStatus").className = "pillSmall " + (st === "closed" ? "pillClosed" : "pillOpen");
+    $("invTotal").textContent = `المجموع: ${fmt(inv?.total)}`;
+      const tdL = document.createElement("td");
+      tdL.textContent = r.label || "عملية";
+
+    const ops = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(id)}&order=created_at.asc`, { method:"GET" });
+      const tdO = document.createElement("td");
+      tdO.className = "num";
+      tdO.textContent = r.operation || "";
+
+    const tb = $("opsBody");
+    tb.innerHTML = "";
+    let total = 0;
+      const tdR = document.createElement("td");
+      tdR.className = "num";
+      tdR.textContent = r.result ?? "";
+
+    (ops || []).forEach(r=>{
+      const tr = document.createElement("tr");
+      const tdT = document.createElement("td"); tdT.textContent = fmtDate(r.created_at);
+      const tdL = document.createElement("td"); tdL.textContent = r.label || "عملية";
+      const tdO = document.createElement("td"); tdO.className="num"; tdO.textContent = r.operation || "";
+      const tdR = document.createElement("td"); tdR.className="num"; tdR.textContent = r.result ?? "";
+      tr.append(tdT, tdL, tdO, tdR);
+      tb.appendChild(tr);
+
+      const v = Number(r.result);
+      if (Number.isFinite(v)) total += v;
+    });
+
+    $("invTotal").textContent = `المجموع: ${fmt(total)}`;
+    toast("تم فتح الفاتورة ✅");
+    $("opsCount").textContent = `عدد العمليات: ${opsRows.length}`;
+    const total = opsRows.reduce((a,r)=> a + (Number(r.result)||0), 0);
+    $("opsTotal").textContent = `المجموع العام: ${fmtNum(total)}`;
+  }
+
+  function printInvoice(){
+    const id = state.selectedInvoiceId || $("invoiceSelect").value;
+    if (!id) return toast("اختر فاتورة أولاً");
+    // ✅ طباعة نظيفة من invoice.html فقط
+    const url = `./invoice.html?invoice_id=${encodeURIComponent(id)}&print=1`;
+  async function loadInvoiceOps(invoiceId){
+    const rows = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(invoiceId)}&order=created_at.asc&limit=500`, { method:"GET" });
+    opsRows = Array.isArray(rows) ? rows : [];
+    renderOps();
+  }
+
+  async function onPickInvoice(){
+    const id = ($("invoiceSelect").value || "").trim();
+    selectedInvoice = invoices.find(x => String(x.id) === String(id)) || null;
+    renderInvoiceMeta(selectedInvoice);
+    if (!selectedInvoice){
+      opsRows = [];
+      renderOps();
+      setInvoiceButtons(false);
+      return;
+    }
+    setInvoiceButtons(true);
+    $("invNote").textContent = `فاتورة للمستخدم: ${selectedInvoice.username || "-"} — ${fmtTime(selectedInvoice.created_at)}`;
+    await loadInvoiceOps(selectedInvoice.id);
+  }
+
+  function openInvoicePrint(){
+    if (!selectedInvoice?.id) return;
+    // ✅ فتح صفحة الفاتورة نفسها (نظيفة) بدل لقطة شاشة الأدمن
+    const url = `./invoice.html?v=999&invoice_id=${encodeURIComponent(selectedInvoice.id)}&print=1`;
+    window.open(url, "_blank");
+  }
+
+  async function deleteInvoice(){
+    const id = state.selectedInvoiceId || $("invoiceSelect").value;
+    if (!id) return toast("اختر فاتورة");
+    if (!selectedInvoice?.id) return;
+    if (!confirm("حذف الفاتورة المختارة؟ سيتم حذف عملياتها أيضاً.")) return;
+
+    // delete invoice -> FK cascade will delete operations if FK on delete cascade exists
+    await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(id)}`, { method:"DELETE" });
+    // حذف العمليات أولاً
+    await apiFetch(`/app_operations?invoice_id=eq.${encodeURIComponent(selectedInvoice.id)}`, { method:"DELETE" });
+    await apiFetch(`/app_invoices?id=eq.${encodeURIComponent(selectedInvoice.id)}`, { method:"DELETE" });
+
+    toast("تم حذف الفاتورة");
+    state.selectedInvoiceId = null;
+    $("opsBody").innerHTML = "";
+    await loadInvoices();
+  }
+
+  // ========= Events =========
+  $("refreshUsers").onclick = ()=>loadUsers().catch(e=>{console.error(e);toast("فشل جلب المستخدمين");});
+  $("searchUser").oninput = ()=>loadUsers().catch(()=>{});
+  $("saveUser").onclick = ()=>saveUser().catch(e=>{console.error(e);toast("فشل حفظ المستخدم");});
+  $("genPass").onclick = ()=>genPass();
+  // =========================
+  // ✅ Events
+  // =========================
+  $("goHomeBtn").onclick = ()=> location.href = "./index.html?v=999";
+  $("logoutBtn").onclick = ()=>{
+    clearSession();
+    toast("تم الخروج");
+    setTimeout(()=> location.href = "./index.html?v=999", 350);
+  };
+
+  $("refreshUsersBtn").onclick = ()=> loadUsers().catch(e=>{console.error(e); toast("فشل تحديث المستخدمين");});
+  $("saveUserBtn").onclick = ()=> saveUser().catch(e=>{console.error(e); toast("فشل حفظ المستخدم");});
+  $("genPassBtn").onclick = ()=> { $("uPass").value = randPass(); toast("تم توليد كلمة سر"); };
+
+  $("userSearch").addEventListener("input", ()=>{ usersPage=0; renderUsers(); });
+
+  $("prevUsersBtn").onclick = ()=>{ usersPage=Math.max(0, usersPage-1); renderUsers(); };
+  $("nextUsersBtn").onclick = ()=>{ usersPage=usersPage+1; renderUsers(); };
+
+  $("refreshInvoicesBtn").onclick = ()=> loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+  $("invUserSelect").onchange = ()=> loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+  $("fromDate").onchange = ()=> loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+  $("toDate").onchange = ()=> loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+
+  $("invoiceSelect").onchange = ()=> onPickInvoice().catch(e=>{console.error(e); toast("فشل تحميل التفاصيل");});
+
+  $("openInvoiceBtn").onclick = ()=> openInvoicePrint();
+  $("exportPdfBtn").onclick = ()=> openInvoicePrint();
+  $("deleteInvoiceBtn").onclick = ()=> deleteInvoice().catch(e=>{console.error(e); toast("فشل حذف الفاتورة");});
+
+  $("todayBtn").onclick = ()=>{
+    const d = isoDate(new Date());
+    setDateRange(d,d);
+    const d = new Date();
+    const ymd = d.toISOString().slice(0,10);
+    $("fromDate").value = ymd;
+    $("toDate").value = ymd;
+    loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+  };
+  $("last7Btn").onclick = ()=>{
+    const now = new Date();
+    const from = new Date(now.getTime() - 7*24*3600*1000);
+    setDateRange(isoDate(from), isoDate(now));
+    const d = new Date();
+    const to = d.toISOString().slice(0,10);
+    const d2 = new Date(Date.now() - 6*24*60*60*1000);
+    const from = d2.toISOString().slice(0,10);
+    $("fromDate").value = from;
+    $("toDate").value = to;
+    loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+  };
+  $("clearDates").onclick = ()=>setDateRange("","");
+  $("refreshInv").onclick = ()=>loadInvoices().catch(e=>{console.error(e);toast("فشل جلب الفواتير");});
+  $("openInv").onclick = ()=>openInvoice().catch(e=>{console.error(e);toast("فشل فتح الفاتورة");});
+  $("printInv").onclick = ()=>printInvoice();
+  $("deleteInv").onclick = ()=>deleteInvoice().catch(e=>{console.error(e);toast("فشل حذف الفاتورة");});
+
+  // Boot
+  loadUsers().catch(e=>{console.error(e);toast("فشل بدء الأدمن");});
+  $("clearDatesBtn").onclick = ()=>{
+    $("fromDate").value = "";
+    $("toDate").value = "";
+    loadInvoices().catch(e=>{console.error(e); toast("فشل تحديث الفواتير");});
+  };
+
+  // =========================
+  // ✅ Boot
+  // =========================
+  (async function boot(){
+    await adminGuard();          // ✅ حماية الأدمن (الأهم)
+    await loadUsers();           // تحميل المستخدمين
+    await loadInvoices();        // تحميل الفواتير
+  })();
+</script>
 </body>
+</html>
