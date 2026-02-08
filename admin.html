@@ -5,250 +5,1077 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="./style.css?v=9001" />
+  <!-- ستايل -->
+  <style>
+    :root{
+      --bg:#071217;
+      --card:#0d1b22;
+      --card2:#0b1720;
+      --txt:#e9f1f3;
+      --muted:#9fb3ba;
+      --line:rgba(255,255,255,.10);
+      --blue:#2f6bff;
+      --green:#2ac26a;
+      --red:#ff4d4d;
+      --amber:#ffcc66;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --radius: 20px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: radial-gradient(1000px 600px at 20% 10%, rgba(47,107,255,.22), transparent 60%),
+                  radial-gradient(1000px 600px at 90% 20%, rgba(42,194,106,.18), transparent 60%),
+                  linear-gradient(180deg, #061015, #050c10 55%, #04080b);
+      color:var(--txt);
+    }
+    .wrap{max-width:1100px; margin:22px auto; padding:0 14px 50px;}
+    .topCard{
+      background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px 18px 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .topCard:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 280px at 70% 20%, rgba(47,107,255,.25), transparent 55%),
+                  radial-gradient(600px 280px at 10% 20%, rgba(42,194,106,.20), transparent 55%);
+      filter: blur(0px);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .topCard > *{position:relative}
+    .titleRow{display:flex; align-items:flex-start; justify-content:space-between; gap:14px;}
+    h1{margin:0; font-size:30px; letter-spacing:.2px}
+    .sub{margin-top:6px; color:var(--muted); font-size:14px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      font-size:13px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill strong{color:var(--txt); font-weight:700}
+    .ok{color:var(--green)}
+    .bad{color:var(--red)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media(max-width:900px){ .grid{grid-template-columns:1fr} }
+    .card{
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .card h2{margin:0 0 12px; font-size:20px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+    input, select{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      color:var(--txt);
+      padding:12px 12px;
+      outline:none;
+      font-size:14px;
+    }
+    input::placeholder{color:rgba(233,241,243,.45)}
+    .col{flex:1; min-width:190px}
+    .col.small{min-width:140px; flex:.55}
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+      cursor:pointer;
+      color:white;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      transition:.15s;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn:active{transform: translateY(0px); opacity:.92}
+    .btn.blue{background: rgba(47,107,255,.35); border-color: rgba(47,107,255,.55)}
+    .btn.green{background: rgba(42,194,106,.28); border-color: rgba(42,194,106,.50)}
+    .btn.red{background: rgba(255,77,77,.22); border-color: rgba(255,77,77,.45)}
+    .btn.ghost{background: rgba(0,0,0,.20)}
+    .btn.wide{width:100%}
+    .hint{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.18);
+      color: var(--muted);
+      background: rgba(0,0,0,.18);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .statusLine{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      font-size:13px;
+      color: var(--muted);
+    }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      margin-top:12px;
+    }
+    thead th{
+      text-align:right;
+      font-size:12px;
+      color: var(--muted);
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    tbody td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:13px;
+      vertical-align:middle;
+    }
+    tbody tr:last-child td{border-bottom:0}
+    .actions{display:flex; gap:8px; flex-wrap:wrap}
+    .tag{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .tag.on{border-color: rgba(42,194,106,.45); color:#bff7d3}
+    .tag.off{border-color: rgba(255,77,77,.40); color:#ffd0d0}
+    .split{display:flex; gap:10px; flex-wrap:wrap}
+    .preview{
+      margin-top:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      padding:12px;
+    }
+    .previewTitle{margin:0 0 8px; font-size:14px; color:var(--muted)}
+    .miniCard{
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      padding:10px 12px;
+      margin-bottom:8px;
+    }
+    .miniRow{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .miniRow b{color:var(--txt)}
+    .muted{color:var(--muted)}
+    .noteOk{color:#bff7d3}
+    .noteBad{color:#ffd0d0}
+  </style>
 
-  <!-- Supabase UMD (بدون import) -->
+  <!-- Supabase UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- jsPDF + AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- خط Amiri (ملفك المحلي) -->
-  <script src="./amiri-font.js?v=9001"></script>
+  <!-- خط عربي (اختياري) - إذا عندك الملف موجود -->
+  <script src="./amiri-font.js?v=1"></script>
 
-  <!-- Config (يحمل SUPABASE_URL و SUPABASE_ANON_KEY داخل window.APP_CONFIG) -->
-  <script src="./config.js?v=9001"></script>
-
-  <style>
-    /* fallback بسيط إذا style.css فيه مشاكل */
-    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial; }
-    .app-wrap { max-width: 1100px; margin: 0 auto; padding: 18px; }
-    .card { background: rgba(10,20,25,.75); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); backdrop-filter: blur(8px); }
-    .title { font-size: 28px; font-weight: 800; margin: 0 0 6px; color: #eaf3ff; }
-    .sub { margin: 0 0 14px; color: rgba(234,243,255,.65); }
-    .row { display:flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .row > * { flex: 1 1 auto; }
-    .field { display:flex; flex-direction: column; gap: 6px; min-width: 180px; }
-    .label { font-size: 13px; color: rgba(234,243,255,.65); }
-    .inp, select { height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: #eaf3ff; padding: 0 12px; outline: none; }
-    .btn { height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.08); color:#eaf3ff; cursor:pointer; padding: 0 14px; font-weight: 700; }
-    .btn.primary { background: rgba(40,120,255,.35); border-color: rgba(40,120,255,.45); }
-    .btn.danger { background: rgba(255,60,60,.25); border-color: rgba(255,60,60,.35); }
-    .btn.ok { background: rgba(20,200,120,.22); border-color: rgba(20,200,120,.30); }
-    .pill { padding: 8px 12px; border-radius: 999px; display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color:#eaf3ff; font-weight: 700; }
-    .muted { color: rgba(234,243,255,.65); }
-    table { width:100%; border-collapse: collapse; overflow:hidden; border-radius: 14px; }
-    th, td { padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,.08); color:#eaf3ff; font-size: 14px; }
-    thead th { background: rgba(255,255,255,.06); position: sticky; top: 0; z-index: 1; }
-    .sp { height: 12px; }
-    .statusbar { display:flex; justify-content: space-between; gap:10px; align-items:center; flex-wrap:wrap; }
-    .hint { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(20,200,120,.35); background: rgba(20,200,120,.12); color: #d8fff0; font-weight: 700; }
-  </style>
+  <!-- config.js لازم يحط window.APP_CONFIG = {SUPABASE_URL, SUPABASE_ANON_KEY} -->
+  <script src="./config.js?v=1"></script>
 </head>
 
-<body class="app-body">
-  <div class="app-wrap">
-
-    <!-- Header -->
-    <div class="card">
-      <div class="statusbar">
+<body>
+  <div class="wrap">
+    <div class="topCard">
+      <div class="titleRow">
         <div>
-          <h1 class="title">لوحة الأمن</h1>
-          <p class="sub">إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأمن.</p>
+          <h1>لوحة الأمن</h1>
+          <div class="sub">إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأدمن.</div>
         </div>
-
-        <div class="row" style="justify-content:flex-end; gap:10px;">
-          <span id="adminStatePill" class="pill">غير مسجل</span>
-          <span id="statusLine" class="pill muted">الحالة: جاهز</span>
-        </div>
+        <div class="pill" id="adminStatePill"><strong>الحالة:</strong> <span id="adminStateText">غير مسجل</span></div>
       </div>
+      <div class="statusLine" id="statusLine">جاهز.</div>
     </div>
 
-    <div class="sp"></div>
+    <div class="grid">
+      <!-- تسجيل دخول الأدمن -->
+      <div class="card">
+        <h2>تسجيل الدخول (Admin)</h2>
 
-    <!-- Admin Login -->
-    <div class="card">
-      <h2 class="title" style="font-size:22px; margin-bottom:10px;">تسجيل الدخول (Admin)</h2>
-
-      <div class="row">
-        <div class="field">
-          <div class="label">اسم المستخدم</div>
-          <input id="adminUser" class="inp" type="text" value="admin" autocomplete="username" />
+        <div class="row">
+          <div class="col">
+            <label>اسم المستخدم</label>
+            <input id="adminUser" placeholder="admin" value="admin" autocomplete="username" />
+          </div>
+          <div class="col">
+            <label>كلمة السر</label>
+            <input id="adminPass" type="password" placeholder="••••" autocomplete="current-password" />
+          </div>
         </div>
 
-        <div class="field">
-          <div class="label">كلمة السر</div>
-          <input id="adminPass" class="inp" type="password" placeholder="••••" autocomplete="current-password" />
+        <div class="row" style="margin-top:10px;">
+          <button class="btn blue col" id="btnAdminLogin">تسجيل دخول</button>
+          <button class="btn ghost col" id="btnAdminLogout">تسجيل خروج</button>
         </div>
 
-        <div class="field" style="min-width: 160px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnAdminLogin" class="btn primary">تسجيل دخول</button>
-        </div>
-
-        <div class="field" style="min-width: 160px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnAdminLogout" class="btn">تسجيل خروج</button>
-        </div>
-      </div>
-
-      <div class="sp"></div>
-
-      <div class="hint">
-        ✅ الأمن يقفل على جهاز واحد فقط (إذا سجل من جهاز ثاني سيتم رفض الدخول)
-      </div>
-    </div>
-
-    <div class="sp"></div>
-
-    <!-- Users Management -->
-    <div class="card">
-      <h2 class="title" style="font-size:22px; margin-bottom:10px;">إدارة المستخدمين</h2>
-
-      <div class="row">
-        <div class="field">
-          <div class="label">اسم مستخدم جديد</div>
-          <input id="newUsername" class="inp" type="text" placeholder="مثال: محمود" />
-        </div>
-
-        <div class="field">
-          <div class="label">كلمة السر</div>
-          <input id="newPassword" class="inp" type="text" placeholder="مثال: 1234" />
-        </div>
-
-        <div class="field" style="min-width: 170px;">
-          <div class="label">صلاحية</div>
-          <select id="newRole" class="inp">
-            <option value="user">مستخدم</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <div class="field" style="min-width: 160px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnAddUser" class="btn ok">إضافة</button>
-        </div>
-
-        <div class="field" style="min-width: 200px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnRefreshUsers" class="btn">تحديث قائمة المستخدمين</button>
-        </div>
-
-        <div class="field" style="min-width: 180px;">
-          <div class="label">&nbsp;</div>
-          <div class="pill">عدد المستخدمين: <span id="usersCount">0</span></div>
+        <div class="hint">
+          ✅ الأدمن يقفل على جهاز واحد فقط. إذا حاولت تسجل من جهاز ثاني يتم رفض الدخول.  
+          لإلغاء القفل (فك الجهاز) للأدمن:  
+          <span class="muted">update public.app_users set device_id=null where username='admin';</span>
         </div>
       </div>
 
-      <div class="sp"></div>
+      <!-- إدارة المستخدمين -->
+      <div class="card">
+        <h2>إدارة المستخدمين</h2>
 
-      <div style="overflow:auto; border-radius: 14px;">
+        <div class="row">
+          <div class="col">
+            <label>اسم مستخدم جديد</label>
+            <input id="newUsername" placeholder="مثال: محمود" />
+          </div>
+          <div class="col">
+            <label>كلمة السر</label>
+            <input id="newPassword" placeholder="1234" />
+          </div>
+          <div class="col small">
+            <label>صلاحية</label>
+            <select id="newRole">
+              <option value="user" selected>مستخدم</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="col small">
+            <button class="btn green wide" id="btnAddUser">إضافة</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn blue" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
+          <div class="pill"><strong>عدد المستخدمين:</strong> <span id="usersCount">0</span></div>
+        </div>
+
         <table id="usersTable">
           <thead>
             <tr>
-              <th style="width:60px;">#</th>
+              <th>#</th>
               <th>المستخدم</th>
-              <th style="width:120px;">Admin</th>
-              <th style="width:120px;">محظور</th>
-              <th style="width:180px;">قفل الجهاز</th>
-              <th style="width:260px;">إجراءات</th>
+              <th>Admin</th>
+              <th>محظور</th>
+              <th>قفل الجهاز</th>
+              <th>إجراءات</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- admin.js يملأ الصفوف هنا -->
-          </tbody>
+          <tbody></tbody>
         </table>
+
+        <div class="hint">
+          زر <b>فك ربط الجهاز</b> يجعل <b>device_id = null</b> للمستخدم.  
+          زر <b>اختر</b> يحدد المستخدم لفتح الفواتير.
+        </div>
       </div>
     </div>
 
-    <div class="sp"></div>
-
-    <!-- Invoices (Admin View) -->
-    <div class="card">
-      <h2 class="title" style="font-size:22px; margin-bottom:10px;">فلاتر الفواتير</h2>
+    <!-- فلاتر الفواتير -->
+    <div class="card" style="margin-top:14px;">
+      <h2>فلاتر الفواتير</h2>
 
       <div class="row">
-        <div class="field" style="min-width:220px;">
-          <div class="label">اختر المستخدم</div>
-          <select id="pickUser" class="inp">
+        <div class="col">
+          <label>اختر المستخدم</label>
+          <select id="pickUser">
             <option value="">— اختر المستخدم —</option>
           </select>
         </div>
 
-        <div class="field" style="min-width:220px;">
-          <div class="label">الحالة</div>
-          <select id="pickStatus" class="inp">
+        <div class="col small">
+          <label>الحالة</label>
+          <select id="pickStatus">
             <option value="">الكل</option>
-            <option value="open">مفتوح</option>
+            <option value="open">مفتوحة</option>
             <option value="closed">منتهية</option>
           </select>
         </div>
 
-        <div class="field" style="min-width:180px;">
-          <div class="label">من تاريخ</div>
-          <input id="fromDate" class="inp" type="date" />
+        <div class="col small">
+          <button class="btn ghost wide" id="btnToday">فواتير اليوم</button>
         </div>
-
-        <div class="field" style="min-width:180px;">
-          <div class="label">إلى تاريخ</div>
-          <input id="toDate" class="inp" type="date" />
-        </div>
-
-        <div class="field" style="min-width:170px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnToday" class="btn">فواتير اليوم</button>
-        </div>
-
-        <div class="field" style="min-width:190px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnLast7" class="btn">آخر 7 أيام</button>
-        </div>
-
-        <div class="field" style="min-width:170px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnLoadInvoices" class="btn primary">جلب الفواتير</button>
-        </div>
-
-        <div class="field" style="min-width:180px;">
-          <div class="label">&nbsp;</div>
-          <div class="pill">عدد النتائج: <span id="invCount">0</span></div>
+        <div class="col small">
+          <button class="btn ghost wide" id="btnLast7">آخر 7 أيام</button>
         </div>
       </div>
 
-      <div class="sp"></div>
+      <div class="row" style="margin-top:10px;">
+        <div class="col">
+          <label>من تاريخ</label>
+          <input id="fromDate" type="date" />
+        </div>
+        <div class="col">
+          <label>إلى تاريخ</label>
+          <input id="toDate" type="date" />
+        </div>
+        <div class="col small">
+          <button class="btn blue wide" id="btnLoadInvoices">جلب الفواتير</button>
+        </div>
+        <div class="pill"><strong>عدد النتائج:</strong> <span id="invCount">0</span></div>
+      </div>
 
-      <div class="row">
-        <div class="field" style="min-width:380px; flex: 2 1 380px;">
-          <div class="label">قائمة الفواتير (بعد جلب الفواتير)</div>
-          <select id="invoiceSelect" class="inp">
+      <div class="row" style="margin-top:12px;">
+        <div class="col">
+          <label>قائمة الفواتير (منسدلة)</label>
+          <select id="invoiceSelect">
             <option value="">— اختر فاتورة —</option>
           </select>
         </div>
-
-        <div class="field" style="min-width:200px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnOpenInvoice" class="btn">فتح</button>
+        <div class="col small">
+          <button class="btn green wide" id="btnOpenInvoice">فتح</button>
         </div>
-
-        <div class="field" style="min-width:220px;">
-          <div class="label">&nbsp;</div>
-          <button id="btnExportInvoicePdf" class="btn ok">تصدير PDF</button>
+        <div class="col small">
+          <button class="btn blue wide" id="btnExportInvoicePdf">تصدير PDF</button>
         </div>
       </div>
 
-      <div class="sp"></div>
-
-      <!-- Preview Area (admin.js يحقن نفس قالب PDF/المعاينة) -->
-      <div id="invoicePreview" class="card" style="background: rgba(255,255,255,.04);">
-        <div class="muted">المعاينة ستظهر هنا بعد اختيار فاتورة والضغط على "فتح".</div>
+      <div class="preview" id="invoicePreview">
+        <p class="previewTitle">معاينة الفاتورة</p>
+        <div class="miniCard">
+          <div class="miniRow"><span class="muted">رقم الفاتورة</span><b id="pvId">—</b></div>
+          <div class="miniRow"><span class="muted">المستخدم</span><b id="pvUser">—</b></div>
+          <div class="miniRow"><span class="muted">اسم الزبون</span><b id="pvCustomer">—</b></div>
+          <div class="miniRow"><span class="muted">التاريخ</span><b id="pvDate">—</b></div>
+          <div class="miniRow"><span class="muted">الإجمالي</span><b id="pvTotal">—</b></div>
+          <div class="miniRow"><span class="muted">الحالة</span><b id="pvStatus">—</b></div>
+        </div>
+        <div class="miniCard">
+          <div class="miniRow"><span class="muted">عدد السطور</span><b id="pvLines">0</b></div>
+          <div class="muted" style="margin-top:6px; font-size:12px;">
+            سيتم جلب السطور من جدول <b>app_operations</b> تلقائيًا.
+          </div>
+        </div>
       </div>
     </div>
-
   </div>
 
-  <!-- IMPORTANT: admin.js لازم يكون آخر شيء (بدون import) -->
-  <script src="./admin.js?v=9001"></script>
+<script>
+(() => {
+  // =========================
+  // Config + Supabase client
+  // =========================
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG || {};
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    alert("config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)");
+    return;
+  }
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false }
+  });
+
+  // =========================
+  // Helpers
+  // =========================
+  const el = (id) => document.getElementById(id);
+  const statusLine = el("statusLine");
+  const adminStateText = el("adminStateText");
+  const adminStatePill = el("adminStatePill");
+
+  const fmtDateTime = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2,'0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())} ${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;
+  };
+  const todayISO = () => {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  };
+  const addDaysISO = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    const p = (n) => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  };
+  const safeText = (v) => (v === null || v === undefined || v === "" ? "—" : String(v));
+  const setStatus = (msg, type="") => {
+    statusLine.textContent = msg;
+    statusLine.style.borderColor = type==="ok" ? "rgba(42,194,106,.35)"
+                         : type==="bad" ? "rgba(255,77,77,.35)"
+                         : "rgba(255,255,255,.12)";
+  };
+
+  // =========================
+  // Local admin session (device lock)
+  // =========================
+  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V1";
+  const DEVICE_KEY  = "HAYEK_DEVICE_ID_V1";
+
+  const getDeviceId = () => {
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) {
+      id = "dev_" + crypto.randomUUID();
+      localStorage.setItem(DEVICE_KEY, id);
+    }
+    return id;
+  };
+  const getSession = () => {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
+  };
+  const setSession = (obj) => localStorage.setItem(SESSION_KEY, JSON.stringify(obj));
+  const clearSession = () => localStorage.removeItem(SESSION_KEY);
+
+  let currentAdmin = null;     // { username, device_id }
+  let selectedUser = "";       // for invoice filters
+  let invoicesCache = [];      // fetched invoices
+  let currentInvoice = null;   // selected invoice row
+  let currentLines = [];       // invoice lines from app_operations
+
+  // =========================
+  // UI elements
+  // =========================
+  const adminUser = el("adminUser");
+  const adminPass = el("adminPass");
+  const btnAdminLogin = el("btnAdminLogin");
+  const btnAdminLogout = el("btnAdminLogout");
+
+  const newUsername = el("newUsername");
+  const newPassword = el("newPassword");
+  const newRole = el("newRole");
+  const btnAddUser = el("btnAddUser");
+  const btnRefreshUsers = el("btnRefreshUsers");
+  const usersCount = el("usersCount");
+  const usersTableBody = el("usersTable").querySelector("tbody");
+
+  const pickUser = el("pickUser");
+  const pickStatus = el("pickStatus");
+  const fromDate = el("fromDate");
+  const toDate = el("toDate");
+  const btnToday = el("btnToday");
+  const btnLast7 = el("btnLast7");
+  const btnLoadInvoices = el("btnLoadInvoices");
+  const invCount = el("invCount");
+
+  const invoiceSelect = el("invoiceSelect");
+  const btnOpenInvoice = el("btnOpenInvoice");
+  const btnExportInvoicePdf = el("btnExportInvoicePdf");
+
+  const pvId = el("pvId");
+  const pvUser = el("pvUser");
+  const pvCustomer = el("pvCustomer");
+  const pvDate = el("pvDate");
+  const pvTotal = el("pvTotal");
+  const pvStatus = el("pvStatus");
+  const pvLines = el("pvLines");
+
+  // =========================
+  // Admin state
+  // =========================
+  const setAdminState = (text, ok=false) => {
+    adminStateText.textContent = text;
+    adminStatePill.style.borderColor = ok ? "rgba(42,194,106,.45)" : "rgba(255,255,255,.14)";
+    adminStatePill.style.color = ok ? "#bff7d3" : "var(--muted)";
+  };
+
+  const requireAdmin = () => {
+    if (!currentAdmin) { setStatus("سجل دخول الأدمن أولاً.", "bad"); return false; }
+    return true;
+  };
+
+  // =========================
+  // Database helpers
+  // =========================
+  async function fetchUserRow(username) {
+    const { data, error } = await supabase
+      .from("app_users")
+      .select("*")
+      .eq("username", username)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
+  async function refreshUsersList() {
+    if (!requireAdmin()) return;
+    setStatus("جاري تحميل المستخدمين...");
+    const { data, error } = await supabase
+      .from("app_users")
+      .select("id, username, pass, is_admin, blocked, device_id, created_at")
+      .order("id", { ascending: true });
+
+    if (error) { console.error(error); setStatus("خطأ تحميل المستخدمين.", "bad"); return; }
+
+    usersCount.textContent = String(data.length);
+
+    // Fill select
+    const prev = pickUser.value;
+    pickUser.innerHTML = `<option value="">— اختر المستخدم —</option>`;
+    data.forEach(u => {
+      if (u.username === "admin") return;
+      const opt = document.createElement("option");
+      opt.value = u.username;
+      opt.textContent = u.username;
+      pickUser.appendChild(opt);
+    });
+    if (prev) pickUser.value = prev;
+
+    // Table
+    usersTableBody.innerHTML = "";
+    data.forEach((u, idx) => {
+      const tr = document.createElement("tr");
+
+      const tdIdx = document.createElement("td");
+      tdIdx.textContent = String(idx + 1);
+
+      const tdUser = document.createElement("td");
+      tdUser.textContent = u.username;
+
+      const tdAdmin = document.createElement("td");
+      tdAdmin.innerHTML = u.is_admin ? `<span class="tag on">TRUE</span>` : `<span class="tag">FALSE</span>`;
+
+      const tdBlocked = document.createElement("td");
+      tdBlocked.innerHTML = u.blocked ? `<span class="tag off">محظور</span>` : `<span class="tag on">حر</span>`;
+
+      const tdDev = document.createElement("td");
+      tdDev.textContent = u.device_id ? "مقفل" : "غير مقفل";
+
+      const tdActions = document.createElement("td");
+      const box = document.createElement("div");
+      box.className = "actions";
+
+      const btnPick = mkBtn("اختر", "blue", async () => {
+        pickUser.value = u.username;
+        selectedUser = u.username;
+        setStatus(`تم اختيار المستخدم: ${u.username}`, "ok");
+      });
+
+      const btnBlock = mkBtn("حظر", "red", async () => {
+        await supabase.from("app_users").update({ blocked: true }).eq("id", u.id);
+        setStatus(`تم حظر: ${u.username}`, "ok");
+        refreshUsersList();
+      });
+
+      const btnUnblock = mkBtn("فك حظر", "green", async () => {
+        await supabase.from("app_users").update({ blocked: false }).eq("id", u.id);
+        setStatus(`تم فك الحظر: ${u.username}`, "ok");
+        refreshUsersList();
+      });
+
+      const btnUnbind = mkBtn("فك ربط الجهاز", "ghost", async () => {
+        await supabase.from("app_users").update({ device_id: null }).eq("id", u.id);
+        setStatus(`تم فك الجهاز: ${u.username}`, "ok");
+        refreshUsersList();
+      });
+
+      const btnDel = mkBtn("حذف", "red", async () => {
+        if (!confirm(`حذف المستخدم "${u.username}"؟`)) return;
+        await supabase.from("app_users").delete().eq("id", u.id);
+        setStatus(`تم حذف: ${u.username}`, "ok");
+        refreshUsersList();
+      });
+
+      // Admin row: limit actions
+      if (u.username === "admin") {
+        box.appendChild(mkBtn("فك ربط الجهاز", "ghost", async () => {
+          await supabase.from("app_users").update({ device_id: null }).eq("username", "admin");
+          setStatus("تم فك جهاز الأدمن.", "ok");
+          refreshUsersList();
+        }));
+      } else {
+        box.appendChild(btnPick);
+        box.appendChild(u.blocked ? btnUnblock : btnBlock);
+        box.appendChild(btnUnbind);
+        box.appendChild(btnDel);
+      }
+
+      tdActions.appendChild(box);
+
+      tr.append(tdIdx, tdUser, tdAdmin, tdBlocked, tdDev, tdActions);
+      usersTableBody.appendChild(tr);
+    });
+
+    setStatus("تم تحديث المستخدمين.", "ok");
+  }
+
+  function mkBtn(text, kind, onClick) {
+    const b = document.createElement("button");
+    b.className = `btn ${kind || ""}`.trim();
+    b.textContent = text;
+    b.onclick = async () => {
+      try {
+        if (!requireAdmin()) return;
+        b.disabled = true;
+        await onClick();
+      } catch (e) {
+        console.error(e);
+        setStatus("حدث خطأ.", "bad");
+      } finally {
+        b.disabled = false;
+      }
+    };
+    return b;
+  }
+
+  // =========================
+  // Admin login with single-device lock
+  // =========================
+  async function adminLogin() {
+    const u = adminUser.value.trim();
+    const p = adminPass.value.trim();
+    if (!u || !p) { setStatus("أدخل اسم المستخدم وكلمة السر.", "bad"); return; }
+
+    setStatus("جاري التحقق من الأدمن...");
+    try {
+      const row = await fetchUserRow(u);
+      if (!row) { setStatus("المستخدم غير موجود.", "bad"); return; }
+      if (!row.is_admin) { setStatus("هذا المستخدم ليس Admin.", "bad"); return; }
+      if (row.pass !== p) { setStatus("كلمة السر خاطئة.", "bad"); return; }
+      if (row.blocked) { setStatus("هذا الأدمن محظور.", "bad"); return; }
+
+      const myDev = getDeviceId();
+
+      // device lock for admin
+      if (row.device_id && row.device_id !== myDev) {
+        setAdminState(`Admin مستخدم على جهاز آخر`, false);
+        setStatus("مرفوض: الأدمن مسجل من جهاز آخر.", "bad");
+        return;
+      }
+
+      // bind if empty
+      if (!row.device_id) {
+        const { error: upErr } = await supabase
+          .from("app_users")
+          .update({ device_id: myDev, last_seen: new Date().toISOString() })
+          .eq("id", row.id);
+        if (upErr) throw upErr;
+      } else {
+        // update last_seen
+        await supabase.from("app_users").update({ last_seen: new Date().toISOString() }).eq("id", row.id);
+      }
+
+      currentAdmin = { username: row.username, device_id: myDev };
+      setSession(currentAdmin);
+      setAdminState("مسجل", true);
+      setStatus("تم تسجيل دخول الأدمن بنجاح.", "ok");
+      await refreshUsersList();
+
+    } catch (e) {
+      console.error(e);
+      setStatus("خطأ أثناء تسجيل الدخول.", "bad");
+    }
+  }
+
+  function adminLogout() {
+    currentAdmin = null;
+    clearSession();
+    setAdminState("غير مسجل", false);
+    setStatus("تم تسجيل الخروج.", "ok");
+  }
+
+  // =========================
+  // Add user
+  // =========================
+  async function addUser() {
+    if (!requireAdmin()) return;
+    const u = newUsername.value.trim();
+    const p = newPassword.value.trim();
+    const role = newRole.value;
+
+    if (!u || !p) { setStatus("اسم المستخدم وكلمة السر مطلوبان.", "bad"); return; }
+
+    setStatus("جاري إضافة المستخدم...");
+    try {
+      // Prevent duplicates
+      const exists = await fetchUserRow(u);
+      if (exists) { setStatus("اسم المستخدم موجود مسبقًا.", "bad"); return; }
+
+      const payload = {
+        username: u,
+        pass: p,
+        is_admin: role === "admin",
+        blocked: false,
+        device_id: null,
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from("app_users").insert(payload);
+      if (error) throw error;
+
+      newUsername.value = "";
+      newPassword.value = "";
+      setStatus("تمت الإضافة بنجاح.", "ok");
+      await refreshUsersList();
+    } catch (e) {
+      console.error(e);
+      setStatus("فشل إضافة المستخدم.", "bad");
+    }
+  }
+
+  // =========================
+  // Invoices fetch & preview
+  // =========================
+  function applyToday() {
+    fromDate.value = todayISO();
+    toDate.value = todayISO();
+    setStatus("تم اختيار فواتير اليوم.", "ok");
+  }
+  function applyLast7() {
+    fromDate.value = addDaysISO(-7);
+    toDate.value = todayISO();
+    setStatus("تم اختيار آخر 7 أيام.", "ok");
+  }
+
+  async function loadInvoices() {
+    if (!requireAdmin()) return;
+
+    const u = pickUser.value;
+    if (!u) { setStatus("اختر المستخدم أولاً.", "bad"); return; }
+
+    const f = fromDate.value;
+    const t = toDate.value;
+    const st = pickStatus.value;
+
+    setStatus("جاري جلب الفواتير...");
+    try {
+      let q = supabase
+        .from("app_invoices")
+        .select("*")
+        .eq("username", u)
+        .order("created_at", { ascending: false });
+
+      if (st) q = q.eq("status", st);
+      if (f) q = q.gte("created_at", new Date(f + "T00:00:00").toISOString());
+      if (t) q = q.lte("created_at", new Date(t + "T23:59:59").toISOString());
+
+      const { data, error } = await q.limit(500);
+      if (error) throw error;
+
+      invoicesCache = data || [];
+      invCount.textContent = String(invoicesCache.length);
+
+      invoiceSelect.innerHTML = `<option value="">— اختر فاتورة —</option>`;
+      invoicesCache.forEach(inv => {
+        const opt = document.createElement("option");
+        opt.value = inv.id;
+        const cName = inv.customer_name || inv.customer || "—";
+        opt.textContent = `${fmtDateTime(inv.created_at)} — ${cName} — (${inv.status || "open"}) — ${inv.total ?? 0}`;
+        invoiceSelect.appendChild(opt);
+      });
+
+      setStatus("تم جلب الفواتير.", "ok");
+
+    } catch (e) {
+      console.error(e);
+      setStatus("فشل جلب الفواتير.", "bad");
+    }
+  }
+
+  function setPreview(inv, lines) {
+    pvId.textContent = inv ? safeText(inv.id) : "—";
+    pvUser.textContent = inv ? safeText(inv.username) : "—";
+    pvCustomer.textContent = inv ? safeText(inv.customer_name || inv.customer) : "—";
+    pvDate.textContent = inv ? fmtDateTime(inv.created_at) : "—";
+    pvTotal.textContent = inv ? safeText(inv.total ?? 0) : "—";
+    pvStatus.textContent = inv ? safeText(inv.status || "open") : "—";
+    pvLines.textContent = String(lines ? lines.length : 0);
+  }
+
+  async function openInvoice() {
+    if (!requireAdmin()) return;
+
+    const id = invoiceSelect.value;
+    if (!id) { setStatus("اختر فاتورة من القائمة.", "bad"); return; }
+
+    const inv = invoicesCache.find(x => x.id === id);
+    if (!inv) { setStatus("الفاتورة غير موجودة.", "bad"); return; }
+
+    setStatus("جاري جلب سطور الفاتورة...");
+    try {
+      // Try to fetch lines from app_operations with flexible matching
+      // Common column names for invoice FK: invoice_id / inv_id / invoice
+      let { data, error } = await supabase
+        .from("app_operations")
+        .select("*")
+        .or(`invoice_id.eq.${inv.id},inv_id.eq.${inv.id},invoice.eq.${inv.id}`)
+        .order("created_at", { ascending: true });
+
+      // If order column name differs, fallback without order
+      if (error) {
+        console.warn("order(created_at) failed, retry without order:", error);
+        const retry = await supabase
+          .from("app_operations")
+          .select("*")
+          .or(`invoice_id.eq.${inv.id},inv_id.eq.${inv.id},invoice.eq.${inv.id}`);
+        data = retry.data;
+        error = retry.error;
+      }
+      if (error) throw error;
+
+      currentInvoice = inv;
+      currentLines = (data || []).map(normalizeLine);
+      setPreview(currentInvoice, currentLines);
+
+      setStatus("تم فتح الفاتورة.", "ok");
+    } catch (e) {
+      console.error(e);
+      setStatus("فشل فتح الفاتورة/السطور.", "bad");
+    }
+  }
+
+  // Normalize operation line from unknown column names
+  function normalizeLine(row) {
+    const pick = (keys) => {
+      for (const k of keys) {
+        if (row && row[k] !== undefined && row[k] !== null) return row[k];
+      }
+      return null;
+    };
+
+    const time = pick(["created_at","time","ts","at"]);
+    const statement = pick(["statement","text","note","desc","description","line","label","item","name","type"]);
+    const operation = pick(["operation","op","expr","expression","calc","formula"]);
+    const result = pick(["result","value","total","out","answer","res"]);
+
+    return {
+      time: time ? fmtDateTime(time) : "—",
+      statement: safeText(statement),
+      operation: safeText(operation),
+      result: safeText(result),
+      _raw: row
+    };
+  }
+
+  // =========================
+  // PDF export - same professional layout
+  // =========================
+  async function exportInvoicePdf() {
+    if (!requireAdmin()) return;
+    if (!currentInvoice) { setStatus("افتح الفاتورة أولاً.", "bad"); return; }
+
+    setStatus("جاري إنشاء PDF...");
+    try {
+      const inv = currentInvoice;
+      const lines = currentLines || [];
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:"pt", format:"a4" });
+
+      // Use Arabic font if available
+      let fontReady = false;
+      try {
+        if (window.amiriFontBase64) {
+          doc.addFileToVFS("Amiri-Regular.ttf", window.amiriFontBase64);
+          doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+          doc.setFont("Amiri", "normal");
+          fontReady = true;
+        }
+      } catch (e) { console.warn("Arabic font not loaded:", e); }
+
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 36;
+
+      const drawRounded = (x,y,w,h,r=14) => {
+        doc.roundedRect(x,y,w,h,r,r,"S");
+      };
+
+      // Header box
+      doc.setLineWidth(1);
+      doc.setDrawColor(40,40,40);
+      doc.setTextColor(10,10,10);
+
+      // Background light
+      doc.setFillColor(245,245,245);
+      doc.rect(0,0,pageW,doc.internal.pageSize.getHeight(),"F");
+
+      // Main card
+      doc.setFillColor(255,255,255);
+      doc.setDrawColor(50,50,50);
+      drawRounded(margin, margin, pageW - margin*2, 90, 14);
+      doc.setFontSize(18);
+      doc.text("شركة الحايك", pageW/2, margin + 35, { align:"center" });
+      doc.setFontSize(12);
+      doc.setTextColor(20,120,80);
+      doc.text("HAYEK SPOT", pageW/2, margin + 55, { align:"center" });
+      doc.setTextColor(10,10,10);
+
+      // Info cards
+      const boxW = pageW - margin*2;
+      const fieldH = 42;
+      let y = margin + 110;
+
+      const field = (label, value) => {
+        drawRounded(margin, y, boxW, fieldH, 12);
+        doc.setFontSize(11);
+        doc.setTextColor(80,80,80);
+        doc.text(label, pageW - margin - 12, y + 16, { align:"right" });
+        doc.setFontSize(12);
+        doc.setTextColor(10,10,10);
+        doc.text(String(value || ""), pageW - margin - 12, y + 34, { align:"right" });
+        y += fieldH + 10;
+      };
+
+      field("اسم المستخدم", inv.username);
+      field("اسم العميل", inv.customer_name || inv.customer || "");
+      field("رقم الفاتورة", inv.id);
+      field("التاريخ", fmtDateTime(inv.created_at));
+
+      // 3 empty lines (space) قبل جدول العمليات
+      y += 22;
+
+      // Operations table
+      doc.setFontSize(12);
+      doc.setTextColor(10,10,10);
+
+      const head = [["الوقت", "البيان", "العملية", "النتيجة"]];
+      const body = lines.map(L => [L.time, L.statement, L.operation, L.result]);
+
+      doc.autoTable({
+        head,
+        body,
+        startY: y,
+        theme: "grid",
+        styles: {
+          font: fontReady ? "Amiri" : "helvetica",
+          fontSize: 10,
+          cellPadding: 6,
+          overflow: "linebreak",
+          valign: "middle",
+          textColor: [10,10,10],
+          lineColor: [60,60,60],
+          lineWidth: 0.6
+        },
+        headStyles: {
+          fillColor: [240,240,240],
+          textColor: [10,10,10],
+          fontStyle: "bold",
+          halign: "center"
+        },
+        columnStyles: {
+          0: { cellWidth: 120, halign: "center" },
+          1: { cellWidth: 170, halign: "right" },
+          2: { cellWidth: 150, halign: "center" },
+          3: { cellWidth: 90, halign: "center" }
+        },
+        didDrawPage: (data) => {
+          // keep background
+          doc.setFillColor(245,245,245);
+          doc.rect(0,0,pageW,doc.internal.pageSize.getHeight(),"F");
+        },
+        margin: { left: margin, right: margin }
+      });
+
+      // 3 empty lines (space) بعد جدول العمليات
+      let afterTableY = doc.lastAutoTable.finalY + 22;
+
+      // Total box (dashed)
+      const totalBoxH = 46;
+      doc.setDrawColor(50,50,50);
+      doc.setLineWidth(1);
+      // dashed
+      doc.setLineDash([6, 4], 0);
+      drawRounded(margin, afterTableY, boxW, totalBoxH, 12);
+      doc.setLineDash([], 0);
+
+      doc.setFontSize(12);
+      doc.setTextColor(10,10,10);
+      doc.text("إجمالي الكشف:", pageW - margin - 12, afterTableY + 18, { align:"right" });
+      doc.setFontSize(14);
+      doc.text(String(inv.total ?? 0), margin + 12, afterTableY + 30, { align:"left" });
+
+      afterTableY += totalBoxH + 14;
+
+      // Footer card
+      const footerH = 70;
+      drawRounded(margin, afterTableY, boxW, footerH, 14);
+      doc.setFontSize(11);
+      doc.setTextColor(120,120,120);
+      doc.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك", pageW/2, afterTableY + 26, { align:"center" });
+      doc.setTextColor(140,110,50);
+      doc.text("شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية", pageW/2, afterTableY + 44, { align:"center" });
+      doc.setTextColor(20,120,80);
+      doc.setFontSize(14);
+      doc.text("05510217646", pageW/2, afterTableY + 62, { align:"center" });
+
+      // Save
+      const fileName = `invoice_${inv.username}_${(inv.customer_name||inv.customer||"client")}_${String(inv.id).slice(0,8)}.pdf`;
+      doc.save(fileName);
+
+      setStatus("تم تصدير PDF بنجاح.", "ok");
+    } catch (e) {
+      console.error(e);
+      setStatus("فشل تصدير PDF.", "bad");
+    }
+  }
+
+  // =========================
+  // Wire UI
+  // =========================
+  btnAdminLogin.onclick = adminLogin;
+  btnAdminLogout.onclick = adminLogout;
+  btnAddUser.onclick = addUser;
+  btnRefreshUsers.onclick = refreshUsersList;
+
+  btnToday.onclick = applyToday;
+  btnLast7.onclick = applyLast7;
+  btnLoadInvoices.onclick = loadInvoices;
+  btnOpenInvoice.onclick = openInvoice;
+  btnExportInvoicePdf.onclick = exportInvoicePdf;
+
+  pickUser.onchange = () => { selectedUser = pickUser.value; };
+
+  // init
+  fromDate.value = addDaysISO(-7);
+  toDate.value = todayISO();
+
+  // restore session if possible
+  (async function init() {
+    try {
+      const s = getSession();
+      if (s && s.username) {
+        // verify still same device lock
+        const row = await fetchUserRow(s.username);
+        const myDev = getDeviceId();
+        if (row && row.is_admin && row.device_id === myDev) {
+          currentAdmin = s;
+          setAdminState("مسجل", true);
+          setStatus("تم استعادة جلسة الأدمن.", "ok");
+          await refreshUsersList();
+          return;
+        }
+      }
+      setAdminState("غير مسجل", false);
+      setStatus("جاهز. سجل دخول الأدمن.", "");
+    } catch (e) {
+      console.error(e);
+      setAdminState("غير مسجل", false);
+      setStatus("جاهز.", "");
+    }
+  })();
+
+})();
+</script>
 </body>
 </html>
