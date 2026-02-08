@@ -2,306 +2,516 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>فاتورة — HAYEK SPOT</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111315" />
-  <title>HAYEK SPOT | Invoice</title>
+  <title>HAYEK SPOT — فاتورة</title>
 
   <style>
     :root{
-      --white:#fff; --green:#19C37D; --yellow:#D6A628; --black:#111315; --dark:#2F3337;
-      --bg:#5F6368;
-      --line: rgba(0,0,0,.10);
-      --muted: rgba(0,0,0,.65);
-      --shadow: 0 14px 40px rgba(0,0,0,.18);
-      --radius: 18px;
+      --bg:#0f1214; --card:#151a1e; --line:rgba(255,255,255,.14);
+      --txt:#fff; --muted:rgba(255,255,255,.72);
+      --green:#19C37D; --yellow:#D6A628;
+      --radius:18px;
+      --white:#FFFFFF;
+      --green:#19C37D;
+      --yellow:#D6A628;
+      --bg1:#0f1113;
+      --bg2:#1a1f24;
+      --card: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.16);
+      --text:#fff;
+      --muted: rgba(255,255,255,.78);
+      --shadow: 0 16px 46px rgba(0,0,0,.45);
+      --radius: 22px;
+      --ink:#111315;
     }
-
     *{box-sizing:border-box}
     body{
+      margin:0; background:var(--bg); color:var(--txt);
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
       margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
-      background:#f4f6f7;
-      color:#111;
+      background: radial-gradient(900px 420px at 30% 0%, rgba(25,195,125,.14), rgba(0,0,0,0) 55%),
+                  radial-gradient(900px 420px at 80% 10%, rgba(214,166,40,.14), rgba(0,0,0,0) 58%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
       padding:16px;
+      display:flex;
+      justify-content:center;
     }
-
-    .wrap{width:min(820px, 100%); margin:0 auto; display:grid; gap:12px}
-
+    .wrap{max-width:720px;margin:0 auto;display:grid;gap:12px}
     .card{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.10);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    .wrap{width:min(980px,100%); display:grid; gap:12px}
 
     .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
       padding:14px 14px;
-      background:
-        radial-gradient(520px 180px at 50% -10%, rgba(25,195,125,.18), rgba(0,0,0,0) 70%),
-        radial-gradient(520px 180px at 10% 30%, rgba(214,166,40,.18), rgba(0,0,0,0) 70%),
-        #ffffff;
-      border-bottom:1px solid rgba(0,0,0,.10);
-    }
-
-    .brand{display:grid; gap:4px}
-    .brand b{font-size:18px; letter-spacing:.3px}
-    .brand span{font-size:12px; color: var(--muted)}
-
-    .btnRow{display:flex; gap:10px; flex-wrap:wrap}
-    .btn{
-      border:1px solid rgba(0,0,0,.12);
-      background:#fff;
-      color:#111;
-      padding:10px 12px;
-      border-radius:14px;
-      font-weight:900;
-      cursor:pointer;
-    }
-    .btn.green{background: rgba(25,195,125,.14); border-color: rgba(25,195,125,.35)}
-    .btn.yellow{background: rgba(214,166,40,.16); border-color: rgba(214,166,40,.35)}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-
-    .meta{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
       padding:14px;
-      display:grid;
-      gap:10px;
     }
+    .top{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap
+      background: linear-gradient(180deg, rgba(17,19,21,.92), rgba(47,51,55,.92));
+      box-shadow: var(--shadow);
+    }
+    .brand{display:grid;gap:4px}
+    .brand b{font-size:18px}
+    .brand span{font-size:12px;color:var(--muted)}
+    .brand{display:grid; gap:3px}
+    .brand b{font-size:16px; letter-spacing:.4px}
+    .brand span{font-size:12px; color:var(--muted)}
 
-    .chips{display:flex; gap:8px; flex-wrap:wrap}
-    .chip{
-      font-size:12px;
-      font-weight:900;
-      border:1px solid rgba(0,0,0,.10);
-      background:#fafafa;
+    .pill{
+      font-size:12px;font-weight:900;padding:7px 10px;border-radius:999px;
+      padding:8px 12px;
       border-radius:999px;
-      padding:7px 10px;
+      font-weight:1000;
+      font-size:12px;
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.10);
+      color:#fff;
       white-space:nowrap;
     }
-    .chip strong{direction:ltr}
+    .pill.ok{background: rgba(25,195,125,.20); border-color: rgba(25,195,125,.45)}
+    .pill.warn{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color:#111315}
+    .pill.bad{background: rgba(255,80,90,.18); border-color: rgba(255,80,90,.35)}
 
-    .hero{
-      padding:14px;
-      display:grid;
-      gap:10px;
-      border-top:1px solid rgba(0,0,0,.08);
-      border-bottom:1px solid rgba(0,0,0,.08);
-      background:
-        radial-gradient(700px 260px at 50% 0%, rgba(214,166,40,.12), rgba(0,0,0,0) 70%),
-        radial-gradient(700px 240px at 20% 50%, rgba(25,195,125,.10), rgba(0,0,0,0) 65%),
-        #fff;
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
     }
-
-    .bannerBox{
-      text-align:center;
-      padding:14px 12px;
-      border-radius:18px;
-      border:1px solid rgba(0,0,0,.10);
-      background:#fff;
-    }
-    .bannerTitle{font-weight:1000; font-size:26px; line-height:1.1}
-    .bannerSub{margin-top:6px; font-weight:1000; letter-spacing:2px; color:#0f7d4f}
-
+    .pill.open{background:rgba(25,195,125,.18); border-color:rgba(25,195,125,.45)}
+    .pill.closed{background:rgba(214,166,40,.18); border-color:rgba(214,166,40,.45)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kv{border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(0,0,0,.12)}
+    .kv b{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .kv div{font-weight:900}
     table{
       width:100%;
       border-collapse:collapse;
-      border:1px solid rgba(0,0,0,.12);
-      border-radius: 14px;
+      border-radius:14px;
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
       overflow:hidden;
-      background:#fff;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.10);
     }
-    th,td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(0,0,0,.08);
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);font-size:13px}
+    th{color:var(--muted);font-weight:900}
+    td.num{text-align:left;direction:ltr;font-weight:900}
+    tr:last-child td{border-bottom:none}
+
+    /* Header banner (تعريفي) */
+    .hero{
+      padding:16px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(900px 260px at 50% 0%, rgba(214,166,40,.22), rgba(0,0,0,0) 70%),
+        radial-gradient(700px 240px at 20% 40%, rgba(25,195,125,.18), rgba(0,0,0,0) 65%),
+        rgba(17,19,21,.18);
+    }
+    .banner{
+      position:relative;
+      text-align:center;
+      padding:16px 14px;
+      border-radius:20px;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.88));
+      color:#111315;
+      border:1px solid rgba(0,0,0,.10);
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .banner::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(450px 160px at 50% -10%, rgba(214,166,40,.42), rgba(0,0,0,0) 70%);
+      pointer-events:none;
+    }
+    .banner::after{
+      content:"";
+      position:absolute; top:-60px; left:-60px;
+      width:160px; height:160px; border-radius:50%;
+      background: rgba(25,195,125,.22);
+      pointer-events:none;
+    }
+    .bannerTitle{
+      position:relative;
+      font-weight:1000;
+      font-size:26px;
+      line-height:1.12;
+    }
+    .bannerSub{
+      position:relative;
+      margin-top:6px;
+      font-weight:1000;
+      font-size:14px;
+      letter-spacing:2px;
+      color:#0f7d4f;
+    }
+    .badgeRow{
+      position:relative;
+      margin-top:10px;
+      display:flex; justify-content:center; gap:8px; flex-wrap:wrap;
+    }
+    .badge{
+      font-size:12px;
+      font-weight:1000;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(17,19,21,.08);
+      border:1px solid rgba(17,19,21,.10);
+      color:#111315;
+      box-shadow: 0 6px 16px rgba(0,0,0,.10);
+      white-space:nowrap;
+    }
+
+    .content{padding:16px; display:grid; gap:12px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width:820px){
+      .grid{grid-template-columns:1fr}
+    }
+    .box{
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(17,19,21,.35);
+      border-radius:18px;
+      padding:12px 12px;
+      display:grid;
+      gap:6px;
+      min-height:64px;
+    }
+    .box label{font-size:12px; color:var(--muted); font-weight:1000}
+    .box b{font-size:16px; direction:ltr; text-align:left}
+    .box b.ar{direction:rtl; text-align:right}
+
+    .actions{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      padding:0 16px 16px;
+    }
+    .btn{
+      user-select:none;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      padding:12px 14px;
+      border-radius:16px;
+      font-weight:1000;
+      cursor:pointer;
+      touch-action:manipulation;
+      min-width:170px;
+    }
+    .btn.green{background: rgba(25,195,125,.22); border-color: rgba(25,195,125,.45)}
+    .btn.yellow{background: rgba(214,166,40,.20); border-color: rgba(214,166,40,.45); color:#111315}
+    .btn.gray{min-width:auto}
+
+    /* Table */
+    .tableWrap{
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:18px;
+      overflow:hidden;
+      background: rgba(17,19,21,.22);
+    }
+    table{width:100%; border-collapse:collapse}
+    thead th{
+      padding:12px 10px;
       font-size:13px;
+      font-weight:1000;
+      color:#111315;
+      background: linear-gradient(135deg, rgba(214,166,40,.95), rgba(25,195,125,.65));
+      border-bottom:1px solid rgba(0,0,0,.12);
+      text-align:right;
+    }
+    tbody td{
+      padding:11px 10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      font-size:13px;
+      color:#fff;
       text-align:right;
       vertical-align:top;
     }
-    th{
-      background:#f6f6f6;
-      font-weight:1000;
-      color:#111;
-      border-bottom:1px solid rgba(0,0,0,.14);
+    tbody tr:nth-child(even) td{
+      background: rgba(255,255,255,.04);
     }
-    td.num{direction:ltr; text-align:left; font-weight:900}
-    tr:last-child td{border-bottom:none}
-
+    td.num{direction:ltr; text-align:left; font-weight:1000}
     .total{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:10px;
-      padding:12px 12px;
-      border:2px dashed rgba(0,0,0,.35);
-      border-radius:16px;
-      background:#fff;
-      font-weight:1000;
-      font-size:16px;
-    }
-    .total span:last-child{direction:ltr}
-
-    .footerBox{
+      display:flex;justify-content:space-between;align-items:center;
+      border:1px dashed rgba(255,255,255,.22);
       margin-top:12px;
-      padding:14px;
+      display:flex; justify-content:space-between; align-items:center;
+      border:2px dashed rgba(255,255,255,.26);
       border-radius:18px;
-      border:1px solid rgba(0,0,0,.12);
-      background:#111;
-      color:#fff;
-      display:grid;
-      gap:8px;
-      text-align:center;
-    }
-    .footerMain{font-weight:1000; font-size:15px; line-height:1.7}
-    .footerLine{font-weight:1000; font-size:13px; color:#D6A628; line-height:1.8}
-    .footerPhone{
+      padding:12px 12px;
+      background: rgba(255,255,255,.06);
       font-weight:1000;
-      font-size:18px;
+    }
+    .total span:last-child{direction:ltr; text-align:left}
+
+    /* Footer banner (تعريفي) */
+    .footerBanner{
+      margin-top:14px;
+      text-align:center;
+      padding:16px 14px;
+      border-radius:20px;
+      background: linear-gradient(135deg, rgba(17,19,21,.96), rgba(47,51,55,.96));
+      color:#FFFFFF;
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 14px 34px rgba(0,0,0,.45);
+      position:relative;
+      overflow:hidden;
+    }
+    .footerBanner::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(520px 180px at 50% -10%, rgba(25,195,125,.28), rgba(0,0,0,0) 70%);
+      pointer-events:none;
+    }
+    .footerMain{position:relative; font-weight:1000; font-size:16px; line-height:1.7}
+    .footerLine{position:relative; margin-top:6px; font-weight:1000; font-size:14px; line-height:1.8; color:var(--yellow)}
+    .footerPhone{
+      position:relative;
+      margin-top:10px;
+      font-weight:1000;
+      font-size:20px;
       direction:ltr;
-      color:#19C37D;
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.18);
+      color: var(--green);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
       border-radius:14px;
+      padding:12px;
+      font-weight:900;
+      background:rgba(255,255,255,.06);
       padding:10px 12px;
       display:inline-block;
-      margin:0 auto;
     }
+    .total span:last-child{direction:ltr}
+    .note{color:var(--muted);font-size:12px;line-height:1.7}
 
-    .note{
-      font-size:12px;
-      color: var(--muted);
-      line-height:1.8;
-    }
+    /* ✅ PRINT: يطبع الفاتورة فقط (بدون ضبابية/سكرينشوت) */
+    .hint{padding:10px 16px; color:var(--muted); font-size:12px}
 
-    /* ✅ طباعة واضحة بدون تغبيش */
+    /* PRINT (PDF) */
     @media print{
-      body{background:#fff; padding:0}
-      .btnRow{display:none !important}
-      .card{box-shadow:none; border:none; border-radius:0}
-      .topbar{border:none}
-      .wrap{width:100%; margin:0}
-      table{page-break-inside:auto}
-      tr{page-break-inside:avoid; page-break-after:auto}
-      .footerBox{break-inside: avoid; page-break-inside: avoid}
+      body{background:#fff;color:#000;padding:0}
+      .card{background:#fff;border:0;box-shadow:none}
+      .pill{border:1px solid #000;background:#fff !important;color:#000 !important}
+      table{border:1px solid #000;background:#fff}
+      th{background:#f0f0f0;color:#000;border:1px solid #000}
+      td{border:1px solid #999;color:#000}
+      .total{border:2px dashed #000;background:#fff}
+      .note{color:#000}
+      body{background:#fff !important; color:#000 !important; padding:0 !important}
+      .topbar, .actions, .hint{display:none !important}
+      .wrap{width:100% !important}
+      .card{box-shadow:none !important; border:none !important; background:#fff !important}
+      .hero{background:#fff !important; border-bottom:none !important}
+      .banner{box-shadow:none !important; border:2px solid #000 !important}
+      .bannerSub{color:#0b7a4a !important}
+
+      .box{background:#fff !important; border:1px solid #000 !important; color:#000 !important}
+      .box label{color:#333 !important}
+      .box b{color:#000 !important}
+
+      .tableWrap{border:1px solid #000 !important; background:#fff !important}
+      thead th{
+        background:#f0f0f0 !important;
+        color:#000 !important;
+        border-bottom:1px solid #000 !important;
+      }
+      tbody td{color:#000 !important; border-bottom:1px solid #999 !important}
+      tbody tr:nth-child(even) td{background:#fafafa !important}
+
+      .total{
+        border:2px dashed #000 !important;
+        background:#fff !important;
+        color:#000 !important;
+      }
+      .footerBanner{
+        box-shadow:none !important;
+        border:2px solid #111 !important;
+        background:#111 !important;
+        color:#fff !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .footerPhone{background:#fff !important; color:#19C37D !important; border:2px solid #19C37D !important}
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div class="brand">
+          <b>HAYEK SPOT — فاتورة</b>
+          <span id="subLine">...</span>
+        </div>
+        <div id="statusPill" class="pill">...</div>
+    <div class="topbar">
+      <div class="brand">
+        <b>HAYEK SPOT — فاتورة</b>
+        <span id="subTitle">...</span>
+      </div>
+      <div class="pill" id="statusPill">...</div>
+    </div>
 
     <div class="card">
-      <div class="topbar">
-        <div class="brand">
-          <b>HAYEK SPOT</b>
-          <span>فاتورة رسمية — طباعة/PDF</span>
-        </div>
-
-        <div class="btnRow">
-          <button class="btn green" id="printBtn">طباعة / PDF</button>
-          <button class="btn yellow" id="reloadBtn">تحديث</button>
-        </div>
-      </div>
-
-      <div class="meta">
-        <div class="chips" id="chips">
-          <div class="chip">Invoice: <strong id="invId">—</strong></div>
-          <div class="chip">العميل: <span id="customer">—</span></div>
-          <div class="chip">المستخدم: <span id="username">—</span></div>
-          <div class="chip">التاريخ: <span id="date">—</span></div>
-          <div class="chip">الحالة: <span id="status">—</span></div>
-        </div>
-
-        <div class="hero">
-          <div class="bannerBox">
-            <div class="bannerTitle">شركة الحايك</div>
-            <div class="bannerSub">HAYEK SPOT</div>
-          </div>
-
-          <div class="note" id="hint">جارٍ تحميل الفاتورة…</div>
-
-          <div style="overflow:auto">
-            <table>
-              <thead>
-                <tr>
-                  <th>الوقت</th>
-                  <th>البيان</th>
-                  <th class="num">العملية</th>
-                  <th class="num">النتيجة</th>
-                </tr>
-              </thead>
-              <tbody id="tbody"></tbody>
-            </table>
-          </div>
-
-          <div class="total">
-            <span>إجمالي الكشف:</span>
-            <span id="grandTotal">0</span>
-          </div>
-
-          <div class="footerBox">
-            <div class="footerMain">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-            <div class="footerLine">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية /</div>
-            <div class="footerPhone">05510217646</div>
+      <div class="grid2">
+        <div class="kv"><b>اسم المستخدم</b><div id="username">—</div></div>
+        <div class="kv"><b>اسم العميل</b><div id="customer">—</div></div>
+        <div class="kv"><b>رقم الفاتورة</b><div id="invId" style="direction:ltr">—</div></div>
+        <div class="kv"><b>التاريخ</b><div id="createdAt">—</div></div>
+      <div class="hero">
+        <div class="banner">
+          <div class="bannerTitle">شركة الحايك</div>
+          <div class="bannerSub">HAYEK SPOT</div>
+          <div class="badgeRow">
+            <div class="badge">فاتورة رسمية</div>
+            <div class="badge">سجل عمليات كامل</div>
+            <div class="badge">طباعة / PDF</div>
           </div>
         </div>
       </div>
     </div>
 
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الوقت</th>
+            <th>البيان</th>
+            <th class="num">العملية</th>
+            <th class="num">النتيجة</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div style="height:10px"></div>
+
+      <div class="total">
+        <span>إجمالي الكشف:</span>
+        <span id="grandTotal">0</span>
+      </div>
+      <div class="content">
+        <div class="grid">
+          <div class="box">
+            <label>اسم المستخدم</label>
+            <b class="ar" id="username">—</b>
+          </div>
+          <div class="box">
+            <label>اسم العميل</label>
+            <b class="ar" id="customer">—</b>
+          </div>
+          <div class="box">
+            <label>رقم الفاتورة</label>
+            <b id="invoiceId">—</b>
+          </div>
+          <div class="box">
+            <label>التاريخ</label>
+            <b class="ar" id="date">—</b>
+          </div>
+        </div>
+
+      <div style="height:10px"></div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:190px">الوقت</th>
+                <th>البيان</th>
+                <th class="num" style="width:170px">العملية</th>
+                <th class="num" style="width:120px">النتيجة</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <!-- rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="total">
+          <span>إجمالي الكشف:</span>
+          <span id="grandTotal">0</span>
+        </div>
+
+      <div class="note">
+        تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
+        <div class="footerBanner">
+          <div class="footerMain">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="footerLine">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية /</div>
+          <div class="footerPhone">05510217646</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn green" id="printBtn">تصدير / طباعة PDF</button>
+        <button class="btn gray" id="backBtn">رجوع</button>
+      </div>
+
+      <div class="hint" id="hint">ملاحظة: لازم تفتح الرابط ومعه invoice_id.</div>
+    </div>
   </div>
 
 <script>
+  // ========= Supabase REST =========
   // =========================
-  // ✅ Supabase REST
+  // Supabase REST
   // =========================
   const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
   const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
   const REST = `${SUPABASE_URL}/rest/v1`;
+
   const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
+
+  function qp(name){
+    const u = new URL(location.href);
+    return u.searchParams.get(name);
+  function toast(msg){
+    const d = document.createElement("div");
+    d.textContent = msg;
+    Object.assign(d.style, {
+      position:"fixed", bottom:"18px", left:"50%",
+      transform:"translateX(-50%)",
+      background:"rgba(17,19,21,.88)",
+      color:"#fff", padding:"10px 14px",
+      borderRadius:"14px", fontWeight:"1000",
+      zIndex:9999, border:"1px solid rgba(255,255,255,.18)"
+    });
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(), 1600);
+  }
 
   const apiFetch = async (path, options = {}) => {
+  async function apiFetch(path, options = {}){
     const res = await fetch(`${REST}${path}`, {
       ...options,
       headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+@@ -151,91 +410,144 @@
         ...(options.headers || {})
       }
     });
     if (!res.ok) {
+    if (!res.ok){
       const t = await res.text().catch(()=> "");
       throw new Error(`API ${res.status}: ${t || res.statusText}`);
     }
     const text = await res.text();
     return text ? JSON.parse(text) : null;
   };
-
-  function qs(name){
-    const u = new URL(location.href);
-    return u.searchParams.get(name);
   }
 
-  function fmtDateTime(ts){
-    try{
-      const d = new Date(ts);
-      return d.toLocaleString("ar-EG", { hour12:true });
-    }catch{ return String(ts||""); }
-  }
-  function fmtTime(ts){
-    try{
-      const d = new Date(ts);
-      return d.toLocaleTimeString("ar", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-    }catch{ return ""; }
-  }
-  function safeNum(x){
-    const n = Number(x);
-    return Number.isFinite(n) ? n : 0;
-  }
+  function fmt(n){
   function formatNumber(n){
     const x = Number(n);
     if (!Number.isFinite(x)) return "0";
@@ -309,98 +519,178 @@
     return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
   }
 
-  async function loadInvoiceAndOps(invoiceId){
-    $("hint").textContent = "جارٍ تحميل الفاتورة…";
-    $("tbody").innerHTML = "";
-    $("grandTotal").textContent = "0";
-
-    // 1) Invoice (مرن: invoice_id أو id)
-    let inv = null;
+  function fmtDate(iso){
+  function fmtDT(dt){
     try{
-      const r1 = await apiFetch(`/app_invoices?select=invoice_id,id,username,customer_name,status,total,created_at,closed_at&limit=1&invoice_id=eq.${encodeURIComponent(invoiceId)}`, { method:"GET" });
-      inv = Array.isArray(r1) ? r1[0] : null;
-    }catch(_){}
+      const d = new Date(iso);
+      return d.toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }catch{ return iso || "—"; }
+      const d = new Date(dt);
+      if (isNaN(d.getTime())) return "—";
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const da = String(d.getDate()).padStart(2,"0");
+      const hh = String(d.getHours()).padStart(2,"0");
+      const mm = String(d.getMinutes()).padStart(2,"0");
+      // عربي بسيط
+      return `${y}/${m}/${da} ${hh}:${mm}`;
+    }catch{ return "—"; }
+  }
 
-    if (!inv){
-      try{
-        const r2 = await apiFetch(`/app_invoices?select=invoice_id,id,username,customer_name,status,total,created_at,closed_at&limit=1&id=eq.${encodeURIComponent(invoiceId)}`, { method:"GET" });
-        inv = Array.isArray(r2) ? r2[0] : null;
-      }catch(_){}
-    }
-
-    if (!inv){
-      $("hint").textContent = "لم يتم العثور على الفاتورة ❌";
-      $("invId").textContent = invoiceId || "—";
+  async function loadInvoice(){
+    const invoiceId = qp("invoice_id");
+    if (!invoiceId) {
+      $("subLine").textContent = "مفقود invoice_id في الرابط";
+      $("statusPill").textContent = "خطأ";
       return;
-    }
-
-    const shownId = inv.invoice_id || inv.id || invoiceId;
-
-    $("invId").textContent = shownId;
-    $("customer").textContent = inv.customer_name || "—";
-    $("username").textContent = inv.username || "—";
-    $("status").textContent = inv.status || "—";
-    $("date").textContent = fmtDateTime(inv.closed_at || inv.created_at);
-
-    // 2) Operations
-    const ops = await apiFetch(
-      `/app_operations?select=created_at,label,operation,result&order=created_at.asc&invoice_id=eq.${encodeURIComponent(shownId)}`,
-      { method:"GET" }
-    );
-
-    const rows = Array.isArray(ops) ? ops : [];
-    if (!rows.length){
-      $("hint").textContent = "لا توجد سطور داخل هذه الفاتورة.";
+  function setStatusPill(status){
+    const p = $("statusPill");
+    if (status === "closed"){
+      p.textContent = "مغلقة";
+      p.className = "pill warn";
+    } else if (status === "open"){
+      p.textContent = "مفتوحة";
+      p.className = "pill ok";
     } else {
-      $("hint").textContent = "";
-    }
-
-    let total = 0;
-    const tb = $("tbody");
-    tb.innerHTML = "";
-
-    rows.forEach(r=>{
-      const tr = document.createElement("tr");
-
-      const tdT = document.createElement("td");
-      tdT.textContent = fmtTime(r.created_at);
-
-      const tdL = document.createElement("td");
-      tdL.textContent = r.label || "عملية";
-
-      const tdO = document.createElement("td");
-      tdO.className = "num";
-      tdO.textContent = r.operation || "";
-
-      const tdR = document.createElement("td");
-      tdR.className = "num";
-      tdR.textContent = r.result ?? "";
-
-      total += safeNum(r.result);
-
-      tr.append(tdT, tdL, tdO, tdR);
-      tb.appendChild(tr);
-    });
-
-    // إذا كان total موجود بالفاتورة وخانة العمليات تعطي 0، نعتمد الحساب من السطور
-    const finalTotal = Number.isFinite(Number(inv.total)) ? Number(inv.total) : total;
-    $("grandTotal").textContent = formatNumber(finalTotal);
-
-    // ✅ إذا تم فتح الصفحة بطلب print=1 اطبع تلقائي بعد التحميل
-    if (qs("print") === "1"){
-      setTimeout(()=> window.print(), 350);
+      p.textContent = "غير معروف";
+      p.className = "pill bad";
     }
   }
 
-  $("printBtn").addEventListener("click", ()=> window.print());
-  $("reloadBtn").addEventListener("click", ()=> location.reload());
+    $("invId").textContent = invoiceId;
+  function getInvoiceIdFromUrl(){
+    const u = new URL(location.href);
+    return u.searchParams.get("invoice_id") || "";
+  }
+
+  async function loadInvoice(invoice_id){
+    // invoice
+    const qInv =
+      `?select=id,username,customer_name,status,created_at,closed_at` +
+      `&id=eq.${encodeURIComponent(invoice_id)}` +
+      `&limit=1`;
+
+    const invRows = await apiFetch(`/app_invoices?select=id,username,customer_name,status,created_at,total,closed_at&limit=1&id=eq.${encodeURIComponent(invoiceId)}`, { method:"GET" });
+    const invRows = await apiFetch(`/app_invoices${qInv}`, { method:"GET" });
+    const inv = Array.isArray(invRows) ? invRows[0] : null;
+    if (!inv) {
+      $("subLine").textContent = "لم يتم العثور على الفاتورة";
+      $("statusPill").textContent = "غير موجودة";
+      return;
+    }
+    if (!inv) throw new Error("لم يتم العثور على الفاتورة");
+
+    // operations
+    const qOps =
+      `?select=label,operation,result,created_at` +
+      `&invoice_id=eq.${encodeURIComponent(invoice_id)}` +
+      `&order=created_at.asc`;
+
+    const ops = await apiFetch(`/app_operations${qOps}`, { method:"GET" });
+    return { inv, ops: Array.isArray(ops) ? ops : [] };
+  }
+
+  function render({ inv, ops }){
+    $("invoiceId").textContent = inv.id || "—";
+    $("username").textContent = inv.username || "—";
+    $("customer").textContent = inv.customer_name || "—";
+    $("createdAt").textContent = fmtDate(inv.created_at);
+
+    const pill = $("statusPill");
+    const st = (inv.status || "open").toLowerCase();
+    pill.textContent = st === "closed" ? "مغلقة" : "مفتوحة";
+    pill.className = `pill ${st === "closed" ? "closed" : "open"}`;
+    $("date").textContent = fmtDT(inv.closed_at || inv.created_at);
+    setStatusPill(inv.status || "open");
+
+    $("subLine").textContent = st === "closed"
+      ? `فاتورة مغلقة — ${fmtDate(inv.closed_at)}`
+      : `فاتورة مفتوحة`;
+    $("subTitle").textContent = `رقم الفاتورة: ${inv.id} — ${fmtDT(inv.closed_at || inv.created_at)}`;
+
+    const ops = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(invoiceId)}&order=created_at.asc`, { method:"GET" });
+    const tbody = $("tbody");
+    tbody.innerHTML = "";
+
+    const tb = $("tbody");
+    tb.innerHTML = "";
+    let total = 0;
+
+    (ops || []).forEach(r=>{
+    for (const row of ops){
+      const tr = document.createElement("tr");
+      const tdTime = document.createElement("td"); tdTime.textContent = fmtDate(r.created_at);
+      const tdLabel = document.createElement("td"); tdLabel.textContent = r.label || "عملية";
+      const tdOp = document.createElement("td"); tdOp.className="num"; tdOp.textContent = r.operation || "";
+      const tdRes = document.createElement("td"); tdRes.className="num"; tdRes.textContent = r.result ?? "";
+      tr.append(tdTime, tdLabel, tdOp, tdRes);
+      tb.appendChild(tr);
+
+      const v = Number(r.result);
+      if (Number.isFinite(v)) total += v;
+    });
+
+    $("grandTotal").textContent = fmt(total);
+      const tdT = document.createElement("td");
+      tdT.textContent = fmtDT(row.created_at);
+
+      const tdL = document.createElement("td");
+      tdL.textContent = (row.label || "عملية");
+
+      const tdO = document.createElement("td");
+      tdO.className = "num";
+      tdO.textContent = (row.operation || "").toString();
+
+    // ✅ إذا الرابط فيه print=1 اطبع مباشرة
+    if (qp("print") === "1"){
+      setTimeout(()=>window.print(), 350);
+      const tdR = document.createElement("td");
+      tdR.className = "num";
+      tdR.textContent = formatNumber(row.result);
+
+      tr.append(tdT, tdL, tdO, tdR);
+      tbody.appendChild(tr);
+
+      const r = Number(row.result);
+      if (Number.isFinite(r)) total += r;
+    }
+
+    $("grandTotal").textContent = formatNumber(total);
+    $("hint").textContent = `عدد السطور: ${ops.length}`;
+  }
+
+  loadInvoice().catch(err=>{
+    console.error(err);
+    $("subLine").textContent = "خطأ تحميل الفاتورة";
+    $("statusPill").textContent = "خطأ";
+  });
+  // Buttons
+  $("printBtn").addEventListener("click", () => window.print());
+  $("backBtn").addEventListener("click", () => history.length > 1 ? history.back() : location.href = "./admin.html?v=999");
 
   // Boot
-  const invoiceId = qs("invoice_id") || "";
-  loadInvoiceAndOps(invoiceId).catch(err=>{
-    console.error(err);
-    $("hint").textContent = "خطأ اتصال أثناء تحميل الفاتورة.";
-  });
+  (async () => {
+    const invoice_id = getInvoiceIdFromUrl();
+    if (!invoice_id){
+      setStatusPill("bad");
+      $("statusPill").textContent = "خطأ";
+      $("subTitle").textContent = "مفقود invoice_id في الرابط";
+      $("hint").textContent = "افتح الرابط هكذا: invoice.html?v=999&invoice_id=XXXX";
+      return;
+    }
+
+    try{
+      const data = await loadInvoice(invoice_id);
+      render(data);
+    }catch(e){
+      console.error(e);
+      $("statusPill").textContent = "خطأ";
+      $("statusPill").className = "pill bad";
+      $("subTitle").textContent = "لم يتم تحميل الفاتورة";
+      $("hint").textContent = e?.message || "حدث خطأ";
+      toast($("hint").textContent);
+    }
+  })();
 </script>
 </body>
 </html>
