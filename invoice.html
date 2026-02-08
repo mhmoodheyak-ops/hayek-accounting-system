@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>فاتورة — HAYEK SPOT</title>
+
+  <style>
+    :root{
+      --bg:#0f1214; --card:#151a1e; --line:rgba(255,255,255,.14);
+      --txt:#fff; --muted:rgba(255,255,255,.72);
+      --green:#19C37D; --yellow:#D6A628;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--txt);
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
+      padding:16px;
+    }
+    .wrap{max-width:720px;margin:0 auto;display:grid;gap:12px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+    }
+    .top{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap
+    }
+    .brand{display:grid;gap:4px}
+    .brand b{font-size:18px}
+    .brand span{font-size:12px;color:var(--muted)}
+    .pill{
+      font-size:12px;font-weight:900;padding:7px 10px;border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
+    }
+    .pill.open{background:rgba(25,195,125,.18); border-color:rgba(25,195,125,.45)}
+    .pill.closed{background:rgba(214,166,40,.18); border-color:rgba(214,166,40,.45)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kv{border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(0,0,0,.12)}
+    .kv b{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    .kv div{font-weight:900}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.10);
+    }
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);font-size:13px}
+    th{color:var(--muted);font-weight:900}
+    td.num{text-align:left;direction:ltr;font-weight:900}
+    tr:last-child td{border-bottom:none}
+    .total{
+      display:flex;justify-content:space-between;align-items:center;
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius:14px;
+      padding:12px;
+      font-weight:900;
+      background:rgba(255,255,255,.06);
+    }
+    .total span:last-child{direction:ltr}
+    .note{color:var(--muted);font-size:12px;line-height:1.7}
+
+    /* ✅ PRINT: يطبع الفاتورة فقط (بدون ضبابية/سكرينشوت) */
+    @media print{
+      body{background:#fff;color:#000;padding:0}
+      .card{background:#fff;border:0;box-shadow:none}
+      .pill{border:1px solid #000;background:#fff !important;color:#000 !important}
+      table{border:1px solid #000;background:#fff}
+      th{background:#f0f0f0;color:#000;border:1px solid #000}
+      td{border:1px solid #999;color:#000}
+      .total{border:2px dashed #000;background:#fff}
+      .note{color:#000}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div class="brand">
+          <b>HAYEK SPOT — فاتورة</b>
+          <span id="subLine">...</span>
+        </div>
+        <div id="statusPill" class="pill">...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid2">
+        <div class="kv"><b>اسم المستخدم</b><div id="username">—</div></div>
+        <div class="kv"><b>اسم العميل</b><div id="customer">—</div></div>
+        <div class="kv"><b>رقم الفاتورة</b><div id="invId" style="direction:ltr">—</div></div>
+        <div class="kv"><b>التاريخ</b><div id="createdAt">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الوقت</th>
+            <th>البيان</th>
+            <th class="num">العملية</th>
+            <th class="num">النتيجة</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div style="height:10px"></div>
+
+      <div class="total">
+        <span>إجمالي الكشف:</span>
+        <span id="grandTotal">0</span>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="note">
+        تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ========= Supabase REST =========
+  const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+  const REST = `${SUPABASE_URL}/rest/v1`;
+
+  const $ = (id)=>document.getElementById(id);
+
+  function qp(name){
+    const u = new URL(location.href);
+    return u.searchParams.get(name);
+  }
+
+  const apiFetch = async (path, options = {}) => {
+    const res = await fetch(`${REST}${path}`, {
+      ...options,
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(()=> "");
+      throw new Error(`API ${res.status}: ${t || res.statusText}`);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  };
+
+  function fmt(n){
+    const x = Number(n);
+    if (!Number.isFinite(x)) return "0";
+    const s = x.toString();
+    return s.includes(".") ? x.toFixed(6).replace(/0+$/,"").replace(/\.$/,"") : s;
+  }
+
+  function fmtDate(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }catch{ return iso || "—"; }
+  }
+
+  async function loadInvoice(){
+    const invoiceId = qp("invoice_id");
+    if (!invoiceId) {
+      $("subLine").textContent = "مفقود invoice_id في الرابط";
+      $("statusPill").textContent = "خطأ";
+      return;
+    }
+
+    $("invId").textContent = invoiceId;
+
+    const invRows = await apiFetch(`/app_invoices?select=id,username,customer_name,status,created_at,total,closed_at&limit=1&id=eq.${encodeURIComponent(invoiceId)}`, { method:"GET" });
+    const inv = Array.isArray(invRows) ? invRows[0] : null;
+    if (!inv) {
+      $("subLine").textContent = "لم يتم العثور على الفاتورة";
+      $("statusPill").textContent = "غير موجودة";
+      return;
+    }
+
+    $("username").textContent = inv.username || "—";
+    $("customer").textContent = inv.customer_name || "—";
+    $("createdAt").textContent = fmtDate(inv.created_at);
+
+    const pill = $("statusPill");
+    const st = (inv.status || "open").toLowerCase();
+    pill.textContent = st === "closed" ? "مغلقة" : "مفتوحة";
+    pill.className = `pill ${st === "closed" ? "closed" : "open"}`;
+
+    $("subLine").textContent = st === "closed"
+      ? `فاتورة مغلقة — ${fmtDate(inv.closed_at)}`
+      : `فاتورة مفتوحة`;
+
+    const ops = await apiFetch(`/app_operations?select=created_at,label,operation,result&invoice_id=eq.${encodeURIComponent(invoiceId)}&order=created_at.asc`, { method:"GET" });
+
+    const tb = $("tbody");
+    tb.innerHTML = "";
+    let total = 0;
+
+    (ops || []).forEach(r=>{
+      const tr = document.createElement("tr");
+      const tdTime = document.createElement("td"); tdTime.textContent = fmtDate(r.created_at);
+      const tdLabel = document.createElement("td"); tdLabel.textContent = r.label || "عملية";
+      const tdOp = document.createElement("td"); tdOp.className="num"; tdOp.textContent = r.operation || "";
+      const tdRes = document.createElement("td"); tdRes.className="num"; tdRes.textContent = r.result ?? "";
+      tr.append(tdTime, tdLabel, tdOp, tdRes);
+      tb.appendChild(tr);
+
+      const v = Number(r.result);
+      if (Number.isFinite(v)) total += v;
+    });
+
+    $("grandTotal").textContent = fmt(total);
+
+    // ✅ إذا الرابط فيه print=1 اطبع مباشرة
+    if (qp("print") === "1"){
+      setTimeout(()=>window.print(), 350);
+    }
+  }
+
+  loadInvoice().catch(err=>{
+    console.error(err);
+    $("subLine").textContent = "خطأ تحميل الفاتورة";
+    $("statusPill").textContent = "خطأ";
+  });
+</script>
+</body>
+</html>
