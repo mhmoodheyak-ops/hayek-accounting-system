@@ -1,518 +1,515 @@
-// admin.js  (NO IMPORTS - works on GitHub Pages)
 (() => {
-  const cfg = window.APP_CONFIG || {};
-  const SUPABASE_URL = cfg.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = cfg.SUPABASE_ANON_KEY;
-
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG || {};
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    alert("❌ config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)");
-    return;
-  }
-
-  if (!window.supabase || !window.supabase.createClient) {
-    alert("❌ مكتبة Supabase لم تُحمّل. تأكد أن admin.html يحتوي على <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>");
+    alert('config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)');
     return;
   }
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const $ = (id) => document.getElementById(id);
-  const statusLine = $("statusLine");
-  const adminStatePill = $("adminStatePill");
+  const el = (id) => document.getElementById(id);
 
-  const adminUser = $("adminUser");
-  const adminPass = $("adminPass");
-  const btnAdminLogin = $("btnAdminLogin");
-  const btnAdminLogout = $("btnAdminLogout");
+  const statusLine = el("statusLine");
+  const adminStatePill = el("adminStatePill");
+  const adminMsg = el("adminMsg");
 
-  const newUsername = $("newUsername");
-  const newPassword = $("newPassword");
-  const newRole = $("newRole");
-  const btnAddUser = $("btnAddUser");
-  const btnRefreshUsers = $("btnRefreshUsers");
-  const usersCount = $("usersCount");
-  const usersTableBody = $("usersTable").querySelector("tbody");
+  const adminUser = el("adminUser");
+  const adminPass = el("adminPass");
+  const btnAdminLogin = el("btnAdminLogin");
+  const btnAdminLogout = el("btnAdminLogout");
 
-  const pickUser = $("pickUser");
-  const pickStatus = $("pickStatus");
-  const fromDate = $("fromDate");
-  const toDate = $("toDate");
-  const btnToday = $("btnToday");
-  const btnLast7 = $("btnLast7");
-  const btnLoadInvoices = $("btnLoadInvoices");
-  const invCount = $("invCount");
+  const newUsername = el("newUsername");
+  const newPassword = el("newPassword");
+  const newRole = el("newRole");
+  const btnAddUser = el("btnAddUser");
+  const btnRefreshUsers = el("btnRefreshUsers");
+  const usersCount = el("usersCount");
+  const usersList = el("usersList");
+  const pickedUserLabel = el("pickedUserLabel");
 
-  const invoiceSelect = $("invoiceSelect");
-  const btnOpenInvoice = $("btnOpenInvoice");
-  const btnExportInvoicePdf = $("btnExportInvoicePdf");
-  const invoicePreview = $("invoicePreview");
+  const fromDate = el("fromDate");
+  const toDate = el("toDate");
+  const pickStatus = el("pickStatus");
+  const btnToday = el("btnToday");
+  const btnLast7 = el("btnLast7");
+  const btnLoadInvoices = el("btnLoadInvoices");
+  const invCount = el("invCount");
 
-  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V1";
-  const DEVICE_KEY = "HAYEK_DEVICE_ID_V1";
+  const invoiceSelect = el("invoiceSelect");
+  const btnOpenInvoice = el("btnOpenInvoice");
+  const btnExportInvoicePdf = el("btnExportInvoicePdf");
+  const invoicePreview = el("invoicePreview");
 
-  function setStatus(msg) {
-    statusLine.textContent = `الحالة: ${msg}`;
+  // ========= Helpers =========
+  const pad2 = (n) => (n < 10 ? "0" + n : "" + n);
+  const toDateInput = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+  function fmtDateTime(iso) {
+    const d = new Date(iso);
+    const yyyy = d.getFullYear();
+    const mm = pad2(d.getMonth() + 1);
+    const dd = pad2(d.getDate());
+    const hh = pad2(d.getHours());
+    const mi = pad2(d.getMinutes());
+    return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+  }
+
+  function setMsg(text, ok = true) {
+    adminMsg.textContent = text || "";
+    adminMsg.className = "msg " + (ok ? "ok" : "bad");
   }
 
   function getDeviceId() {
-    let id = localStorage.getItem(DEVICE_KEY);
-    if (!id) {
-      id = "dev_" + (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()));
-      localStorage.setItem(DEVICE_KEY, id);
+    // جهاز ثابت لكل متصفح
+    const k = "HAYEK_ADMIN_DEVICE_V1";
+    let v = localStorage.getItem(k);
+    if (!v) {
+      v = "adm_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+      localStorage.setItem(k, v);
     }
-    return id;
+    return v;
   }
 
-  function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
-  function loadSession() {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
-    catch { return null; }
-  }
-  function clearSession() { localStorage.removeItem(SESSION_KEY); }
-  function isAdminLogged() {
-    const s = loadSession();
-    return !!(s && s.username && s.device_id);
+  // ========= Session =========
+  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V1";
+  let session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+  let pickedUser = session?.pickedUser || "";
+  let openedInvoice = null;
+
+  function setLoggedIn(isIn) {
+    adminStatePill.textContent = isIn ? "مفتوح" : "غير مسجل";
+    adminStatePill.classList.toggle("ok", !!isIn);
   }
 
-  function setAdminUI() {
-    if (isAdminLogged()) {
-      adminStatePill.textContent = "مسجّل";
-      adminStatePill.classList.add("ok");
-    } else {
-      adminStatePill.textContent = "غير مسجّل";
-      adminStatePill.classList.remove("ok");
-    }
+  function saveSession() {
+    session = session || {};
+    session.pickedUser = pickedUser || "";
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   }
 
-  function toISODate(d) {
-    const x = new Date(d);
-    const yyyy = x.getFullYear();
-    const mm = String(x.getMonth() + 1).padStart(2, "0");
-    const dd = String(x.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  function setTodayRange() {
-    const today = new Date();
-    fromDate.value = toISODate(today);
-    toDate.value = toISODate(today);
-  }
-
-  function setLast7Range() {
-    const today = new Date();
-    const prev = new Date();
-    prev.setDate(today.getDate() - 6);
-    fromDate.value = toISODate(prev);
-    toDate.value = toISODate(today);
-  }
-
+  // ========= Admin Login with device lock =========
   async function adminLogin() {
+    setMsg("");
+    statusLine.textContent = "الحالة: جاري التحقق...";
     const u = (adminUser.value || "").trim();
     const p = (adminPass.value || "").trim();
-    if (!u || !p) return alert("اكتب اسم المستخدم وكلمة السر");
+    if (!u || !p) return setMsg("❌ أدخل اسم المستخدم وكلمة السر.", false);
 
     const device_id = getDeviceId();
 
-    setStatus("جاري التحقق...");
     const { data, error } = await supabase
       .from("app_users")
-      .select("id, username, pass, is_admin, blocked, device_id")
+      .select("*")
       .eq("username", u)
       .limit(1);
 
-    if (error) { console.error(error); setStatus("خطأ اتصال"); return alert("خطأ اتصال بقاعدة البيانات"); }
-
-    const row = data?.[0];
-    if (!row) { setStatus("مستخدم غير موجود"); return alert("المستخدم غير موجود"); }
-    if (!row.is_admin) { setStatus("ليس Admin"); return alert("هذا المستخدم ليس Admin"); }
-    if (row.blocked) { setStatus("محظور"); return alert("هذا المستخدم محظور"); }
-    if (String(row.pass) !== String(p)) { setStatus("بيانات خاطئة"); return alert("بيانات خاطئة"); }
-
-    if (row.device_id && row.device_id !== device_id) {
-      setStatus("مرفوض: جهاز آخر");
-      return alert("❌ Admin مستخدم على جهاز آخر.\nلفك القفل: اجعل device_id = null لهذا المستخدم من Supabase.");
+    if (error || !data?.length) {
+      statusLine.textContent = "الحالة: خطأ";
+      return setMsg("❌ المستخدم غير موجود.", false);
     }
 
-    if (!row.device_id) {
+    const user = data[0];
+    if (!user.is_admin) {
+      statusLine.textContent = "الحالة: مرفوض";
+      return setMsg("❌ هذا الحساب ليس Admin.", false);
+    }
+    if (String(user.pass) !== String(p)) {
+      statusLine.textContent = "الحالة: مرفوض";
+      return setMsg("❌ كلمة السر غير صحيحة.", false);
+    }
+
+    // قفل الجهاز: إذا device_id موجود ومختلف => رفض
+    if (user.device_id && String(user.device_id) !== String(device_id)) {
+      statusLine.textContent = "الحالة: مرفوض";
+      setLoggedIn(false);
+      return setMsg("❌ الحالة: Admin مستخدم على جهاز آخر.", false);
+    }
+
+    // إذا فارغ -> اربط الجهاز الحالي
+    if (!user.device_id) {
       const { error: upErr } = await supabase
         .from("app_users")
         .update({ device_id, last_seen: new Date().toISOString() })
-        .eq("id", row.id);
+        .eq("username", u);
 
-      if (upErr) { console.error(upErr); setStatus("فشل ربط الجهاز"); return alert("فشل ربط الجهاز"); }
+      if (upErr) {
+        statusLine.textContent = "الحالة: خطأ";
+        setLoggedIn(false);
+        return setMsg("❌ فشل ربط الجهاز. راجع صلاحيات Supabase.", false);
+      }
     } else {
-      await supabase.from("app_users").update({ last_seen: new Date().toISOString() }).eq("id", row.id);
+      // حدث last_seen فقط
+      await supabase.from("app_users").update({ last_seen: new Date().toISOString() }).eq("username", u);
     }
 
-    saveSession({ username: row.username, device_id });
-    setStatus("تم تسجيل الدخول");
-    setAdminUI();
-
+    session = { admin: u, device_id, pickedUser };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    setLoggedIn(true);
+    statusLine.textContent = "الحالة: مفتوح";
+    setMsg("✅ تم تسجيل الدخول بنجاح.");
     await refreshUsers();
-    await fillUsersDropdown();
   }
 
-  async function adminLogout() {
-    clearSession();
-    setAdminUI();
-    setStatus("تم تسجيل الخروج");
+  function adminLogout() {
+    localStorage.removeItem(SESSION_KEY);
+    session = null;
+    pickedUser = "";
+    openedInvoice = null;
+    invoiceSelect.innerHTML = `<option value="">— لا يوجد —</option>`;
+    invoicePreview.innerHTML = "";
+    pickedUserLabel.textContent = "المستخدم المحدد للفواتير: —";
+    setLoggedIn(false);
+    statusLine.textContent = "الحالة: مغلق";
+    setMsg("✅ تم تسجيل الخروج.");
+  }
+
+  // ========= Users =========
+  function userCard(u) {
+    const roleText = u.is_admin ? "Admin" : "User";
+    const blocked = !!u.blocked;
+
+    const wrap = document.createElement("div");
+    wrap.className = "user-card";
+
+    wrap.innerHTML = `
+      <div class="uc-top">
+        <div class="uc-name">${escapeHtml(u.username)}</div>
+        <div class="uc-meta">
+          <span class="tag">${roleText}</span>
+          <span class="tag ${blocked ? "bad" : "ok"}">${blocked ? "محظور" : "حر"}</span>
+          <span class="tag">${u.device_id ? "مربوط" : "فارغ"}</span>
+        </div>
+      </div>
+
+      <div class="uc-actions">
+        <button class="btn small primary">اختر</button>
+        <button class="btn small">${blocked ? "فك الحظر" : "حظر"}</button>
+        <button class="btn small">فك ربط الجهاز</button>
+        <button class="btn small danger">حذف</button>
+      </div>
+    `;
+
+    const [btnPick, btnBlock, btnUnbind, btnDel] = wrap.querySelectorAll("button");
+
+    btnPick.onclick = () => {
+      pickedUser = u.username;
+      pickedUserLabel.textContent = `المستخدم المحدد للفواتير: ${pickedUser}`;
+      saveSession();
+      setMsg(`✅ تم تحديد المستخدم: ${pickedUser}`);
+    };
+
+    btnBlock.onclick = async () => {
+      if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
+      const { error } = await supabase
+        .from("app_users")
+        .update({ blocked: !blocked })
+        .eq("id", u.id);
+      if (error) return setMsg("❌ فشل تحديث الحظر.", false);
+      setMsg("✅ تم التحديث.");
+      await refreshUsers();
+    };
+
+    btnUnbind.onclick = async () => {
+      if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
+      const { error } = await supabase
+        .from("app_users")
+        .update({ device_id: null })
+        .eq("id", u.id);
+      if (error) return setMsg("❌ فشل فك ربط الجهاز.", false);
+      setMsg("✅ تم فك ربط الجهاز.");
+      await refreshUsers();
+    };
+
+    btnDel.onclick = async () => {
+      if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
+      if (u.is_admin) return setMsg("❌ لا يمكن حذف Admin.", false);
+      const ok = confirm(`تأكيد حذف المستخدم: ${u.username} ؟`);
+      if (!ok) return;
+      const { error } = await supabase.from("app_users").delete().eq("id", u.id);
+      if (error) return setMsg("❌ فشل الحذف.", false);
+      setMsg("✅ تم حذف المستخدم.");
+      await refreshUsers();
+    };
+
+    return wrap;
   }
 
   async function refreshUsers() {
-    if (!isAdminLogged()) return;
+    if (!session?.admin) return;
 
-    setStatus("جاري تحديث المستخدمين...");
     const { data, error } = await supabase
       .from("app_users")
-      .select("id, username, is_admin, blocked, device_id")
+      .select("*")
       .order("id", { ascending: true });
 
-    if (error) { console.error(error); setStatus("خطأ"); return alert("خطأ بجلب المستخدمين"); }
+    if (error) {
+      return setMsg("❌ خطأ بجلب المستخدمين.", false);
+    }
+
+    usersList.innerHTML = "";
+    data.forEach(u => usersList.appendChild(userCard(u)));
 
     usersCount.textContent = String(data.length);
-    usersTableBody.innerHTML = "";
-
-    data.forEach((u, idx) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${idx + 1}</td>
-        <td>${escapeHtml(u.username)}</td>
-        <td>${u.is_admin ? "TRUE" : "FALSE"}</td>
-        <td>${u.blocked ? "TRUE" : "FALSE"}</td>
-        <td>${u.device_id ? "مقفول" : "حر"}</td>
-        <td class="actions">
-          <button class="mini blue" data-act="pick" data-id="${u.id}">اختر</button>
-          <button class="mini" data-act="toggleBlock" data-id="${u.id}">${u.blocked ? "فك" : "حظر"}</button>
-          <button class="mini" data-act="unlock" data-id="${u.id}">فك ربط الجهاز</button>
-          <button class="mini red" data-act="del" data-id="${u.id}">حذف</button>
-        </td>
-      `;
-      usersTableBody.appendChild(tr);
-    });
-
-    setStatus("جاهز");
+    if (pickedUser) {
+      pickedUserLabel.textContent = `المستخدم المحدد للفواتير: ${pickedUser}`;
+    } else {
+      pickedUserLabel.textContent = "المستخدم المحدد للفواتير: —";
+    }
   }
 
   async function addUser() {
-    if (!isAdminLogged()) return alert("سجّل دخول Admin أولاً");
+    if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
 
     const u = (newUsername.value || "").trim();
     const p = (newPassword.value || "").trim();
-    const role = newRole.value;
+    const role = (newRole.value || "user");
+    if (!u || !p) return setMsg("❌ أدخل اسم المستخدم وكلمة السر.", false);
 
-    if (!u || !p) return alert("اكتب اسم المستخدم وكلمة السر");
-
-    setStatus("جاري الإضافة...");
-    const { error } = await supabase.from("app_users").insert({
+    const payload = {
       username: u,
       pass: p,
       is_admin: role === "admin",
       blocked: false,
-      device_id: null,
-      last_seen: new Date().toISOString()
-    });
+      created_at: new Date().toISOString(),
+    };
 
-    if (error) { console.error(error); setStatus("فشل"); return alert("فشل الإضافة (قد يكون الاسم مستخدم)"); }
+    const { error } = await supabase.from("app_users").insert(payload);
+    if (error) return setMsg("❌ فشل الإضافة (قد يكون الاسم مستخدم).", false);
 
     newUsername.value = "";
     newPassword.value = "";
-    setStatus("تمت الإضافة");
+    setMsg("✅ تم إضافة المستخدم.");
     await refreshUsers();
-    await fillUsersDropdown();
   }
 
-  usersTableBody.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    if (!isAdminLogged()) return alert("سجّل دخول Admin أولاً");
-
-    const id = btn.getAttribute("data-id");
-    const act = btn.getAttribute("data-act");
-    if (!id || !act) return;
-
-    if (act === "del") {
-      if (!confirm("حذف المستخدم نهائياً؟")) return;
-      setStatus("جاري الحذف...");
-      const { error } = await supabase.from("app_users").delete().eq("id", id);
-      if (error) { console.error(error); setStatus("فشل"); return alert("فشل الحذف"); }
-      setStatus("تم الحذف");
-      await refreshUsers();
-      await fillUsersDropdown();
-      return;
-    }
-
-    if (act === "toggleBlock") {
-      const { data, error } = await supabase.from("app_users").select("blocked").eq("id", id).limit(1);
-      if (error) return alert("خطأ");
-      const blocked = !!data?.[0]?.blocked;
-
-      setStatus("جاري التحديث...");
-      const { error: upErr } = await supabase.from("app_users").update({ blocked: !blocked }).eq("id", id);
-      if (upErr) { console.error(upErr); setStatus("فشل"); return alert("فشل"); }
-
-      setStatus("تم");
-      await refreshUsers();
-      await fillUsersDropdown();
-      return;
-    }
-
-    if (act === "unlock") {
-      setStatus("جاري فك الربط...");
-      const { error } = await supabase.from("app_users").update({ device_id: null }).eq("id", id);
-      if (error) { console.error(error); setStatus("فشل"); return alert("فشل فك الربط"); }
-      setStatus("تم فك الربط");
-      await refreshUsers();
-      return;
-    }
-
-    if (act === "pick") {
-      const { data, error } = await supabase.from("app_users").select("username").eq("id", id).limit(1);
-      if (error) return alert("خطأ");
-      const uname = data?.[0]?.username || "";
-      pickUser.value = uname;
-      await loadInvoices();
-    }
-  });
-
-  async function fillUsersDropdown() {
-    if (!isAdminLogged()) return;
-
-    const { data, error } = await supabase
-      .from("app_users")
-      .select("username, is_admin")
-      .order("username", { ascending: true });
-
-    if (error) return;
-
-    pickUser.innerHTML = `<option value="">— اختر —</option>`;
-    data.filter(x => !x.is_admin).forEach(u => {
-      const opt = document.createElement("option");
-      opt.value = u.username;
-      opt.textContent = u.username;
-      pickUser.appendChild(opt);
-    });
+  // ========= Invoices =========
+  function dateRangeToday() {
+    const now = new Date();
+    fromDate.value = toDateInput(now);
+    toDate.value = toDateInput(now);
+  }
+  function dateRangeLast7() {
+    const now = new Date();
+    const d = new Date(now);
+    d.setDate(d.getDate() - 6);
+    fromDate.value = toDateInput(d);
+    toDate.value = toDateInput(now);
   }
 
-  let loadedInvoices = [];
-  let loadedInvoiceDetails = null;
-
-  async function loadInvoices() {
-    if (!isAdminLogged()) return alert("سجّل دخول Admin أولاً");
-
-    const user = pickUser.value;
-    if (!user) return alert("اختر المستخدم أولاً");
-
-    const fd = fromDate.value;
-    const td = toDate.value;
-    if (!fd || !td) return alert("حدد التاريخ");
-
-    const status = pickStatus.value;
-
-    const fromTS = new Date(fd + "T00:00:00").toISOString();
-    const toTS = new Date(td + "T23:59:59").toISOString();
-
-    setStatus("جاري جلب الفواتير...");
-    let q = supabase
-      .from("app_invoices")
-      .select("id, username, device_id, customer, total, status, created_at")
-      .eq("username", user)
-      .gte("created_at", fromTS)
-      .lte("created_at", toTS)
-      .order("created_at", { ascending: false });
-
-    if (status) q = q.eq("status", status);
-
-    const { data, error } = await q;
-    if (error) { console.error(error); setStatus("خطأ"); return alert("خطأ بجلب الفواتير"); }
-
-    loadedInvoices = data || [];
-    invCount.textContent = String(loadedInvoices.length);
-
+  function setInvoiceOptions(list) {
     invoiceSelect.innerHTML = `<option value="">— اختر فاتورة —</option>`;
-    loadedInvoices.forEach(inv => {
+    list.forEach(inv => {
       const opt = document.createElement("option");
       opt.value = inv.id;
-      const d = new Date(inv.created_at);
-      opt.textContent = `${inv.customer || "بدون اسم"} — ${inv.total || 0} — ${d.toLocaleString("ar")}`;
+
+      // ✅ واضح + يظهر الإجمالي داخل القائمة
+      opt.textContent =
+        `(${(inv.status || "open")}) — ${fmtDateTime(inv.created_at)} — ` +
+        `${(inv.customer_name || "—")} — الإجمالي: ${Number(inv.total || 0)}`;
+
       invoiceSelect.appendChild(opt);
     });
-
-    invoicePreview.innerHTML = `<div class="muted">اختر فاتورة من القائمة لعرض التفاصيل…</div>`;
-    loadedInvoiceDetails = null;
-
-    setStatus("تم");
+    invCount.textContent = `عدد النتائج: ${list.length}`;
   }
 
-  async function openSelectedInvoice() {
-    const id = invoiceSelect.value;
-    if (!id) return alert("اختر فاتورة أولاً");
+  function makeISOStartEnd(fromD, toD) {
+    // range inclusive: from 00:00 to 23:59:59
+    const f = new Date(fromD + "T00:00:00");
+    const t = new Date(toD + "T23:59:59");
+    return [f.toISOString(), t.toISOString()];
+  }
 
-    const inv = loadedInvoices.find(x => x.id === id);
-    if (!inv) return alert("فاتورة غير موجودة");
+  async function loadInvoices() {
+    if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
+    if (!pickedUser) return setMsg("❌ اختر مستخدم أولاً من قائمة المستخدمين (زر اختر).", false);
+    if (!fromDate.value || !toDate.value) return setMsg("❌ اختر تاريخ من/إلى.", false);
 
-    setStatus("جاري جلب السطور...");
-    const { data: ops, error } = await supabase
+    setMsg("...");
+    const [fromISO, toISO] = makeISOStartEnd(fromDate.value, toDate.value);
+
+    let q = supabase
+      .from("app_invoices")
+      .select("*")
+      .eq("username", pickedUser)
+      .gte("created_at", fromISO)
+      .lte("created_at", toISO)
+      .order("created_at", { ascending: false });
+
+    if (pickStatus.value !== "all") {
+      q = q.eq("status", pickStatus.value);
+    }
+
+    const { data, error } = await q;
+    if (error) return setMsg("❌ خطأ بجلب الفواتير.", false);
+
+    setInvoiceOptions(data || []);
+    setMsg("✅ تم جلب الفواتير.");
+  }
+
+  // ===== Invoice Preview + PDF =====
+  async function fetchOperationsForInvoice(inv) {
+    // 1) الأفضل: حسب invoice_id
+    let { data, error } = await supabase
       .from("app_operations")
-      .select("note, expression, result, created_at")
-      .eq("invoice_id", id)
+      .select("*")
+      .eq("invoice_id", inv.id)
       .order("created_at", { ascending: true });
 
-    if (error) { console.error(error); setStatus("خطأ"); return alert("خطأ بجلب سطور الفاتورة"); }
+    if (!error && data && data.length) return data;
 
-    loadedInvoiceDetails = { inv, ops: ops || [] };
-    renderPreview(loadedInvoiceDetails);
-    setStatus("تم فتح الفاتورة");
+    // 2) احتياط: إذا invoice_id فاضي عندكم -> نجرب بالوقت + المستخدم + الجهاز
+    const t0 = new Date(inv.created_at);
+    const t1 = new Date(t0);
+    const t2 = new Date(t0);
+    t1.setMinutes(t1.getMinutes() - 10);
+    t2.setMinutes(t2.getMinutes() + 10);
+
+    const { data: data2 } = await supabase
+      .from("app_operations")
+      .select("*")
+      .eq("username", inv.username)
+      .eq("device_id", inv.device_id || "")
+      .gte("created_at", t1.toISOString())
+      .lte("created_at", t2.toISOString())
+      .order("created_at", { ascending: true });
+
+    return data2 || [];
   }
 
-  function renderPreview({ inv, ops }) {
-    const d = new Date(inv.created_at);
-    const total = Number(inv.total || 0);
-
-    const rows = ops.map((o, i) => {
-      const dt = new Date(o.created_at);
+  function buildInvoiceHTML(inv, ops) {
+    const rows = (ops || []).map(o => {
+      const time = o.created_at ? fmtDateTime(o.created_at) : "—";
+      const label = escapeHtml(o.label || "—");
+      const op = escapeHtml(o.operation || o.expression || "—");
+      const res = escapeHtml(String(o.result ?? "—"));
       return `
         <tr>
-          <td>${i + 1}</td>
-          <td>${escapeHtml(dt.toLocaleString("ar"))}</td>
-          <td>${escapeHtml(o.note || "")}</td>
-          <td>${escapeHtml(o.expression || "")}</td>
-          <td>${escapeHtml(String(o.result ?? ""))}</td>
+          <td>${time}</td>
+          <td>${label}</td>
+          <td dir="ltr">${op}</td>
+          <td dir="ltr">${res}</td>
         </tr>
       `;
     }).join("");
 
-    invoicePreview.innerHTML = `
-      <div class="preview-head">
-        <div><b>المستخدم:</b> ${escapeHtml(inv.username)}</div>
-        <div><b>الزبون:</b> ${escapeHtml(inv.customer || "")}</div>
-        <div><b>رقم الفاتورة:</b> ${escapeHtml(inv.id)}</div>
-        <div><b>التاريخ:</b> ${escapeHtml(d.toLocaleString("ar"))}</div>
-        <div><b>الإجمالي:</b> ${total}</div>
-      </div>
+    // ✅ 3 أسطر فراغ فوق وتحت جدول العمليات (تقريباً 36px)
+    return `
+      <div class="invCard" id="printableInvoice">
+        <div class="invHeader">
+          <div class="invHeaderBox">
+            <div class="invTitle">شركة الحايك</div>
+            <div class="invBrand">HAYEK SPOT</div>
+          </div>
+        </div>
 
-      <div class="table-wrap">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>الوقت</th>
-              <th>البيان</th>
-              <th>العملية</th>
-              <th>النتيجة</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="5" class="muted">لا يوجد سطور.</td></tr>`}
-          </tbody>
-        </table>
+        <div class="invField">
+          <div class="invLabel">اسم المستخدم</div>
+          <div class="invValue">${escapeHtml(inv.username || "—")}</div>
+        </div>
+
+        <div class="invField">
+          <div class="invLabel">اسم العميل</div>
+          <div class="invValue">${escapeHtml(inv.customer_name || inv.customer || "—")}</div>
+        </div>
+
+        <div class="invField">
+          <div class="invLabel">رقم الفاتورة</div>
+          <div class="invValue" dir="ltr">${escapeHtml(inv.id)}</div>
+        </div>
+
+        <div class="invField">
+          <div class="invLabel">التاريخ</div>
+          <div class="invValue">${fmtDateTime(inv.created_at)}</div>
+        </div>
+
+        <div style="height:36px;"></div>
+
+        <div class="invTableWrap">
+          <table class="invTable">
+            <thead>
+              <tr>
+                <th>الوقت</th>
+                <th>البيان</th>
+                <th>العملية</th>
+                <th>النتيجة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="4" style="text-align:center">لا يوجد بيانات</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="height:36px;"></div>
+
+        <div class="invTotalBox">
+          <div class="invTotalLabel">إجمالي الكشف:</div>
+          <div class="invTotalValue" dir="ltr">${Number(inv.total || 0)}</div>
+        </div>
+
+        <div class="invFooter">
+          <div class="invFooterText">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="invFooterText2">شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية</div>
+          <div class="invPhone" dir="ltr">05510217646</div>
+        </div>
       </div>
     `;
   }
 
-  async function exportInvoicePdf() {
-    if (!loadedInvoiceDetails) return alert("افتح الفاتورة أولاً");
+  async function openInvoice() {
+    if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
 
-    const { inv, ops } = loadedInvoiceDetails;
+    const invId = invoiceSelect.value;
+    if (!invId) return setMsg("❌ اختر فاتورة من القائمة.", false);
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+    const { data, error } = await supabase
+      .from("app_invoices")
+      .select("*")
+      .eq("id", invId)
+      .limit(1);
 
-    // خط عربي (amiri-font.js يضعه داخل window.AMIRI_FONT_BASE64)
-    if (window.AMIRI_FONT_BASE64) {
-      doc.addFileToVFS("Amiri-Regular.ttf", window.AMIRI_FONT_BASE64);
-      doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-      doc.setFont("Amiri");
-    }
+    if (error || !data?.length) return setMsg("❌ لم يتم العثور على الفاتورة.", false);
 
-    const pageW = doc.internal.pageSize.getWidth();
-    const margin = 12;
+    const inv = data[0];
+    openedInvoice = inv;
 
-    doc.setLineWidth(0.4);
-    doc.roundedRect(margin, 12, pageW - margin * 2, 28, 4, 4);
+    const ops = await fetchOperationsForInvoice(inv);
+    invoicePreview.innerHTML = buildInvoiceHTML(inv, ops);
 
-    doc.setFontSize(16);
-    doc.text("شركة الحايك", pageW / 2, 22, { align: "center" });
-    doc.setFontSize(11);
-    doc.text("HAYEK SPOT", pageW / 2, 28, { align: "center" });
-
-    doc.setFontSize(9);
-    doc.roundedRect(pageW/2 - 36, 32, 22, 7, 3, 3);
-    doc.text("PDF / طباعة", pageW/2 - 25, 37, { align: "center" });
-    doc.roundedRect(pageW/2 - 11, 32, 26, 7, 3, 3);
-    doc.text("سجل عمليات كامل", pageW/2 + 2, 37, { align: "center" });
-    doc.roundedRect(pageW/2 + 18, 32, 22, 7, 3, 3);
-    doc.text("فاتورة رسمية", pageW/2 + 29, 37, { align: "center" });
-
-    const infoY = 45;
-    const boxH = 14;
-    const boxW = pageW - margin * 2;
-
-    function infoBox(y, label, value) {
-      doc.roundedRect(margin, y, boxW, boxH, 3, 3);
-      doc.setFontSize(10);
-      doc.text(label, pageW - margin - 2, y + 5.5, { align: "right" });
-      doc.setFontSize(11);
-      doc.text(String(value || ""), margin + 2, y + 10, { align: "left" });
-    }
-
-    const created = new Date(inv.created_at);
-    infoBox(infoY + 0, "اسم المستخدم", inv.username);
-    infoBox(infoY + 16, "اسم العميل", inv.customer || "");
-    infoBox(infoY + 32, "رقم الفاتورة", inv.id);
-    infoBox(infoY + 48, "التاريخ", created.toLocaleString("ar"));
-
-    // 3 سطور فراغ فوق الجدول ≈ 10-12mm
-    const tableStartY = infoY + 48 + 18;
-
-    const tableRows = ops.map(o => {
-      const t = new Date(o.created_at).toLocaleString("ar");
-      return [t, (o.note || ""), (o.expression || ""), (o.result ?? "")];
-    });
-
-    doc.autoTable({
-      startY: tableStartY,
-      head: [["الوقت", "البيان", "العملية", "النتيجة"]],
-      body: tableRows.length ? tableRows : [["", "لا يوجد سطور", "", ""]],
-      theme: "grid",
-      styles: {
-        font: window.AMIRI_FONT_BASE64 ? "Amiri" : "helvetica",
-        fontSize: 10,
-        cellPadding: 2,
-        overflow: "linebreak",
-        halign: "center",
-        valign: "middle"
-      },
-      headStyles: { halign: "center" },
-      bodyStyles: { halign: "center" },
-      margin: { left: margin, right: margin }
-    });
-
-    // 3 سطور فراغ تحت الجدول
-    const afterTableY = doc.lastAutoTable.finalY + 10;
-
-    doc.setLineDashPattern([2, 2], 0);
-    doc.roundedRect(margin, afterTableY, boxW, 14, 3, 3);
-    doc.setLineDashPattern([], 0);
-
-    doc.setFontSize(11);
-    doc.text("إجمالي الكشف:", pageW - margin - 2, afterTableY + 9, { align: "right" });
-    doc.setFontSize(12);
-    doc.text(String(inv.total ?? 0), margin + 6, afterTableY + 9, { align: "left" });
-
-    const footerY = afterTableY + 20;
-    doc.roundedRect(margin, footerY, boxW, 26, 4, 4);
-    doc.setFontSize(10);
-    doc.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك", pageW / 2, footerY + 9, { align: "center" });
-    doc.setFontSize(9);
-    doc.text("شركة الحايك: تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية", pageW / 2, footerY + 15, { align: "center" });
-    doc.setFontSize(12);
-    doc.roundedRect(pageW/2 - 20, footerY + 18, 40, 8, 3, 3);
-    doc.text("05510217646", pageW / 2, footerY + 24, { align: "center" });
-
-    const fileName = `HAYEK_SPOT_${inv.username}_${(inv.customer || "invoice")}_${inv.id}.pdf`;
-    doc.save(fileName);
+    setMsg("✅ تم فتح الفاتورة.");
   }
 
+  async function exportInvoicePdf() {
+    if (!openedInvoice) return setMsg("❌ افتح فاتورة أولاً.", false);
+
+    const node = document.querySelector("#invoicePreview #printableInvoice");
+    if (!node) return setMsg("❌ لا يوجد معاينة لتصديرها.", false);
+
+    // ✅ PDF عربي مضمون لأنه تصوير HTML
+    const holder = document.createElement("div");
+    holder.style.background = "#fff";
+    holder.style.padding = "18px";
+    const clone = node.cloneNode(true);
+    clone.style.margin = "0";
+    clone.style.boxShadow = "none";
+    holder.appendChild(clone);
+
+    const filename = `HAYEK_SPOT_${openedInvoice.id}.pdf`;
+
+    const opt = {
+      margin: 10,
+      filename,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] }
+    };
+
+    await html2pdf().set(opt).from(holder).save();
+    setMsg("✅ تم تصدير PDF عربي بنجاح.");
+  }
+
+  // ========= HTML escape =========
   function escapeHtml(s) {
     return String(s ?? "")
       .replaceAll("&", "&amp;")
@@ -522,31 +519,32 @@
       .replaceAll("'", "&#039;");
   }
 
+  // ========= Wire =========
   btnAdminLogin.addEventListener("click", adminLogin);
   btnAdminLogout.addEventListener("click", adminLogout);
-
   btnAddUser.addEventListener("click", addUser);
-  btnRefreshUsers.addEventListener("click", async () => {
-    await refreshUsers();
-    await fillUsersDropdown();
-  });
+  btnRefreshUsers.addEventListener("click", refreshUsers);
 
-  btnToday.addEventListener("click", setTodayRange);
-  btnLast7.addEventListener("click", setLast7Range);
-
+  btnToday.addEventListener("click", () => { dateRangeToday(); setMsg("✅ تم اختيار فواتير اليوم."); });
+  btnLast7.addEventListener("click", () => { dateRangeLast7(); setMsg("✅ تم اختيار آخر 7 أيام."); });
   btnLoadInvoices.addEventListener("click", loadInvoices);
-  btnOpenInvoice.addEventListener("click", openSelectedInvoice);
+
+  btnOpenInvoice.addEventListener("click", openInvoice);
   btnExportInvoicePdf.addEventListener("click", exportInvoicePdf);
 
-  (async function init() {
-    setAdminUI();
-    setLast7Range();
-    if (isAdminLogged()) {
-      await refreshUsers();
-      await fillUsersDropdown();
-      setStatus("جاهز");
+  // ========= Init =========
+  (function init() {
+    statusLine.textContent = "الحالة: جاهز";
+    if (!fromDate.value || !toDate.value) dateRangeLast7();
+
+    if (session?.admin) {
+      setLoggedIn(true);
+      pickedUser = session?.pickedUser || "";
+      pickedUserLabel.textContent = pickedUser ? `المستخدم المحدد للفواتير: ${pickedUser}` : "المستخدم المحدد للفواتير: —";
+      refreshUsers();
+      setMsg("✅ جلسة Admin محفوظة.");
     } else {
-      setStatus("جاهز — سجّل دخول Admin");
+      setLoggedIn(false);
     }
   })();
 })();
