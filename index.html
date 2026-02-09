@@ -1,220 +1,82 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta charset="UTF-8" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="./style.css" />
+  <!-- ستايل -->
+  <link rel="stylesheet" href="style.css?v=1" />
 
-  <!-- (اختياري) Font loader لو عندك amiri-font.js -->
-  <script src="./amiri-font.js"></script>
-
-  <style>
-    /* حماية بسيطة لو style.css فيه نقص */
-    :root{
-      --bg1:#071a2b; --bg2:#0b2b3a; --card: rgba(255,255,255,0.08);
-      --stroke: rgba(255,255,255,0.10); --txt:#fff; --muted:rgba(255,255,255,0.7);
-      --ok:#22c55e; --bad:#ef4444; --btn:#2563eb;
-      --radius:18px;
-    }
-    body{
-      margin:0; min-height:100vh;
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,0.12), transparent 55%),
-                  radial-gradient(900px 600px at 90% 20%, rgba(37,99,235,0.18), transparent 55%),
-                  linear-gradient(135deg, var(--bg1), var(--bg2));
-      color:var(--txt);
-      font-family: "Amiri", system-ui, -apple-system, Segoe UI, Tahoma, Arial, sans-serif;
-    }
-    .wrap{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 28px 18px 40px;
-    }
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; margin-bottom: 18px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:10px;
-    }
-    .brand .dot{
-      width:12px; height:12px; border-radius:999px; background: var(--ok);
-      box-shadow: 0 0 0 6px rgba(34,197,94,0.12);
-    }
-    .brand h1{
-      font-size:18px; margin:0; line-height:1.2;
-    }
-    .brand p{
-      margin:0; font-size:12px; color:var(--muted);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-    .card{
-      background: var(--card);
-      border: 1px solid var(--stroke);
-      border-radius: var(--radius);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
-    }
-    .card-head{
-      padding: 18px 18px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-    .card-head h2{
-      margin:0; font-size:20px;
-    }
-    .card-head small{
-      display:block; margin-top:6px; color:var(--muted);
-      font-size:12px; line-height:1.5;
-    }
-    .card-body{ padding: 16px 18px 18px; }
-
-    .row{ display:grid; gap:10px; }
-    .field{
-      display:grid; gap:6px;
-    }
-    label{ font-size:12px; color:var(--muted); }
-    input{
-      width:100%;
-      padding: 14px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      color: var(--txt);
-      outline:none;
-      font-size: 15px;
-    }
-    input::placeholder{ color: rgba(255,255,255,0.35); }
-    .actions{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top: 10px;
-    }
-    button{
-      border:0; cursor:pointer;
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      color:#fff;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-    button.primary{
-      background: var(--btn);
-      border-color: rgba(255,255,255,0.18);
-      flex:1;
-      min-width: 160px;
-    }
-    button.ghost{
-      background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.9);
-    }
-    .badge{
-      display:inline-flex; align-items:center; gap:8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color: rgba(255,255,255,0.85);
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-    .error{
-      display:none;
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(239,68,68,0.35);
-      background: rgba(239,68,68,0.10);
-      color: #ffd7d7;
-      font-size: 13px;
-    }
-
-    /* حاوية التطبيق (تظهر بعد تسجيل الدخول) */
-    #app-root{ display:none; }
-
-    /* Responsive */
-    @media (min-width: 860px){
-      .grid{ grid-template-columns: 420px 1fr; align-items:start; }
-    }
-  </style>
+  <!-- منع الكاش -->
+  <meta http-equiv="Cache-Control" content="no-store" />
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <span class="dot" aria-hidden="true"></span>
-        <div>
-          <h1>حاسبة الحايك</h1>
-          <p>سجل + فاتورة + PDF + أوفلاين</p>
-        </div>
-      </div>
-      <!-- زر خروج عام (لو app.js يستخدمه) -->
-      <button id="btnLogout" class="ghost" type="button" style="display:none;">خروج</button>
+
+  <!-- خلفية -->
+  <div class="login-bg"></div>
+
+  <!-- صندوق تسجيل الدخول -->
+  <div class="login-card">
+    <h2>تسجيل الدخول</h2>
+    <p class="login-note">
+      مرة واحدة فقط — بعدها يتم الدخول تلقائياً على نفس الجهاز
+    </p>
+
+    <div class="device-box">
+      <span id="deviceId">Device: ...</span>
     </div>
 
-    <div class="grid">
-      <!-- AUTH / LOGIN -->
-      <section id="auth-root" class="card">
-        <div class="card-head">
-          <h2>تسجيل الدخول</h2>
-          <small>مرة واحدة فقط — بعدها يدخل تلقائيًا على نفس الجهاز.</small>
-        </div>
-        <div class="card-body">
-          <div class="badge">
-            <span>Device:</span>
-            <strong id="deviceIdBadge">...</strong>
-          </div>
+    <label>اسم المستخدم</label>
+    <input
+      id="username"
+      type="text"
+      placeholder="مثال: أبو علي"
+      autocomplete="off"
+    />
 
-          <div class="row">
-            <div class="field">
-              <label for="loginUsername">اسم المستخدم</label>
-              <input id="loginUsername" type="text" placeholder="مثال: لاب توب" autocomplete="username" />
-            </div>
+    <label>كلمة السر</label>
+    <input
+      id="password"
+      type="password"
+      placeholder="••••••"
+      autocomplete="off"
+    />
 
-            <div class="field">
-              <label for="loginPassword">كلمة السر</label>
-              <input id="loginPassword" type="password" placeholder="••••••" autocomplete="current-password" />
-            </div>
+    <div class="login-actions">
+      <button id="loginBtn" class="btn-primary">
+        تسجيل دخول
+      </button>
 
-            <div class="actions">
-              <button id="btnLogin" class="primary" type="button">تسجيل دخول</button>
-              <button id="btnResetDevice" class="ghost" type="button">مسح بيانات الجهاز</button>
-            </div>
+      <button id="resetDeviceBtn" class="btn-secondary">
+        مسح بيانات الجهاز
+      </button>
+    </div>
 
-            <div id="loginError" class="error"></div>
-          </div>
+    <div id="loginError" class="login-error"></div>
 
-          <div style="margin-top:12px; color:rgba(255,255,255,0.45); font-size:12px; text-align:center;">
-            HAYEK SPOT
-          </div>
-        </div>
-      </section>
-
-      <!-- APP -->
-      <section id="app-root" class="card">
-        <div class="card-head">
-          <h2>واجهة المستخدم</h2>
-          <small>يتم تحميل الواجهة من app.js بعد تسجيل الدخول.</small>
-        </div>
-        <div class="card-body">
-          <!-- app.js لازم يملأ هذه الحاوية -->
-          <div id="appMount"></div>
-        </div>
-      </section>
+    <div class="login-footer">
+      HAYEK SPOT
     </div>
   </div>
 
-  <!-- مهم: config ثم auth ثم app (بدون module) -->
-  <script src="./config.js"></script>
-  <script src="./auth.js"></script>
-  <script src="./app.js"></script>
+  <!-- ================== -->
+  <!-- تحميل السكربتات -->
+  <!-- ================== -->
+
+  <!-- config أولاً -->
+  <script src="config.js?v=1"></script>
+
+  <!-- auth.js إلزامي -->
+  <script src="auth.js?v=1"></script>
+
+  <!-- حماية -->
+  <script>
+    if (typeof window.HAYEK_AUTH === "undefined") {
+      alert("auth.js غير محمل بشكل صحيح.\nتأكد أن الملف موجود بنفس المجلد.");
+    }
+  </script>
+
 </body>
 </html>
