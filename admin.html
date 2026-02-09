@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,19 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <link rel="stylesheet" href="./style.css?v=9003" />
+  <link rel="stylesheet" href="./style.css?v=9004" />
 
   <!-- Supabase UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- ✅ PDF (تصوير HTML كما هو) -->
+  <!-- ✅ PDF تصوير HTML -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-  <!-- خط عربي (اختياري للـ jsPDF، بس نخليه) -->
-  <script src="./amiri-font.js?v=9003"></script>
-
   <!-- Config -->
-  <script src="./config.js?v=9003"></script>
+  <script src="./config.js?v=9004"></script>
 </head>
 
 <body class="app-body">
@@ -27,7 +23,7 @@
     <div class="card header-card">
       <div class="header-title">لوحة الأمن</div>
       <div class="header-sub">
-        إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأمن — بدون import وبدون أخطاء “module”.
+        إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id)
       </div>
       <div id="statusLine" class="status-pill">غير مسجل</div>
     </div>
@@ -90,7 +86,7 @@
 
     <!-- الفواتير -->
     <div class="card">
-      <div class="card-title">فلاتر الفواتير</div>
+      <div class="card-title">الفواتير</div>
 
       <div class="form-grid">
         <div class="field">
@@ -141,12 +137,12 @@
         </div>
       </div>
 
-      <!-- ✅ معاينة الفاتورة (هذا الذي سنصدّره) -->
+      <!-- معاينة -->
       <div id="invoicePreview" class="invoice-preview"></div>
     </div>
 
   </div>
 
-  <script src="./admin.js?v=9003"></script>
+  <script src="./admin.js?v=9004"></script>
 </body>
 </html>
