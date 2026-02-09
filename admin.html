@@ -5,238 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <!-- CSS داخل الصفحة لضمان سلامة العمل -->
-  <style>
-    :root{
-      --bg:#0b1320;
-      --card:#0f1f2c;
-      --card2:#0d1a25;
-      --txt:#e9f1ff;
-      --muted:#a9b8cc;
-      --line:rgba(255,255,255,.08);
-      --blue:#2b67ff;
-      --green:#21c38a;
-      --red:#ff4d4d;
-      --yellow:#ffcf4a;
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-      --radius:22px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 70% -10%, rgba(43,103,255,.25), transparent 60%),
-                  radial-gradient(900px 500px at 20% 10%, rgba(33,195,138,.18), transparent 55%),
-                  linear-gradient(180deg, #08101b, #07111a 55%, #060f18);
-      color:var(--txt);
-      padding:18px;
-    }
-    .wrap{max-width:1180px;margin:0 auto}
-    .header{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      padding:18px 18px 14px;
-      box-shadow: var(--shadow);
-      margin-bottom:14px;
-    }
-    .header h1{margin:0;font-size:28px;letter-spacing:.2px}
-    .header p{margin:6px 0 0;color:var(--muted);line-height:1.6}
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:14px;
-    }
-    @media(min-width:980px){
-      .grid{grid-template-columns: 1fr 1fr;}
-    }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .title{
-      padding:14px 16px;
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      border-bottom:1px solid var(--line);
-      background: rgba(0,0,0,.12);
-    }
-    .title h2{margin:0;font-size:18px}
-    .title .pill{
-      padding:6px 10px; border-radius:999px; font-size:12px;
-      border:1px solid var(--line); color:var(--muted); background:rgba(0,0,0,.18);
-      white-space:nowrap;
-    }
-    .body{padding:14px 16px}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end}
-    .field{
-      flex:1;
-      min-width:170px;
-      display:flex; flex-direction:column; gap:6px;
-    }
-    label{font-size:12px;color:var(--muted)}
-    input, select{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.25);
-      color:var(--txt);
-      outline:none;
-    }
-    input::placeholder{color:rgba(233,241,255,.35)}
-    .btn{
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-      color:var(--txt);
-      cursor:pointer;
-      font-weight:700;
-      transition: .15s transform, .15s opacity, .15s background;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn:hover{transform: translateY(-1px); opacity:.95}
-    .btn.blue{background: linear-gradient(180deg, rgba(43,103,255,.95), rgba(43,103,255,.65)); border-color: rgba(43,103,255,.55)}
-    .btn.green{background: linear-gradient(180deg, rgba(33,195,138,.95), rgba(33,195,138,.65)); border-color: rgba(33,195,138,.55)}
-    .btn.red{background: linear-gradient(180deg, rgba(255,77,77,.95), rgba(255,77,77,.65)); border-color: rgba(255,77,77,.55)}
-    .btn.gray{background: rgba(0,0,0,.18)}
-    .btn.small{padding:9px 10px;border-radius:12px;font-size:13px}
-    .sep{height:1px;background:var(--line);margin:12px 0}
-    .status{
-      border:1px solid rgba(255,255,255,.1);
-      background: rgba(0,0,0,.18);
-      padding:10px 12px;
-      border-radius:14px;
-      color:var(--muted);
-      line-height:1.55;
-      font-size:13px;
-    }
-    .ok{border-color: rgba(33,195,138,.35); background: rgba(33,195,138,.10); color:#c9ffe9}
-    .bad{border-color: rgba(255,77,77,.35); background: rgba(255,77,77,.10); color:#ffd0d0}
-    .warn{border-color: rgba(255,207,74,.35); background: rgba(255,207,74,.10); color:#fff3c8}
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      overflow:hidden;
-      border-radius:18px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.12);
-    }
-    thead th{
-      text-align:right;
-      font-size:12px;
-      color:var(--muted);
-      padding:12px 10px;
-      border-bottom:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-    }
-    tbody td{
-      padding:10px 10px;
-      border-bottom:1px solid var(--line);
-      vertical-align:top;
-      font-size:13px;
-      color:var(--txt);
-    }
-    tbody tr:last-child td{border-bottom:none}
-    .actions{display:flex; gap:8px; flex-wrap:wrap}
-    .muted{color:var(--muted)}
-    .kpi{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
-      margin-top:10px;
-    }
-    .kpi .box{
-      flex:1;
-      min-width:180px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.16);
-      border-radius:18px;
-      padding:10px 12px;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .preview{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      border-radius:18px;
-      padding:12px;
-      min-height:210px;
-      overflow:auto;
-    }
-    .inv-sheet{
-      background:white;
-      color:#111;
-      border-radius:16px;
-      padding:16px;
-      max-width:780px;
-      margin:0 auto;
-      border:1px solid rgba(0,0,0,.08);
-    }
-    .inv-top{
-      border:2px solid #333;
-      border-radius:16px;
-      padding:14px;
-      text-align:center;
-      margin-bottom:12px;
-    }
-    .inv-top .sub{font-size:12px;color:#2a7a5a;font-weight:800;letter-spacing:.5px}
-    .inv-field{
-      border:2px solid #333;
-      border-radius:16px;
-      padding:12px 14px;
-      margin-bottom:10px;
-      display:flex; justify-content:space-between; gap:12px;
-      font-size:14px;
-    }
-    .inv-field b{color:#111}
-    .inv-table{
-      border:2px solid #333;
-      border-radius:16px;
-      overflow:hidden;
-      margin:10px 0 12px;
-    }
-    .inv-table table{border:none;border-radius:0;border-collapse:collapse;background:white}
-    .inv-table th,.inv-table td{
-      border-bottom:1px solid #ccc;
-      padding:10px 8px;
-      text-align:right;
-      font-size:13px;
-      color:#111;
-    }
-    .inv-table thead th{background:#f3f4f6;color:#111;font-weight:800}
-    .inv-total{
-      border:2px dashed #333;
-      border-radius:16px;
-      padding:12px 14px;
-      margin-top:10px;
-      display:flex; justify-content:space-between;
-      font-weight:900;
-    }
-    .inv-footer{
-      border:2px solid #333;
-      border-radius:16px;
-      padding:14px;
-      margin-top:12px;
-      text-align:center;
-      font-size:12px;
-      color:#333;
-    }
-    .inv-footer .phone{
-      display:inline-block;
-      margin-top:10px;
-      padding:10px 16px;
-      border-radius:14px;
-      border:2px solid #1aa874;
-      color:#1aa874;
-      font-weight:900;
-      font-size:16px;
-      letter-spacing:.5px;
-    }
-  </style>
-
   <!-- Supabase UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -244,787 +12,1095 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- خط عربي (اختياري) إذا عندك الملف بالمستودع -->
+  <!-- خط Amiri (ملفك داخل المشروع) -->
   <script src="./amiri-font.js?v=9000"></script>
 
-  <!-- config.js يجب أن يحتوي:
-       window.APP_CONFIG = { SUPABASE_URL:"https://xxxx.supabase.co", SUPABASE_ANON_KEY:"..." }
-  -->
+  <!-- Config (SUPABASE_URL / SUPABASE_ANON_KEY داخل window.APP_CONFIG) -->
   <script src="./config.js?v=9000"></script>
+
+  <!-- لو عندك style.css -->
+  <link rel="stylesheet" href="./style.css?v=9000" />
+
+  <style>
+    :root{
+      --bg1:#07131a; --bg2:#0b1f2a;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.18);
+      --txt:#eaf3ff; --muted:rgba(234,243,255,.65);
+      --blue:#2d6cff; --green:#20c997; --red:#ff4d4d; --amber:#ffcc66;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+
+    body{
+      margin:0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 30% 10%, #10384a 0%, var(--bg1) 45%, #050b10 100%);
+      color: var(--txt);
+    }
+
+    .wrap{ max-width: 1100px; margin: 18px auto; padding: 14px; }
+    .hero{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      border-radius: 22px;
+      padding: 18px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(700px 200px at 80% 0%, rgba(45,108,255,.28), transparent 60%),
+                  radial-gradient(600px 200px at 10% 100%, rgba(32,201,151,.16), transparent 60%);
+      pointer-events:none;
+    }
+    .hero h1{ margin:0 0 6px; font-size: 30px; position:relative; }
+    .hero p{ margin:0; color: var(--muted); position:relative; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .card h2{ margin: 0 0 10px; font-size: 20px; }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .label{ font-size: 13px; color: var(--muted); }
+    input, select, button{
+      font: inherit;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      padding: 11px 12px;
+      outline: none;
+    }
+    input::placeholder{ color: rgba(234,243,255,.35); }
+    button{
+      cursor:pointer;
+      transition: transform .08s ease, filter .2s ease, background .2s ease;
+      user-select:none;
+    }
+    button:active{ transform: scale(.98); }
+    .btn{ background: rgba(255,255,255,.07); }
+    .btnBlue{ background: rgba(45,108,255,.9); border-color: rgba(45,108,255,.9); }
+    .btnGreen{ background: rgba(32,201,151,.85); border-color: rgba(32,201,151,.85); color:#062015;}
+    .btnRed{ background: rgba(255,77,77,.9); border-color: rgba(255,77,77,.9); }
+    .btnGhost{ background: rgba(255,255,255,.05); }
+    .btnSmall{ padding: 8px 10px; border-radius: 12px; font-size: 13px; }
+
+    .statusLine{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.15);
+      font-size: 13px;
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      white-space: nowrap;
+    }
+    .pill.bad{ background: rgba(255,77,77,.12); border-color: rgba(255,77,77,.25); }
+    .pill.good{ background: rgba(32,201,151,.12); border-color: rgba(32,201,151,.25); }
+
+    /* جدول المستخدمين - (الاسم + الأزرار بنفس السطر) */
+    .usersList{ margin-top: 10px; display:flex; flex-direction:column; gap: 10px; }
+    .userItem{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      border-radius: 16px;
+      padding: 10px;
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items:center;
+    }
+    .userMain{
+      display:flex; flex-direction:column; gap: 4px;
+      min-width: 0;
+    }
+    .userName{
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .userMeta{
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .userActions{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    /* فواتير */
+    .filters{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin: 8px 0 10px;
+    }
+    .filters .field{ min-width: 160px; }
+    .filters .field input{ width: 180px; }
+
+    .invoicePreview{
+      margin-top: 12px;
+      background: rgba(255,255,255,.03);
+      border: 1px dashed rgba(255,255,255,.25);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    /* شكل المعاينة (مثل المرجع) */
+    .invCard{
+      background:#fff;
+      color:#111;
+      border-radius: 16px;
+      padding: 18px;
+      max-width: 720px;
+      margin: 0 auto;
+      border: 2px solid #111;
+    }
+    .invHeader{
+      border: 2px solid #111;
+      border-radius: 14px;
+      padding: 14px 16px;
+      text-align:center;
+      margin-bottom: 10px;
+    }
+    .invHeader .t1{ font-size: 22px; font-weight: 800; }
+    .invHeader .t2{ font-size: 12px; color:#0a6; font-weight: 800; letter-spacing:.7px; }
+    .invBox{
+      border: 2px solid #111;
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin: 10px 0;
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .invBox .k{ color:#666; font-size: 13px; }
+    .invBox .v{ font-size: 16px; font-weight: 700; }
+    table.invTable{
+      width:100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      border: 2px solid #111;
+      border-radius: 12px;
+      overflow:hidden;
+    }
+    table.invTable th, table.invTable td{
+      border: 1px solid #aaa;
+      padding: 10px 8px;
+      font-size: 13px;
+      text-align: center;
+    }
+    table.invTable th{
+      background: #f2f2f2;
+      font-weight: 800;
+    }
+    .totalBox{
+      margin-top: 12px;
+      border: 2px dashed #111;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 12px;
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .footerBox{
+      margin-top: 12px;
+      border: 2px solid #111;
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-align:center;
+      font-size: 12px;
+      color:#333;
+    }
+    .footerBox .phone{
+      display:inline-block;
+      margin-top: 8px;
+      padding: 8px 14px;
+      border: 2px solid #0a6;
+      border-radius: 12px;
+      color:#0a6;
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+      .row{ grid-template-columns: 1fr; }
+      .filters .field input{ width: 100%; }
+    }
+    @media (max-width: 520px){
+      .userItem{ grid-template-columns: 1fr; }
+      .userActions{ justify-content: flex-start; }
+      .hero h1{ font-size: 24px; }
+    }
+  </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="header">
+    <div class="hero">
       <h1>لوحة الأمن</h1>
-      <p>إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأدمن. <span class="muted">بدون import وبدون أخطاء “module”.</span></p>
+      <p>إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأمان — بدون import / بدون أخطاء "module".</p>
+
+      <div class="statusLine" id="statusLine">
+        <span class="pill" id="adminStatePill">غير مسجل</span>
+        <span class="pill" id="selectedUserPill">المستخدم المحدد للفواتير: —</span>
+        <span class="pill" id="hintPill">✅ الأمن يقفل على جهاز واحد فقط (إذا سجل من جهاز ثاني سيتم رفض الدخول)</span>
+      </div>
     </div>
 
     <div class="grid">
-      <!-- Admin Login -->
+
+      <!-- تسجيل دخول الأدمن -->
       <div class="card">
-        <div class="title">
-          <h2>تسجيل الدخول (Admin)</h2>
-          <div class="pill" id="adminStatePill">غير مسجّل</div>
-        </div>
-        <div class="body">
-          <div class="row">
-            <div class="field">
-              <label>اسم المستخدم</label>
-              <input id="adminUser" placeholder="admin" autocomplete="username" />
-            </div>
-            <div class="field">
-              <label>كلمة السر</label>
-              <input id="adminPass" placeholder="••••" type="password" autocomplete="current-password" />
-            </div>
-          </div>
+        <h2>تسجيل الدخول (Admin)</h2>
 
-          <div class="row" style="margin-top:10px">
-            <button class="btn blue" id="btnAdminLogin">تسجيل دخول</button>
-            <button class="btn gray" id="btnAdminLogout">تسجيل خروج</button>
+        <div class="row">
+          <div class="field">
+            <div class="label">اسم المستخدم</div>
+            <input id="adminUser" value="admin" autocomplete="username" />
           </div>
-
-          <div class="status warn" style="margin-top:10px" id="statusLine">
-            ✅ الأمن يقفل على جهاز واحد فقط (إذا سُجل من جهاز ثاني سيتم رفض الدخول).
+          <div class="field">
+            <div class="label">كلمة السر</div>
+            <input id="adminPass" type="password" value="1234" autocomplete="current-password" />
           </div>
         </div>
+
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btnBlue" id="btnAdminLogin">تسجيل دخول</button>
+          <button class="btnGhost" id="btnAdminLogout">تسجيل خروج</button>
+        </div>
+
+        <div id="adminMsg" style="margin-top:10px; color: var(--muted);"></div>
       </div>
 
-      <!-- Users Management -->
+      <!-- إدارة المستخدمين -->
       <div class="card">
-        <div class="title">
-          <h2>إدارة المستخدمين</h2>
-          <div class="pill" id="usersCount">عدد المستخدمين: 0</div>
+        <h2>إدارة المستخدمين</h2>
+
+        <div class="row">
+          <div class="field">
+            <div class="label">اسم مستخدم جديد</div>
+            <input id="newUsername" placeholder="مثال: محمود" />
+          </div>
+          <div class="field">
+            <div class="label">كلمة السر</div>
+            <input id="newPassword" placeholder="****" />
+          </div>
         </div>
-        <div class="body">
-          <div class="row">
-            <div class="field">
-              <label>اسم مستخدم جديد</label>
-              <input id="newUsername" placeholder="مثال: محمود" />
-            </div>
-            <div class="field">
-              <label>كلمة السر</label>
-              <input id="newPassword" placeholder="1234" />
-            </div>
-            <div class="field">
-              <label>صلاحية</label>
-              <select id="newRole">
-                <option value="user">مستخدم</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <button class="btn green" id="btnAddUser">إضافة</button>
-          </div>
 
-          <div class="row" style="margin-top:10px">
-            <button class="btn gray" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
-            <div class="status" id="pickUser" style="flex:1">
-              المستخدم المحدد للفواتير: <b id="pickedUserName">—</b>
-            </div>
+        <div class="row" style="margin-top:10px;">
+          <div class="field">
+            <div class="label">صلاحية</div>
+            <select id="newRole">
+              <option value="user">مستخدم</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
-
-          <div class="sep"></div>
-
-          <div style="overflow:auto">
-            <table id="usersTable">
-              <thead>
-                <tr>
-                  <th style="width:56px">#</th>
-                  <th>المستخدم</th>
-                  <th style="width:90px">Admin</th>
-                  <th style="width:100px">محظور</th>
-                  <th style="width:170px">قفل الجهاز</th>
-                  <th style="width:260px">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div class="field" style="display:flex; flex-direction:row; gap:10px; align-items:flex-end;">
+            <button class="btnGreen" id="btnAddUser" style="width:100%;">إضافة</button>
           </div>
+        </div>
 
-          <div class="kpi">
-            <div class="box" id="deviceBox">Device ID الحالي: —</div>
-            <div class="box" id="loginBox">جلسة الأدمن: —</div>
-          </div>
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
+          <span class="pill" id="usersCount">عدد المستخدمين: 0</span>
+        </div>
+
+        <div class="usersList" id="usersList"></div>
+      </div>
+
+    </div>
+
+    <!-- الفواتير -->
+    <div class="card" style="margin-top:14px;">
+      <h2>فواتير المستخدمين</h2>
+
+      <div class="filters">
+        <div class="field" style="min-width:240px;">
+          <div class="label">اختر المستخدم (أو استخدم زر "اختر" من القائمة فوق)</div>
+          <select id="pickUser">
+            <option value="">— اختر المستخدم —</option>
+          </select>
+        </div>
+
+        <button class="btnSmall btn" id="btnToday">فواتير اليوم</button>
+        <button class="btnSmall btn" id="btnLast7">فواتير آخر 7 أيام</button>
+
+        <div class="field">
+          <div class="label">من تاريخ</div>
+          <input id="fromDate" type="date" />
+        </div>
+        <div class="field">
+          <div class="label">إلى تاريخ</div>
+          <input id="toDate" type="date" />
+        </div>
+
+        <button class="btnBlue" id="btnLoadInvoices">اعرض الفواتير</button>
+        <span class="pill" id="invCount">عدد النتائج: 0</span>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <div class="label">قائمة الفواتير (منسدلة)</div>
+          <select id="invoiceSelect">
+            <option value="">— اختر فاتورة —</option>
+          </select>
+        </div>
+        <div class="field" style="display:flex; flex-direction:row; gap:10px; align-items:flex-end;">
+          <button class="btn" id="btnOpenInvoice" style="flex:1;">فتح</button>
+          <button class="btnGreen" id="btnExportInvoicePdf" style="flex:1;">تصدير PDF</button>
         </div>
       </div>
 
-      <!-- Invoices (Admin) -->
-      <div class="card" style="grid-column: 1 / -1;">
-        <div class="title">
-          <h2>فواتير المستخدم (Admin)</h2>
-          <div class="pill" id="invCount">عدد النتائج: 0</div>
-        </div>
-        <div class="body">
-          <div class="row">
-            <div class="field">
-              <label>المستخدم (يُحدد من جدول المستخدمين بزر “اختر”)</label>
-              <input id="pickedUserInput" disabled placeholder="اضغط زر اختر من جدول المستخدمين" />
-            </div>
-
-            <div class="field">
-              <label>الحالة</label>
-              <select id="pickStatus">
-                <option value="">الكل</option>
-                <option value="open">مفتوحة</option>
-                <option value="closed">منتهية</option>
-              </select>
-            </div>
-
-            <button class="btn gray" id="btnToday">فواتير اليوم</button>
-            <button class="btn gray" id="btnLast7">فواتير آخر 7 أيام</button>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <div class="field">
-              <label>من تاريخ</label>
-              <input id="fromDate" type="date" />
-            </div>
-            <div class="field">
-              <label>إلى تاريخ</label>
-              <input id="toDate" type="date" />
-            </div>
-            <button class="btn blue" id="btnLoadInvoices">جلب الفواتير</button>
-
-            <div class="field" style="min-width:300px">
-              <label>قائمة الفواتير</label>
-              <select id="invoiceSelect">
-                <option value="">— اختر فاتورة —</option>
-              </select>
-            </div>
-
-            <button class="btn gray" id="btnOpenInvoice">فتح</button>
-            <button class="btn green" id="btnExportInvoicePdf">تصدير PDF</button>
-          </div>
-
-          <div class="sep"></div>
-
-          <div class="preview" id="invoicePreview">
-            <div class="muted">اختر مستخدم ثم اجلب الفواتير ثم افتح فاتورة لعرضها هنا.</div>
-          </div>
-        </div>
-      </div>
+      <div class="invoicePreview" id="invoicePreview" style="display:none;"></div>
     </div>
   </div>
 
 <script>
 (() => {
-  // ====== Config / Supabase ======
+  // =========================
+  // CONFIG + SUPABASE
+  // =========================
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG || {};
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    alert('config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)');
+    alert("config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)");
     return;
   }
-  if (!/^https?:\/\//i.test(SUPABASE_URL)) {
-    alert('SUPABASE_URL يجب أن يبدأ بـ https://');
-    return;
-  }
-
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ====== Helpers ======
+  // =========================
+  // HELPERS
+  // =========================
   const el = (id) => document.getElementById(id);
-  const statusLine = el("statusLine");
   const adminStatePill = el("adminStatePill");
+  const selectedUserPill = el("selectedUserPill");
+  const adminMsg = el("adminMsg");
 
-  const adminUser = el("adminUser");
-  const adminPass = el("adminPass");
-  const btnAdminLogin = el("btnAdminLogin");
-  const btnAdminLogout = el("btnAdminLogout");
+  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V1";
+  const DEVICE_KEY  = "HAYEK_DEVICE_ID_V1";
 
-  const newUsername = el("newUsername");
-  const newPassword = el("newPassword");
-  const newRole = el("newRole");
-  const btnAddUser = el("btnAddUser");
-  const btnRefreshUsers = el("btnRefreshUsers");
-  const usersCount = el("usersCount");
-  const usersTbody = el("usersTable").querySelector("tbody");
-
-  const pickedUserName = el("pickedUserName");
-  const pickedUserInput = el("pickedUserInput");
-
-  const pickStatus = el("pickStatus");
-  const fromDate = el("fromDate");
-  const toDate = el("toDate");
-  const btnToday = el("btnToday");
-  const btnLast7 = el("btnLast7");
-  const btnLoadInvoices = el("btnLoadInvoices");
-  const invoiceSelect = el("invoiceSelect");
-  const btnOpenInvoice = el("btnOpenInvoice");
-  const btnExportInvoicePdf = el("btnExportInvoicePdf");
-  const invoicePreview = el("invoicePreview");
-  const invCount = el("invCount");
-
-  const deviceBox = el("deviceBox");
-  const loginBox = el("loginBox");
-
-  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V2";
-  const DEVICE_KEY  = "HAYEK_DEVICE_ID_V2";
-
-  function nowISO() { return new Date().toISOString(); }
-
-  function getOrCreateDeviceId(){
+  function getDeviceId() {
     let id = localStorage.getItem(DEVICE_KEY);
     if (!id) {
-      const uuid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random()).slice(2);
-      id = "dev_" + uuid;
+      id = "dev_" + crypto.randomUUID();
       localStorage.setItem(DEVICE_KEY, id);
     }
     return id;
   }
 
-  function setStatus(type, msg){
-    statusLine.className = "status " + (type || "");
-    statusLine.textContent = msg;
+  function setPill(pillEl, text, type) {
+    pillEl.textContent = text;
+    pillEl.classList.remove("good","bad");
+    if (type === "good") pillEl.classList.add("good");
+    if (type === "bad") pillEl.classList.add("bad");
   }
 
-  function fmtDateTime(iso){
-    if (!iso) return "—";
-    const d = new Date(iso);
+  function todayISODate() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function toISODateTime(d) {
+    // d: Date
+    return d.toISOString();
+  }
+
+  function formatDateTime(dt) {
+    // dt: Date|string
+    const d = (dt instanceof Date) ? dt : new Date(dt);
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth()+1).padStart(2,"0");
     const dd = String(d.getDate()).padStart(2,"0");
     const hh = String(d.getHours()).padStart(2,"0");
     const mi = String(d.getMinutes()).padStart(2,"0");
-    return `${hh}:${mi} ${yyyy}/${mm}/${dd}`;
+    return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
   }
 
-  function safeText(v){ return (v === null || v === undefined) ? "" : String(v); }
-
-  function requireAdmin(){
-    const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-    if (!sess || !sess.username) return null;
-    return sess;
+  function safeText(v) {
+    return (v === null || v === undefined) ? "" : String(v);
   }
 
-  function setAdminUI(logged, msg){
-    if (logged){
-      adminStatePill.textContent = "مفتوح";
-      adminStatePill.style.borderColor = "rgba(33,195,138,.45)";
-      adminStatePill.style.background = "rgba(33,195,138,.12)";
-      adminStatePill.style.color = "#c9ffe9";
-      setStatus("ok", msg || "✅ تم تسجيل الدخول كأدمن.");
+  // =========================
+  // ADMIN SESSION
+  // =========================
+  let adminSession = null; // { username, device_id }
+  let selectedUser = "";   // username
+  let loadedInvoices = []; // invoices cache
+  let openedInvoice = null; // {invoice, ops[]}
+
+  function loadSession() {
+    try {
+      adminSession = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    } catch { adminSession = null; }
+    if (adminSession?.username) {
+      setPill(adminStatePill, `مفتوح: ${adminSession.username}`, "good");
     } else {
-      adminStatePill.textContent = "غير مسجّل";
-      adminStatePill.style.borderColor = "rgba(255,255,255,.10)";
-      adminStatePill.style.background = "rgba(0,0,0,.18)";
-      adminStatePill.style.color = "var(--muted)";
-      setStatus("warn", msg || "✅ الأمن يقفل على جهاز واحد فقط (إذا سُجل من جهاز ثاني سيتم رفض الدخول).");
+      setPill(adminStatePill, "غير مسجل", "bad");
     }
   }
 
-  // ====== Admin Login with single device lock ======
-  async function adminLogin(){
-    const u = adminUser.value.trim();
-    const p = adminPass.value.trim();
-    if (!u || !p) { setStatus("bad","❌ أدخل اسم المستخدم وكلمة السر."); return; }
+  function saveSession(sess) {
+    adminSession = sess;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
+    loadSession();
+  }
 
-    const deviceId = getOrCreateDeviceId();
+  function clearSession() {
+    localStorage.removeItem(SESSION_KEY);
+    adminSession = null;
+    loadSession();
+  }
 
-    // Fetch user
-    const { data, error } = await supabase
-      .from("app_users")
-      .select("id, username, pass, is_admin, blocked, device_id")
-      .eq("username", u)
-      .limit(1);
+  loadSession();
 
-    if (error) { setStatus("bad","❌ خطأ في الاتصال: " + error.message); return; }
-    const row = (data && data[0]) ? data[0] : null;
-    if (!row) { setStatus("bad","❌ بيانات الدخول خاطئة."); return; }
-    if (!row.is_admin) { setStatus("bad","❌ هذا المستخدم ليس Admin."); return; }
-    if (row.blocked) { setStatus("bad","❌ هذا الأدمن محظور."); return; }
-    if (String(row.pass) !== String(p)) { setStatus("bad","❌ بيانات الدخول خاطئة."); return; }
+  // =========================
+  // LOGIN (device lock)
+  // =========================
+  async function adminLogin() {
+    adminMsg.textContent = "";
+    const username = el("adminUser").value.trim();
+    const pass = el("adminPass").value.trim();
+    const deviceId = getDeviceId();
 
-    // Device lock logic:
-    // If device_id is null => bind it to this device
-    // Else must match this deviceId
-    if (row.device_id && row.device_id !== deviceId) {
-      setStatus("bad", `❌ الحالة: Admin مستخدم على جهاز آخر`);
+    if (!username || !pass) {
+      adminMsg.textContent = "❌ أدخل اسم المستخدم وكلمة السر.";
       return;
     }
 
-    if (!row.device_id) {
-      const { error: upErr } = await supabase
-        .from("app_users")
-        .update({ device_id: deviceId, last_seen: nowISO() })
-        .eq("id", row.id);
+    // fetch user
+    const { data, error } = await supabase
+      .from("app_users")
+      .select("id, username, pass, is_admin, blocked, device_id")
+      .eq("username", username)
+      .maybeSingle();
 
-      if (upErr) { setStatus("bad","❌ لم يتم ربط الجهاز: " + upErr.message); return; }
-    } else {
-      // update last_seen
-      await supabase.from("app_users").update({ last_seen: nowISO() }).eq("id", row.id);
+    if (error) {
+      adminMsg.textContent = "❌ خطأ اتصال بالسيرفر.";
+      console.error(error);
+      return;
+    }
+    if (!data) {
+      adminMsg.textContent = "❌ المستخدم غير موجود.";
+      return;
+    }
+    if (data.blocked) {
+      adminMsg.textContent = "⛔ هذا المستخدم محظور.";
+      return;
+    }
+    if (!data.is_admin) {
+      adminMsg.textContent = "⛔ ليس لديك صلاحية Admin.";
+      return;
+    }
+    if (String(data.pass) !== String(pass)) {
+      adminMsg.textContent = "❌ كلمة السر خاطئة.";
+      return;
     }
 
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ username: row.username, device_id: deviceId, ts: Date.now() }));
-    setAdminUI(true, "✅ تم تسجيل الدخول. (قفل الجهاز مفعل)");
-    deviceBox.textContent = "Device ID الحالي: " + deviceId;
-    loginBox.textContent = "جلسة الأدمن: " + row.username;
+    // device lock: if device_id exists and different -> reject
+    if (data.device_id && String(data.device_id) !== String(deviceId)) {
+      adminMsg.textContent = "❌ الحالة: Admin مستخدم على جهاز آخر.";
+      setPill(adminStatePill, "مقفول على جهاز آخر", "bad");
+      return;
+    }
 
-    await loadUsers();
+    // bind device if empty
+    if (!data.device_id) {
+      const { error: upErr } = await supabase
+        .from("app_users")
+        .update({ device_id: deviceId, last_seen: new Date().toISOString() })
+        .eq("username", username);
+
+      if (upErr) console.error(upErr);
+    } else {
+      await supabase.from("app_users").update({ last_seen: new Date().toISOString() }).eq("username", username);
+    }
+
+    saveSession({ username, device_id: deviceId });
+    adminMsg.textContent = "✅ تم تسجيل الدخول بنجاح.";
+    await refreshUsers();
   }
 
-  function adminLogout(){
-    localStorage.removeItem(SESSION_KEY);
-    setAdminUI(false, "تم تسجيل الخروج.");
-    loginBox.textContent = "جلسة الأدمن: —";
+  async function adminLogout() {
+    // لا نفك ربط الجهاز تلقائياً (الأمان)، فقط نسجل خروج محلي
+    clearSession();
+    adminMsg.textContent = "✅ تم تسجيل الخروج.";
   }
 
-  // ====== Users Management ======
-  async function loadUsers(){
-    if (!requireAdmin()) { setStatus("warn","⚠️ سجّل دخول الأدمن أولاً."); return; }
+  el("btnAdminLogin").addEventListener("click", adminLogin);
+  el("btnAdminLogout").addEventListener("click", adminLogout);
+
+  // =========================
+  // USERS CRUD + LIST (with select button)
+  // =========================
+  async function refreshUsers() {
+    if (!adminSession?.username) {
+      adminMsg.textContent = "سجل دخول Admin أولاً.";
+      return;
+    }
 
     const { data, error } = await supabase
       .from("app_users")
-      .select("id, username, is_admin, blocked, device_id")
+      .select("id, username, is_admin, blocked, device_id, created_at, last_seen")
       .order("id", { ascending: true });
 
-    if (error) { setStatus("bad","❌ خطأ: " + error.message); return; }
+    if (error) {
+      console.error(error);
+      adminMsg.textContent = "❌ خطأ بجلب المستخدمين.";
+      return;
+    }
 
-    usersTbody.innerHTML = "";
-    usersCount.textContent = "عدد المستخدمين: " + (data ? data.length : 0);
+    el("usersCount").textContent = `عدد المستخدمين: ${data.length}`;
+    renderUsers(data);
+    fillPickUser(data);
+  }
 
-    (data || []).forEach((u, idx) => {
-      const tr = document.createElement("tr");
+  function fillPickUser(users) {
+    const pick = el("pickUser");
+    const prev = pick.value;
+    pick.innerHTML = `<option value="">— اختر المستخدم —</option>`;
+    users.forEach(u => {
+      // لا نعرض admin فقط إن أردت — هنا نعرض الجميع
+      const opt = document.createElement("option");
+      opt.value = u.username;
+      opt.textContent = u.username + (u.is_admin ? " (Admin)" : "");
+      pick.appendChild(opt);
+    });
+    if (prev) pick.value = prev;
+  }
 
-      const tdIdx = document.createElement("td");
-      tdIdx.textContent = String(idx+1);
-      tr.appendChild(tdIdx);
+  function renderUsers(users) {
+    const box = el("usersList");
+    box.innerHTML = "";
 
-      const tdUser = document.createElement("td");
-      tdUser.textContent = u.username;
-      tr.appendChild(tdUser);
+    users.forEach(u => {
+      const item = document.createElement("div");
+      item.className = "userItem";
 
-      const tdAdmin = document.createElement("td");
-      tdAdmin.textContent = u.is_admin ? "TRUE" : "FALSE";
-      tr.appendChild(tdAdmin);
+      const main = document.createElement("div");
+      main.className = "userMain";
 
-      const tdBlocked = document.createElement("td");
-      tdBlocked.textContent = u.blocked ? "TRUE" : "FALSE";
-      tr.appendChild(tdBlocked);
+      const name = document.createElement("div");
+      name.className = "userName";
+      name.textContent = u.username;
 
-      const tdDev = document.createElement("td");
-      tdDev.textContent = u.device_id ? "مقفل" : "حر";
-      tr.appendChild(tdDev);
+      const meta = document.createElement("div");
+      meta.className = "userMeta";
+      meta.innerHTML = `
+        <span>Admin: <b>${u.is_admin ? "TRUE" : "FALSE"}</b></span>
+        <span>محظور: <b>${u.blocked ? "TRUE" : "FALSE"}</b></span>
+        <span>Device: <b>${u.device_id ? "مربوط" : "فارغ"}</b></span>
+      `;
 
-      const tdActions = document.createElement("td");
-      const wrap = document.createElement("div");
-      wrap.className = "actions";
+      main.appendChild(name);
+      main.appendChild(meta);
 
+      const actions = document.createElement("div");
+      actions.className = "userActions";
+
+      // زر "اختر" لفتح فواتير المستخدم
       const btnPick = document.createElement("button");
-      btnPick.className = "btn small gray";
+      btnPick.className = "btnSmall btnBlue";
       btnPick.textContent = "اختر";
       btnPick.onclick = () => {
-        pickedUserName.textContent = u.username;
-        pickedUserInput.value = u.username;
-        pickedUserInput.dataset.username = u.username;
-        setStatus("ok", "✅ تم تحديد المستخدم للفواتير: " + u.username);
+        selectedUser = u.username;
+        el("pickUser").value = u.username;
+        selectedUserPill.textContent = `المستخدم المحدد للفواتير: ${u.username}`;
       };
-      wrap.appendChild(btnPick);
 
       const btnBlock = document.createElement("button");
-      btnBlock.className = "btn small blue";
-      btnBlock.textContent = u.blocked ? "فك" : "حظر";
+      btnBlock.className = "btnSmall btn";
+      btnBlock.textContent = u.blocked ? "فك الحظر" : "حظر";
       btnBlock.onclick = async () => {
-        const { error: e } = await supabase.from("app_users").update({ blocked: !u.blocked }).eq("id", u.id);
-        if (e) { setStatus("bad","❌ " + e.message); return; }
-        setStatus("ok", "✅ تم تحديث الحظر للمستخدم: " + u.username);
-        await loadUsers();
+        await supabase.from("app_users")
+          .update({ blocked: !u.blocked })
+          .eq("id", u.id);
+        await refreshUsers();
       };
-      wrap.appendChild(btnBlock);
 
-      const btnUnlock = document.createElement("button");
-      btnUnlock.className = "btn small gray";
-      btnUnlock.textContent = "فك ربط الجهاز";
-      btnUnlock.onclick = async () => {
-        const { error: e } = await supabase.from("app_users").update({ device_id: null }).eq("id", u.id);
-        if (e) { setStatus("bad","❌ " + e.message); return; }
-        setStatus("ok", "✅ تم فك ربط الجهاز: " + u.username);
-        await loadUsers();
+      const btnUnbind = document.createElement("button");
+      btnUnbind.className = "btnSmall btnGhost";
+      btnUnbind.textContent = "فك ربط الجهاز";
+      btnUnbind.onclick = async () => {
+        await supabase.from("app_users")
+          .update({ device_id: null })
+          .eq("id", u.id);
+        await refreshUsers();
       };
-      wrap.appendChild(btnUnlock);
 
-      const btnDelete = document.createElement("button");
-      btnDelete.className = "btn small red";
-      btnDelete.textContent = "حذف";
-      btnDelete.onclick = async () => {
-        if (u.username === "admin") { setStatus("bad","❌ لا يمكن حذف admin."); return; }
-        const { error: e } = await supabase.from("app_users").delete().eq("id", u.id);
-        if (e) { setStatus("bad","❌ " + e.message); return; }
-        setStatus("ok", "✅ تم حذف المستخدم: " + u.username);
-        await loadUsers();
+      const btnDel = document.createElement("button");
+      btnDel.className = "btnSmall btnRed";
+      btnDel.textContent = "حذف";
+      btnDel.onclick = async () => {
+        if (!confirm(`حذف المستخدم: ${u.username} ؟`)) return;
+        await supabase.from("app_users").delete().eq("id", u.id);
+        await refreshUsers();
       };
-      wrap.appendChild(btnDelete);
 
-      tdActions.appendChild(wrap);
-      tr.appendChild(tdActions);
+      actions.appendChild(btnPick);
+      actions.appendChild(btnBlock);
+      actions.appendChild(btnUnbind);
+      actions.appendChild(btnDel);
 
-      usersTbody.appendChild(tr);
+      item.appendChild(main);
+      item.appendChild(actions);
+      box.appendChild(item);
     });
   }
 
-  async function addUser(){
-    if (!requireAdmin()) { setStatus("warn","⚠️ سجّل دخول الأدمن أولاً."); return; }
-    const u = newUsername.value.trim();
-    const p = newPassword.value.trim();
-    const role = newRole.value;
+  el("btnRefreshUsers").addEventListener("click", refreshUsers);
 
-    if (!u || !p) { setStatus("bad","❌ أدخل اسم مستخدم وكلمة سر."); return; }
+  async function addUser() {
+    if (!adminSession?.username) {
+      adminMsg.textContent = "سجل دخول Admin أولاً.";
+      return;
+    }
+    const username = el("newUsername").value.trim();
+    const pass = el("newPassword").value.trim();
+    const role = el("newRole").value;
+
+    if (!username || !pass) {
+      adminMsg.textContent = "❌ أدخل اسم مستخدم وكلمة سر.";
+      return;
+    }
 
     const payload = {
-      username: u,
-      pass: p,
-      is_admin: (role === "admin"),
+      username,
+      pass,
+      is_admin: role === "admin",
       blocked: false,
-      created_at: nowISO()
+      created_at: new Date().toISOString()
     };
 
     const { error } = await supabase.from("app_users").insert(payload);
-    if (error) { setStatus("bad","❌ " + error.message); return; }
-
-    newUsername.value = "";
-    newPassword.value = "";
-    setStatus("ok","✅ تمت إضافة المستخدم: " + u);
-    await loadUsers();
-  }
-
-  // ====== Invoices (Admin) ======
-  function setTodayRange(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    const s = `${y}-${m}-${day}`;
-    fromDate.value = s;
-    toDate.value = s;
-  }
-  function setLast7Range(){
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate()-6);
-
-    const fmt = (x) => {
-      const y = x.getFullYear();
-      const m = String(x.getMonth()+1).padStart(2,"0");
-      const d = String(x.getDate()).padStart(2,"0");
-      return `${y}-${m}-${d}`;
-    };
-    fromDate.value = fmt(start);
-    toDate.value = fmt(end);
-  }
-
-  async function loadInvoices(){
-    if (!requireAdmin()) { setStatus("warn","⚠️ سجّل دخول الأدمن أولاً."); return; }
-
-    const u = (pickedUserInput.dataset.username || "").trim();
-    if (!u) { setStatus("bad","❌ اختر مستخدم أولاً (زر اختر)."); return; }
-    if (!fromDate.value || !toDate.value) { setStatus("bad","❌ اختر التاريخ (من/إلى)."); return; }
-
-    // make full-day range in UTC-ish:
-    const fromISO = new Date(fromDate.value + "T00:00:00").toISOString();
-    const toEnd = new Date(toDate.value + "T23:59:59").toISOString();
-
-    let q = supabase
-      .from("app_invoices")
-      .select("id, username, customer_name, total, status, created_at, closed_at")
-      .eq("username", u)
-      .gte("created_at", fromISO)
-      .lte("created_at", toEnd)
-      .order("created_at", { ascending: false });
-
-    const st = pickStatus.value;
-    if (st) q = q.eq("status", st);
-
-    const { data, error } = await q;
-    if (error) { setStatus("bad","❌ " + error.message); return; }
-
-    invoiceSelect.innerHTML = `<option value="">— اختر فاتورة —</option>`;
-    (data || []).forEach(inv => {
-      const opt = document.createElement("option");
-      const title = `${safeText(inv.customer_name || "بدون اسم")} — ${fmtDateTime(inv.created_at)} — إجمالي: ${safeText(inv.total)} — ${safeText(inv.status)}`;
-      opt.value = inv.id;
-      opt.textContent = title;
-      invoiceSelect.appendChild(opt);
-    });
-
-    invCount.textContent = "عدد النتائج: " + (data ? data.length : 0);
-    setStatus("ok", `✅ تم جلب ${data ? data.length : 0} فاتورة للمستخدم: ${u}`);
-  }
-
-  async function fetchInvoiceBundle(invoiceId){
-    // invoice
-    const { data: invD, error: invE } = await supabase
-      .from("app_invoices")
-      .select("id, username, customer_name, total, status, created_at, closed_at")
-      .eq("id", invoiceId)
-      .limit(1);
-
-    if (invE) throw new Error(invE.message);
-    const inv = (invD && invD[0]) ? invD[0] : null;
-    if (!inv) throw new Error("الفاتورة غير موجودة.");
-
-    // operations
-    // ملاحظة: بعض السجلات القديمة عندك invoice_id = NULL
-    const { data: opsD, error: opsE } = await supabase
-      .from("app_operations")
-      .select("id, label, operation, result, note, expression, created_at, invoice_id")
-      .eq("invoice_id", invoiceId)
-      .order("created_at", { ascending: true });
-
-    if (opsE) throw new Error(opsE.message);
-    const ops = opsD || [];
-
-    // total (use inv.total, if null compute)
-    let total = inv.total;
-    if (total === null || total === undefined) {
-      total = ops.reduce((a,o)=> a + (Number(o.result)||0), 0);
+    if (error) {
+      console.error(error);
+      adminMsg.textContent = "❌ لم يتم إضافة المستخدم (قد يكون الاسم موجود).";
+      return;
     }
 
-    return { inv: { ...inv, total }, ops };
+    el("newUsername").value = "";
+    el("newPassword").value = "";
+    adminMsg.textContent = "✅ تمت إضافة المستخدم.";
+    await refreshUsers();
+  }
+  el("btnAddUser").addEventListener("click", addUser);
+
+  // =========================
+  // INVOICE FILTERS
+  // =========================
+  el("btnToday").addEventListener("click", () => {
+    const t = todayISODate();
+    el("fromDate").value = t;
+    el("toDate").value = t;
+  });
+
+  el("btnLast7").addEventListener("click", () => {
+    const now = new Date();
+    const from = new Date(now);
+    from.setDate(now.getDate() - 6); // 7 أيام مع اليوم
+    el("fromDate").value = from.toISOString().slice(0,10);
+    el("toDate").value = now.toISOString().slice(0,10);
+  });
+
+  async function loadInvoices() {
+    if (!adminSession?.username) {
+      adminMsg.textContent = "سجل دخول Admin أولاً.";
+      return;
+    }
+
+    const username = el("pickUser").value || selectedUser;
+    if (!username) {
+      adminMsg.textContent = "❌ اختر المستخدم أولاً.";
+      return;
+    }
+    selectedUser = username;
+    selectedUserPill.textContent = `المستخدم المحدد للفواتير: ${username}`;
+
+    const fromD = el("fromDate").value;
+    const toD = el("toDate").value;
+
+    // range
+    let q = supabase.from("app_invoices")
+      .select("id, username, device_id, total, created_at, customer_name, status, closed_at")
+      .eq("username", username)
+      .order("created_at", { ascending: false });
+
+    if (fromD) {
+      const fromISO = new Date(fromD + "T00:00:00").toISOString();
+      q = q.gte("created_at", fromISO);
+    }
+    if (toD) {
+      const toISO = new Date(toD + "T23:59:59").toISOString();
+      q = q.lte("created_at", toISO);
+    }
+
+    const { data, error } = await q;
+    if (error) {
+      console.error(error);
+      adminMsg.textContent = "❌ خطأ بجلب الفواتير.";
+      return;
+    }
+
+    loadedInvoices = data || [];
+    el("invCount").textContent = `عدد النتائج: ${loadedInvoices.length}`;
+    fillInvoiceSelect(loadedInvoices);
+    adminMsg.textContent = "✅ تم جلب الفواتير.";
   }
 
-  function renderInvoicePreview(bundle){
-    const { inv, ops } = bundle;
-    const html = `
-      <div class="inv-sheet">
-        <div class="inv-top">
-          <div style="font-size:18px;font-weight:900">شركة الحايك</div>
-          <div class="sub">HAYEK SPOT</div>
+  function fillInvoiceSelect(invoices) {
+    const sel = el("invoiceSelect");
+    sel.innerHTML = `<option value="">— اختر فاتورة —</option>`;
+    invoices.forEach(inv => {
+      const opt = document.createElement("option");
+      const cn = inv.customer_name ? ` — ${inv.customer_name}` : "";
+      opt.value = inv.id;
+      opt.textContent = `${formatDateTime(inv.created_at)}${cn} — (${inv.status || "—"})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  el("btnLoadInvoices").addEventListener("click", loadInvoices);
+
+  // =========================
+  // OPEN INVOICE + LOAD OPERATIONS
+  // =========================
+  async function openInvoice() {
+    const invId = el("invoiceSelect").value;
+    if (!invId) {
+      adminMsg.textContent = "❌ اختر فاتورة أولاً.";
+      return;
+    }
+
+    const invoice = loadedInvoices.find(x => x.id === invId);
+    if (!invoice) {
+      adminMsg.textContent = "❌ الفاتورة غير موجودة في القائمة.";
+      return;
+    }
+
+    // 1) الأفضل: جلب العمليات عبر invoice_id
+    let ops = [];
+    {
+      const { data, error } = await supabase
+        .from("app_operations")
+        .select("id, username, label, operation, result, created_at, invoice_id, note, expression, device_id")
+        .eq("invoice_id", invId)
+        .order("created_at", { ascending: true });
+
+      if (!error && data && data.length) ops = data;
+    }
+
+    // 2) fallback: لو invoice_id فاضي بالعمليات -> نجمعها حسب (username + device_id + وقت الفاتورة)
+    if (!ops.length) {
+      const start = new Date(invoice.created_at);
+      const end = invoice.closed_at ? new Date(invoice.closed_at) : new Date(start.getTime() + 2*60*60*1000);
+      const bufStart = new Date(start.getTime() - 60*60*1000);
+      const bufEnd   = new Date(end.getTime()   + 60*60*1000);
+
+      let q = supabase
+        .from("app_operations")
+        .select("id, username, label, operation, result, created_at, invoice_id, note, expression, device_id")
+        .eq("username", invoice.username)
+        .gte("created_at", bufStart.toISOString())
+        .lte("created_at", bufEnd.toISOString())
+        .order("created_at", { ascending: true });
+
+      // لو عندنا device_id بالفاتورة، نفلتر به
+      if (invoice.device_id) q = q.eq("device_id", invoice.device_id);
+
+      const { data, error } = await q;
+      if (error) {
+        console.error(error);
+      } else {
+        ops = data || [];
+      }
+    }
+
+    openedInvoice = { invoice, ops };
+    renderInvoicePreview(openedInvoice);
+    adminMsg.textContent = ops.length ? "✅ تم فتح الفاتورة." : "⚠️ تم فتح الفاتورة لكن لا توجد عمليات مرتبطة.";
+  }
+
+  el("btnOpenInvoice").addEventListener("click", openInvoice);
+
+  function renderInvoicePreview(payload) {
+    const { invoice, ops } = payload;
+    const box = el("invoicePreview");
+    box.style.display = "block";
+
+    const total = (invoice.total !== null && invoice.total !== undefined) ? invoice.total : (ops.reduce((s,o)=> s + (Number(o.result)||0), 0));
+
+    const rows = ops.map(o => {
+      const label = safeText(o.label || o.note || "—");
+      const oper  = safeText(o.operation || o.expression || "—");
+      const res   = safeText(o.result);
+      const time  = safeText(o.created_at ? formatDateTime(o.created_at) : "");
+      return `<tr>
+        <td>${time}</td>
+        <td>${label}</td>
+        <td>${oper}</td>
+        <td>${res}</td>
+      </tr>`;
+    }).join("");
+
+    const customerName = safeText(invoice.customer_name || "—");
+
+    box.innerHTML = `
+      <div class="invCard" id="printInvoiceArea">
+        <div class="invHeader">
+          <div class="t1">شركة الحايك</div>
+          <div class="t2">HAYEK SPOT</div>
         </div>
 
-        <div class="inv-field"><span class="muted">اسم المستخدم</span><b>${safeText(inv.username)}</b></div>
-        <div class="inv-field"><span class="muted">اسم العميل</span><b>${safeText(inv.customer_name || "—")}</b></div>
-        <div class="inv-field"><span class="muted">رقم الفاتورة</span><b style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">${safeText(inv.id)}</b></div>
-        <div class="inv-field"><span class="muted">التاريخ</span><b>${fmtDateTime(inv.closed_at || inv.created_at)}</b></div>
-
-        <div class="inv-table">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:34%">الوقت</th>
-                <th style="width:28%">البيان</th>
-                <th style="width:28%">العملية</th>
-                <th style="width:10%">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${
-                ops.length ? ops.map(o => `
-                  <tr>
-                    <td>${fmtDateTime(o.created_at)}</td>
-                    <td>${safeText(o.note || o.label || "")}</td>
-                    <td>${safeText(o.expression || o.operation || "")}</td>
-                    <td><b>${safeText(o.result)}</b></td>
-                  </tr>
-                `).join("") : `
-                  <tr><td colspan="4" style="text-align:center;color:#555;padding:14px">لا يوجد سطور مرتبطة بهذه الفاتورة.</td></tr>
-                `
-              }
-            </tbody>
-          </table>
+        <div class="invBox">
+          <div>
+            <div class="k">اسم المستخدم</div>
+            <div class="v">${safeText(invoice.username)}</div>
+          </div>
+          <div style="text-align:left;">
+            <div class="k">اسم العميل</div>
+            <div class="v">${customerName}</div>
+          </div>
         </div>
 
-        <div class="inv-total"><span>إجمالي الكشف:</span><span>${safeText(inv.total)}</span></div>
+        <div class="invBox">
+          <div>
+            <div class="k">رقم الفاتورة</div>
+            <div class="v" style="font-size:13px; font-weight:800;">${safeText(invoice.id)}</div>
+          </div>
+          <div style="text-align:left;">
+            <div class="k">التاريخ</div>
+            <div class="v">${formatDateTime(invoice.created_at)}</div>
+          </div>
+        </div>
 
-        <div class="inv-footer">
-          <div style="font-weight:800">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-          <div style="margin-top:6px;font-weight:700">شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية</div>
+        <table class="invTable">
+          <thead>
+            <tr>
+              <th>الوقت</th>
+              <th>البيان</th>
+              <th>العملية</th>
+              <th>النتيجة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="4">لا يوجد بيانات</td></tr>`}
+          </tbody>
+        </table>
+
+        <div class="totalBox">
+          <span>إجمالي الكشف:</span>
+          <span>${safeText(total)}</span>
+        </div>
+
+        <div class="footerBox">
+          تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
+          شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية
           <div class="phone">05510217646</div>
         </div>
       </div>
     `;
-    invoicePreview.innerHTML = html;
   }
 
-  // ====== PDF Export (professional, multi-pages, safe spacing) ======
-  function ensureArabicFont(doc){
-    // إذا amiri-font.js يحط المتغيرات التالية (حسب ملفك):
-    // window.AMIRI_TTF_BASE64  أو window.AMIRI_FONT_BASE64
-    const base64 = window.AMIRI_TTF_BASE64 || window.AMIRI_FONT_BASE64 || null;
-    if (!base64) return false;
-    try{
-      doc.addFileToVFS("Amiri-Regular.ttf", base64);
+  // =========================
+  // PDF EXPORT (Arabic safe + spacing + multi page)
+  // =========================
+  function ensureAmiriFont(doc) {
+    // يدعم أكثر من اسم متغير محتمل داخل amiri-font.js
+    const b64 =
+      window.AMIRI_BASE64 ||
+      window.AMIRI_TTF_BASE64 ||
+      window.AMIRI_REGULAR_BASE64 ||
+      window.AmiriBase64 ||
+      null;
+
+    if (!b64) {
+      console.warn("Amiri base64 not found in amiri-font.js");
+      return false;
+    }
+
+    try {
+      doc.addFileToVFS("Amiri-Regular.ttf", b64);
       doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-      doc.setFont("Amiri","normal");
+      doc.setFont("Amiri", "normal");
+      if (typeof doc.setR2L === "function") doc.setR2L(true);
       return true;
-    }catch(e){
+    } catch (e) {
+      console.error("Font load error", e);
       return false;
     }
   }
 
-  async function exportInvoicePDF(bundle){
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation:"p", unit:"pt", format:"a4" });
-
-    // Fonts
-    const hasArabic = ensureArabicFont(doc);
-    if (!hasArabic) {
-      // fallback
-      doc.setFont("helvetica","normal");
+  async function exportInvoicePdf() {
+    if (!openedInvoice?.invoice) {
+      adminMsg.textContent = "❌ افتح الفاتورة أولاً.";
+      return;
     }
 
+    const { invoice, ops } = openedInvoice;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+    const okFont = ensureAmiriFont(doc);
+    if (!okFont) {
+      adminMsg.textContent = "⚠️ لم يتم تحميل خط عربي. تأكد أن amiri-font.js يضع base64 داخل window.AMIRI_BASE64.";
+    }
+
+    // مقاسات الصفحة
     const pageW = doc.internal.pageSize.getWidth();
-    const margin = 42;
-    let y = 46;
+    const margin = 44;
 
-    // Header box
-    const boxW = pageW - margin*2;
-    doc.setLineWidth(1.4);
-    doc.roundedRect(margin, y, boxW, 80, 14, 14);
-    doc.setFontSize(16);
-    doc.text("شركة الحايك", pageW/2, y+30, { align:"center" });
+    // عنوان
+    doc.setFontSize(18);
+    doc.text("شركة الحايك", pageW - margin, 70, { align: "right" });
     doc.setFontSize(11);
-    doc.text("HAYEK SPOT", pageW/2, y+50, { align:"center" });
-    y += 96;
+    doc.text("HAYEK SPOT", pageW - margin, 88, { align: "right" });
 
-    const drawField = (label, value) => {
-      doc.setLineWidth(1.2);
-      doc.roundedRect(margin, y, boxW, 46, 14, 14);
-      doc.setFontSize(11);
-      doc.text(label, margin + boxW - 14, y+18, { align:"right" });
+    // مربعات بيانات
+    doc.setLineWidth(1);
+    function drawBox(y, label, value) {
+      const h = 44;
+      doc.roundedRect(margin, y, pageW - margin*2, h, 10, 10);
       doc.setFontSize(12);
-      doc.text(String(value || "—"), margin + boxW - 14, y+36, { align:"right" });
-      y += 56;
-    };
+      doc.text(label, pageW - margin - 12, y + 18, { align: "right" });
+      doc.setFontSize(13);
+      doc.text(String(value || "—"), margin + 12, y + 30, { align: "left" });
+      return y + h + 10;
+    }
 
-    drawField("اسم المستخدم", bundle.inv.username);
-    drawField("اسم العميل", bundle.inv.customer_name || "—");
-    drawField("رقم الفاتورة", bundle.inv.id);
-    drawField("التاريخ", fmtDateTime(bundle.inv.closed_at || bundle.inv.created_at));
+    let y = 110;
+    y = drawBox(y, "اسم المستخدم", invoice.username);
+    y = drawBox(y, "اسم العميل", invoice.customer_name || "—");
+    y = drawBox(y, "رقم الفاتورة", invoice.id);
+    y = drawBox(y, "التاريخ", formatDateTime(invoice.created_at));
 
-    // === 3 سطور فراغ فوق جدول العمليات ===
-    y += 32;
+    // ✅ شرطك: 3 أسطر فارغ فوق جدول العمليات
+    y += 18 * 3;
 
-    // Prepare rows
-    const rows = (bundle.ops || []).map(o => ([
-      fmtDateTime(o.created_at),
-      safeText(o.note || o.label || ""),
-      safeText(o.expression || o.operation || ""),
+    // جدول العمليات
+    const body = (ops || []).map(o => ([
+      formatDateTime(o.created_at),
+      safeText(o.label || o.note || "—"),
+      safeText(o.operation || o.expression || "—"),
       safeText(o.result)
     ]));
 
-    // AutoTable with multi-pages
     doc.autoTable({
       startY: y,
       head: [[ "الوقت", "البيان", "العملية", "النتيجة" ]],
-      body: rows.length ? rows : [[ "—", "لا يوجد بيانات", "—", "—" ]],
+      body: body.length ? body : [["—","—","—","—"]],
       styles: {
-        font: hasArabic ? "Amiri" : "helvetica",
-        fontSize: 10.5,
-        lineWidth: 0.6,
-        cellPadding: 7,
-        halign: "right",
-        valign: "middle"
+        font: okFont ? "Amiri" : "helvetica",
+        fontSize: 11,
+        halign: "center",
+        valign: "middle",
+        cellPadding: 6,
+        lineWidth: 0.6
       },
       headStyles: {
-        fillColor: [243,244,246],
+        fillColor: [242,242,242],
         textColor: [0,0,0],
-        fontStyle: "bold",
-        halign: "right"
+        lineWidth: 0.8
       },
-      bodyStyles: {
-        textColor: [0,0,0],
-        fillColor: [255,255,255]
-      },
-      alternateRowStyles: {
-        fillColor: [250,250,250]
-      },
-      tableLineColor: [50,50,50],
-      tableLineWidth: 0.8,
       margin: { left: margin, right: margin },
-      didDrawPage: (data) => {
-        // optional: nothing
-      }
+      theme: "grid",
+      didDrawPage: () => {}
     });
 
-    // y after table
-    y = doc.lastAutoTable.finalY + 18;
+    // ✅ شرطك: 3 أسطر فارغ تحت الجدول
+    let y2 = (doc.lastAutoTable?.finalY || y) + (18 * 3);
 
-    // === 3 سطور فراغ تحت جدول العمليات ===
-    y += 28;
+    // إجمالي
+    const total = (invoice.total !== null && invoice.total !== undefined)
+      ? invoice.total
+      : (ops || []).reduce((s,o)=> s + (Number(o.result)||0), 0);
 
-    // Total box (dashed)
-    doc.setLineDashPattern([4,3], 0);
-    doc.setLineWidth(1.2);
-    doc.roundedRect(margin, y, boxW, 48, 14, 14);
-    doc.setLineDashPattern([], 0);
-    doc.setFontSize(12);
-    doc.text(String(bundle.inv.total ?? "0"), margin + 18, y+30, { align:"left" });
-    doc.text("إجمالي الكشف:", margin + boxW - 18, y+30, { align:"right" });
-    y += 62;
-
-    // Footer box
-    doc.setLineWidth(1.2);
-    doc.roundedRect(margin, y, boxW, 84, 14, 14);
-    doc.setFontSize(10.5);
-    doc.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك", pageW/2, y+26, { align:"center" });
-    doc.text("شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية", pageW/2, y+46, { align:"center" });
-
-    // Phone badge
-    doc.setLineWidth(1.4);
-    doc.roundedRect(pageW/2 - 86, y+54, 172, 24, 10, 10);
     doc.setFontSize(13);
-    doc.text("05510217646", pageW/2, y+71, { align:"center" });
+    doc.setLineDashPattern([6,3], 0);
+    doc.roundedRect(margin, y2, pageW - margin*2, 46, 10, 10);
+    doc.setLineDashPattern([], 0);
+    doc.text("إجمالي الكشف:", pageW - margin - 12, y2 + 28, { align: "right" });
+    doc.text(String(total), margin + 12, y2 + 28, { align: "left" });
 
-    const fileName = `invoice_${bundle.inv.username}_${(bundle.inv.customer_name||"customer")}_${String(bundle.inv.id).slice(0,8)}.pdf`
-      .replace(/[^\u0600-\u06FF\w.-]+/g, "_");
+    y2 += 60;
+
+    // ذيل
+    doc.roundedRect(margin, y2, pageW - margin*2, 80, 10, 10);
+    doc.setFontSize(11);
+    doc.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك", pageW/2, y2 + 24, { align: "center" });
+    doc.setFontSize(10);
+    doc.text("شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية", pageW/2, y2 + 44, { align: "center" });
+    doc.setFontSize(14);
+    doc.text("05510217646", pageW/2, y2 + 68, { align: "center" });
+
+    // حفظ
+    const fileName = `HAYEK_SPOT_${invoice.username}_${(invoice.customer_name||"invoice")}.pdf`
+      .replace(/[^\w\u0600-\u06FF]+/g, "_");
 
     doc.save(fileName);
+    adminMsg.textContent = "✅ تم تصدير PDF (عربي + صفحات تلقائية + مسافات فوق/تحت الجدول).";
   }
 
-  async function openInvoice(){
-    if (!requireAdmin()) { setStatus("warn","⚠️ سجّل دخول الأدمن أولاً."); return; }
-    const invoiceId = invoiceSelect.value;
-    if (!invoiceId) { setStatus("bad","❌ اختر فاتورة من القائمة."); return; }
+  el("btnExportInvoicePdf").addEventListener("click", exportInvoicePdf);
 
-    try{
-      const bundle = await fetchInvoiceBundle(invoiceId);
-      renderInvoicePreview(bundle);
-      setStatus("ok", "✅ تم فتح الفاتورة.");
-    }catch(e){
-      setStatus("bad", "❌ " + e.message);
-    }
-  }
+  // =========================
+  // INIT
+  // =========================
+  (function initDates(){
+    const t = todayISODate();
+    el("fromDate").value = t;
+    el("toDate").value = t;
+  })();
 
-  async function exportSelectedInvoice(){
-    if (!requireAdmin()) { setStatus("warn","⚠️ سجّل دخول الأدمن أولاً."); return; }
-    const invoiceId = invoiceSelect.value;
-    if (!invoiceId) { setStatus("bad","❌ اختر فاتورة أولاً."); return; }
-
-    try{
-      const bundle = await fetchInvoiceBundle(invoiceId);
-      await exportInvoicePDF(bundle);
-      setStatus("ok", "✅ تم تصدير PDF بنجاح.");
-    }catch(e){
-      setStatus("bad", "❌ " + e.message);
-    }
-  }
-
-  // ====== Wire events ======
-  btnAdminLogin.onclick = adminLogin;
-  btnAdminLogout.onclick = adminLogout;
-  btnRefreshUsers.onclick = loadUsers;
-  btnAddUser.onclick = addUser;
-
-  btnToday.onclick = () => { setTodayRange(); setStatus("ok","✅ تم اختيار فواتير اليوم."); };
-  btnLast7.onclick = () => { setLast7Range(); setStatus("ok","✅ تم اختيار فواتير آخر 7 أيام."); };
-
-  btnLoadInvoices.onclick = loadInvoices;
-  btnOpenInvoice.onclick = openInvoice;
-  btnExportInvoicePdf.onclick = exportSelectedInvoice;
-
-  // ====== Init ======
-  const deviceId = getOrCreateDeviceId();
-  deviceBox.textContent = "Device ID الحالي: " + deviceId;
-
-  const sess = requireAdmin();
-  if (sess){
-    setAdminUI(true, "✅ جلسة أدمن محفوظة. إذا ظهر رفض جهاز، فك ربط جهاز admin من Supabase ثم سجّل دخول.");
-    loginBox.textContent = "جلسة الأدمن: " + sess.username;
-    adminUser.value = sess.username;
-    // محاولة تحميل المستخدمين مباشرة
-    loadUsers();
-  } else {
-    setAdminUI(false);
-  }
+  // تحميل قائمة المستخدمين إذا الأدمن مسجل
+  if (adminSession?.username) refreshUsers();
 
 })();
 </script>
