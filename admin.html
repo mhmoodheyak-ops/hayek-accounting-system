@@ -5,144 +5,193 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <link rel="stylesheet" href="./style.css?v=9004" />
+  <link rel="stylesheet" href="./style.css?v=9100" />
 
   <!-- Supabase UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- ✅ PDF تصوير HTML -->
+  <!-- html2pdf (يعطي PDF عربي صحيح لأنه يصوّر المحتوى) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- Config -->
-  <script src="./config.js?v=9004"></script>
+  <script src="./config.js?v=9100"></script>
 </head>
 
 <body class="app-body">
   <div class="app-wrap">
-
-    <div class="card header-card">
-      <div class="header-title">لوحة الأمن</div>
-      <div class="header-sub">
-        إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id)
-      </div>
-      <div id="statusLine" class="status-pill">غير مسجل</div>
+    <div class="top-title">
+      <div class="title">لوحة الأمن</div>
+      <div class="subtitle">إدارة المستخدمين والفواتير — بدون import وبدون أخطاء module.</div>
+      <div class="pill" id="adminStatePill">غير مسجل</div>
     </div>
 
-    <div class="grid-2">
-      <!-- تسجيل الدخول -->
-      <div class="card">
-        <div class="card-title">تسجيل الدخول (Admin)</div>
+    <div class="grid">
+      <!-- LOGIN -->
+      <section class="card">
+        <h2>تسجيل الدخول (Admin)</h2>
 
-        <div class="form-grid">
-          <div class="field">
-            <label>اسم المستخدم</label>
-            <input id="adminUser" type="text" value="admin" autocomplete="username" />
-          </div>
-          <div class="field">
-            <label>كلمة السر</label>
-            <input id="adminPass" type="password" value="" autocomplete="current-password" />
-          </div>
+        <div class="row">
+          <label>اسم المستخدم</label>
+          <input id="adminUser" class="input" value="admin" autocomplete="username" />
+        </div>
+
+        <div class="row">
+          <label>كلمة السر</label>
+          <input id="adminPass" class="input" type="password" autocomplete="current-password" />
         </div>
 
         <div class="btn-row">
-          <button id="btnAdminLogin" class="btn primary">تسجيل دخول</button>
-          <button id="btnAdminLogout" class="btn">تسجيل خروج</button>
+          <button class="btn primary" id="btnAdminLogin">تسجيل دخول</button>
+          <button class="btn" id="btnAdminLogout">تسجيل خروج</button>
         </div>
 
-        <div id="adminStatePill" class="status-pill ok" style="margin-top:10px; display:none;"></div>
-      </div>
+        <div class="hint" id="statusLine"></div>
+      </section>
 
-      <!-- إدارة المستخدمين -->
-      <div class="card">
-        <div class="card-title">إدارة المستخدمين</div>
+      <!-- USERS -->
+      <section class="card">
+        <h2>إدارة المستخدمين</h2>
 
-        <div class="form-grid">
-          <div class="field">
-            <label>اسم مستخدم جديد</label>
-            <input id="newUsername" type="text" placeholder="مثال: محمود" />
+        <div class="row">
+          <label>اسم مستخدم جديد</label>
+          <input id="newUsername" class="input" placeholder="مثال: محمود" />
+        </div>
+
+        <div class="row">
+          <label>كلمة السر</label>
+          <input id="newPassword" class="input" placeholder="مثال: 1234" />
+        </div>
+
+        <div class="row">
+          <label>صلاحية</label>
+          <select id="newRole" class="input">
+            <option value="user">مستخدم</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn primary" id="btnAddUser">إضافة</button>
+          <button class="btn" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
+          <div class="count-badge" id="usersCount">0</div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="usersTable">
+            <thead>
+              <tr>
+                <th style="width:60px">#</th>
+                <th>المستخدم</th>
+                <th style="width:90px">Admin</th>
+                <th style="width:90px">محظور</th>
+                <th style="width:160px">قفل الجهاز</th>
+                <th style="width:240px">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- INVOICES -->
+      <section class="card full">
+        <h2>الفواتير</h2>
+
+        <div class="filters">
+          <div class="row">
+            <label>اختر المستخدم</label>
+            <select id="pickUser" class="input"></select>
           </div>
-          <div class="field">
-            <label>كلمة السر</label>
-            <input id="newPassword" type="text" value="1234" />
-          </div>
-          <div class="field">
-            <label>صلاحية</label>
-            <select id="newRole">
-              <option value="user">مستخدم</option>
-              <option value="admin">Admin</option>
+
+          <div class="row">
+            <label>الحالة</label>
+            <select id="pickStatus" class="input">
+              <option value="all">الكل</option>
+              <option value="open">open</option>
+              <option value="closed">closed</option>
             </select>
           </div>
+
+          <div class="row">
+            <label>من تاريخ</label>
+            <input id="fromDate" class="input" type="date" />
+          </div>
+
+          <div class="row">
+            <label>إلى تاريخ</label>
+            <input id="toDate" class="input" type="date" />
+          </div>
+
+          <div class="btn-row">
+            <button class="btn" id="btnToday">فواتير اليوم</button>
+            <button class="btn" id="btnLast7">آخر 7 أيام</button>
+            <button class="btn primary" id="btnLoadInvoices">اعرض الفواتير</button>
+            <div class="count-badge" id="invCount">0</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>قائمة الفواتير (مع المبلغ)</label>
+          <select id="invoiceSelect" class="input invoice-select"></select>
         </div>
 
         <div class="btn-row">
-          <button id="btnAddUser" class="btn success">إضافة</button>
-          <button id="btnRefreshUsers" class="btn">تحديث قائمة المستخدمين</button>
-          <div class="pill" id="usersCount">عدد المستخدمين: 0</div>
+          <button class="btn" id="btnOpenInvoice">فتح</button>
+          <button class="btn primary" id="btnExportInvoicePdf">تصدير PDF</button>
         </div>
 
-        <div class="users-list" id="usersList"></div>
-      </div>
+        <!-- Preview -->
+        <div class="preview-wrap">
+          <div id="invoicePreview" class="invoice-paper" aria-label="invoice">
+            <div class="invoice-header">
+              <div class="inv-title">شركة الحايك</div>
+              <div class="inv-sub">HAYEK SPOT</div>
+            </div>
+
+            <div class="inv-fields">
+              <div class="field"><span>اسم المستخدم</span><b id="pv_username">—</b></div>
+              <div class="field"><span>اسم العميل</span><b id="pv_customer">—</b></div>
+              <div class="field"><span>رقم الفاتورة</span><b id="pv_invoiceId">—</b></div>
+              <div class="field"><span>التاريخ</span><b id="pv_date">—</b></div>
+            </div>
+
+            <!-- 3 سطور فراغ فوق الجدول -->
+            <div class="spacer-rows" aria-hidden="true"></div>
+
+            <table class="inv-table" id="pv_table">
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>البيان</th>
+                  <th>العملية</th>
+                  <th>النتيجة</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <!-- 3 سطور فراغ تحت الجدول -->
+            <div class="spacer-rows" aria-hidden="true"></div>
+
+            <div class="inv-total">
+              <div class="total-label">إجمالي الكشف:</div>
+              <div class="total-value" id="pv_total">0</div>
+            </div>
+
+            <div class="inv-footer">
+              <div>تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+              <div>شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية</div>
+              <div class="phone">05510217646</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hint" id="pdfHint"></div>
+      </section>
     </div>
-
-    <!-- الفواتير -->
-    <div class="card">
-      <div class="card-title">الفواتير</div>
-
-      <div class="form-grid">
-        <div class="field">
-          <label>اختر المستخدم</label>
-          <select id="pickUser">
-            <option value="">— اختر —</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>الحالة</label>
-          <select id="pickStatus">
-            <option value="">الكل</option>
-            <option value="open">مفتوحة</option>
-            <option value="closed">منتهية</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>من تاريخ</label>
-          <input id="fromDate" type="date" />
-        </div>
-
-        <div class="field">
-          <label>إلى تاريخ</label>
-          <input id="toDate" type="date" />
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button id="btnToday" class="btn">فواتير اليوم</button>
-        <button id="btnLast7" class="btn">آخر 7 أيام</button>
-        <button id="btnLoadInvoices" class="btn primary">اعرض الفواتير</button>
-        <div class="pill" id="invCount">عدد النتائج: 0</div>
-      </div>
-
-      <div class="form-grid" style="margin-top:12px;">
-        <div class="field">
-          <label>قائمة الفواتير</label>
-          <select id="invoiceSelect">
-            <option value="">— اختر فاتورة —</option>
-          </select>
-        </div>
-
-        <div class="btn-row" style="align-items:end; gap:10px;">
-          <button id="btnOpenInvoice" class="btn">فتح</button>
-          <button id="btnExportInvoicePdf" class="btn success">تصدير PDF</button>
-        </div>
-      </div>
-
-      <!-- معاينة -->
-      <div id="invoicePreview" class="invoice-preview"></div>
-    </div>
-
   </div>
 
-  <script src="./admin.js?v=9004"></script>
+  <script src="./admin.js?v=9100"></script>
 </body>
 </html>
+
