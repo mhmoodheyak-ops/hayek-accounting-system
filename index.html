@@ -5,236 +5,216 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
 
-  <!-- (اختياري) إذا عندك style.css بالمشروع -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- CSS -->
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- (اختياري) Font loader لو عندك amiri-font.js -->
+  <script src="./amiri-font.js"></script>
 
   <style>
+    /* حماية بسيطة لو style.css فيه نقص */
     :root{
-      --bg1:#06121f; --bg2:#0b2a2f;
-      --card: rgba(255,255,255,.06);
-      --stroke: rgba(255,255,255,.14);
-      --txt:#eaf2ff; --muted: rgba(255,255,255,.72);
-      --btn:#1d4ed8; --btn2: rgba(255,255,255,.08);
-      --ok:#22c55e; --bad:#ef4444;
-      --radius: 18px;
+      --bg1:#071a2b; --bg2:#0b2b3a; --card: rgba(255,255,255,0.08);
+      --stroke: rgba(255,255,255,0.10); --txt:#fff; --muted:rgba(255,255,255,0.7);
+      --ok:#22c55e; --bad:#ef4444; --btn:#2563eb;
+      --radius:18px;
     }
     body{
-      margin:0;
-      font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-      color: var(--txt);
-      min-height: 100vh;
-      background: radial-gradient(1200px 700px at 20% 10%, #0a3b4a 0%, transparent 60%),
-                  radial-gradient(900px 600px at 80% 0%, #0a2f4e 0%, transparent 60%),
+      margin:0; min-height:100vh;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(34,197,94,0.12), transparent 55%),
+                  radial-gradient(900px 600px at 90% 20%, rgba(37,99,235,0.18), transparent 55%),
                   linear-gradient(135deg, var(--bg1), var(--bg2));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
+      color:var(--txt);
+      font-family: "Amiri", system-ui, -apple-system, Segoe UI, Tahoma, Arial, sans-serif;
     }
     .wrap{
-      width: min(520px, 100%);
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin-bottom: 18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .brand .dot{
+      width:12px; height:12px; border-radius:999px; background: var(--ok);
+      box-shadow: 0 0 0 6px rgba(34,197,94,0.12);
+    }
+    .brand h1{
+      font-size:18px; margin:0; line-height:1.2;
+    }
+    .brand p{
+      margin:0; font-size:12px; color:var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
     }
     .card{
       background: var(--card);
       border: 1px solid var(--stroke);
       border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       backdrop-filter: blur(10px);
+      overflow:hidden;
     }
-    .head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 12px;
+    .card-head{
+      padding: 18px 18px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .title{
-      font-size: 22px;
-      font-weight: 800;
-      margin: 0;
-      letter-spacing: .2px;
+    .card-head h2{
+      margin:0; font-size:20px;
     }
-    .sub{
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
+    .card-head small{
+      display:block; margin-top:6px; color:var(--muted);
+      font-size:12px; line-height:1.5;
     }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.05);
-      font-size: 12px;
-      color: var(--muted);
-      white-space: nowrap;
+    .card-body{ padding: 16px 18px 18px; }
+
+    .row{ display:grid; gap:10px; }
+    .field{
+      display:grid; gap:6px;
     }
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    label{
-      display:block;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
+    label{ font-size:12px; color:var(--muted); }
     input{
-      width: 100%;
-      box-sizing: border-box;
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(0,0,0,.18);
-      color: var(--txt);
+      width:100%;
       padding: 14px 14px;
-      outline: none;
-      font-size: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      color: var(--txt);
+      outline:none;
+      font-size: 15px;
     }
-    input:focus{
-      border-color: rgba(59,130,246,.55);
-      box-shadow: 0 0 0 3px rgba(59,130,246,.18);
-    }
-    .row{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 12px;
+    input::placeholder{ color: rgba(255,255,255,0.35); }
+    .actions{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 10px;
     }
     button{
-      border: 0;
-      cursor: pointer;
-      border-radius: 14px;
+      border:0; cursor:pointer;
       padding: 12px 14px;
-      font-size: 15px;
-      font-weight: 700;
+      border-radius: 14px;
+      font-size: 14px;
+      color:#fff;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
     }
-    .btn-primary{
-      background: linear-gradient(180deg, #2563eb, #1d4ed8);
-      color: #fff;
-      flex: 1;
+    button.primary{
+      background: var(--btn);
+      border-color: rgba(255,255,255,0.18);
+      flex:1;
       min-width: 160px;
     }
-    .btn-ghost{
-      background: var(--btn2);
-      color: var(--txt);
-      border: 1px solid var(--stroke);
+    button.ghost{
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.9);
     }
-    .msg{
-      margin-top: 12px;
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .error{
+      display:none;
+      margin-top: 10px;
       padding: 10px 12px;
       border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(0,0,0,.15);
-      color: var(--muted);
+      border: 1px solid rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.10);
+      color: #ffd7d7;
       font-size: 13px;
-      display:none;
     }
-    .msg.ok{ display:block; border-color: rgba(34,197,94,.35); color: rgba(220,255,234,.95); }
-    .msg.bad{ display:block; border-color: rgba(239,68,68,.35); color: rgba(255,230,230,.95); }
-    .foot{
-      margin-top: 14px;
-      text-align:center;
-      color: rgba(255,255,255,.55);
-      font-size: 12px;
+
+    /* حاوية التطبيق (تظهر بعد تسجيل الدخول) */
+    #app-root{ display:none; }
+
+    /* Responsive */
+    @media (min-width: 860px){
+      .grid{ grid-template-columns: 420px 1fr; align-items:start; }
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="head">
+    <div class="topbar">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"></span>
         <div>
-          <h1 class="title">تسجيل الدخول</h1>
-          <p class="sub">مرة واحدة فقط — بعدها يدخل تلقائياً على نفس الجهاز.</p>
-        </div>
-        <div class="pill" id="devicePill">Device: ...</div>
-      </div>
-
-      <div class="grid">
-        <div>
-          <label for="username">اسم المستخدم</label>
-          <input id="username" type="text" inputmode="text" autocomplete="username" placeholder="مثال: محمود" />
-        </div>
-
-        <div>
-          <label for="password">كلمة السر</label>
-          <input id="password" type="password" inputmode="text" autocomplete="current-password" placeholder="••••" />
+          <h1>حاسبة الحايك</h1>
+          <p>سجل + فاتورة + PDF + أوفلاين</p>
         </div>
       </div>
+      <!-- زر خروج عام (لو app.js يستخدمه) -->
+      <button id="btnLogout" class="ghost" type="button" style="display:none;">خروج</button>
+    </div>
 
-      <div class="row">
-        <button class="btn-primary" onclick="doLogin()">تسجيل دخول</button>
-        <button class="btn-ghost" onclick="clearLocal()">مسح بيانات الجهاز</button>
-      </div>
+    <div class="grid">
+      <!-- AUTH / LOGIN -->
+      <section id="auth-root" class="card">
+        <div class="card-head">
+          <h2>تسجيل الدخول</h2>
+          <small>مرة واحدة فقط — بعدها يدخل تلقائيًا على نفس الجهاز.</small>
+        </div>
+        <div class="card-body">
+          <div class="badge">
+            <span>Device:</span>
+            <strong id="deviceIdBadge">...</strong>
+          </div>
 
-      <div id="msg" class="msg"></div>
+          <div class="row">
+            <div class="field">
+              <label for="loginUsername">اسم المستخدم</label>
+              <input id="loginUsername" type="text" placeholder="مثال: لاب توب" autocomplete="username" />
+            </div>
 
-      <div class="foot">HAYEK SPOT</div>
+            <div class="field">
+              <label for="loginPassword">كلمة السر</label>
+              <input id="loginPassword" type="password" placeholder="••••••" autocomplete="current-password" />
+            </div>
+
+            <div class="actions">
+              <button id="btnLogin" class="primary" type="button">تسجيل دخول</button>
+              <button id="btnResetDevice" class="ghost" type="button">مسح بيانات الجهاز</button>
+            </div>
+
+            <div id="loginError" class="error"></div>
+          </div>
+
+          <div style="margin-top:12px; color:rgba(255,255,255,0.45); font-size:12px; text-align:center;">
+            HAYEK SPOT
+          </div>
+        </div>
+      </section>
+
+      <!-- APP -->
+      <section id="app-root" class="card">
+        <div class="card-head">
+          <h2>واجهة المستخدم</h2>
+          <small>يتم تحميل الواجهة من app.js بعد تسجيل الدخول.</small>
+        </div>
+        <div class="card-body">
+          <!-- app.js لازم يملأ هذه الحاوية -->
+          <div id="appMount"></div>
+        </div>
+      </section>
     </div>
   </div>
 
-  <!-- مهم: تحميل عادي بدون module -->
-  <script src="auth.js"></script>
-
-  <script>
-    function showMsg(type, text){
-      const el = document.getElementById("msg");
-      el.className = "msg " + (type || "");
-      el.textContent = text || "";
-    }
-
-    // لو مسجّل دخول سابقاً → ادخل مباشرة
-    document.addEventListener("DOMContentLoaded", () => {
-      try {
-        // عرض جزء من deviceId إن وجد
-        const did = localStorage.getItem("HAYEK_DEVICE_ID") || "";
-        document.getElementById("devicePill").textContent = "Device: " + (did ? (did.slice(0,8) + "...") : "NEW");
-
-        if (window.HAYEK_AUTH && HAYEK_AUTH.isLoggedIn()) {
-          showMsg("ok", "تم تسجيل الدخول سابقاً — يتم فتح صفحة المستخدم...");
-          setTimeout(() => location.href = "user.html", 600);
-        }
-      } catch (e) {
-        showMsg("bad", "خطأ بالمتصفح/التخزين المحلي.");
-      }
-    });
-
-    function doLogin(){
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-
-      if (!user || !pass){
-        showMsg("bad", "الرجاء إدخال اسم المستخدم وكلمة السر.");
-        return;
-      }
-
-      if (!window.HAYEK_AUTH){
-        showMsg("bad", "auth.js غير محمّل بشكل صحيح. تأكد أن الملف موجود بنفس المجلد.");
-        return;
-      }
-
-      const ok = HAYEK_AUTH.login(user, pass);
-      if (ok){
-        showMsg("ok", "تم تسجيل الدخول بنجاح ✅ يتم تحويلك...");
-        setTimeout(() => location.href = "user.html", 500);
-      } else {
-        showMsg("bad", "فشل تسجيل الدخول.");
-      }
-    }
-
-    function clearLocal(){
-      if (!confirm("متأكد؟ سيتم مسح بيانات الدخول من هذا الجهاز.")) return;
-      localStorage.removeItem("HAYEK_AUTH_DEVICE");
-      localStorage.removeItem("HAYEK_DEVICE_ID");
-      showMsg("ok", "تم المسح ✅ أعد تحميل الصفحة.");
-    }
-  </script>
+  <!-- مهم: config ثم auth ثم app (بدون module) -->
+  <script src="./config.js"></script>
+  <script src="./auth.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
-
