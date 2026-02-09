@@ -1,3 +1,4 @@
+
 // admin.js (بدون import)
 (() => {
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG || {};
@@ -8,7 +9,6 @@
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // عناصر
   const el = (id) => document.getElementById(id);
 
   const statusLine = el("statusLine");
@@ -41,7 +41,6 @@
   const btnExportInvoicePdf = el("btnExportInvoicePdf");
   const pdfHint = el("pdfHint");
 
-  // Preview fields
   const pv_username = el("pv_username");
   const pv_customer = el("pv_customer");
   const pv_invoiceId = el("pv_invoiceId");
@@ -50,11 +49,9 @@
   const pv_total = el("pv_total");
   const invoicePreview = el("invoicePreview");
 
-  // Session keys
   const SESSION_KEY = "HAYEK_ADMIN_SESSION_V2";
   const DEVICE_KEY = "HAYEK_DEVICE_ID_V2";
 
-  // Helpers
   const nowLocalISODate = () => {
     const d = new Date();
     const y = d.getFullYear();
@@ -141,12 +138,10 @@
     if (row.blocked) return toast("هذا المستخدم محظور", false);
     if (row.pass !== p) return toast("كلمة السر خاطئة", false);
 
-    // قفل جهاز الأدمن: إذا كان مسجل بجهاز آخر
     if (row.device_id && row.device_id !== deviceId) {
       return toast("❌ الحالة: Admin مستخدم على جهاز آخر", false);
     }
 
-    // اربط الجهاز إن لم يكن مربوط
     if (!row.device_id) {
       const { error: upErr } = await supabase
         .from("app_users")
@@ -275,7 +270,6 @@
   }
 
   async function fillUsersPickers() {
-    // users for invoices filter
     const { data, error } = await supabase
       .from("app_users")
       .select("username")
@@ -293,7 +287,6 @@
       pickUser.appendChild(opt);
     });
 
-    // default
     if (list.length && !pickUser.value) pickUser.value = list[0];
   }
 
@@ -315,8 +308,6 @@
       .limit(500);
 
     if (status !== "all") q = q.eq("status", status);
-
-    // فلترة التاريخ (على created_at)
     if (from) q = q.gte("created_at", from + "T00:00:00");
     if (to) q = q.lte("created_at", to + "T23:59:59");
 
@@ -332,7 +323,6 @@
       const dt = fmtDateTime(inv.created_at);
       const cust = inv.customer_name || "—";
       const total = (inv.total ?? 0);
-      // ✅ المطلوب: يظهر قيمة الفاتورة ضمن القائمة قبل فتحها
       opt.value = inv.id;
       opt.textContent = `(${st}) — ${dt} — ${cust} — الإجمالي: ${total}`;
       invoiceSelect.appendChild(opt);
@@ -366,10 +356,8 @@
 
     if (invErr) throw new Error(invErr.message);
     if (!inv || !inv.length) throw new Error("الفاتورة غير موجودة");
-
     const invoice = inv[0];
 
-    // 1) نحاول invoice_id إذا موجود بالسجلات
     let { data: ops, error: opsErr } = await supabase
       .from("app_operations")
       .select("created_at, label, operation, result, invoice_id")
@@ -377,12 +365,11 @@
       .order("created_at", { ascending: true })
       .limit(2000);
 
-    // 2) إذا ما في ربط invoice_id (مثل صورك كانت NULL) نجيب حسب وقت الفاتورة
     if (!opsErr && (!ops || ops.length === 0)) {
       const start = invoice.created_at;
       const end = invoice.closed_at || new Date().toISOString();
 
-      const q2 = supabase
+      const r2 = await supabase
         .from("app_operations")
         .select("created_at, label, operation, result")
         .eq("username", invoice.username)
@@ -391,13 +378,12 @@
         .order("created_at", { ascending: true })
         .limit(2000);
 
-      const r2 = await q2;
       if (r2.error) throw new Error(r2.error.message);
       ops = r2.data || [];
     } else if (opsErr) {
-      // حتى لو فشل invoice_id، نجرب fallback
       const start = invoice.created_at;
       const end = invoice.closed_at || new Date().toISOString();
+
       const r2 = await supabase
         .from("app_operations")
         .select("created_at, label, operation, result")
@@ -443,7 +429,6 @@
         tOp.textContent = safeText(r.operation);
         tRes.textContent = safeText(r.result);
 
-        // ✅ إصلاح المجموع النهائي: مجموع نتائج كل الأسطر (مثل مثال 15125+6+2+5=15138)
         totalCalc += parseNum(r.result);
 
         tr.appendChild(tTime);
@@ -453,10 +438,8 @@
         pv_table_body.appendChild(tr);
       });
 
-      // إذا total موجود ومضبوط، بنستعمل الأكبر بينهم حتى ما يطلع غلط
       const invTotal = parseNum(invoice.total);
       const finalTotal = Math.abs(totalCalc) > 0 ? totalCalc : invTotal;
-
       pv_total.textContent = String(finalTotal);
 
       toastPdf("✅ تم فتح الفاتورة", true);
@@ -466,7 +449,7 @@
     }
   }
 
-  // ===== PDF EXPORT (Arabic-safe) =====
+  // ===== PDF EXPORT (قوي + fallback) =====
   async function exportInvoicePDF() {
     if (!isAuthed()) return;
 
@@ -474,57 +457,78 @@
       return toastPdf("مكتبة html2pdf غير محمّلة", false);
     }
 
-    // إذا مافي جدول أو بيانات
     if (!pv_invoiceId.textContent || pv_invoiceId.textContent === "—") {
       return toastPdf("افتح فاتورة أولاً", false);
     }
 
+    const fileName = `HAYEK_SPOT_${pv_invoiceId.textContent}.pdf`;
     toastPdf("جاري التصدير...", true);
 
-    // نعمل clone نظيف (أبيض) حتى ما يطلع PDF فاضي/غامق
+    // clone أبيض
     const clone = invoicePreview.cloneNode(true);
     clone.style.background = "#fff";
     clone.style.color = "#111";
     clone.classList.add("print-white");
 
-    // حاوية خارج الشاشة لكن مرئية للـ html2canvas
     const wrap = document.createElement("div");
     wrap.style.position = "fixed";
-    wrap.style.left = "-10000px";
+    wrap.style.left = "0";
     wrap.style.top = "0";
-    wrap.style.width = "794px"; // تقريب A4 px
+    wrap.style.width = "794px";
+    wrap.style.zIndex = "-1";
     wrap.style.background = "#fff";
+    wrap.style.opacity = "0.01"; // مرئي للكانفاس بدون ما يبين للمستخدم
     wrap.appendChild(clone);
     document.body.appendChild(wrap);
 
-    const fileName = `HAYEK_SPOT_${pv_invoiceId.textContent}.pdf`;
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] }
+    };
 
     try {
-      const opt = {
-        margin: [12, 12, 12, 12],
-        filename: fileName,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          windowWidth: clone.scrollWidth,
-          windowHeight: clone.scrollHeight
-        },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"] }
-      };
+      // الطريقة الأقوى: toPdf ثم get pdf ثم save
+      const worker = window.html2pdf().set(opt).from(clone).toPdf();
+      const pdf = await worker.get("pdf");
 
-      await window.html2pdf().set(opt).from(clone).save();
+      // بعض المتصفحات تحتاج save مباشر من pdf object
+      pdf.save(fileName);
+
       toastPdf("✅ تم تصدير PDF بنجاح", true);
     } catch (e) {
-      toastPdf("فشل التصدير: " + e.message, false);
+      // fallback: إذا منع التنزيل، نعمل blob وننزل يدوي
+      try {
+        const worker2 = window.html2pdf().set(opt).from(clone).toPdf();
+        const pdf2 = await worker2.get("pdf");
+        const blob = pdf2.output("blob");
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        toastPdf("✅ تم التصدير (fallback) بنجاح", true);
+      } catch (e2) {
+        toastPdf("فشل التصدير: " + (e2?.message || e?.message || "Unknown"), false);
+        alert("قد يكون كروم مانع التنزيلات التلقائية من الموقع. راجع الخطوات التي سأرسلها الآن.");
+      }
     } finally {
       wrap.remove();
     }
   }
 
-  // ===== Date shortcuts =====
   function setTodayRange() {
     const today = nowLocalISODate();
     fromDate.value = today;
@@ -537,11 +541,8 @@
     toDate.value = today;
   }
 
-  // ===== init =====
   function init() {
     setAuthed(isAuthed());
-
-    // default range
     setLast7Range();
 
     btnAdminLogin.onclick = adminLogin;
@@ -562,7 +563,6 @@
 
     btnExportInvoicePdf.onclick = exportInvoicePDF;
 
-    // Auto load if session
     if (isAuthed()) {
       refreshUsers().then(fillUsersPickers).catch(() => {});
     }
@@ -570,4 +570,3 @@
 
   init();
 })();
-
