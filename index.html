@@ -3,164 +3,166 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK SPOT — حاسبة الحايك</title>
+  <title>حاسبة الحايك</title>
 
-  <link rel="stylesheet" href="style.css" />
-  <meta name="theme-color" content="#0b1220" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css?v=1" />
 
-  <!-- Supabase UMD (بدون import/module) -->
+  <!-- Supabase + Config + Auth -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=1"></script>
+  <script src="auth.js?v=1"></script>
 
-  <!-- jsPDF + AutoTable -->
-  <script src="jspdf.umd.min.js"></script>
+  <!-- jsPDF + AutoTable + Font (لـ PDF العربي) -->
+  <script src="jspdf.umd.min.js?v=1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- خط أميري (لازم يكون موجود عندك بالريبو) -->
-  <script src="amiri-font.js"></script>
-
-  <!-- config.js فيه SUPABASE_URL و SUPABASE_ANON_KEY -->
-  <script src="config.js"></script>
-
-  <script>
-    // PWA Offline
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
-    }
-  </script>
+  <script src="amiri-font.js?v=1"></script>
 </head>
 
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="badge" id="onlineBadge">●</div>
-        <div>
-          <div class="title">حاسبة الحايك</div>
-          <div class="sub">سجل + فاتورة + PDF + أوفلاين</div>
-        </div>
+  <!-- شريط علوي -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot online" id="netDot" title="متصل"></div>
+      <div class="titles">
+        <div class="title">حاسبة الحايك</div>
+        <div class="subtitle">سجل + فاتورة + PDF + أوفلاين</div>
       </div>
+    </div>
+    <button class="btn ghost" id="btnLogout">خروج</button>
+  </header>
 
-      <button class="ghost" id="logoutBtn" title="تسجيل خروج">خروج</button>
-    </header>
+  <!-- محتوى -->
+  <main class="wrap">
 
-    <!-- Login (مرة واحدة لكل جهاز) -->
-    <section class="card login-card" id="loginCard">
-      <div class="card-h">تسجيل الدخول (مرة واحدة)</div>
-      <div class="grid2">
-        <label class="field">
-          <span>اسم المستخدم</span>
-          <input id="loginUser" inputmode="text" autocomplete="username" placeholder="مثال: محمود" />
-        </label>
-        <label class="field">
-          <span>كلمة السر</span>
-          <input id="loginPass" type="password" inputmode="text" autocomplete="current-password" placeholder="••••" />
-        </label>
-      </div>
-      <div class="row">
-        <button class="primary" id="loginBtn">تسجيل دخول</button>
-        <div class="hint">بعد نجاح الدخول: لن يطلب كلمة مرور على هذا الجهاز.</div>
-      </div>
-      <div class="msg" id="loginMsg"></div>
+    <!-- تبويبات -->
+    <section class="tabs">
+      <button class="tab active" data-tab="calc">الحاسبة</button>
+      <button class="tab" data-tab="history">سجل العمليات</button>
+      <button class="tab" data-tab="invoice">فاتورة</button>
+      <button class="tab" data-tab="tools">أدوات</button>
     </section>
 
-    <!-- Main -->
-    <section class="card main-card" id="mainCard" style="display:none;">
-      <div class="tabs">
-        <button class="tab active" data-tab="calc">الحاسبة</button>
-        <button class="tab" data-tab="ops">سجل العمليات</button>
-        <button class="tab" data-tab="inv">فاتورة</button>
-        <button class="tab" data-tab="tools">أدوات</button>
-      </div>
+    <!-- معلومات الفاتورة + فتح/إغلاق -->
+    <section class="card header-card">
+      <div class="grid2">
+        <div class="field">
+          <label>اسم العميل</label>
+          <input id="customerName" type="text" placeholder="مثال: أبو علي" autocomplete="off" />
+          <div class="hint">بمجرد كتابة اسم العميل سيتم فتح فاتورة تلقائياً (بالخلفية).</div>
+        </div>
 
-      <!-- CALC -->
-      <div class="tabpane active" id="tab-calc">
-        <div class="calc-head">
-          <input id="expr" class="expr" placeholder="مثال: 7/2-3*12.5" />
-          <div class="result" id="result">0</div>
-
-          <div class="toggles">
-            <label class="chk"><input type="checkbox" id="linePerOp" checked /> كل عملية بسطر</label>
-            <label class="chk"><input type="checkbox" id="vibrate" checked /> اهتزاز عند الضغط</label>
+        <div class="field">
+          <label>حالة الفاتورة</label>
+          <div class="pill" id="invoiceStatusPill">لا توجد فاتورة</div>
+          <div class="btnRow">
+            <button class="btn primary" id="btnOpenInvoice">فتح فاتورة جديدة</button>
+            <button class="btn danger" id="btnCloseInvoice">إغلاق الفاتورة</button>
+            <button class="btn" id="btnPDF">تصدير PDF</button>
+          </div>
+          <div class="hint subtle" id="closeHint">
+            قبل التصدير/النسخ يجب إغلاق الفاتورة.
           </div>
         </div>
-
-        <div class="pad" id="pad">
-          <!-- ترتيب الأرقام مثل طلبك: 3 2 1 / 6 5 4 / 9 8 7 -->
-          <button class="k op" data-k="+">+</button>
-          <button class="k" data-k="3">3</button>
-          <button class="k" data-k="2">2</button>
-          <button class="k" data-k="1">1</button>
-
-          <button class="k op" data-k="-">−</button>
-          <button class="k" data-k="6">6</button>
-          <button class="k" data-k="5">5</button>
-          <button class="k" data-k="4">4</button>
-
-          <button class="k op" data-k="*">×</button>
-          <button class="k" data-k="9">9</button>
-          <button class="k" data-k="8">8</button>
-          <button class="k" data-k="7">7</button>
-
-          <button class="k op" data-k="/">÷</button>
-          <button class="k soft" data-k="(">(</button>
-          <button class="k soft" data-k=")">)</button>
-          <button class="k soft" data-k="Backspace">⌫</button>
-
-          <button class="k eq" data-k="=">=</button>
-          <button class="k soft" data-k="±">±</button>
-          <button class="k" data-k="0">0</button>
-          <button class="k soft" data-k=".">.</button>
-        </div>
-
-        <button class="danger wide" id="clearLine">مسح السطر بالكامل</button>
       </div>
 
-      <!-- OPS -->
-      <div class="tabpane" id="tab-ops">
-        <div class="row between">
-          <div class="mini">سجل آخر العمليات</div>
-          <button class="ghost" id="clearOps">مسح السجل</button>
-        </div>
-        <div class="ops" id="opsList"></div>
-      </div>
+      <div class="toast" id="toast" aria-live="polite"></div>
+    </section>
 
-      <!-- INVOICE -->
-      <div class="tabpane" id="tab-inv">
-        <div class="grid2">
-          <label class="field">
-            <span>اسم العميل</span>
-            <input id="customerName" placeholder="مثال: أبو علي" />
+    <!-- TAB: الحاسبة -->
+    <section class="card tabpane" id="tab-calc">
+      <div class="calcTop">
+        <div class="exprBox">
+          <input id="noteInput" class="noteInput" type="text" placeholder="اكتب اسم/وصف (مثال: محارم)" />
+          <input id="exprInput" class="exprInput" type="text" placeholder="اكتب العملية أو استخدم الأزرار (مثال: 5+5*2)" inputmode="decimal" />
+        </div>
+
+        <div class="toggles">
+          <label class="chk">
+            <input type="checkbox" id="chkPerLine" checked />
+            <span>كل عملية بسطر</span>
           </label>
-          <label class="field">
-            <span>حالة الفاتورة</span>
-            <select id="invStatus">
-              <option value="open">مفتوحة</option>
-              <option value="closed">مغلقة</option>
-            </select>
+          <label class="chk">
+            <input type="checkbox" id="chkVibrate" checked />
+            <span>اهتزاز عند الضغط</span>
           </label>
         </div>
 
-        <div class="row">
-          <button class="primary" id="openInvoice">فتح فاتورة جديدة</button>
-          <button class="ghost" id="closeInvoice">إغلاق الفاتورة</button>
-          <button class="ghost" id="exportPdf">تصدير PDF</button>
+        <div class="bigResult" id="bigResult">0</div>
+      </div>
+
+      <!-- لوحة الأرقام (موبايل) -->
+      <div class="pad">
+        <button class="k op" data-k="+">+</button>
+        <button class="k del" data-k="DEL">⌫</button>
+        <button class="k" data-k="(">(</button>
+        <button class="k" data-k=")">)</button>
+
+        <button class="k op" data-k="*">×</button>
+        <button class="k num" data-k="7">7</button>
+        <button class="k num" data-k="8">8</button>
+        <button class="k num" data-k="9">9</button>
+
+        <button class="k op" data-k="-">-</button>
+        <button class="k num" data-k="4">4</button>
+        <button class="k num" data-k="5">5</button>
+        <button class="k num" data-k="6">6</button>
+
+        <button class="k op" data-k="/">÷</button>
+        <button class="k num" data-k="1">1</button>
+        <button class="k num" data-k="2">2</button>
+        <button class="k num" data-k="3">3</button>
+
+        <button class="k eq" data-k="=">=</button>
+        <button class="k" data-k="±">±</button>
+        <button class="k num" data-k="0">0</button>
+        <button class="k" data-k=".">.</button>
+
+        <button class="k wide clearLine" data-k="CLEAR_LINE">مسح السطر بالكامل</button>
+      </div>
+
+      <div class="actionsRow">
+        <button class="btn" id="btnCopyResult">نسخ النتيجة</button>
+        <button class="btn" id="btnCopyTable">نسخ كجدول</button>
+        <button class="btn danger" id="btnClearHistory">مسح السجل</button>
+      </div>
+    </section>
+
+    <!-- TAB: سجل -->
+    <section class="card tabpane hidden" id="tab-history">
+      <h3 class="h3">سجل العمليات</h3>
+      <div class="tableWrap">
+        <table class="tbl" id="historyTable">
+          <thead>
+            <tr>
+              <th>الوقت</th>
+              <th>البيان</th>
+              <th>العملية</th>
+              <th>النتيجة</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB: فاتورة -->
+    <section class="card tabpane hidden" id="tab-invoice">
+      <div class="invoicePreview" id="invoicePreview">
+        <div class="invHead">
+          <div class="invTitle">
+            <div class="invCompany">شركة الحايك</div>
+            <div class="invBrand">HAYEK SPOT</div>
+          </div>
+          <div class="invMeta">
+            <div><b>اسم المستخدم:</b> <span id="invUser">—</span></div>
+            <div><b>اسم العميل:</b> <span id="invCust">—</span></div>
+            <div><b>رقم الفاتورة:</b> <span id="invId">—</span></div>
+            <div><b>التاريخ:</b> <span id="invDate">—</span></div>
+          </div>
         </div>
 
-        <div class="invoice-box" id="invoiceArea">
-          <div class="inv-head">
-            <div class="inv-title">شركة الحايك</div>
-            <div class="inv-sub">HAYEK SPOT</div>
-          </div>
-
-          <div class="inv-meta">
-            <div><b>اسم المستخدم:</b> <span id="invUser"></span></div>
-            <div><b>اسم العميل:</b> <span id="invCustomer"></span></div>
-            <div><b>رقم الفاتورة:</b> <span id="invId"></span></div>
-            <div><b>التاريخ:</b> <span id="invDate"></span></div>
-          </div>
-
-          <table class="tbl" id="invTable">
+        <div class="tableWrap">
+          <table class="tbl">
             <thead>
               <tr>
                 <th>الوقت</th>
@@ -171,37 +173,34 @@
             </thead>
             <tbody id="invBody"></tbody>
           </table>
-
-          <div class="total">
-            <div class="total-label">إجمالي الكشف:</div>
-            <div class="total-val" id="invTotal">0</div>
-          </div>
-
-          <div class="footer">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
-          </div>
         </div>
 
-        <div class="msg" id="invMsg"></div>
-      </div>
+        <div class="totalBox">
+          <div class="totalLabel">إجمالي الكشف:</div>
+          <div class="totalValue" id="invTotal">0</div>
+        </div>
 
-      <!-- TOOLS -->
-      <div class="tabpane" id="tab-tools">
-        <div class="row">
-          <button class="ghost" id="copyResult">نسخ النتيجة</button>
-          <button class="ghost" id="copyAsTable">نسخ كجدول</button>
-          <button class="ghost" id="syncNow">مزامنة الآن</button>
+        <div class="footerNote">
+          تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
         </div>
-        <div class="hint">
-          الأوفلاين: يتم حفظ العمليات والفواتير محليًا، وعند رجوع النت يتم رفعها تلقائيًا.
-        </div>
-        <div class="msg" id="toolsMsg"></div>
       </div>
     </section>
-  </div>
 
-  <script src="auth.js"></script>
-  <script src="app.js"></script>
+    <!-- TAB: أدوات -->
+    <section class="card tabpane hidden" id="tab-tools">
+      <h3 class="h3">أدوات</h3>
+      <div class="toolsGrid">
+        <button class="btn" id="btnToday">فاتورة اليوم</button>
+        <button class="btn" id="btnLast7">آخر 7 أيام</button>
+        <button class="btn" id="btnRebuild">تحديث الشاشة</button>
+      </div>
+      <div class="hint subtle">
+        ملاحظة: الأوفلاين (بدون نت) سنفعّله بالخطوة التالية عبر service-worker.
+      </div>
+    </section>
+
+  </main>
+
+  <script src="app.js?v=1"></script>
 </body>
 </html>
-
