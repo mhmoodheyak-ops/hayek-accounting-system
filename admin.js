@@ -1,17 +1,17 @@
+// admin.js
 (() => {
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG || {};
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    alert('config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)');
+    alert("config.js غير مضبوط (SUPABASE_URL / SUPABASE_ANON_KEY)");
     return;
   }
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Helpers
   const el = (id) => document.getElementById(id);
-
   const statusLine = el("statusLine");
   const adminStatePill = el("adminStatePill");
-  const adminMsg = el("adminMsg");
 
   const adminUser = el("adminUser");
   const adminPass = el("adminPass");
@@ -25,11 +25,11 @@
   const btnRefreshUsers = el("btnRefreshUsers");
   const usersCount = el("usersCount");
   const usersList = el("usersList");
-  const pickedUserLabel = el("pickedUserLabel");
 
+  const pickUser = el("pickUser");
+  const pickStatus = el("pickStatus");
   const fromDate = el("fromDate");
   const toDate = el("toDate");
-  const pickStatus = el("pickStatus");
   const btnToday = el("btnToday");
   const btnLast7 = el("btnLast7");
   const btnLoadInvoices = el("btnLoadInvoices");
@@ -40,392 +40,377 @@
   const btnExportInvoicePdf = el("btnExportInvoicePdf");
   const invoicePreview = el("invoicePreview");
 
-  // ========= Helpers =========
-  const pad2 = (n) => (n < 10 ? "0" + n : "" + n);
-  const toDateInput = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  // Session
+  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V1";
 
-  function fmtDateTime(iso) {
-    const d = new Date(iso);
+  let adminSession = null;
+  let cachedUsers = [];
+  let cachedInvoices = [];
+  let currentInvoice = null;
+
+  function setPill(text, ok = true) {
+    adminStatePill.style.display = "block";
+    adminStatePill.className = "status-pill " + (ok ? "ok" : "bad");
+    adminStatePill.textContent = text;
+  }
+
+  function setStatus(text) {
+    statusLine.textContent = text;
+  }
+
+  function formatDateTime(ts) {
+    const d = new Date(ts);
     const yyyy = d.getFullYear();
-    const mm = pad2(d.getMonth() + 1);
-    const dd = pad2(d.getDate());
-    const hh = pad2(d.getHours());
-    const mi = pad2(d.getMinutes());
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
     return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
   }
 
-  function setMsg(text, ok = true) {
-    adminMsg.textContent = text || "";
-    adminMsg.className = "msg " + (ok ? "ok" : "bad");
+  function startOfTodayISO() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
   }
 
-  function getDeviceId() {
-    // جهاز ثابت لكل متصفح
-    const k = "HAYEK_ADMIN_DEVICE_V1";
-    let v = localStorage.getItem(k);
-    if (!v) {
-      v = "adm_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
-      localStorage.setItem(k, v);
-    }
-    return v;
+  function endOfTodayISO() {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d.toISOString();
   }
 
-  // ========= Session =========
-  const SESSION_KEY = "HAYEK_ADMIN_SESSION_V1";
-  let session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  let pickedUser = session?.pickedUser || "";
-  let openedInvoice = null;
-
-  function setLoggedIn(isIn) {
-    adminStatePill.textContent = isIn ? "مفتوح" : "غير مسجل";
-    adminStatePill.classList.toggle("ok", !!isIn);
+  function isoFromDateInput(value, end = false) {
+    if (!value) return null;
+    const d = new Date(value + "T00:00:00");
+    if (end) d.setHours(23, 59, 59, 999);
+    return d.toISOString();
   }
 
-  function saveSession() {
-    session = session || {};
-    session.pickedUser = pickedUser || "";
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  function safeText(v) {
+    return (v === null || v === undefined) ? "" : String(v);
   }
 
-  // ========= Admin Login with device lock =========
+  function pickRangeToday() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    fromDate.value = `${yyyy}-${mm}-${dd}`;
+    toDate.value = `${yyyy}-${mm}-${dd}`;
+  }
+
+  function pickRangeLast7() {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 6);
+
+    const f = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+    fromDate.value = f(start);
+    toDate.value = f(end);
+  }
+
+  // --- Login (admin user stored in app_users)
   async function adminLogin() {
-    setMsg("");
-    statusLine.textContent = "الحالة: جاري التحقق...";
-    const u = (adminUser.value || "").trim();
-    const p = (adminPass.value || "").trim();
-    if (!u || !p) return setMsg("❌ أدخل اسم المستخدم وكلمة السر.", false);
-
-    const device_id = getDeviceId();
+    const u = adminUser.value.trim();
+    const p = adminPass.value.trim();
+    if (!u || !p) return setPill("أدخل اسم المستخدم وكلمة السر", false);
 
     const { data, error } = await supabase
       .from("app_users")
-      .select("*")
+      .select("id, username, pass, is_admin, blocked, device_id")
       .eq("username", u)
-      .limit(1);
+      .maybeSingle();
 
-    if (error || !data?.length) {
-      statusLine.textContent = "الحالة: خطأ";
-      return setMsg("❌ المستخدم غير موجود.", false);
-    }
+    if (error) return setPill("خطأ اتصال: " + error.message, false);
+    if (!data) return setPill("المستخدم غير موجود", false);
+    if (!data.is_admin) return setPill("هذا المستخدم ليس Admin", false);
+    if (data.blocked) return setPill("الحساب محظور", false);
+    if (data.pass !== p) return setPill("كلمة السر غير صحيحة", false);
 
-    const user = data[0];
-    if (!user.is_admin) {
-      statusLine.textContent = "الحالة: مرفوض";
-      return setMsg("❌ هذا الحساب ليس Admin.", false);
-    }
-    if (String(user.pass) !== String(p)) {
-      statusLine.textContent = "الحالة: مرفوض";
-      return setMsg("❌ كلمة السر غير صحيحة.", false);
-    }
+    adminSession = { username: data.username, is_admin: true, ts: Date.now() };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(adminSession));
+    setStatus("مفتوح");
+    setPill("تم تسجيل الدخول بنجاح", true);
 
-    // قفل الجهاز: إذا device_id موجود ومختلف => رفض
-    if (user.device_id && String(user.device_id) !== String(device_id)) {
-      statusLine.textContent = "الحالة: مرفوض";
-      setLoggedIn(false);
-      return setMsg("❌ الحالة: Admin مستخدم على جهاز آخر.", false);
-    }
-
-    // إذا فارغ -> اربط الجهاز الحالي
-    if (!user.device_id) {
-      const { error: upErr } = await supabase
-        .from("app_users")
-        .update({ device_id, last_seen: new Date().toISOString() })
-        .eq("username", u);
-
-      if (upErr) {
-        statusLine.textContent = "الحالة: خطأ";
-        setLoggedIn(false);
-        return setMsg("❌ فشل ربط الجهاز. راجع صلاحيات Supabase.", false);
-      }
-    } else {
-      // حدث last_seen فقط
-      await supabase.from("app_users").update({ last_seen: new Date().toISOString() }).eq("username", u);
-    }
-
-    session = { admin: u, device_id, pickedUser };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setLoggedIn(true);
-    statusLine.textContent = "الحالة: مفتوح";
-    setMsg("✅ تم تسجيل الدخول بنجاح.");
     await refreshUsers();
+    await refreshUserPicker();
   }
 
   function adminLogout() {
+    adminSession = null;
     localStorage.removeItem(SESSION_KEY);
-    session = null;
-    pickedUser = "";
-    openedInvoice = null;
-    invoiceSelect.innerHTML = `<option value="">— لا يوجد —</option>`;
+    setStatus("غير مسجل");
+    setPill("تم تسجيل الخروج", true);
+    usersList.innerHTML = "";
+    pickUser.innerHTML = `<option value="">— اختر —</option>`;
+    invoiceSelect.innerHTML = `<option value="">— اختر فاتورة —</option>`;
     invoicePreview.innerHTML = "";
-    pickedUserLabel.textContent = "المستخدم المحدد للفواتير: —";
-    setLoggedIn(false);
-    statusLine.textContent = "الحالة: مغلق";
-    setMsg("✅ تم تسجيل الخروج.");
   }
 
-  // ========= Users =========
-  function userCard(u) {
-    const roleText = u.is_admin ? "Admin" : "User";
-    const blocked = !!u.blocked;
+  function loadSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      adminSession = JSON.parse(raw);
+      if (adminSession?.username) {
+        setStatus("مفتوح");
+        setPill("جلسة Admin جاهزة", true);
+      }
+    } catch {}
+  }
 
-    const wrap = document.createElement("div");
-    wrap.className = "user-card";
+  // --- Users UI
+  function renderUsers() {
+    usersCount.textContent = `عدد المستخدمين: ${cachedUsers.length}`;
+    usersList.innerHTML = "";
 
-    wrap.innerHTML = `
-      <div class="uc-top">
-        <div class="uc-name">${escapeHtml(u.username)}</div>
-        <div class="uc-meta">
-          <span class="tag">${roleText}</span>
-          <span class="tag ${blocked ? "bad" : "ok"}">${blocked ? "محظور" : "حر"}</span>
-          <span class="tag">${u.device_id ? "مربوط" : "فارغ"}</span>
-        </div>
-      </div>
+    cachedUsers.forEach((u) => {
+      const wrap = document.createElement("div");
+      wrap.className = "user-card";
 
-      <div class="uc-actions">
-        <button class="btn small primary">اختر</button>
-        <button class="btn small">${blocked ? "فك الحظر" : "حظر"}</button>
-        <button class="btn small">فك ربط الجهاز</button>
-        <button class="btn small danger">حذف</button>
-      </div>
-    `;
+      const left = document.createElement("div");
+      left.className = "user-card-left";
 
-    const [btnPick, btnBlock, btnUnbind, btnDel] = wrap.querySelectorAll("button");
+      const name = document.createElement("div");
+      name.className = "user-card-name";
+      name.textContent = u.username;
 
-    btnPick.onclick = () => {
-      pickedUser = u.username;
-      pickedUserLabel.textContent = `المستخدم المحدد للفواتير: ${pickedUser}`;
-      saveSession();
-      setMsg(`✅ تم تحديد المستخدم: ${pickedUser}`);
-    };
+      const meta = document.createElement("div");
+      meta.className = "user-card-meta";
+      meta.innerHTML =
+        `Admin: <b>${u.is_admin ? "TRUE" : "FALSE"}</b> &nbsp; | &nbsp; محظور: <b>${u.blocked ? "TRUE" : "FALSE"}</b> &nbsp; | &nbsp; Device: <b>${u.device_id ? "مربوط" : "فارغ"}</b>`;
 
-    btnBlock.onclick = async () => {
-      if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
-      const { error } = await supabase
-        .from("app_users")
-        .update({ blocked: !blocked })
-        .eq("id", u.id);
-      if (error) return setMsg("❌ فشل تحديث الحظر.", false);
-      setMsg("✅ تم التحديث.");
-      await refreshUsers();
-    };
+      left.appendChild(name);
+      left.appendChild(meta);
 
-    btnUnbind.onclick = async () => {
-      if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
-      const { error } = await supabase
-        .from("app_users")
-        .update({ device_id: null })
-        .eq("id", u.id);
-      if (error) return setMsg("❌ فشل فك ربط الجهاز.", false);
-      setMsg("✅ تم فك ربط الجهاز.");
-      await refreshUsers();
-    };
+      const actions = document.createElement("div");
+      actions.className = "user-card-actions";
 
-    btnDel.onclick = async () => {
-      if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
-      if (u.is_admin) return setMsg("❌ لا يمكن حذف Admin.", false);
-      const ok = confirm(`تأكيد حذف المستخدم: ${u.username} ؟`);
-      if (!ok) return;
-      const { error } = await supabase.from("app_users").delete().eq("id", u.id);
-      if (error) return setMsg("❌ فشل الحذف.", false);
-      setMsg("✅ تم حذف المستخدم.");
-      await refreshUsers();
-    };
+      const btnPick = document.createElement("button");
+      btnPick.className = "btn small primary";
+      btnPick.textContent = "اختر";
+      btnPick.onclick = () => {
+        pickUser.value = u.username;
+        setPill(`تم اختيار المستخدم: ${u.username}`, true);
+      };
 
-    return wrap;
+      const btnBlock = document.createElement("button");
+      btnBlock.className = "btn small";
+      btnBlock.textContent = u.blocked ? "فك حظر" : "حظر";
+      btnBlock.onclick = async () => {
+        const { error } = await supabase.from("app_users").update({ blocked: !u.blocked }).eq("id", u.id);
+        if (error) return setPill("فشل: " + error.message, false);
+        await refreshUsers();
+        await refreshUserPicker();
+        setPill("تم", true);
+      };
+
+      const btnUnlockDevice = document.createElement("button");
+      btnUnlockDevice.className = "btn small";
+      btnUnlockDevice.textContent = "فك ربط الجهاز";
+      btnUnlockDevice.onclick = async () => {
+        const { error } = await supabase.from("app_users").update({ device_id: null }).eq("id", u.id);
+        if (error) return setPill("فشل: " + error.message, false);
+        await refreshUsers();
+        setPill("تم فك ربط الجهاز", true);
+      };
+
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn small danger";
+      btnDel.textContent = "حذف";
+      btnDel.onclick = async () => {
+        if (!confirm(`حذف المستخدم ${u.username}؟`)) return;
+        const { error } = await supabase.from("app_users").delete().eq("id", u.id);
+        if (error) return setPill("فشل: " + error.message, false);
+        await refreshUsers();
+        await refreshUserPicker();
+        setPill("تم الحذف", true);
+      };
+
+      actions.appendChild(btnPick);
+      actions.appendChild(btnBlock);
+      actions.appendChild(btnUnlockDevice);
+      actions.appendChild(btnDel);
+
+      wrap.appendChild(left);
+      wrap.appendChild(actions);
+      usersList.appendChild(wrap);
+    });
   }
 
   async function refreshUsers() {
-    if (!session?.admin) return;
+    if (!adminSession) return;
 
     const { data, error } = await supabase
       .from("app_users")
-      .select("*")
+      .select("id, username, pass, is_admin, blocked, created_at, device_id")
       .order("id", { ascending: true });
 
-    if (error) {
-      return setMsg("❌ خطأ بجلب المستخدمين.", false);
-    }
+    if (error) return setPill("خطأ جلب المستخدمين: " + error.message, false);
+    cachedUsers = data || [];
+    renderUsers();
+  }
 
-    usersList.innerHTML = "";
-    data.forEach(u => usersList.appendChild(userCard(u)));
+  async function refreshUserPicker() {
+    const { data, error } = await supabase
+      .from("app_users")
+      .select("username")
+      .order("username", { ascending: true });
 
-    usersCount.textContent = String(data.length);
-    if (pickedUser) {
-      pickedUserLabel.textContent = `المستخدم المحدد للفواتير: ${pickedUser}`;
-    } else {
-      pickedUserLabel.textContent = "المستخدم المحدد للفواتير: —";
-    }
+    if (error) return;
+
+    pickUser.innerHTML = `<option value="">— اختر —</option>`;
+    (data || []).forEach((u) => {
+      const opt = document.createElement("option");
+      opt.value = u.username;
+      opt.textContent = u.username;
+      pickUser.appendChild(opt);
+    });
   }
 
   async function addUser() {
-    if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
+    if (!adminSession) return setPill("سجل دخول Admin أولاً", false);
 
-    const u = (newUsername.value || "").trim();
-    const p = (newPassword.value || "").trim();
-    const role = (newRole.value || "user");
-    if (!u || !p) return setMsg("❌ أدخل اسم المستخدم وكلمة السر.", false);
+    const u = newUsername.value.trim();
+    const p = newPassword.value.trim();
+    const role = newRole.value;
+
+    if (!u || !p) return setPill("أدخل اسم المستخدم وكلمة السر", false);
 
     const payload = {
       username: u,
       pass: p,
       is_admin: role === "admin",
-      blocked: false,
-      created_at: new Date().toISOString(),
+      blocked: false
     };
 
     const { error } = await supabase.from("app_users").insert(payload);
-    if (error) return setMsg("❌ فشل الإضافة (قد يكون الاسم مستخدم).", false);
+    if (error) return setPill("فشل الإضافة: " + error.message, false);
 
     newUsername.value = "";
-    newPassword.value = "";
-    setMsg("✅ تم إضافة المستخدم.");
     await refreshUsers();
+    await refreshUserPicker();
+    setPill("تمت الإضافة", true);
   }
 
-  // ========= Invoices =========
-  function dateRangeToday() {
-    const now = new Date();
-    fromDate.value = toDateInput(now);
-    toDate.value = toDateInput(now);
-  }
-  function dateRangeLast7() {
-    const now = new Date();
-    const d = new Date(now);
-    d.setDate(d.getDate() - 6);
-    fromDate.value = toDateInput(d);
-    toDate.value = toDateInput(now);
-  }
-
-  function setInvoiceOptions(list) {
-    invoiceSelect.innerHTML = `<option value="">— اختر فاتورة —</option>`;
-    list.forEach(inv => {
-      const opt = document.createElement("option");
-      opt.value = inv.id;
-
-      // ✅ واضح + يظهر الإجمالي داخل القائمة
-      opt.textContent =
-        `(${(inv.status || "open")}) — ${fmtDateTime(inv.created_at)} — ` +
-        `${(inv.customer_name || "—")} — الإجمالي: ${Number(inv.total || 0)}`;
-
-      invoiceSelect.appendChild(opt);
-    });
-    invCount.textContent = `عدد النتائج: ${list.length}`;
-  }
-
-  function makeISOStartEnd(fromD, toD) {
-    // range inclusive: from 00:00 to 23:59:59
-    const f = new Date(fromD + "T00:00:00");
-    const t = new Date(toD + "T23:59:59");
-    return [f.toISOString(), t.toISOString()];
-  }
-
+  // --- Invoices
   async function loadInvoices() {
-    if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
-    if (!pickedUser) return setMsg("❌ اختر مستخدم أولاً من قائمة المستخدمين (زر اختر).", false);
-    if (!fromDate.value || !toDate.value) return setMsg("❌ اختر تاريخ من/إلى.", false);
+    if (!adminSession) return setPill("سجل دخول Admin أولاً", false);
 
-    setMsg("...");
-    const [fromISO, toISO] = makeISOStartEnd(fromDate.value, toDate.value);
+    const u = pickUser.value.trim();
+    if (!u) return setPill("اختر مستخدم أولاً", false);
+
+    const st = pickStatus.value.trim() || null;
+
+    let fromISO = isoFromDateInput(fromDate.value, false);
+    let toISO = isoFromDateInput(toDate.value, true);
+
+    if (!fromISO && !toISO) {
+      // Default: today
+      fromISO = startOfTodayISO();
+      toISO = endOfTodayISO();
+    }
+    if (!fromISO && toISO) fromISO = "1970-01-01T00:00:00.000Z";
+    if (fromISO && !toISO) toISO = endOfTodayISO();
 
     let q = supabase
       .from("app_invoices")
-      .select("*")
-      .eq("username", pickedUser)
+      .select("id, username, total, created_at, customer_name, status, closed_at")
+      .eq("username", u)
       .gte("created_at", fromISO)
       .lte("created_at", toISO)
       .order("created_at", { ascending: false });
 
-    if (pickStatus.value !== "all") {
-      q = q.eq("status", pickStatus.value);
-    }
+    if (st) q = q.eq("status", st);
 
     const { data, error } = await q;
-    if (error) return setMsg("❌ خطأ بجلب الفواتير.", false);
+    if (error) return setPill("خطأ جلب الفواتير: " + error.message, false);
 
-    setInvoiceOptions(data || []);
-    setMsg("✅ تم جلب الفواتير.");
+    cachedInvoices = data || [];
+    invCount.textContent = `عدد النتائج: ${cachedInvoices.length}`;
+
+    // dropdown clear
+    invoiceSelect.innerHTML = `<option value="">— اختر فاتورة —</option>`;
+
+    cachedInvoices.forEach((inv) => {
+      const opt = document.createElement("option");
+      const statusTxt = inv.status || "";
+      const cName = inv.customer_name || "بدون اسم";
+      const total = (inv.total ?? 0);
+      const dt = formatDateTime(inv.created_at);
+
+      // ✅ المطلوب: عرض المبلغ داخل القائمة
+      opt.value = inv.id;
+      opt.textContent = `(${statusTxt}) — ${cName} — ${total} — ${dt}`;
+      invoiceSelect.appendChild(opt);
+    });
+
+    setPill("تم تحميل الفواتير", true);
   }
 
-  // ===== Invoice Preview + PDF =====
-  async function fetchOperationsForInvoice(inv) {
-    // 1) الأفضل: حسب invoice_id
-    let { data, error } = await supabase
+  async function openSelectedInvoice() {
+    const id = invoiceSelect.value;
+    if (!id) return setPill("اختر فاتورة أولاً", false);
+
+    const inv = cachedInvoices.find((x) => x.id === id);
+    if (!inv) return setPill("الفاتورة غير موجودة بالقائمة", false);
+
+    currentInvoice = inv;
+    await renderInvoice(inv);
+    setPill("تم فتح الفاتورة", true);
+  }
+
+  async function renderInvoice(inv) {
+    invoicePreview.innerHTML = `<div class="muted">جارٍ التحميل...</div>`;
+
+    // ملاحظة: بيانات العمليات موجودة في app_operations حسب username + created_at غالباً
+    // نجيب عمليات هذا المستخدم ضمن نفس يوم الفاتورة (أو قريب منها)
+    const start = new Date(inv.created_at);
+    const end = new Date(inv.created_at);
+    // هامش 6 ساعات (لضمان التطابق لو في فرق وقت)
+    start.setHours(start.getHours() - 6);
+    end.setHours(end.getHours() + 6);
+
+    const { data, error } = await supabase
       .from("app_operations")
-      .select("*")
-      .eq("invoice_id", inv.id)
-      .order("created_at", { ascending: true });
-
-    if (!error && data && data.length) return data;
-
-    // 2) احتياط: إذا invoice_id فاضي عندكم -> نجرب بالوقت + المستخدم + الجهاز
-    const t0 = new Date(inv.created_at);
-    const t1 = new Date(t0);
-    const t2 = new Date(t0);
-    t1.setMinutes(t1.getMinutes() - 10);
-    t2.setMinutes(t2.getMinutes() + 10);
-
-    const { data: data2 } = await supabase
-      .from("app_operations")
-      .select("*")
+      .select("label, operation, result, created_at, note, expression, invoice_id, username")
       .eq("username", inv.username)
-      .eq("device_id", inv.device_id || "")
-      .gte("created_at", t1.toISOString())
-      .lte("created_at", t2.toISOString())
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString())
       .order("created_at", { ascending: true });
 
-    return data2 || [];
-  }
+    if (error) {
+      invoicePreview.innerHTML = `<div class="status-pill bad">خطأ جلب العمليات: ${safeText(error.message)}</div>`;
+      return;
+    }
 
-  function buildInvoiceHTML(inv, ops) {
-    const rows = (ops || []).map(o => {
-      const time = o.created_at ? fmtDateTime(o.created_at) : "—";
-      const label = escapeHtml(o.label || "—");
-      const op = escapeHtml(o.operation || o.expression || "—");
-      const res = escapeHtml(String(o.result ?? "—"));
-      return `
-        <tr>
-          <td>${time}</td>
-          <td>${label}</td>
-          <td dir="ltr">${op}</td>
-          <td dir="ltr">${res}</td>
-        </tr>
-      `;
-    }).join("");
+    const rows = (data || []).map((r) => ({
+      time: formatDateTime(r.created_at),
+      label: r.label || "",
+      op: r.operation || r.expression || "",
+      result: r.result || ""
+    }));
 
-    // ✅ 3 أسطر فراغ فوق وتحت جدول العمليات (تقريباً 36px)
-    return `
-      <div class="invCard" id="printableInvoice">
-        <div class="invHeader">
-          <div class="invHeaderBox">
-            <div class="invTitle">شركة الحايك</div>
-            <div class="invBrand">HAYEK SPOT</div>
-          </div>
+    const total = inv.total ?? 0;
+
+    // ✅ نفس شكل فاتورة المستخدم (احترافي)
+    invoicePreview.innerHTML = `
+      <div class="invoice-paper" id="invoicePaper">
+        <div class="inv-header">
+          <div class="inv-title">شركة الحايك</div>
+          <div class="inv-sub">HAYEK SPOT</div>
         </div>
 
-        <div class="invField">
-          <div class="invLabel">اسم المستخدم</div>
-          <div class="invValue">${escapeHtml(inv.username || "—")}</div>
+        <div class="inv-box">
+          <div class="inv-field"><span class="k">اسم المستخدم</span><span class="v">${safeText(inv.username)}</span></div>
+          <div class="inv-field"><span class="k">اسم العميل</span><span class="v">${safeText(inv.customer_name || "")}</span></div>
+          <div class="inv-field"><span class="k">رقم الفاتورة</span><span class="v">${safeText(inv.id)}</span></div>
+          <div class="inv-field"><span class="k">التاريخ</span><span class="v">${formatDateTime(inv.created_at)}</span></div>
         </div>
 
-        <div class="invField">
-          <div class="invLabel">اسم العميل</div>
-          <div class="invValue">${escapeHtml(inv.customer_name || inv.customer || "—")}</div>
-        </div>
-
-        <div class="invField">
-          <div class="invLabel">رقم الفاتورة</div>
-          <div class="invValue" dir="ltr">${escapeHtml(inv.id)}</div>
-        </div>
-
-        <div class="invField">
-          <div class="invLabel">التاريخ</div>
-          <div class="invValue">${fmtDateTime(inv.created_at)}</div>
-        </div>
-
-        <div style="height:36px;"></div>
-
-        <div class="invTableWrap">
-          <table class="invTable">
+        <div class="inv-table-wrap">
+          <table class="inv-table">
             <thead>
               <tr>
                 <th>الوقت</th>
@@ -435,116 +420,90 @@
               </tr>
             </thead>
             <tbody>
-              ${rows || `<tr><td colspan="4" style="text-align:center">لا يوجد بيانات</td></tr>`}
+              ${
+                rows.length
+                  ? rows.map(r => `
+                    <tr>
+                      <td>${safeText(r.time)}</td>
+                      <td>${safeText(r.label)}</td>
+                      <td>${safeText(r.op)}</td>
+                      <td>${safeText(r.result)}</td>
+                    </tr>
+                  `).join("")
+                  : `<tr><td colspan="4" class="muted">لا توجد عمليات ضمن نطاق هذه الفاتورة</td></tr>`
+              }
             </tbody>
           </table>
         </div>
 
-        <div style="height:36px;"></div>
-
-        <div class="invTotalBox">
-          <div class="invTotalLabel">إجمالي الكشف:</div>
-          <div class="invTotalValue" dir="ltr">${Number(inv.total || 0)}</div>
+        <div class="inv-total">
+          <div class="inv-total-label">إجمالي الكشف:</div>
+          <div class="inv-total-val">${safeText(total)}</div>
         </div>
 
-        <div class="invFooter">
-          <div class="invFooterText">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-          <div class="invFooterText2">شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية</div>
-          <div class="invPhone" dir="ltr">05510217646</div>
+        <div class="inv-footer">
+          <div class="inv-foot-1">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="inv-foot-2">شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية</div>
+          <div class="inv-phone">05510217646</div>
         </div>
       </div>
     `;
   }
 
-  async function openInvoice() {
-    if (!session?.admin) return setMsg("❌ سجّل دخول أولاً.", false);
-
-    const invId = invoiceSelect.value;
-    if (!invId) return setMsg("❌ اختر فاتورة من القائمة.", false);
-
-    const { data, error } = await supabase
-      .from("app_invoices")
-      .select("*")
-      .eq("id", invId)
-      .limit(1);
-
-    if (error || !data?.length) return setMsg("❌ لم يتم العثور على الفاتورة.", false);
-
-    const inv = data[0];
-    openedInvoice = inv;
-
-    const ops = await fetchOperationsForInvoice(inv);
-    invoicePreview.innerHTML = buildInvoiceHTML(inv, ops);
-
-    setMsg("✅ تم فتح الفاتورة.");
-  }
-
+  // ✅ الحل: تصدير PDF من نفس المعاينة (HTML) لضمان عدم الفراغ + دعم عربي 100%
   async function exportInvoicePdf() {
-    if (!openedInvoice) return setMsg("❌ افتح فاتورة أولاً.", false);
+    if (!currentInvoice) return setPill("افتح فاتورة أولاً", false);
 
-    const node = document.querySelector("#invoicePreview #printableInvoice");
-    if (!node) return setMsg("❌ لا يوجد معاينة لتصديرها.", false);
+    const paper = document.getElementById("invoicePaper");
+    if (!paper) return setPill("لا يوجد محتوى لتصديره", false);
 
-    // ✅ PDF عربي مضمون لأنه تصوير HTML
-    const holder = document.createElement("div");
-    holder.style.background = "#fff";
-    holder.style.padding = "18px";
-    const clone = node.cloneNode(true);
-    clone.style.margin = "0";
-    clone.style.boxShadow = "none";
-    holder.appendChild(clone);
+    // ضمان أن العنصر ظاهر ومترسم
+    paper.scrollIntoView({ behavior: "instant", block: "start" });
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-    const filename = `HAYEK_SPOT_${openedInvoice.id}.pdf`;
+    const filename = `HAYEK_SPOT_${currentInvoice.username}_${String(currentInvoice.id).slice(0,8)}.pdf`;
 
-    const opt = {
-      margin: 10,
-      filename,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] }
-    };
+    try {
+      const opt = {
+        margin:       8,
+        filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+      };
 
-    await html2pdf().set(opt).from(holder).save();
-    setMsg("✅ تم تصدير PDF عربي بنجاح.");
+      // مهم جداً: لا تجعل العنصر display:none أثناء التصدير
+      await window.html2pdf().set(opt).from(paper).save();
+
+      setPill("تم تصدير PDF بنجاح", true);
+    } catch (e) {
+      console.error(e);
+      setPill("فشل تصدير PDF: " + (e?.message || e), false);
+    }
   }
 
-  // ========= HTML escape =========
-  function escapeHtml(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  // ========= Wire =========
+  // Events
   btnAdminLogin.addEventListener("click", adminLogin);
   btnAdminLogout.addEventListener("click", adminLogout);
+
   btnAddUser.addEventListener("click", addUser);
   btnRefreshUsers.addEventListener("click", refreshUsers);
 
-  btnToday.addEventListener("click", () => { dateRangeToday(); setMsg("✅ تم اختيار فواتير اليوم."); });
-  btnLast7.addEventListener("click", () => { dateRangeLast7(); setMsg("✅ تم اختيار آخر 7 أيام."); });
-  btnLoadInvoices.addEventListener("click", loadInvoices);
+  btnToday.addEventListener("click", () => { pickRangeToday(); setPill("تم اختيار اليوم", true); });
+  btnLast7.addEventListener("click", () => { pickRangeLast7(); setPill("تم اختيار آخر 7 أيام", true); });
 
-  btnOpenInvoice.addEventListener("click", openInvoice);
+  btnLoadInvoices.addEventListener("click", loadInvoices);
+  btnOpenInvoice.addEventListener("click", openSelectedInvoice);
   btnExportInvoicePdf.addEventListener("click", exportInvoicePdf);
 
-  // ========= Init =========
-  (function init() {
-    statusLine.textContent = "الحالة: جاهز";
-    if (!fromDate.value || !toDate.value) dateRangeLast7();
+  // Boot
+  loadSession();
+  if (adminSession) {
+    refreshUsers();
+    refreshUserPicker();
+  } else {
+    setStatus("غير مسجل");
+  }
 
-    if (session?.admin) {
-      setLoggedIn(true);
-      pickedUser = session?.pickedUser || "";
-      pickedUserLabel.textContent = pickedUser ? `المستخدم المحدد للفواتير: ${pickedUser}` : "المستخدم المحدد للفواتير: —";
-      refreshUsers();
-      setMsg("✅ جلسة Admin محفوظة.");
-    } else {
-      setLoggedIn(false);
-    }
-  })();
 })();
