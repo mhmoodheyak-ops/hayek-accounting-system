@@ -3,204 +3,238 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>حاسبة الحايك</title>
+  <title>HAYEK SPOT — تسجيل الدخول</title>
 
-  <link rel="stylesheet" href="style.css?v=1" />
+  <!-- (اختياري) إذا عندك style.css بالمشروع -->
+  <link rel="stylesheet" href="style.css" />
 
-  <!-- Supabase + Config + Auth -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=1"></script>
-  <script src="auth.js?v=1"></script>
-
-  <!-- jsPDF + AutoTable + Font (لـ PDF العربي) -->
-  <script src="jspdf.umd.min.js?v=1"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="amiri-font.js?v=1"></script>
+  <style>
+    :root{
+      --bg1:#06121f; --bg2:#0b2a2f;
+      --card: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.14);
+      --txt:#eaf2ff; --muted: rgba(255,255,255,.72);
+      --btn:#1d4ed8; --btn2: rgba(255,255,255,.08);
+      --ok:#22c55e; --bad:#ef4444;
+      --radius: 18px;
+    }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: var(--txt);
+      min-height: 100vh;
+      background: radial-gradient(1200px 700px at 20% 10%, #0a3b4a 0%, transparent 60%),
+                  radial-gradient(900px 600px at 80% 0%, #0a2f4e 0%, transparent 60%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+    }
+    .wrap{
+      width: min(520px, 100%);
+    }
+    .card{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 12px;
+    }
+    .title{
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: .2px;
+    }
+    .sub{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    label{
+      display:block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    input{
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      color: var(--txt);
+      padding: 14px 14px;
+      outline: none;
+      font-size: 16px;
+    }
+    input:focus{
+      border-color: rgba(59,130,246,.55);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+    }
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    button{
+      border: 0;
+      cursor: pointer;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .btn-primary{
+      background: linear-gradient(180deg, #2563eb, #1d4ed8);
+      color: #fff;
+      flex: 1;
+      min-width: 160px;
+    }
+    .btn-ghost{
+      background: var(--btn2);
+      color: var(--txt);
+      border: 1px solid var(--stroke);
+    }
+    .msg{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(0,0,0,.15);
+      color: var(--muted);
+      font-size: 13px;
+      display:none;
+    }
+    .msg.ok{ display:block; border-color: rgba(34,197,94,.35); color: rgba(220,255,234,.95); }
+    .msg.bad{ display:block; border-color: rgba(239,68,68,.35); color: rgba(255,230,230,.95); }
+    .foot{
+      margin-top: 14px;
+      text-align:center;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+    }
+  </style>
 </head>
 
 <body>
-  <!-- شريط علوي -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="dot online" id="netDot" title="متصل"></div>
-      <div class="titles">
-        <div class="title">حاسبة الحايك</div>
-        <div class="subtitle">سجل + فاتورة + PDF + أوفلاين</div>
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <div>
+          <h1 class="title">تسجيل الدخول</h1>
+          <p class="sub">مرة واحدة فقط — بعدها يدخل تلقائياً على نفس الجهاز.</p>
+        </div>
+        <div class="pill" id="devicePill">Device: ...</div>
       </div>
+
+      <div class="grid">
+        <div>
+          <label for="username">اسم المستخدم</label>
+          <input id="username" type="text" inputmode="text" autocomplete="username" placeholder="مثال: محمود" />
+        </div>
+
+        <div>
+          <label for="password">كلمة السر</label>
+          <input id="password" type="password" inputmode="text" autocomplete="current-password" placeholder="••••" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn-primary" onclick="doLogin()">تسجيل دخول</button>
+        <button class="btn-ghost" onclick="clearLocal()">مسح بيانات الجهاز</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="foot">HAYEK SPOT</div>
     </div>
-    <button class="btn ghost" id="btnLogout">خروج</button>
-  </header>
+  </div>
 
-  <!-- محتوى -->
-  <main class="wrap">
+  <!-- مهم: تحميل عادي بدون module -->
+  <script src="auth.js"></script>
 
-    <!-- تبويبات -->
-    <section class="tabs">
-      <button class="tab active" data-tab="calc">الحاسبة</button>
-      <button class="tab" data-tab="history">سجل العمليات</button>
-      <button class="tab" data-tab="invoice">فاتورة</button>
-      <button class="tab" data-tab="tools">أدوات</button>
-    </section>
+  <script>
+    function showMsg(type, text){
+      const el = document.getElementById("msg");
+      el.className = "msg " + (type || "");
+      el.textContent = text || "";
+    }
 
-    <!-- معلومات الفاتورة + فتح/إغلاق -->
-    <section class="card header-card">
-      <div class="grid2">
-        <div class="field">
-          <label>اسم العميل</label>
-          <input id="customerName" type="text" placeholder="مثال: أبو علي" autocomplete="off" />
-          <div class="hint">بمجرد كتابة اسم العميل سيتم فتح فاتورة تلقائياً (بالخلفية).</div>
-        </div>
+    // لو مسجّل دخول سابقاً → ادخل مباشرة
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        // عرض جزء من deviceId إن وجد
+        const did = localStorage.getItem("HAYEK_DEVICE_ID") || "";
+        document.getElementById("devicePill").textContent = "Device: " + (did ? (did.slice(0,8) + "...") : "NEW");
 
-        <div class="field">
-          <label>حالة الفاتورة</label>
-          <div class="pill" id="invoiceStatusPill">لا توجد فاتورة</div>
-          <div class="btnRow">
-            <button class="btn primary" id="btnOpenInvoice">فتح فاتورة جديدة</button>
-            <button class="btn danger" id="btnCloseInvoice">إغلاق الفاتورة</button>
-            <button class="btn" id="btnPDF">تصدير PDF</button>
-          </div>
-          <div class="hint subtle" id="closeHint">
-            قبل التصدير/النسخ يجب إغلاق الفاتورة.
-          </div>
-        </div>
-      </div>
+        if (window.HAYEK_AUTH && HAYEK_AUTH.isLoggedIn()) {
+          showMsg("ok", "تم تسجيل الدخول سابقاً — يتم فتح صفحة المستخدم...");
+          setTimeout(() => location.href = "user.html", 600);
+        }
+      } catch (e) {
+        showMsg("bad", "خطأ بالمتصفح/التخزين المحلي.");
+      }
+    });
 
-      <div class="toast" id="toast" aria-live="polite"></div>
-    </section>
+    function doLogin(){
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
 
-    <!-- TAB: الحاسبة -->
-    <section class="card tabpane" id="tab-calc">
-      <div class="calcTop">
-        <div class="exprBox">
-          <input id="noteInput" class="noteInput" type="text" placeholder="اكتب اسم/وصف (مثال: محارم)" />
-          <input id="exprInput" class="exprInput" type="text" placeholder="اكتب العملية أو استخدم الأزرار (مثال: 5+5*2)" inputmode="decimal" />
-        </div>
+      if (!user || !pass){
+        showMsg("bad", "الرجاء إدخال اسم المستخدم وكلمة السر.");
+        return;
+      }
 
-        <div class="toggles">
-          <label class="chk">
-            <input type="checkbox" id="chkPerLine" checked />
-            <span>كل عملية بسطر</span>
-          </label>
-          <label class="chk">
-            <input type="checkbox" id="chkVibrate" checked />
-            <span>اهتزاز عند الضغط</span>
-          </label>
-        </div>
+      if (!window.HAYEK_AUTH){
+        showMsg("bad", "auth.js غير محمّل بشكل صحيح. تأكد أن الملف موجود بنفس المجلد.");
+        return;
+      }
 
-        <div class="bigResult" id="bigResult">0</div>
-      </div>
+      const ok = HAYEK_AUTH.login(user, pass);
+      if (ok){
+        showMsg("ok", "تم تسجيل الدخول بنجاح ✅ يتم تحويلك...");
+        setTimeout(() => location.href = "user.html", 500);
+      } else {
+        showMsg("bad", "فشل تسجيل الدخول.");
+      }
+    }
 
-      <!-- لوحة الأرقام (موبايل) -->
-      <div class="pad">
-        <button class="k op" data-k="+">+</button>
-        <button class="k del" data-k="DEL">⌫</button>
-        <button class="k" data-k="(">(</button>
-        <button class="k" data-k=")">)</button>
-
-        <button class="k op" data-k="*">×</button>
-        <button class="k num" data-k="7">7</button>
-        <button class="k num" data-k="8">8</button>
-        <button class="k num" data-k="9">9</button>
-
-        <button class="k op" data-k="-">-</button>
-        <button class="k num" data-k="4">4</button>
-        <button class="k num" data-k="5">5</button>
-        <button class="k num" data-k="6">6</button>
-
-        <button class="k op" data-k="/">÷</button>
-        <button class="k num" data-k="1">1</button>
-        <button class="k num" data-k="2">2</button>
-        <button class="k num" data-k="3">3</button>
-
-        <button class="k eq" data-k="=">=</button>
-        <button class="k" data-k="±">±</button>
-        <button class="k num" data-k="0">0</button>
-        <button class="k" data-k=".">.</button>
-
-        <button class="k wide clearLine" data-k="CLEAR_LINE">مسح السطر بالكامل</button>
-      </div>
-
-      <div class="actionsRow">
-        <button class="btn" id="btnCopyResult">نسخ النتيجة</button>
-        <button class="btn" id="btnCopyTable">نسخ كجدول</button>
-        <button class="btn danger" id="btnClearHistory">مسح السجل</button>
-      </div>
-    </section>
-
-    <!-- TAB: سجل -->
-    <section class="card tabpane hidden" id="tab-history">
-      <h3 class="h3">سجل العمليات</h3>
-      <div class="tableWrap">
-        <table class="tbl" id="historyTable">
-          <thead>
-            <tr>
-              <th>الوقت</th>
-              <th>البيان</th>
-              <th>العملية</th>
-              <th>النتيجة</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- TAB: فاتورة -->
-    <section class="card tabpane hidden" id="tab-invoice">
-      <div class="invoicePreview" id="invoicePreview">
-        <div class="invHead">
-          <div class="invTitle">
-            <div class="invCompany">شركة الحايك</div>
-            <div class="invBrand">HAYEK SPOT</div>
-          </div>
-          <div class="invMeta">
-            <div><b>اسم المستخدم:</b> <span id="invUser">—</span></div>
-            <div><b>اسم العميل:</b> <span id="invCust">—</span></div>
-            <div><b>رقم الفاتورة:</b> <span id="invId">—</span></div>
-            <div><b>التاريخ:</b> <span id="invDate">—</span></div>
-          </div>
-        </div>
-
-        <div class="tableWrap">
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>الوقت</th>
-                <th>البيان</th>
-                <th>العملية</th>
-                <th>النتيجة</th>
-              </tr>
-            </thead>
-            <tbody id="invBody"></tbody>
-          </table>
-        </div>
-
-        <div class="totalBox">
-          <div class="totalLabel">إجمالي الكشف:</div>
-          <div class="totalValue" id="invTotal">0</div>
-        </div>
-
-        <div class="footerNote">
-          تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB: أدوات -->
-    <section class="card tabpane hidden" id="tab-tools">
-      <h3 class="h3">أدوات</h3>
-      <div class="toolsGrid">
-        <button class="btn" id="btnToday">فاتورة اليوم</button>
-        <button class="btn" id="btnLast7">آخر 7 أيام</button>
-        <button class="btn" id="btnRebuild">تحديث الشاشة</button>
-      </div>
-      <div class="hint subtle">
-        ملاحظة: الأوفلاين (بدون نت) سنفعّله بالخطوة التالية عبر service-worker.
-      </div>
-    </section>
-
-  </main>
-
-  <script src="app.js?v=1"></script>
+    function clearLocal(){
+      if (!confirm("متأكد؟ سيتم مسح بيانات الدخول من هذا الجهاز.")) return;
+      localStorage.removeItem("HAYEK_AUTH_DEVICE");
+      localStorage.removeItem("HAYEK_DEVICE_ID");
+      showMsg("ok", "تم المسح ✅ أعد تحميل الصفحة.");
+    }
+  </script>
 </body>
 </html>
+
