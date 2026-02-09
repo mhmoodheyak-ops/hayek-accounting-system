@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -5,16 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الأمن</title>
 
-  <link rel="stylesheet" href="./style.css?v=9002" />
+  <link rel="stylesheet" href="./style.css?v=9003" />
 
-  <!-- Supabase (UMD) -->
+  <!-- Supabase UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- ✅ PDF عربي مضمون (HTML -> PDF) -->
+  <!-- ✅ PDF (تصوير HTML كما هو) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+  <!-- خط عربي (اختياري للـ jsPDF، بس نخليه) -->
+  <script src="./amiri-font.js?v=9003"></script>
+
   <!-- Config -->
-  <script src="./config.js?v=9002"></script>
+  <script src="./config.js?v=9003"></script>
 </head>
 
 <body class="app-body">
@@ -22,134 +26,127 @@
 
     <div class="card header-card">
       <div class="header-title">لوحة الأمن</div>
-      <div class="header-sub">إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأمن.</div>
-      <div class="pill" id="statusLine">الحالة: —</div>
+      <div class="header-sub">
+        إدارة المستخدمين والفواتير — مع قفل الجهاز الواحد (device_id) للأمن — بدون import وبدون أخطاء “module”.
+      </div>
+      <div id="statusLine" class="status-pill">غير مسجل</div>
     </div>
 
-    <div class="grid">
-      <!-- Admin Login -->
+    <div class="grid-2">
+      <!-- تسجيل الدخول -->
       <div class="card">
         <div class="card-title">تسجيل الدخول (Admin)</div>
 
-        <div class="row">
+        <div class="form-grid">
           <div class="field">
             <label>اسم المستخدم</label>
-            <input id="adminUser" type="text" autocomplete="username" value="admin" />
+            <input id="adminUser" type="text" value="admin" autocomplete="username" />
           </div>
           <div class="field">
             <label>كلمة السر</label>
-            <input id="adminPass" type="password" autocomplete="current-password" />
+            <input id="adminPass" type="password" value="" autocomplete="current-password" />
           </div>
         </div>
 
-        <div class="actions">
-          <button class="btn primary" id="btnAdminLogin">تسجيل دخول</button>
-          <button class="btn" id="btnAdminLogout">تسجيل خروج</button>
-          <div class="pill ok" id="adminStatePill">غير مسجل</div>
+        <div class="btn-row">
+          <button id="btnAdminLogin" class="btn primary">تسجيل دخول</button>
+          <button id="btnAdminLogout" class="btn">تسجيل خروج</button>
         </div>
 
-        <div class="msg" id="adminMsg"></div>
+        <div id="adminStatePill" class="status-pill ok" style="margin-top:10px; display:none;"></div>
       </div>
 
-      <!-- Add user -->
+      <!-- إدارة المستخدمين -->
       <div class="card">
         <div class="card-title">إدارة المستخدمين</div>
 
-        <div class="row">
+        <div class="form-grid">
           <div class="field">
             <label>اسم مستخدم جديد</label>
             <input id="newUsername" type="text" placeholder="مثال: محمود" />
           </div>
           <div class="field">
             <label>كلمة السر</label>
-            <input id="newPassword" type="text" placeholder="1234" />
+            <input id="newPassword" type="text" value="1234" />
           </div>
-        </div>
-
-        <div class="row">
           <div class="field">
             <label>صلاحية</label>
             <select id="newRole">
-              <option value="user" selected>مستخدم</option>
+              <option value="user">مستخدم</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-
-          <div class="field">
-            <label>عدد المستخدمين</label>
-            <div class="pill" id="usersCount">—</div>
-          </div>
         </div>
 
-        <div class="actions">
-          <button class="btn green" id="btnAddUser">إضافة</button>
-          <button class="btn" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
-          <div class="pill" id="pickedUserLabel">المستخدم المحدد للفواتير: —</div>
+        <div class="btn-row">
+          <button id="btnAddUser" class="btn success">إضافة</button>
+          <button id="btnRefreshUsers" class="btn">تحديث قائمة المستخدمين</button>
+          <div class="pill" id="usersCount">عدد المستخدمين: 0</div>
         </div>
+
+        <div class="users-list" id="usersList"></div>
       </div>
     </div>
 
-    <!-- Users List -->
-    <div class="card">
-      <div class="card-title">قائمة المستخدمين</div>
-
-      <div class="users-list" id="usersList"></div>
-    </div>
-
-    <!-- Invoices -->
+    <!-- الفواتير -->
     <div class="card">
       <div class="card-title">فلاتر الفواتير</div>
 
-      <div class="row">
+      <div class="form-grid">
         <div class="field">
-          <label>من تاريخ</label>
-          <input id="fromDate" type="date" />
+          <label>اختر المستخدم</label>
+          <select id="pickUser">
+            <option value="">— اختر —</option>
+          </select>
         </div>
-        <div class="field">
-          <label>إلى تاريخ</label>
-          <input id="toDate" type="date" />
-        </div>
+
         <div class="field">
           <label>الحالة</label>
           <select id="pickStatus">
-            <option value="all" selected>الكل</option>
+            <option value="">الكل</option>
             <option value="open">مفتوحة</option>
             <option value="closed">منتهية</option>
           </select>
         </div>
+
+        <div class="field">
+          <label>من تاريخ</label>
+          <input id="fromDate" type="date" />
+        </div>
+
+        <div class="field">
+          <label>إلى تاريخ</label>
+          <input id="toDate" type="date" />
+        </div>
       </div>
 
-      <div class="actions">
-        <button class="btn" id="btnToday">فواتير اليوم</button>
-        <button class="btn" id="btnLast7">فواتير آخر 7 أيام</button>
-        <button class="btn primary" id="btnLoadInvoices">جلب الفواتير</button>
+      <div class="btn-row">
+        <button id="btnToday" class="btn">فواتير اليوم</button>
+        <button id="btnLast7" class="btn">آخر 7 أيام</button>
+        <button id="btnLoadInvoices" class="btn primary">اعرض الفواتير</button>
         <div class="pill" id="invCount">عدد النتائج: 0</div>
       </div>
 
-      <div class="row">
+      <div class="form-grid" style="margin-top:12px;">
         <div class="field">
-          <label>قائمة الفواتير (اختر فاتورة لفتحها)</label>
+          <label>قائمة الفواتير</label>
           <select id="invoiceSelect">
-            <option value="">— لا يوجد —</option>
+            <option value="">— اختر فاتورة —</option>
           </select>
         </div>
-      </div>
 
-      <div class="actions">
-        <button class="btn primary" id="btnOpenInvoice">فتح الفاتورة</button>
-        <button class="btn green" id="btnExportInvoicePdf">تصدير PDF</button>
-      </div>
-
-      <div class="split">
-        <div class="preview-card">
-          <div class="preview-title">معاينة الفاتورة</div>
-          <div id="invoicePreview"></div>
+        <div class="btn-row" style="align-items:end; gap:10px;">
+          <button id="btnOpenInvoice" class="btn">فتح</button>
+          <button id="btnExportInvoicePdf" class="btn success">تصدير PDF</button>
         </div>
       </div>
+
+      <!-- ✅ معاينة الفاتورة (هذا الذي سنصدّره) -->
+      <div id="invoicePreview" class="invoice-preview"></div>
     </div>
 
   </div>
 
-  <script src="./admin.js?v=9002"></script>
+  <script src="./admin.js?v=9003"></script>
 </body>
 </html>
