@@ -3,233 +3,200 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأدمن</title>
-  <meta name="theme-color" content="#071820" />
-
-  <style>
-    :root{
-      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a;
-    }
-    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
-    .wrap{max-width:1100px;margin:18px auto;padding:16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-    .btnSmall{border:none;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
-    .head{padding:16px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.12);color:#fff}
-    .pill-ok{border-color:var(--ok);color:var(--ok)}
-    .mut{color:var(--mut);font-size:13px}
-    .body{padding:16px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
-    label{display:block;color:var(--mut);font-size:13px;margin:0 0 6px}
-    input,select{
-      width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);
-      background:rgba(0,0,0,.18);color:var(--txt);font-size:15px;outline:none
-    }
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{border:none;border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.10);color:#fff;cursor:pointer}
-    .btn.blue{background:var(--blue)}
-    .btn.danger{background:rgba(255,107,107,.25);border:1px solid rgba(255,107,107,.35)}
-    .btn.ok{background:rgba(73,227,154,.18);border:1px solid rgba(73,227,154,.30)}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right}
-    th{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
-    .err{color:var(--danger);min-height:18px;font-size:13px;margin-top:8px}
-    #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
-    #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
-  </style>
-
+  <title>لوحة الأدمن — HAYEK SPOT</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a; }
+    body{margin:0; background:var(--bg); color:var(--txt); font-family:system-ui; padding-bottom:50px}
+    .nav{display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid var(--line); backdrop-filter:blur(10px); position:sticky; top:0; z-index:100}
+    .container{max-width:1000px; margin:20px auto; padding:0 15px}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px}
+    .stat-card{background:var(--panel); border:1px solid var(--line); padding:20px; border-radius:18px; text-align:center}
+    .stat-card h3{margin:0; font-size:24px; color:var(--blue)}
+    .stat-card p{margin:5px 0 0; color:var(--mut); font-size:13px}
+    .admin-box{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px; margin-bottom:20px}
+    table{width:100%; border-collapse:collapse; margin-top:15px}
+    th{text-align:right; color:var(--mut); font-size:13px; padding:10px; border-bottom:1px solid var(--line)}
+    td{padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:14px}
+    .badge{padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold}
+    .bg-ok{background:rgba(73,227,154,0.1); color:var(--ok)}
+    .bg-err{background:rgba(255,107,107,0.1); color:var(--danger)}
+    .btn-sm{padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-size:12px; margin-left:5px}
+    input, select{background:rgba(0,0,0,0.2); border:1px solid var(--line); color:#fff; padding:10px; border-radius:8px; outline:none}
+    #lock{display:none; position:fixed; inset:0; background:var(--bg); z-index:9999; align-items:center; justify-content:center; flex-direction:column}
+  </style>
 </head>
 <body>
 
   <div id="lock">
-    <div class="box">
-      <h3>تسجيل الدخول مطلوب</h3>
-      <p style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون صلاحية أدمن.</p>
-      <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
-    </div>
+    <h2>تسجيل الدخول مطلوب</h2>
+    <p>غير مسموح تصفح هذه الصفحة بدون صلاحية أدمن</p>
+    <button class="btn-sm bg-ok" onclick="location.href='index.html'" style="padding:12px 25px">الذهاب لتسجيل الدخول</button>
   </div>
 
-  <div class="wrap">
-    <div class="topbar">
-      <div>
-        <div style="font-weight:900;font-size:18px">HAYEK SPOT — لوحة الأدمن</div>
-        <div class="mut">إدارة مستخدمين + إحصائيات فواتير</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <span class="pill pill-ok" id="adminPill">أدمن: متصل</span>
-        <button class="btnSmall" id="logoutBtn">خروج</button>
-      </div>
+  <div class="nav">
+    <div style="display:flex; align-items:center; gap:10px">
+        <span class="badge bg-ok" id="adminTag">متصل</span>
+        <strong id="adminName">الأدمن</strong>
+    </div>
+    <button class="btn-sm bg-err" onclick="logout()">خروج</button>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+        <div class="stat-card">
+            <h3 id="totalUsers">0</h3>
+            <p>إجمالي المستخدمين</p>
+        </div>
+        <div class="stat-card">
+            <h3 id="totalInvoices">0</h3>
+            <p>إجمالي الفواتير</p>
+        </div>
+        <div class="stat-card">
+            <select id="timeFilter" onchange="loadStats()" style="margin-top:5px; width:100%">
+                <option value="today">اليوم</option>
+                <option value="7days">آخر 7 أيام</option>
+                <option value="30days" selected>آخر 30 يوم</option>
+                <option value="all">الكل</option>
+            </select>
+            <p>فلتر المدة الإحصائية</p>
+        </div>
     </div>
 
-    <div class="card">
-      <div class="head">
-        <div class="pill">الفترة:</div>
-        <select id="range" style="width:auto;min-width:220px">
-          <option value="today">اليوم</option>
-          <option value="7">آخر 7 أيام</option>
-          <option value="30">آخر 30 يوم</option>
-          <option value="all">الكل</option>
-        </select>
-        <button class="btnSmall" id="refreshBtn">تحديث البيانات</button>
-        <span class="mut" id="hint">جاهز</span>
-      </div>
-
-      <div class="body">
-        <div class="grid">
-          <div>
-            <div style="font-weight:900;margin-bottom:10px">إضافة عضو جديد</div>
-            <div class="row">
-              <div style="flex:1;min-width:200px">
-                <label>الاسم</label>
-                <input id="newU" placeholder="اسم المستخدم">
-              </div>
-              <div style="flex:1;min-width:200px">
-                <label>كلمة السر</label>
-                <input id="newP" placeholder="••••">
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn ok" id="addUserBtn">إضافة مستخدم</button>
-              <button class="btn blue" id="addAdminBtn">ترقية لأدمن</button>
-            </div>
-            <div class="err" id="err"></div>
-          </div>
-
-          <div>
-            <div style="font-weight:900;margin-bottom:10px">ملخص النظام</div>
-            <div class="row">
-              <div class="pill">المستخدمين: <b id="usersCount">0</b></div>
-              <div class="pill">الفواتير: <b id="invCount">0</b></div>
-            </div>
-            <div class="mut" style="margin-top:10px">يتم احتساب الفواتير المغلقة فقط في الفترة المحددة.</div>
-          </div>
+    <div class="admin-box">
+        <h4 style="margin:0 0 15px">إضافة مستخدم جديد</h4>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <input id="newU" placeholder="اسم المستخدم" style="flex:1">
+            <input id="newP" placeholder="كلمة السر" style="flex:1">
+            <button class="btn-sm bg-ok" onclick="addUser()" style="flex:0.5">إضافة</button>
         </div>
+    </div>
 
-        <div style="margin-top:20px;font-weight:900">قائمة الأعضاء</div>
-        <div style="overflow:auto;border:1px solid var(--line);border-radius:16px;margin-top:10px">
-          <table>
+    <div class="admin-box">
+        <h4 style="margin:0">إدارة المستخدمين ونشاطهم</h4>
+        <table id="userTable">
             <thead>
-              <tr>
-                <th>المستخدم</th>
-                <th>فواتير</th>
-                <th>آخر نشاط</th>
-                <th>الحالة</th>
-                <th>إجراءات</th>
-              </tr>
+                <tr>
+                    <th>المستخدم</th>
+                    <th>الفواتير</th>
+                    <th>آخر نشاط</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
             </thead>
-            <tbody id="usersRows"></tbody>
-          </table>
-        </div>
-      </div>
+            <tbody id="userList">
+                </tbody>
+        </table>
     </div>
   </div>
 
-<script>
-(() => {
-  const $ = (id)=>document.getElementById(id);
-  
-  // إعدادات Supabase مدمجة لضمان الاتصال
-  const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-  const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-  const sb = supabase.createClient(SB_URL, SB_KEY);
+  <script>
+    // 1. إعدادات الاتصال (مباشرة لتفادي خطأ 404)
+    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+    const sb = supabase.createClient(SB_URL, SB_KEY);
 
-  // التحقق من الجلسة (بسيط)
-  const session = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "null");
-  if (!session || session.role !== "admin") {
-      $("lock").style.display = "flex";
-  }
-
-  $("goLogin").onclick = () => location.href = "index.html";
-  $("logoutBtn").onclick = () => { localStorage.removeItem("HAYEK_SESSION"); location.href = "index.html"; };
-
-  function setErr(msg, isOk=false){ 
-      $("err").textContent = msg || ""; 
-      $("err").style.color = isOk ? "var(--ok)" : "var(--danger)";
-  }
-
-  async function loadData() {
-    $("hint").textContent = "جاري التحميل...";
-    try {
-      // 1. جلب المستخدمين
-      const { data: users, error: uErr } = await sb.from('app_users').select('*');
-      if (uErr) throw uErr;
-      $("usersCount").textContent = users.length;
-
-      // 2. جلب إحصائيات الفواتير
-      const { data: invs, error: iErr } = await sb.from('app_invoices').select('username, created_at').eq('status', 'closed');
-      if (iErr) throw iErr;
-      $("invCount").textContent = invs.length;
-
-      // 3. بناء الجدول
-      const tbody = $("usersRows");
-      tbody.innerHTML = "";
-      users.forEach(u => {
-          const isBlocked = u.blocked === true;
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><b>${u.username}</b> ${u.is_admin ? '<small>(Admin)</small>':''}</td>
-            <td>${invs.filter(i => i.username === u.username).length}</td>
-            <td>${u.device_id ? 'جهاز مرتبط' : 'لم يدخل بعد'}</td>
-            <td>${isBlocked ? '🔴 محظور' : '🟢 فعال'}</td>
-            <td>
-                <button class="btnSmall ${isBlocked?'ok':'danger'}" onclick="toggleBlock('${u.username}', ${isBlocked})">
-                    ${isBlocked ? 'فك حظر' : 'حظر'}
-                </button>
-                <button class="btnSmall danger" onclick="deleteUser('${u.username}')">حذف</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-      });
-      $("hint").textContent = "تم التحديث ✓";
-    } catch (e) {
-      console.error(e);
-      $("hint").textContent = "خطأ في التحميل";
+    // 2. التحقق من الهوية (Security)
+    const session = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
+    if (session.role !== "admin") {
+        document.getElementById("lock").style.display = "flex";
+    } else {
+        document.getElementById("adminName").textContent = session.username;
     }
-  }
 
-  window.toggleBlock = async (uname, currentStatus) => {
-      const { error } = await sb.from('app_users').update({ blocked: !currentStatus }).eq('username', uname);
-      if (!error) loadData();
-  };
+    function logout() { localStorage.clear(); location.href = 'index.html'; }
 
-  window.deleteUser = async (uname) => {
-      if (!confirm("هل أنت متأكد من حذف " + uname + "؟")) return;
-      const { error } = await sb.from('app_users').delete().eq('username', uname);
-      if (!error) loadData();
-  };
+    // 3. تحميل البيانات والإحصائيات
+    async function loadStats() {
+        const filter = document.getElementById("timeFilter").value;
+        let dateLimit = new Date();
+        
+        if(filter === "today") dateLimit.setHours(0,0,0,0);
+        else if(filter === "7days") dateLimit.setDate(dateLimit.getDate() - 7);
+        else if(filter === "30days") dateLimit.setDate(dateLimit.getDate() - 30);
+        else dateLimit = new Date(0);
 
-  async function addNewUser(isAdmin) {
-      setErr("");
-      const u = $("newU").value.trim();
-      const p = $("newP").value.trim();
-      if (!u || !p) return setErr("أدخل البيانات");
+        // جلب عدد المستخدمين
+        const { count: uCount } = await sb.from('app_users').select('*', { count: 'exact', head: true });
+        document.getElementById("totalUsers").textContent = uCount || 0;
 
-      const { error } = await sb.from('app_users').insert([{
-          username: u,
-          pass: p,
-          is_admin: isAdmin,
-          blocked: false
-      }]);
+        // جلب عدد الفواتير حسب الفلتر
+        const { count: iCount } = await sb.from('app_invoices')
+            .select('*', { count: 'exact', head: true })
+            .gt('created_at', dateLimit.toISOString());
+        document.getElementById("totalInvoices").textContent = iCount || 0;
 
-      if (error) setErr("خطأ: الاسم قد يكون مستخدماً");
-      else {
-          setErr("تمت الإضافة بنجاح", true);
-          $("newU").value = ""; $("newP").value = "";
-          loadData();
-      }
-  }
+        loadUsers();
+    }
 
-  $("addUserBtn").onclick = () => addNewUser(false);
-  $("addAdminBtn").onclick = () => addNewUser(true);
-  $("refreshBtn").onclick = () => loadData();
+    async function loadUsers() {
+        const list = document.getElementById("userList");
+        list.innerHTML = "<tr><td colspan='5'>جاري التحميل...</td></tr>";
 
-  loadData();
-})();
-</script>
+        const { data: users, error } = await sb.from('app_users').select('*').order('last_seen', { ascending: false });
+        
+        if(error) return;
+        list.innerHTML = "";
+
+        for (const u of users) {
+            // جلب عدد فواتير كل مستخدم (المطلوب A)
+            const { count: invCount } = await sb.from('app_invoices')
+                .select('*', { count: 'exact', head: true })
+                .eq('username', u.username);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                    <b>${u.username}</b><br>
+                    <small style="color:var(--mut)">${u.is_admin ? 'أدمن' : 'مستخدم'}</small>
+                </td>
+                <td>${invCount || 0}</td>
+                <td>${u.last_seen ? new Date(u.last_seen).toLocaleString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : 'لم يدخل بعد'}</td>
+                <td>
+                    <span class="badge ${u.blocked ? 'bg-err' : 'bg-ok'}">${u.blocked ? 'محظور' : 'نشط'}</span>
+                </td>
+                <td>
+                    <button class="btn-sm" onclick="toggleBlock('${u.username}', ${u.blocked})">${u.blocked ? 'فك حظر' : 'حظر'}</button>
+                    <button class="btn-sm bg-err" onclick="deleteUser('${u.username}')">حذف</button>
+                    <button class="btn-sm" style="background:#555" onclick="resetDevice('${u.username}')">مسح الجهاز</button>
+                </td>
+            `;
+            list.appendChild(row);
+        }
+    }
+
+    // 4. العمليات (إضافة، حظر، مسح جهاز)
+    async function addUser() {
+        const u = document.getElementById("newU").value.trim();
+        const p = document.getElementById("newP").value.trim();
+        if(!u || !p) return alert("أدخل البيانات");
+
+        const { error } = await sb.from('app_users').insert([{ username: u, pass: p, is_admin: false, blocked: false }]);
+        if(error) alert("خطأ: " + error.message);
+        else { alert("تمت الإضافة"); loadStats(); }
+    }
+
+    async function toggleBlock(user, currentStatus) {
+        await sb.from('app_users').update({ blocked: !currentStatus }).eq('username', user);
+        loadUsers();
+    }
+
+    async function resetDevice(user) {
+        if(confirm("سيتمكن المستخدم من التسجيل من جهاز جديد، استمرار؟")) {
+            await sb.from('app_users').update({ device_id: null }).eq('username', user);
+            alert("تم مسح بيانات الجهاز");
+        }
+    }
+
+    async function deleteUser(user) {
+        if(confirm("حذف المستخدم نهائياً؟ لا يمكن التراجع")) {
+            await sb.from('app_users').delete().eq('username', user);
+            loadUsers();
+        }
+    }
+
+    // التشغيل الأول
+    loadStats();
+  </script>
 </body>
 </html>
