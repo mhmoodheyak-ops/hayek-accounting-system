@@ -1,8 +1,8 @@
-/* HAYEK SPOT — Admin (final fix: modal close + PDF working) */
+/* HAYEK SPOT — Admin (final: tools visible + modal close + PDF working) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // UI elements (نفس السابق)
+  // UI elements
   const lock = $("lock");
   const goLogin = $("goLogin");
   const onlineDot = $("onlineDot");
@@ -32,7 +32,7 @@
   const invTbody = $("invTbody");
   const reloadInvBtn = $("reloadInvBtn");
 
-  // Helpers (نفس السابق بدون تغيير)
+  // Helpers
   function setOnlineDot() {
     const on = navigator.onLine;
     onlineDot.style.background = on ? "#49e39a" : "#ff6b6b";
@@ -262,7 +262,7 @@
   searchUser.oninput = renderUsers;
   refreshBtn.onclick = refreshAll;
 
-  // User actions
+  // User actions - هذا الجزء اللي كان ناقص وسبب اختفاء الأزرار
   usersTbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -277,7 +277,32 @@
       return;
     }
 
-    // ... (باقي الإجراءات block/unblock/delete/... نفس السابق)
+    if (act === "block") {
+      if (!confirm(`حظر ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ blocked: true }).eq("id", u.id);
+    }
+    if (act === "unblock") {
+      if (!confirm(`فك حظر ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ blocked: false }).eq("id", u.id);
+    }
+    if (act === "resetDevice") {
+      if (!confirm(`مسح جهاز ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ device_id: null }).eq("id", u.id);
+    }
+    if (act === "mkAdmin") {
+      if (!confirm(`جعل ${u.username} أدمن؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ is_admin: true }).eq("id", u.id);
+    }
+    if (act === "rmAdmin") {
+      if (!confirm(`إلغاء أدمن عن ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ is_admin: false }).eq("id", u.id);
+    }
+    if (act === "delete") {
+      if (!confirm(`حذف ${u.username} نهائيًا؟`)) return;
+      await SB.sb.from(SB.tables.users).delete().eq("id", u.id);
+    }
+
+    await refreshAll();
   });
 
   // Add user modal
@@ -306,7 +331,7 @@
     }
   };
 
-  // Invoices modal - fixed close and PDF
+  // Invoices modal - fixed close
   function openInvoicesModal(user) {
     currentUserForInvoices = user;
     invModalTitle.textContent = `فواتير: ${user.username}`;
@@ -327,7 +352,54 @@
     if (e.target === invModalBack) closeInvModalFunc();
   });
 
-  // ... (باقي الدوال loadInvoicesForCurrentUser, renderInvoices, pickField نفس السابق)
+  async function loadInvoicesForCurrentUser() {
+    if (!currentUserForInvoices) return;
+    const { sb } = SB;
+    const invTable = SB.tables.invoices;
+    const sinceISO = rangeToSince(rangeSel.value);
+
+    let q = sb.from(invTable).select("*").order("created_at", { ascending: false }).limit(200);
+    if (sinceISO) q = q.gte("created_at", sinceISO);
+
+    const { data, error } = await q.eq("username", currentUserForInvoices.username);
+
+    if (error) {
+      console.error(error);
+      invTbody.innerHTML = `<tr><td colspan="5">خطأ: ${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    invoicesForUser = data || [];
+    renderInvoices();
+  }
+
+  function renderInvoices() {
+    const term = invSearch.value.trim().toLowerCase();
+    const filtered = invoicesForUser.filter(inv => {
+      const fields = [inv.customer, inv.customer_name, inv.client, inv.name, inv.invoice_no, inv.code, inv.created_at];
+      return fields.some(f => String(f || "").toLowerCase().includes(term));
+    });
+
+    invTbody.innerHTML = filtered.map(inv => {
+      const date = inv.created_at ? new Date(inv.created_at).toLocaleString() : "—";
+      const cust = inv.customer || inv.customer_name || inv.client || inv.name || "—";
+      const total = inv.total || inv.grand_total || inv.amount || "—";
+      const code = inv.invoice_no || inv.code || inv.id || "—";
+
+      return `
+        <tr>
+          <td>${escapeHtml(date)}</td>
+          <td>${escapeHtml(cust)}</td>
+          <td><b>${escapeHtml(total)}</b></td>
+          <td>${escapeHtml(code)}</td>
+          <td>
+            <button class="mini ghost" data-act="viewJson" data-id="${inv.id}">عرض</button>
+            <button class="mini blue" data-act="pdf" data-id="${inv.id}">PDF</button>
+          </td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="5" class="mut">لا فواتير</td></tr>`;
+  }
 
   invSearch.oninput = renderInvoices;
   reloadInvBtn.onclick = loadInvoicesForCurrentUser;
@@ -346,7 +418,7 @@
     }
 
     if (act === "pdf") {
-      console.log("بدء إنشاء PDF للفاتورة:", id);
+      console.log("بدء PDF:", id);
       try {
         const html = `
           <div style="direction:rtl; font-family:Arial; padding:30px; background:#fff; text-align:right; border:1px solid #000; max-width:794px; margin:0 auto;">
@@ -362,7 +434,7 @@
             </div>
             <hr style="border:1px solid #000; margin:20px 0;">
             <h3 style="text-align:center; margin-bottom:15px;">الإجمالي: <span style="color:#0a7c3a;">${escapeHtml(inv.total || inv.grand_total || inv.amount || "—")}</span></h3>
-            <p style="text-align:center; color:#555; margin-top:30px;">لا توجد تفاصيل عمليات محفوظة في هذه الفاتورة</p>
+            <p style="text-align:center; color:#555; margin-top:30px;">لا توجد تفاصيل عمليات محفوظة</p>
             <div style="margin-top:40px; text-align:center; color:#0a7c3a; font-weight:bold;">
               شركة الحايك - 05510217646
             </div>
@@ -388,13 +460,13 @@
           pdf.addImage(imgData, "JPEG", 0, 0, pdf.internal.pageSize.getWidth(), canvas.height * (pdf.internal.pageSize.getWidth() / canvas.width));
           pdf.save(`فاتورة_${currentUserForInvoices.username}_${Date.now()}.pdf`);
           tmp.remove();
-          console.log("PDF تم إنشاؤه بنجاح");
+          console.log("PDF تم إنشاؤه");
         }).catch(err => {
-          console.error("خطأ في html2canvas:", err);
+          console.error("html2canvas error:", err);
           alert("فشل عرض الفاتورة كصورة");
         });
       } catch (err) {
-        console.error("خطأ عام في PDF:", err);
+        console.error("PDF error:", err);
         alert("فشل إنشاء PDF");
       }
     }
