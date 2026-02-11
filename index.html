@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -27,8 +26,8 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-    
-    // الإعدادات من جداول Supabase الخاصة بك
+
+    // إعدادات Supabase (من config.js أو مباشرة)
     const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
     const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -37,44 +36,65 @@
       $("err").textContent = "";
       const userVal = $("u").value.trim();
       const passVal = $("p").value.trim();
-      
-      if(!userVal || !passVal) { $("err").textContent = "يرجى ملء كافة الحقول"; return; }
+
+      if (!userVal || !passVal) {
+        $("err").textContent = "يرجى ملء كافة الحقول";
+        return;
+      }
 
       try {
-        // 1. البحث باستخدام username (تجاوز خطأ العمود t)
+        // البحث عن المستخدم
         const { data, error } = await sb
           .from('app_users')
-          .select('*')
+          .select('id, username, pass, is_admin, blocked, device_id')
           .eq('username', userVal)
           .single();
 
-        if (error || !data) { $("err").textContent = "المستخدم غير موجود"; return; }
-        
-        // 2. مطابقة كلمة السر
-        if (String(data.pass) !== passVal) { $("err").textContent = "كلمة السر غير صحيحة"; return; }
-
-        // 3. التحقق من الحظر
-        if (data.blocked) { $("err").textContent = "هذا الحساب محظور"; return; }
-
-        // 4. إنشاء الجلسة بالشكل الذي تطلبه صفحة الأدمن (مهم جداً)
-        const session = {
-          username: data.username,
-          role: data.is_admin ? "admin" : "user",
-          lastLogin: new Date().toISOString()
-        };
-        
-        // حفظ الجلسة في LocalStorage
-        localStorage.setItem("HAYEK_SESSION", JSON.stringify(session));
-
-        // 5. التوجيه الفوري
-        if (data.is_admin) {
-          window.location.replace("admin.html");
-        } else {
-          window.location.replace("invoice.html");
+        if (error || !data) {
+          $("err").textContent = "اسم المستخدم غير موجود";
+          return;
         }
 
+        // مقارنة كلمة السر (plain text حالياً)
+        if (String(data.pass) !== passVal) {
+          $("err").textContent = "كلمة السر غير صحيحة";
+          return;
+        }
+
+        if (data.blocked) {
+          $("err").textContent = "هذا الحساب محظور";
+          return;
+        }
+
+        // إنشاء الجلسة بالشكل المتوافق مع auth.js و admin.js
+        const session = {
+          id: data.id,
+          username: data.username,
+          role: data.is_admin ? "admin" : "user",
+          device_id: data.device_id || (window.HAYEK_AUTH?.getOrCreateDeviceId?.() || "unknown")
+        };
+
+        // حفظ الجلسة باستخدام دالة auth.js
+        window.HAYEK_AUTH.setSession(session);
+
+        // تحديث last_seen إذا كان العمود موجود
+        await sb
+          .from('app_users')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', data.id)
+          .then(() => console.log("تم تحديث آخر ظهور"))
+          .catch(err => console.warn("فشل تحديث last_seen", err));
+
+        // توجيه حسب الدور مع تجنب الكاش
+        const ts = Date.now();
+        if (data.is_admin) {
+          window.location.replace("admin.html?v=" + ts);
+        } else {
+          window.location.replace("invoice.html?v=" + ts);
+        }
       } catch (e) {
-        $("err").textContent = "خطأ في الاتصال: " + e.message;
+        console.error("خطأ في تسجيل الدخول:", e);
+        $("err").textContent = "خطأ في الاتصال: " + (e.message || "غير معروف");
       }
     };
   </script>
