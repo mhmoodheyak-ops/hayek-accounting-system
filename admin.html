@@ -1,197 +1,351 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأمن</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>HAYEK SPOT — لوحة الأدمن</title>
+  <meta name="theme-color" content="#071820" />
 
-  <link rel="stylesheet" href="./style.css?v=9100" />
+  <style>
+    :root{
+      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a;
+    }
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
+    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
+    .wrap{max-width:1100px;margin:18px auto;padding:16px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .btnSmall{border:none;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
+    .head{padding:16px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.12);color:#fff}
+    .mut{color:var(--mut);font-size:13px}
+    .body{padding:16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
 
-  <!-- Supabase UMD -->
+    label{display:block;color:var(--mut);font-size:13px;margin:0 0 6px}
+    input,select{
+      width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.18);color:var(--txt);font-size:15px;outline:none
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{border:none;border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.10);color:#fff;cursor:pointer}
+    .btn.blue{background:var(--blue)}
+    .btn.danger{background:rgba(255,107,107,.25);border:1px solid rgba(255,107,107,.35)}
+    .btn.ok{background:rgba(73,227,154,.18);border:1px solid rgba(73,227,154,.30)}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right}
+    th{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
+    .err{color:var(--danger);min-height:18px;font-size:13px;margin-top:8px}
+    /* lock */
+    #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
+    #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
+  </style>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- html2pdf (يعطي PDF عربي صحيح لأنه يصوّر المحتوى) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <!-- Config -->
-  <script src="./config.js?v=9100"></script>
+  <script src="./config.js?v=1"></script>
+  <script src="./auth.js?v=1"></script>
 </head>
+<body>
 
-<body class="app-body">
-  <div class="app-wrap">
-    <div class="top-title">
-      <div class="title">لوحة الأمن</div>
-      <div class="subtitle">إدارة المستخدمين والفواتير — بدون import وبدون أخطاء module.</div>
-      <div class="pill" id="adminStatePill">غير مسجل</div>
-    </div>
-
-    <div class="grid">
-      <!-- LOGIN -->
-      <section class="card">
-        <h2>تسجيل الدخول (Admin)</h2>
-
-        <div class="row">
-          <label>اسم المستخدم</label>
-          <input id="adminUser" class="input" value="admin" autocomplete="username" />
-        </div>
-
-        <div class="row">
-          <label>كلمة السر</label>
-          <input id="adminPass" class="input" type="password" autocomplete="current-password" />
-        </div>
-
-        <div class="btn-row">
-          <button class="btn primary" id="btnAdminLogin">تسجيل دخول</button>
-          <button class="btn" id="btnAdminLogout">تسجيل خروج</button>
-        </div>
-
-        <div class="hint" id="statusLine"></div>
-      </section>
-
-      <!-- USERS -->
-      <section class="card">
-        <h2>إدارة المستخدمين</h2>
-
-        <div class="row">
-          <label>اسم مستخدم جديد</label>
-          <input id="newUsername" class="input" placeholder="مثال: محمود" />
-        </div>
-
-        <div class="row">
-          <label>كلمة السر</label>
-          <input id="newPassword" class="input" placeholder="مثال: 1234" />
-        </div>
-
-        <div class="row">
-          <label>صلاحية</label>
-          <select id="newRole" class="input">
-            <option value="user">مستخدم</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn primary" id="btnAddUser">إضافة</button>
-          <button class="btn" id="btnRefreshUsers">تحديث قائمة المستخدمين</button>
-          <div class="count-badge" id="usersCount">0</div>
-        </div>
-
-        <div class="table-wrap">
-          <table class="table" id="usersTable">
-            <thead>
-              <tr>
-                <th style="width:60px">#</th>
-                <th>المستخدم</th>
-                <th style="width:90px">Admin</th>
-                <th style="width:90px">محظور</th>
-                <th style="width:160px">قفل الجهاز</th>
-                <th style="width:240px">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- INVOICES -->
-      <section class="card full">
-        <h2>الفواتير</h2>
-
-        <div class="filters">
-          <div class="row">
-            <label>اختر المستخدم</label>
-            <select id="pickUser" class="input"></select>
-          </div>
-
-          <div class="row">
-            <label>الحالة</label>
-            <select id="pickStatus" class="input">
-              <option value="all">الكل</option>
-              <option value="open">open</option>
-              <option value="closed">closed</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <label>من تاريخ</label>
-            <input id="fromDate" class="input" type="date" />
-          </div>
-
-          <div class="row">
-            <label>إلى تاريخ</label>
-            <input id="toDate" class="input" type="date" />
-          </div>
-
-          <div class="btn-row">
-            <button class="btn" id="btnToday">فواتير اليوم</button>
-            <button class="btn" id="btnLast7">آخر 7 أيام</button>
-            <button class="btn primary" id="btnLoadInvoices">اعرض الفواتير</button>
-            <div class="count-badge" id="invCount">0</div>
-          </div>
-        </div>
-
-        <div class="row">
-          <label>قائمة الفواتير (مع المبلغ)</label>
-          <select id="invoiceSelect" class="input invoice-select"></select>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn" id="btnOpenInvoice">فتح</button>
-          <button class="btn primary" id="btnExportInvoicePdf">تصدير PDF</button>
-        </div>
-
-        <!-- Preview -->
-        <div class="preview-wrap">
-          <div id="invoicePreview" class="invoice-paper" aria-label="invoice">
-            <div class="invoice-header">
-              <div class="inv-title">شركة الحايك</div>
-              <div class="inv-sub">HAYEK SPOT</div>
-            </div>
-
-            <div class="inv-fields">
-              <div class="field"><span>اسم المستخدم</span><b id="pv_username">—</b></div>
-              <div class="field"><span>اسم العميل</span><b id="pv_customer">—</b></div>
-              <div class="field"><span>رقم الفاتورة</span><b id="pv_invoiceId">—</b></div>
-              <div class="field"><span>التاريخ</span><b id="pv_date">—</b></div>
-            </div>
-
-            <!-- 3 سطور فراغ فوق الجدول -->
-            <div class="spacer-rows" aria-hidden="true"></div>
-
-            <table class="inv-table" id="pv_table">
-              <thead>
-                <tr>
-                  <th>الوقت</th>
-                  <th>البيان</th>
-                  <th>العملية</th>
-                  <th>النتيجة</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-
-            <!-- 3 سطور فراغ تحت الجدول -->
-            <div class="spacer-rows" aria-hidden="true"></div>
-
-            <div class="inv-total">
-              <div class="total-label">إجمالي الكشف:</div>
-              <div class="total-value" id="pv_total">0</div>
-            </div>
-
-            <div class="inv-footer">
-              <div>تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-              <div>شركة الحايك: تجارة عامة / توزيع جملة / دعاية وإعلان / طباعة / حلول رقمية</div>
-              <div class="phone">05510217646</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="hint" id="pdfHint"></div>
-      </section>
+  <div id="lock">
+    <div class="box">
+      <h3>تسجيل الدخول مطلوب</h3>
+      <p style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون صلاحية أدمن.</p>
+      <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
     </div>
   </div>
 
-  <script src="./admin.js?v=9100"></script>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div style="font-weight:900;font-size:18px">لوحة الأدمن</div>
+        <div class="mut">إدارة مستخدمين + إحصائيات فواتير</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="pill" id="adminPill">—</span>
+        <button class="btnSmall" id="logoutBtn">خروج</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <div class="pill">الفترة:</div>
+        <select id="range" style="width:auto;min-width:220px">
+          <option value="today">اليوم</option>
+          <option value="7">آخر 7 أيام</option>
+          <option value="30">آخر 30 يوم</option>
+          <option value="all">الكل</option>
+        </select>
+
+        <button class="btnSmall" id="refreshBtn">تحديث</button>
+        <span class="mut" id="hint">—</span>
+      </div>
+
+      <div class="body">
+        <div class="grid">
+
+          <div>
+            <div style="font-weight:900;margin-bottom:10px">إضافة مستخدم</div>
+            <div class="row">
+              <div style="flex:1;min-width:220px">
+                <label>اسم المستخدم</label>
+                <input id="newU" placeholder="مثال: ابو قروب">
+              </div>
+              <div style="flex:1;min-width:220px">
+                <label>كلمة السر</label>
+                <input id="newP" placeholder="1234">
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <button class="btn ok" id="addUserBtn">إضافة مستخدم</button>
+              <button class="btn blue" id="addAdminBtn">إضافة أدمن</button>
+            </div>
+
+            <div class="err" id="err"></div>
+          </div>
+
+          <div>
+            <div style="font-weight:900;margin-bottom:10px">ملخص</div>
+            <div class="row">
+              <div class="pill">عدد المستخدمين: <b id="usersCount">0</b></div>
+              <div class="pill">عدد الفواتير (الفترة): <b id="invCount">0</b></div>
+            </div>
+            <div class="mut" style="margin-top:10px">
+              ملاحظة: العدّاد يعتمد على app_invoices (status = closed).
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:16px;font-weight:900">قائمة المستخدمين</div>
+        <div class="mut">مرتّبة من الأكثر استخدامًا إلى الأقل (حسب الفترة)</div>
+
+        <div style="overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:16px;margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>المستخدم</th>
+                <th>فواتير</th>
+                <th>آخر نشاط</th>
+                <th>حالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersRows"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const $ = (id)=>document.getElementById(id);
+  const lock = $("lock");
+  $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
+
+  if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH.isAuthed()) {
+    lock.style.display = "flex"; return;
+  }
+  const session = window.HAYEK_AUTH.getUser() || {};
+  if (session.role !== "admin") { lock.style.display="flex"; return; }
+
+  $("adminPill").textContent = "أدمن: " + (session.username||"—");
+  $("logoutBtn").onclick = () => { window.HAYEK_AUTH.logout(); location.href="index.html?v="+Date.now(); };
+
+  function setErr(msg){ $("err").textContent = msg || ""; }
+
+  function getSB(){
+    const cfg = window.APP_CONFIG || {};
+    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
+    return supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  }
+
+  function isoDayStart(d){
+    const x = new Date(d); x.setHours(0,0,0,0); return x.toISOString();
+  }
+  function daysAgo(n){
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d;
+  }
+
+  function getRangeFilter(){
+    const v = $("range").value;
+    if (v === "all") return null;
+    if (v === "today") return isoDayStart(new Date());
+    return isoDayStart(daysAgo(Number(v)));
+  }
+
+  // username column might be username or t in app_users
+  function rowUsername(row){ return row?.username ?? row?.t ?? ""; }
+
+  async function loadUsersAndStats(){
+    setErr("");
+    $("hint").textContent = "جاري التحميل...";
+    const sb = getSB();
+    if(!sb){ setErr("Supabase غير مضبوط."); return; }
+
+    // 1) users
+    const { data: users, error: eU } = await sb.from(window.APP_CONFIG.TABLE_USERS).select("*");
+    if(eU){ console.log(eU); setErr("فشل تحميل المستخدمين."); return; }
+
+    $("usersCount").textContent = String(users.length);
+
+    // 2) invoices in range (only closed)
+    const fromIso = getRangeFilter();
+    let q = sb.from(window.APP_CONFIG.TABLE_INVOICES).select("username,closed_at,created_at,status,total", { count: "exact" });
+    q = q.eq("status", "closed");
+    if(fromIso) q = q.gte("closed_at", fromIso);
+
+    const { data: inv, error: eI, count } = await q;
+    if(eI){ console.log(eI); setErr("فشل تحميل الفواتير."); return; }
+
+    $("invCount").textContent = String(count ?? inv?.length ?? 0);
+
+    // aggregate counts + last activity
+    const map = new Map(); // username -> {count,last}
+    (inv||[]).forEach(x=>{
+      const u = x.username || "";
+      if(!u) return;
+      const t = x.closed_at || x.created_at || null;
+      const prev = map.get(u) || { count:0, last:null };
+      prev.count += 1;
+      if (t && (!prev.last || new Date(t) > new Date(prev.last))) prev.last = t;
+      map.set(u, prev);
+    });
+
+    // build rows sorted desc by count
+    const rows = users
+      .filter(u => (u.is_admin !== true)) // show users first
+      .map(u => {
+        const name = rowUsername(u);
+        const stat = map.get(name) || {count:0,last:null};
+        return { row:u, name, count: stat.count, last: stat.last };
+      })
+      .sort((a,b)=> b.count - a.count);
+
+    // render
+    const tbody = $("usersRows");
+    tbody.innerHTML = rows.map(r=>{
+      const blocked = r.row.blocked === true;
+      const status = blocked ? "محظور" : "فعال";
+      const last = r.last ? new Date(r.last).toLocaleString() : "—";
+      return `
+        <tr>
+          <td><b>${escapeHtml(r.name||"—")}</b></td>
+          <td>${r.count}</td>
+          <td>${escapeHtml(last)}</td>
+          <td>${blocked ? "🔴 محظور" : "🟢 فعال"}</td>
+          <td style="white-space:nowrap">
+            <button class="btn ${blocked ? "ok" : "danger"}" data-act="${blocked ? "unblock" : "block"}" data-u="${escapeAttr(r.name)}">
+              ${blocked ? "فك حظر" : "حظر"}
+            </button>
+            <button class="btn danger" data-act="del" data-u="${escapeAttr(r.name)}">حذف</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    // attach handlers
+    tbody.querySelectorAll("button[data-act]").forEach(btn=>{
+      btn.onclick = async ()=>{
+        const act = btn.getAttribute("data-act");
+        const u = btn.getAttribute("data-u");
+        await doAction(act, u);
+      };
+    });
+
+    $("hint").textContent = "تم التحديث ✓";
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+  function escapeAttr(s){ return escapeHtml(s).replaceAll('"',"&quot;"); }
+
+  async function doAction(act, username){
+    setErr("");
+    const sb = getSB();
+    if(!sb){ setErr("Supabase غير مضبوط."); return; }
+
+    // app_users username might be in column username OR t, so update with OR
+    try{
+      if(act === "block" || act === "unblock"){
+        const blocked = (act === "block");
+        const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS)
+          .update({ blocked })
+          .or(`username.eq.${username},t.eq.${username}`);
+        if(error) throw error;
+      }
+
+      if(act === "del"){
+        // delete user
+        const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS)
+          .delete()
+          .or(`username.eq.${username},t.eq.${username}`);
+        if(error) throw error;
+      }
+
+      await loadUsersAndStats();
+    }catch(e){
+      console.log(e);
+      setErr("فشل تنفيذ العملية.");
+    }
+  }
+
+  async function addUser(isAdmin){
+    setErr("");
+    const u = ($("newU").value||"").trim();
+    const p = ($("newP").value||"").trim();
+    if(!u || !p){ setErr("أدخل اسم المستخدم وكلمة السر."); return; }
+
+    const sb = getSB();
+    if(!sb){ setErr("Supabase غير مضبوط."); return; }
+
+    try{
+      const payload = {
+        username: u,   // we store in "username" (SQL below creates it)
+        pass: p,
+        is_admin: !!isAdmin,
+        blocked: false,
+        device_id: null,
+      };
+
+      const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS).insert([payload]);
+      if(error) throw error;
+
+      $("newU").value = "";
+      $("newP").value = "";
+      await loadUsersAndStats();
+    }catch(e){
+      console.log(e);
+      setErr("فشل إضافة المستخدم (قد يكون الاسم موجود).");
+    }
+  }
+
+  $("addUserBtn").onclick  = ()=> addUser(false);
+  $("addAdminBtn").onclick = ()=> addUser(true);
+  $("refreshBtn").onclick  = ()=> loadUsersAndStats();
+  $("range").onchange = ()=> loadUsersAndStats();
+
+  loadUsersAndStats();
+
+  // SW
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
+})();
+</script>
 </body>
 </html>
-
