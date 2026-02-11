@@ -1,4 +1,4 @@
-/* HAYEK SPOT — Admin (robust - fixed for username instead of user_id) */
+/* HAYEK SPOT — Admin (fixed: use username instead of user_id) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
@@ -263,7 +263,7 @@
   searchUser.oninput = () => renderUsers();
   refreshBtn.onclick = () => { vibrateTiny(); refreshAll(); };
 
-  // User actions (غيرنا data-id إلى username بدل id عشان التوافق)
+  // User actions
   usersTbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
