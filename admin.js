@@ -1,8 +1,8 @@
-/* HAYEK SPOT — Admin (fixed: null checks + full functionality) */
+/* HAYEK SPOT — Admin (fixed null checks + safe execution) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // UI elements with null-safe access
+  // UI elements with safe access
   const lock = $("lock");
   const goLogin = $("goLogin");
   const onlineDot = $("onlineDot");
@@ -34,10 +34,11 @@
 
   // Helpers
   function setOnlineDot() {
-    if (!onlineDot) return;
-    const on = navigator.onLine;
-    onlineDot.style.background = on ? "#49e39a" : "#ff6b6b";
-    onlineDot.style.boxShadow = on ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
+    if (onlineDot) {
+      const on = navigator.onLine;
+      onlineDot.style.background = on ? "#49e39a" : "#ff6b6b";
+      onlineDot.style.boxShadow = on ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
+    }
   }
   window.addEventListener("online", setOnlineDot);
   window.addEventListener("offline", setOnlineDot);
@@ -201,7 +202,10 @@
   }
 
   function renderUsers() {
-    if (!usersTbody) return;
+    if (!usersTbody) {
+      console.warn("usersTbody غير موجود في الصفحة");
+      return;
+    }
     const term = (searchUser?.value || "").trim().toLowerCase();
     const list = users
       .filter((u) => (u.username || "").toLowerCase().includes(term))
