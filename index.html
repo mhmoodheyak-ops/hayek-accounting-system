@@ -29,10 +29,21 @@
     .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.12)}
   </style>
 
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js?v=1"></script>
-  <script src="./auth.js?v=1"></script>
+  
+  <script>
+    window.APP_CONFIG = {
+      APP_NAME: "HAYEK SPOT",
+      SUPABASE_URL: "https://itidwqvyrjydmegjzuvn.supabase.co",
+      SUPABASE_ANON_KEY: "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_",
+      TABLE_USERS: "app_users",
+      TABLE_INVOICES: "app_invoices",
+      TABLE_OPERATIONS: "app_operations",
+      WHATSAPP_ENABLED: false
+    };
+  </script>
+
+  <script src="./auth.js?v=2"></script>
 </head>
 
 <body>
@@ -52,7 +63,7 @@
     </div>
 
     <label>اسم المستخدم</label>
-    <input id="u" placeholder="مثال: ابو قروب" autocomplete="username">
+    <input id="u" placeholder="مثال: admin" autocomplete="username">
 
     <label>كلمة السر</label>
     <input id="p" type="password" placeholder="••••••" autocomplete="current-password">
@@ -78,10 +89,15 @@
   window.addEventListener("offline", refreshOnline);
   refreshOnline();
 
+  // تأكد من تحميل مكتبة auth أولاً
+  if (!window.HAYEK_AUTH) {
+      $("err").textContent = "خطأ: لم يتم تحميل ملف auth.js";
+      return;
+  }
+
   const devId = window.HAYEK_AUTH.getOrCreateDeviceId();
   $("devId").textContent = devId.slice(0,8);
 
-  // Auto redirect if already logged in
   if (window.HAYEK_AUTH.isAuthed()) {
     const s = window.HAYEK_AUTH.getUser();
     location.href = (s.role === "admin" ? "admin.html" : "invoice.html") + "?v=" + Date.now();
@@ -91,15 +107,12 @@
   function setErr(msg){ $("err").textContent = msg || ""; }
 
   function getSB(){
-    const cfg = window.APP_CONFIG || {};
-    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
+    const cfg = window.APP_CONFIG;
     return supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
   }
 
-  // robust: supports username column = "username" OR "t"
   async function findUserRow(sb, username){
     const table = window.APP_CONFIG.TABLE_USERS;
-    // OR filter works for both possibilities
     const { data, error } = await sb
       .from(table)
       .select("*")
@@ -108,18 +121,6 @@
     return (data && data[0]) ? data[0] : null;
   }
 
-  function rowUsername(row){
-    return row?.username ?? row?.t ?? "";
-  }
-
-  $("wipeBtn").onclick = () => {
-    // wipe all hayek keys
-    Object.keys(localStorage).forEach(k=>{
-      if (k.startsWith("HAYEK_")) localStorage.removeItem(k);
-    });
-    setErr("تم مسح بيانات الجهاز.");
-  };
-
   $("loginBtn").onclick = async () => {
     setErr("");
     const u = ($("u").value||"").trim();
@@ -127,27 +128,22 @@
     if(!u || !p){ setErr("أدخل اسم المستخدم وكلمة السر."); return; }
 
     const sb = getSB();
-    if(!sb){ setErr("Supabase غير مضبوط داخل config.js"); return; }
-
     try{
       const row = await findUserRow(sb, u);
       if(!row){ setErr("اسم المستخدم غير موجود."); return; }
-
       if (row.blocked === true) { setErr("هذا الحساب محظور."); return; }
 
       const pass = String(row.pass ?? "");
       if (pass !== p){ setErr("كلمة السر غير صحيحة."); return; }
 
-      // device lock: first login binds device_id (except admins)
       const isAdmin = (row.is_admin === true);
       const rowDevice = row.device_id ? String(row.device_id) : "";
 
       if (!isAdmin) {
-        if (!rowDevice) {
-          // bind device on first login
+        if (!rowDevice || rowDevice === "EMPTY") {
           const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS)
             .update({ device_id: devId })
-            .or(`username.eq.${u},t.eq.${u}`);
+            .eq('id', row.id);
           if (error) { setErr("فشل ربط الجهاز."); return; }
         } else if (rowDevice !== devId) {
           setErr("هذا الحساب مربوط بجهاز آخر.");
@@ -155,26 +151,26 @@
         }
       }
 
-      // session
       window.HAYEK_AUTH.setSession({
-        username: rowUsername(row) || u,
+        username: row.username || row.t || u,
         role: isAdmin ? "admin" : "user",
         deviceId: devId,
         loggedAt: new Date().toISOString(),
       });
 
-      // go
       location.href = (isAdmin ? "admin.html" : "invoice.html") + "?v=" + Date.now();
     }catch(e){
-      console.log(e);
+      console.error(e);
       setErr("خطأ في الاتصال بالسيرفر.");
     }
   };
 
-  // Register SW
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  }
+  $("wipeBtn").onclick = () => {
+    Object.keys(localStorage).forEach(k=>{
+      if (k.startsWith("HAYEK_")) localStorage.removeItem(k);
+    });
+    location.reload();
+  };
 })();
 </script>
 </body>
