@@ -1,4 +1,4 @@
-// config.js - لا تغير أي شيء إلا إذا غيرت الـ Key أو الـ URL
+// config.js - هذا الملف ضروري لتحميل Supabase في admin.js
 window.HAYEK_CONFIG = {
   supabaseUrl: "https://itidwqvyrjydmegjzuvn.supabase.co",
   supabaseKey: "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_",
