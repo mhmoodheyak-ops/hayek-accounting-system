@@ -1,18 +1,19 @@
 // config.js
-window.APP_CONFIG = {
-  APP_NAME: "HAYEK SPOT",
+// ===============================
+// HAYEK SPOT - Global App Config
+// ===============================
 
-  // ====== Supabase ======
-  // ضع بيانات مشروعك هنا مرة واحدة فقط:
+window.APP_CONFIG = {
+  // 🔐 Supabase
   SUPABASE_URL: "https://itidwqvyrjydmegjzuvn.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_",
 
-  // ====== Tables ======
+  // 📦 Database Tables (ثابتة – لا تغيّرها لاحقًا)
   TABLE_USERS: "app_users",
   TABLE_INVOICES: "app_invoices",
   TABLE_OPERATIONS: "app_operations",
 
-  // ====== WhatsApp removed by requirement ======
-  WHATSAPP_ENABLED: false,
+  // 🧾 App Info
+  APP_NAME: "HAYEK SPOT",
+  APP_VERSION: "1.0.0",
 };
-
