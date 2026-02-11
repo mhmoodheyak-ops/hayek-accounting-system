@@ -19,120 +19,116 @@
     .btn{border:none;border-radius:14px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
     .btn.primary{background:rgba(31,98,255,.85)}
     .btn.danger{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
-    .btn.success{background:rgba(73,227,154,.18);border:1px solid rgba(73,227,154,.35)}
-    .btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1;min-width:280px}
-    .stat{padding:14px;border-radius:18px;background:rgba(0,0,0,.16);border:1px solid var(--line)}
-    .stat .v{font-weight:900;font-size:28px;margin-top:6px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden; margin-bottom: 20px;}
+    .stat-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:15px;padding:15px}
+    .stat{padding:14px;border-radius:18px;background:rgba(0,0,0,.16);border:1px solid var(--line);text-align:center}
+    .stat .v{font-weight:900;font-size:28px;margin-top:6px; color:var(--blue)}
     .stat .k{color:var(--mut);font-size:13px}
     .head{padding:14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .body{padding:14px}
-    .select, .input{
-      background:rgba(0,0,0,.18);color:var(--txt);
-      border:1px solid var(--line);border-radius:14px;
-      padding:10px 12px;outline:none
-    }
-    .select{cursor:pointer}
-    .tableWrap{margin-top:12px;overflow:auto;border-radius:16px;border:1px solid var(--line)}
+    .input, .select{background:rgba(0,0,0,.18);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:10px 12px;outline:none}
+    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line)}
     table{width:100%;border-collapse:collapse;min-width:980px;background:rgba(0,0,0,.12)}
-    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;white-space:nowrap}
-    th{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);text-align:right}
-    td{color:rgba(255,255,255,.92);text-align:right}
-    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06)}
-    .badge.green{border-color:rgba(73,227,154,.35);background:rgba(73,227,154,.14)}
-    .badge.red{border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.14)}
-    .badge.blue{border-color:rgba(31,98,255,.45);background:rgba(31,98,255,.18)}
-    .badge.amber{border-color:rgba(255,204,102,.45);background:rgba(255,204,102,.14)}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
-    .mini{border:none;border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:13px}
-    .mini.red{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
-    .mini.green{background:rgba(73,227,154,.18);border:1px solid rgba(73,227,154,.35)}
-    .mini.blue{background:rgba(31,98,255,.18);border:1px solid rgba(31,98,255,.35)}
-    .mini.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
-    .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.35);font-size:12px}
-    /* Modal */
-    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.70);display:none;align-items:center;justify-content:center;z-index:9999;padding:14px}
+    th,td{padding:12px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right}
+    .badge{border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid rgba(255,255,255,.12)}
+    .badge.green{color:var(--green); border-color:var(--green)}
+    .badge.red{color:var(--red); border-color:var(--red)}
+    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:14px; backdrop-filter:blur(10px)}
     .modal{width:min(980px,100%);max-height:85vh;overflow:auto;background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px}
-    .modalHead{padding:14px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-    .modalBody{padding:14px}
-    .mut{color:var(--mut);font-size:13px}
-    .hr{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:820px){ .grid2{grid-template-columns:1fr} table{min-width:860px} }
+    .mini{padding:6px 10px; border-radius:10px; border:none; cursor:pointer; font-size:12px; margin-left:5px}
+    /* قالب PDF المخفي */
+    #pdf_capture{position:absolute;left:-9999px;width:800px;background:#fff;color:#000;padding:40px;direction:rtl}
   </style>
 </head>
 <body>
-  <!-- قفل -->
   <div id="lock" class="modalBack" style="display:flex">
-    <div class="modal">
-      <div class="modalHead">
-        <div style="font-weight:900">تسجيل الدخول مطلوب</div>
-        <button class="btn" id="goLogin">الذهاب لتسجيل الدخول</button>
+    <div class="modal" style="max-width:400px; padding:30px; text-align:center">
+      <h2 style="color:var(--red)">دخول الإدارة</h2>
+      <button class="btn primary" id="goLogin">الذهاب لتسجيل الدخول</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand"><div class="dot" id="onlineDot"></div><h2 id="adminInfo">HAYEK SPOT — لوحة الإدارة</h2></div>
+      <button class="btn danger" id="logoutBtn">خروج</button>
+    </div>
+
+    <div class="card">
+      <div class="stat-row">
+        <div class="stat"><div class="k">المستخدمين</div><div class="v" id="stUsers">0</div></div>
+        <div class="stat"><div class="k">الفواتير</div><div class="v" id="stInvoices">0</div></div>
+        <div class="stat"><div class="k">نشط حالياً</div><div class="v" id="stActive">0</div></div>
       </div>
-      <div class="modalBody">
-        <div class="mut">غير مسموح دخول لوحة الأدمن بدون صلاحية.</div>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <div style="display:flex;gap:10px">
+          <input id="searchUser" class="input" placeholder="بحث باسم المستخدم...">
+          <select id="range" class="select">
+            <option value="all">كل الأوقات</option>
+            <option value="today">اليوم</option>
+            <option value="7d">آخر 7 أيام</option>
+          </select>
+        </div>
+        <button class="btn primary" id="refreshBtn">تحديث</button>
+      </div>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>المستخدم</th>
+              <th>الرتبة</th>
+              <th>الحالة</th>
+              <th>الفواتير</th>
+              <th>آخر ظهور</th>
+              <th>الجهاز</th>
+              <th>إجراءات التحكم</th>
+            </tr>
+          </thead>
+          <tbody id="usersTbody"></tbody>
+        </table>
       </div>
     </div>
   </div>
-  <div class="wrap">
-    <!-- ... (نفس الكود اللي عندك للـ topbar والـ card والجدول) ... -->
-  </div>
 
-  <!-- Modal: Add User -->
-  <div id="addModalBack" class="modalBack">
-    <!-- ... (نفس الكود) ... -->
-  </div>
-
-  <!-- Modal: User Invoices -->
   <div id="invModalBack" class="modalBack">
     <div class="modal">
-      <div class="modalHead">
-        <div>
-          <div style="font-weight:900">فواتير المستخدم</div>
-          <div class="mut" id="invModalTitle">—</div>
-        </div>
+      <div class="head">
+        <h3 id="invModalTitle">الفواتير</h3>
         <button class="btn" id="closeInvModal">إغلاق</button>
       </div>
-      <div class="modalBody">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-          <input id="invSearch" class="input" placeholder="بحث (اسم الزبون / رقم / تاريخ)..." style="flex:1;min-width:240px">
-          <button class="btn ghost" id="reloadInvBtn">تحديث</button>
-        </div>
-        <div class="tableWrap" style="margin-top:12px">
+      <div style="padding:15px">
+        <div class="tableWrap">
           <table>
             <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>الزبون</th>
-                <th>الإجمالي</th>
-                <th>رقم/معرّف</th>
-                <th>إجراءات</th>
-              </tr>
+              <tr><th>التاريخ</th><th>الزبون</th><th>الإجمالي</th><th>رقم الفاتورة</th><th>إجراء</th></tr>
             </thead>
             <tbody id="invTbody"></tbody>
           </table>
         </div>
-        <div class="mut" style="margin-top:10px">
-          * تنزيل PDF يعمل إذا كانت بيانات الفاتورة محفوظة (rows/items) داخل جدول الفواتير.
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- libs -->
-  <script src="./config.js?v=1"></script>
-  <script src="./auth.js?v=1"></script>
+  <div id="pdf_capture">
+    <center><h1>شركة الحايك</h1><h2>HAYEK SPOT</h2><hr></center>
+    <div style="display:flex;justify-content:space-between">
+      <p>المستخدم: <b id="p_user"></b></p>
+      <p>التاريخ: <b id="p_date"></b></p>
+    </div>
+    <table style="width:100%;border-collapse:collapse" border="1">
+      <thead><tr><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
+      <tbody id="p_rows"></tbody>
+    </table>
+    <h3 style="background:#000;color:#fff;padding:15px;text-align:center">الإجمالي: <span id="p_total"></span></h3>
+  </div>
 
-  <!-- html2canvas & jsPDF - روابط حديثة ومضمونة -->
+  <script src="./config.js"></script>
+  <script src="./auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Supabase CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- admin.js -->
-  <script src="./admin.js?v=1"></script>
+  <script src="./admin.js"></script>
 </body>
 </html>
