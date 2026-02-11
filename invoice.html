@@ -36,14 +36,17 @@
     .overlay .box button{margin-top:10px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 14px;cursor:pointer}
   </style>
 
+  <!-- config.js + auth -->
   <script src="config.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js?v=1"></script>
 
-  <!-- PDF libs (محلية عندك) -->
-  <script src="jspdf.umd.min.js"></script>
-  <script src="jspdf.plugin.autotable.min.js"></script>
-  <script src="amiri-font.js"></script>
+  <!-- ✅ PDF libs عبر CDN (حل 404) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- ✅ خط عربي (Amiri) لــ jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/@bajzar/arabic-fonts@1.0.0/arabic.js"></script>
 </head>
 
 <body>
@@ -107,14 +110,10 @@
 (() => {
   const $ = (id)=>document.getElementById(id);
 
-  // ===== Gate =====
+  // Gate
   const lock = $("lock");
   const goLogin = $("goLogin");
-
-  function hardLock(){
-    lock.classList.remove("hidden");
-  }
-
+  function hardLock(){ lock.classList.remove("hidden"); }
   if (!window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH || !window.HAYEK_AUTH.isAuthed()) {
     hardLock();
     goLogin.onclick = () => location.href = "index.html?v=" + Date.now();
@@ -124,7 +123,7 @@
   const session = window.HAYEK_AUTH.getUser() || {};
   $("userPill").textContent = "المستخدم: " + (session.username || "—");
 
-  // ===== Online dot =====
+  // Online dot
   const onlineDot = $("onlineDot");
   function refreshOnline(){
     const on = navigator.onLine;
@@ -135,49 +134,38 @@
   window.addEventListener("offline", refreshOnline);
   refreshOnline();
 
-  // ===== Invoice state (local only) =====
-  const LS = "HAYEK_SIMPLE_INV_V1";
+  // Invoice state
+  const LS = "HAYEK_SIMPLE_INV_V2";
   let inv = { id: crypto.randomUUID(), customer:"", rows:[], total:0, createdAt: new Date().toISOString() };
 
-  function load(){
-    try{
-      const x = JSON.parse(localStorage.getItem(LS) || "null");
-      if (x && x.id) inv = x;
-    }catch{}
-  }
+  function load(){ try{ const x=JSON.parse(localStorage.getItem(LS)||"null"); if(x&&x.id) inv=x; }catch{} }
   function save(){ localStorage.setItem(LS, JSON.stringify(inv)); }
   load();
 
   function shortId(){ return String(inv.id).slice(-6); }
-
   function renderMeta(){
     const cust = ($("customer").value || "").trim();
     $("invPill").textContent = cust ? ("فاتورة: " + shortId()) : "—";
   }
-
-  function escapeHtml(s){
-    return String(s||"")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+  function esc(s){
+    return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
-
   function renderTable(){
     $("rows").innerHTML = inv.rows.map(r => `
       <tr>
-        <td>${escapeHtml(r.time)}</td>
-        <td>${escapeHtml(r.note || "—")}</td>
-        <td>${escapeHtml(r.expr)}</td>
-        <td>${escapeHtml(String(r.result))}</td>
+        <td>${esc(r.time)}</td>
+        <td>${esc(r.note || "—")}</td>
+        <td>${esc(r.expr)}</td>
+        <td>${esc(String(r.result))}</td>
       </tr>
     `).join("");
     $("sum").textContent = inv.total;
   }
-
   function nowTime(){
     const d=new Date();
     return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
   }
-
   function safeEval(expr){
     const cleaned = (expr||"").replace(/\s+/g,"");
     if (!/^[0-9+\-*/().]+$/.test(cleaned)) throw new Error("bad");
@@ -188,21 +176,18 @@
     return n;
   }
 
-  function setExpr(v){ $("expr").value = v; }
-  function append(k){ setExpr(($("expr").value || "") + k); }
-
+  // keypad
   $("pad").addEventListener("click",(e)=>{
     const b=e.target.closest("button"); if(!b) return;
     const k=b.getAttribute("data-k");
     if (navigator.vibrate) try{ navigator.vibrate(12);}catch{}
-    if (k==="C"){ setExpr(""); return; }
+    if (k==="C"){ $("expr").value=""; return; }
     if (k==="="){ commit(); return; }
-    append(k);
+    $("expr").value = ($("expr").value||"") + k;
   });
 
   $("customer").addEventListener("input", ()=>{
-    const cust = ($("customer").value||"").trim();
-    inv.customer = cust;
+    inv.customer = ($("customer").value||"").trim();
     save(); renderMeta();
   });
 
@@ -236,46 +221,21 @@
     location.href="index.html?v="+Date.now();
   };
 
-  // ===== PDF (Arabic + autoTable) =====
-  function ensureAmiri(doc){
-    try{
-      // amiri-font.js لازم يعرّف window.AMIRI_TTF_BASE64 (أو مشابه)
-      // إذا ملفك اسمه مختلف داخلياً، عدّل السطرين الجايين حسب المتغير الموجود عندك
-      const b64 = window.AMIRI_TTF_BASE64 || window.AMIRI_FONT_BASE64;
-      if (!b64) return false;
-      doc.addFileToVFS("Amiri-Regular.ttf", b64);
-      doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-      doc.setFont("Amiri", "normal");
-      return true;
-    }catch{
-      return false;
-    }
-  }
-
-  function buildPdf(invSnap){
+  // PDF
+  function buildPdf(snap){
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF) throw new Error("jsPDF missing");
+
     const doc = new jsPDF({ unit:"pt", format:"a4" });
 
-    // Arabic font (best effort)
-    const hasAmiri = ensureAmiri(doc);
-    if (!hasAmiri) doc.setFont("helvetica","normal");
-
-    const phone = "05510217646";
-
-    const head = [
-      [{ content:"الوقت", styles:{halign:"right"} },
-       { content:"البيان", styles:{halign:"right"} },
-       { content:"العملية", styles:{halign:"right"} },
-       { content:"النتيجة", styles:{halign:"right"} }]
-    ];
-
-    const body = (invSnap.rows||[]).map(r => ([
-      String(r.time||""),
-      String(r.note||"—"),
-      String(r.expr||""),
-      String(r.result??"")
-    ]));
+    // Arabic font from arabic.js
+    try{
+      doc.addFileToVFS("Amiri-Regular.ttf", window.arabicFonts.amiri);
+      doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+      doc.setFont("Amiri", "normal");
+    }catch{
+      doc.setFont("helvetica","normal");
+    }
 
     doc.setFontSize(16);
     doc.text("شركة الحايك", 520, 58, { align:"right" });
@@ -283,26 +243,26 @@
     doc.text("HAYEK SPOT", 520, 78, { align:"right" });
 
     doc.setFontSize(12);
-    doc.text(("الزبون: " + (invSnap.customer||"—")), 520, 110, { align:"right" });
-    doc.text(("رقم: " + String(invSnap.id).slice(-6)), 520, 128, { align:"right" });
-    doc.text(("التاريخ: " + new Date().toLocaleString()), 520, 146, { align:"right" });
+    doc.text("الزبون: " + (snap.customer||"—"), 520, 110, { align:"right" });
+    doc.text("رقم: " + String(snap.id).slice(-6), 520, 128, { align:"right" });
+    doc.text("التاريخ: " + new Date().toLocaleString(), 520, 146, { align:"right" });
+
+    const head = [["الوقت","البيان","العملية","النتيجة"]];
+    const body = (snap.rows||[]).map(r => [r.time, r.note||"—", r.expr, String(r.result)]);
 
     doc.autoTable({
       startY: 170,
       head,
       body,
       theme: "grid",
-      styles: { font: hasAmiri ? "Amiri" : "helvetica", fontSize: 10, cellPadding: 6, halign:"right" },
+      styles: { font: "Amiri", fontSize: 10, cellPadding: 6, halign:"right" },
       headStyles: { fillColor: [240,240,240], textColor: [0,0,0], halign:"right" },
-      columnStyles: { 0:{cellWidth:90}, 1:{cellWidth:200}, 2:{cellWidth:150}, 3:{cellWidth:80} },
       margin: { left: 52, right: 52 },
-      didDrawPage: (data) => {
-        const page = doc.internal.getNumberOfPages();
+      didDrawPage: () => {
         const h = doc.internal.pageSize.getHeight();
         doc.setFontSize(10);
-        doc.text(("إجمالي: " + (invSnap.total||0)), 520, h - 64, { align:"right" });
-        doc.text(("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — " + phone), 300, h - 44, { align:"center" });
-        doc.text(("صفحة " + page), 60, h - 44, { align:"left" });
+        doc.text("إجمالي: " + (snap.total||0), 520, h - 64, { align:"right" });
+        doc.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646", 300, h - 44, { align:"center" });
       }
     });
 
@@ -311,13 +271,13 @@
 
   function snapshotAndReset(){
     const cust = ($("customer").value||"").trim();
-    if (!cust) { $("customer").focus(); return null; }
+    if (!cust){ $("customer").focus(); return null; }
     if (!inv.rows.length) return null;
 
-    const snap = JSON.parse(JSON.stringify(inv)); // deep copy
-    // reset for next invoice
+    const snap = JSON.parse(JSON.stringify(inv));
     inv = { id: crypto.randomUUID(), customer:"", rows:[], total:0, createdAt: new Date().toISOString() };
     localStorage.setItem(LS, JSON.stringify(inv));
+
     $("customer").value="";
     $("textNote").value="";
     $("expr").value="";
@@ -329,7 +289,7 @@
     const snap = snapshotAndReset();
     if (!snap) return;
     const doc = buildPdf(snap);
-    doc.save(("HAYEK_"+(snap.customer||"invoice").replace(/\s+/g,"_")+"_"+String(snap.id).slice(-6)+".pdf"));
+    doc.save("HAYEK_"+(snap.customer||"invoice").replace(/\s+/g,"_")+"_"+String(snap.id).slice(-6)+".pdf");
   };
 
   $("waBtn").onclick = async ()=>{
@@ -338,9 +298,9 @@
 
     const doc = buildPdf(snap);
     const blob = doc.output("blob");
-    const file = new File([blob], ("HAYEK_"+String(snap.id).slice(-6)+".pdf"), { type:"application/pdf" });
+    const file = new File([blob], "HAYEK_"+String(snap.id).slice(-6)+".pdf", { type:"application/pdf" });
 
-    // أفضل خيار على الهاتف: إرسال ملف مباشرة
+    // إرسال ملف مباشرة (على الموبايل غالباً يشتغل)
     try{
       if (navigator.share && navigator.canShare && navigator.canShare({ files:[file] })) {
         await navigator.share({ files:[file], title:"فاتورة", text:"فاتورة HAYEK SPOT" });
@@ -348,10 +308,17 @@
       }
     }catch{}
 
-    // fallback: افتح واتساب (ثم المستخدم يرفق الملف يدوي)
-    window.open("https://wa.me/?text=" + encodeURIComponent("فاتورة HAYEK SPOT جاهزة (PDF)."), "_blank");
-    // (الملف تم تنزيله تلقائياً؟ لا. لذلك الأفضل يضغط تصدير PDF ثم يرسله)
-    // إذا تريد: أعمل خيار "تصدير ثم فتح واتساب" خبرني.
+    // fallback: تنزيل الملف ثم فتح واتساب
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href=url;
+    a.download=file.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 3000);
+
+    window.open("https://wa.me/", "_blank");
   };
 })();
 </script>
