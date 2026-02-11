@@ -1,10 +1,90 @@
-<div id="invoiceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; padding:20px; backdrop-filter:blur(5px);">
-    <div style="background:var(--bg); border:1px solid var(--line); max-width:600px; margin:20px auto; border-radius:20px; padding:25px; max-height:80vh; overflow-y:auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 id="modalTitle" style="margin:0">فواتير المستخدم</h3>
-            <button class="btn-sm bg-err" onclick="closeModal()">إغلاق</button>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>لوحة الأدمن — HAYEK SPOT</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  
+  <style>
+    :root{ --bg:#071820; --panel:rgba(255,255,255,.05); --line:rgba(255,255,255,.1); --txt:#eaf4ff; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a; }
+    body{margin:0; background:var(--bg); color:var(--txt); font-family:system-ui; direction:rtl}
+    .header{display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid var(--line); backdrop-filter:blur(10px)}
+    .container{max-width:1100px; margin:auto; padding:20px}
+    .stats-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin-bottom:30px}
+    .card{background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px}
+    table{width:100%; border-collapse:collapse; margin-top:15px}
+    th{text-align:right; color:#888; font-size:13px; padding:12px}
+    td{padding:15px 12px; border-bottom:1px solid rgba(255,255,255,0.05)}
+    .btn-sm{padding:6px 12px; border-radius:8px; border:none; cursor:pointer; font-size:12px; margin-left:5px; background:#333; color:#fff}
+    .user-link{color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:bold}
+    
+    /* النافذة المنبثقة للفواتير */
+    #invoiceModal{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; padding:20px; backdrop-filter:blur(8px)}
+    .modal-content{background:#0d2129; border:1px solid var(--line); max-width:700px; margin:40px auto; border-radius:20px; padding:25px}
+    .badge{padding:4px 8px; border-radius:6px; font-size:11px}
+    .bg-ok{background:var(--ok); color:#000}
+    .bg-err{background:var(--danger); color:#fff}
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div style="display:flex; gap:15px; align-items:center">
+        <span class="badge bg-ok">أدمن: متصل</span>
+        <h3 style="margin:0" id="adminDisplayName">admin</h3>
+    </div>
+    <button class="btn-sm bg-err" onclick="logout()">خروج</button>
+  </div>
+
+  <div class="container">
+    <div class="stats-row">
+        <div class="card" style="text-align:center">
+            <h2 id="totalUsersCount">0</h2>
+            <p style="color:#888; margin:0">إجمالي المستخدمين</p>
         </div>
-        <table style="width:100%">
+        <div class="card" style="text-align:center">
+            <h2 id="totalInvoicesCount">0</h2>
+            <p style="color:#888; margin:0">إجمالي الفواتير</p>
+        </div>
+        <div class="card">
+            <select id="timeFilter" onchange="refreshData()" style="width:100%; background:#000; color:#fff; border:1px solid var(--line); padding:10px; border-radius:8px">
+                <option value="today">اليوم</option>
+                <option value="7days" selected>آخر 7 أيام</option>
+                <option value="all">الكل</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card">
+        <h4 style="margin:0">إدارة المستخدمين ونشاطهم</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>المستخدم (اضغط للعرض)</th>
+                    <th>الفواتير</th>
+                    <th>آخر نشاط</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+        </table>
+    </div>
+  </div>
+
+  <div id="invoiceModal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+            <h3 id="modalTitle">فواتير المستخدم</h3>
+            <div>
+                <button class="btn-sm bg-ok" id="exportPdfBtn">تصدير PDF 📄</button>
+                <button class="btn-sm" onclick="closeModal()">إغلاق</button>
+            </div>
+        </div>
+        <table id="userInvoicesTable">
             <thead>
                 <tr>
                     <th>رقم الفاتورة</th>
@@ -13,67 +93,97 @@
                     <th>الحالة</th>
                 </tr>
             </thead>
-            <tbody id="invoiceDetailsList">
-                </tbody>
+            <tbody id="invoiceListBody"></tbody>
         </table>
     </div>
-</div>
+  </div>
 
-<script>
-    // --- أضف هذه الدوال داخل قسم الـ Script الموجود سابقاً ---
+  <script>
+    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+    const sb = supabase.createClient(SB_URL, SB_KEY);
+    
+    let currentViewingUser = ""; // لحفظ اسم المستخدم المفتوح حالياً للتصدير
 
-    // دالة لفتح النافذة وجلب فواتير المستخدم المختار
-    async function viewUserInvoices(username) {
-        const modal = document.getElementById("invoiceModal");
-        const list = document.getElementById("invoiceDetailsList");
-        const title = document.getElementById("modalTitle");
+    // التحقق من الجلسة
+    const session = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
+    if (session.role !== "admin") { location.href = "index.html"; }
+    document.getElementById("adminDisplayName").textContent = session.username;
+
+    async function refreshData() {
+        // تحديث أرقام الملخص
+        const { count: uCount } = await sb.from('app_users').select('*', { count: 'exact', head: true });
+        const { count: iCount } = await sb.from('app_invoices').select('*', { count: 'exact', head: true });
+        document.getElementById("totalUsersCount").textContent = uCount;
+        document.getElementById("totalInvoicesCount").textContent = iCount;
         
-        modal.style.display = "block";
-        title.textContent = `فواتير: ${username}`;
-        list.innerHTML = "<tr><td colspan='4'>جاري تحميل الفواتير...</td></tr>";
+        loadUsers();
+    }
 
-        try {
-            // جلب البيانات من جدول app_invoices
-            const { data: invoices, error } = await sb
-                .from('app_invoices')
-                .select('*')
-                .eq('username', username)
-                .order('created_at', { ascending: false });
+    async function loadUsers() {
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = "<tr><td colspan='5'>جاري التحميل...</td></tr>";
 
-            if (error) throw error;
+        const { data: users } = await sb.from('app_users').select('*').order('last_seen', { ascending: false });
 
-            list.innerHTML = "";
-            if (invoices.length === 0) {
-                list.innerHTML = "<tr><td colspan='4'>لا توجد فواتير لهذا المستخدم</td></tr>";
-                return;
-            }
-
-            invoices.forEach(inv => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>#${inv.id}</td>
-                    <td>${new Date(inv.created_at).toLocaleDateString('ar-EG')}</td>
-                    <td style="color:var(--ok)">${inv.total || 0}</td>
-                    <td><span class="badge ${inv.status === 'closed' ? 'bg-ok' : 'bg-err'}">${inv.status}</span></td>
-                `;
-                list.appendChild(row);
-            });
-        } catch (err) {
-            list.innerHTML = `<tr><td colspan='4' style="color:var(--danger)">خطأ: ${err.message}</td></tr>`;
+        tbody.innerHTML = "";
+        for (const u of users) {
+            const { count: invs } = await sb.from('app_invoices').select('*', { count: 'exact', head: true }).eq('username', u.username);
+            
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><span class="user-link" onclick="viewInvoices('${u.username}')">${u.username}</span></td>
+                <td>${invs || 0}</td>
+                <td>${u.last_seen ? new Date(u.last_seen).toLocaleTimeString('ar-EG') : '---'}</td>
+                <td><span class="badge ${u.blocked ? 'bg-err' : 'bg-ok'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
+                <td>
+                    <button class="btn-sm" onclick="resetDevice('${u.username}')">مسح الجهاز</button>
+                    <button class="btn-sm bg-err" onclick="deleteUser('${u.username}')">حذف</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
         }
     }
 
-    function closeModal() {
-        document.getElementById("invoiceModal").style.display = "none";
+    async function viewInvoices(username) {
+        currentViewingUser = username;
+        document.getElementById("invoiceModal").style.display = "block";
+        document.getElementById("modalTitle").textContent = `فواتير: ${username}`;
+        const list = document.getElementById("invoiceListBody");
+        list.innerHTML = "جاري التحميل...";
+
+        const { data: invs } = await sb.from('app_invoices').select('*').eq('username', username).order('created_at', { ascending: false });
+        
+        list.innerHTML = "";
+        invs.forEach(inv => {
+            list.innerHTML += `
+                <tr>
+                    <td>#${inv.id}</td>
+                    <td>${new Date(inv.created_at).toLocaleDateString('ar-EG')}</td>
+                    <td style="color:var(--ok)">${inv.total}</td>
+                    <td><span class="badge bg-ok">${inv.status}</span></td>
+                </tr>`;
+        });
     }
 
-    // --- تعديل بسيط في دالة loadUsers ليصبح الاسم قابلاً للضغط ---
-    // ابحث عن السطر الذي يعرض اسم المستخدم (u.username) في دالة loadUsers واستبدله بهذا:
-    /*
-    <td>
-        <b style="cursor:pointer; color:var(--blue); text-decoration:underline" 
-           onclick="viewUserInvoices('${u.username}')">${u.username}</b>
-        <br><small style="color:var(--mut)">${u.is_admin ? 'أدمن' : 'مستخدم'}</small>
-    </td>
-    */
-</script>
+    // وظيفة تصدير PDF للمستخدم المفتوح (المطلوب تصدير ملف PDF)
+    document.getElementById("exportPdfBtn").onclick = () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`User Report: ${currentViewingUser}`, 14, 15);
+        doc.autoTable({ html: '#userInvoicesTable', theme: 'grid', headStyles: { fillColor: [31, 98, 255] } });
+        doc.save(`Invoices_${currentViewingUser}.pdf`);
+    };
+
+    function closeModal() { document.getElementById("invoiceModal").style.display = "none"; }
+    function logout() { localStorage.clear(); location.href = "index.html"; }
+
+    async function resetDevice(u) {
+        await sb.from('app_users').update({ device_id: null }).eq('username', u);
+        alert("تم مسح بيانات الجهاز لـ " + u);
+    }
+
+    refreshData();
+  </script>
+</body>
+</html>
