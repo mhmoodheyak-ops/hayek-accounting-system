@@ -7,165 +7,205 @@
 
   <link rel="stylesheet" href="style.css?v=1" />
 
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Config (SUPABASE_URL / SUPABASE_ANON_KEY) -->
+  <script src="config.js?v=1"></script>
+
+  <!-- Auth -->
+  <script src="auth.js?v=1"></script>
+
+  <!-- Optional font helper -->
+  <script src="amiri-font.js?v=1"></script>
+
   <style>
+    /* صفحة تسجيل دخول داكنة مرتبة */
     body{
-      margin:0; min-height:100vh;
-      font-family: system-ui, -apple-system, Segoe UI, Arial;
-      background: radial-gradient(1000px 600px at 20% 10%, rgba(0,255,170,.10), transparent 60%),
-                  radial-gradient(1000px 600px at 80% 30%, rgba(80,120,255,.12), transparent 60%),
-                  linear-gradient(180deg, #061a22, #071f2b);
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(1200px 600px at 70% 20%, rgba(32,92,110,.55), transparent 60%),
+                  radial-gradient(1200px 700px at 20% 80%, rgba(12,40,60,.75), transparent 55%),
+                  linear-gradient(180deg, #071521, #06131e);
       color:#eaf4ff;
-      display:flex; align-items:center; justify-content:center;
-      padding:20px;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial;
     }
+
     .card{
-      width:min(520px, 96vw);
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.10);
+      width:min(560px, 92vw);
       border-radius: 22px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 20px 70px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
       padding: 22px;
-      backdrop-filter: blur(12px);
     }
     .top{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom: 14px;
     }
-    .title{ font-size: 24px; font-weight: 800; margin:0; }
-    .sub{ margin:0; opacity:.85; font-size: 13px; }
-    .device{
-      font-size: 12px;
-      opacity:.9;
-      padding: 6px 10px;
+    .brand{
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size: 18px;
+    }
+    .sub{
+      opacity:.85;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .pill{
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.14);
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      white-space: nowrap;
+      padding: 8px 12px;
+      font-size: 12px;
+      color:#cfe6ff;
+      white-space:nowrap;
     }
-    label{ display:block; margin:12px 0 6px; opacity:.9; font-size: 13px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    label{
+      display:block;
+      font-size: 13px;
+      opacity:.9;
+      margin-bottom: 6px;
+    }
     input{
       width:100%;
+      box-sizing:border-box;
       padding: 14px 14px;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
       color:#fff;
-      outline: none;
-      font-size: 16px;
-    }
-    input:focus{ border-color: rgba(80,120,255,.55); box-shadow: 0 0 0 3px rgba(80,120,255,.18); }
-    .row{ display:flex; gap:10px; margin-top: 14px; align-items:center; flex-wrap: wrap; }
-    .btn{
-      border:0;
-      border-radius: 14px;
-      padding: 12px 14px;
+      outline:none;
       font-size: 15px;
+    }
+    input::placeholder{ color: rgba(255,255,255,.45); }
+
+    .rowBtns{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    button{
+      border:0;
       cursor:pointer;
-    }
-    .btn.primary{
-      background: linear-gradient(90deg, #1d5cff, #2b7bff);
-      color:#fff;
-      flex: 1 1 200px;
+      border-radius: 14px;
+      padding: 13px 16px;
       font-weight: 700;
+      font-size: 14px;
     }
-    .btn.ghost{
-      background: rgba(255,255,255,.06);
+    .primary{
+      flex:1;
+      min-width: 180px;
+      background: linear-gradient(180deg, #2b6cff, #1f56d9);
       color:#fff;
-      border: 1px solid rgba(255,255,255,.14);
-      flex: 0 0 auto;
+    }
+    .ghost{
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      color:#d9ecff;
     }
     .msg{
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.20);
+      margin-top: 10px;
       font-size: 13px;
+      color: #ffb9b9;
       min-height: 18px;
     }
-    .ok{ color:#7dffb7; }
-    .bad{ color:#ffb1b1; }
-    .foot{
-      margin-top: 10px;
-      opacity:.7;
-      font-size: 12px;
+    .footer{
+      margin-top: 12px;
       text-align:center;
+      opacity:.55;
+      font-size: 12px;
     }
   </style>
-
-  <script src="config.js?v=1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth.js?v=1"></script>
 </head>
 
 <body>
-  <div class="card">
+  <div class="card" id="card">
     <div class="top">
       <div>
-        <h1 class="title">تسجيل الدخول</h1>
-        <p class="sub">مرة واحدة فقط — بعدها يدخل تلقائياً على نفس الجهاز.</p>
+        <div class="brand">تسجيل الدخول</div>
+        <div class="sub">مرة واحدة فقط — بعدها يدخل تلقائيًا على نفس الجهاز.</div>
       </div>
-      <div class="device" id="deviceTag">Device: …</div>
+      <div class="pill" id="devPill">Device: —</div>
     </div>
 
-    <label>اسم المستخدم</label>
-    <input id="u" autocomplete="username" placeholder="مثال: admin" />
+    <div class="grid">
+      <div>
+        <label>اسم المستخدم</label>
+        <input id="username" placeholder="مثال: ابو علي" autocomplete="username" />
+      </div>
+      <div>
+        <label>كلمة السر</label>
+        <input id="password" type="password" placeholder="••••••" autocomplete="current-password" />
+      </div>
+    </div>
 
-    <label>كلمة السر</label>
-    <input id="p" type="password" autocomplete="current-password" placeholder="••••••" />
-
-    <div class="row">
-      <button class="btn ghost" id="resetBtn" type="button">مسح بيانات الجهاز</button>
-      <button class="btn primary" id="loginBtn" type="button">تسجيل دخول</button>
+    <div class="rowBtns">
+      <button class="primary" id="btnLogin">تسجيل دخول</button>
+      <button class="ghost" id="btnReset">مسح بيانات الجهاز</button>
     </div>
 
     <div class="msg" id="msg"></div>
-    <div class="foot">HAYEK SPOT</div>
+    <div class="footer">HAYEK SPOT</div>
   </div>
 
   <script>
-    (function(){
-      if (!window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH) {
-        alert("تعذر تحميل نظام الدخول. تأكد أن auth.js موجود بنفس المجلد.");
+    const $ = (id) => document.getElementById(id);
+
+    function goAfterLogin(user){
+      if (user?.isAdmin) {
+        window.location.href = "admin.html?v=" + Date.now();
+      } else {
+        // ✅ واجهة المستخدم عندك هي invoice.html
+        window.location.href = "invoice.html?v=" + Date.now();
+      }
+    }
+
+    // إذا auth جاهز وجلسة موجودة => دخول تلقائي
+    if (window.HAYEK_AUTH && window.__HAYEK_AUTH_LOADED__ && window.HAYEK_AUTH.isAuthed()){
+      goAfterLogin(window.HAYEK_AUTH.getUser());
+    }
+
+    // عرض Device
+    try{
+      const did = window.HAYEK_AUTH?.getOrCreateDeviceId?.() || "—";
+      $("devPill").textContent = "Device: " + String(did).slice(-8);
+    }catch{}
+
+    $("btnLogin").onclick = async () => {
+      $("msg").textContent = "";
+      const u = $("username").value;
+      const p = $("password").value;
+
+      const res = await window.HAYEK_AUTH.login(u, p);
+      if (!res.ok){
+        $("msg").textContent = res.msg || "فشل تسجيل الدخول.";
         return;
       }
+      goAfterLogin(res.user);
+    };
 
-      const msg = document.getElementById("msg");
-      const u = document.getElementById("u");
-      const p = document.getElementById("p");
-      const deviceTag = document.getElementById("deviceTag");
-
-      const devId = window.HAYEK_AUTH.getOrCreateDeviceId();
-      deviceTag.textContent = "Device: " + devId.slice(-8);
-
-      if (window.HAYEK_AUTH.isAuthed()) {
-        const s = window.HAYEK_AUTH.getUser() || {};
-        const target = (s.role === "admin") ? "admin.html" : "user.html";
-        window.location.href = target + "?v=" + Date.now();
-        return;
-      }
-
-      function setMsg(text, ok){
-        msg.textContent = text || "";
-        msg.className = "msg " + (ok ? "ok" : "bad");
-      }
-
-      document.getElementById("resetBtn").onclick = () => {
-        window.HAYEK_AUTH.resetDevice();
-        setMsg("تم مسح بيانات الجهاز. أعد تسجيل الدخول.", true);
-      };
-
-      document.getElementById("loginBtn").onclick = async () => {
-        setMsg("جارٍ التحقق…", true);
-        const res = await window.HAYEK_AUTH.login(u.value, p.value);
-        if (!res.ok) { setMsg(res.message || "فشل تسجيل الدخول.", false); return; }
-
-        setMsg("تم تسجيل الدخول… يتم التحويل.", true);
-        const s = (res.session || window.HAYEK_AUTH.getUser() || {});
-        const target = (s.role === "admin") ? "admin.html" : "user.html";
-        window.location.href = target + "?v=" + Date.now();
-      };
-    })();
+    $("btnReset").onclick = () => {
+      // مسح جلسة الدخول + تثبيت الجهاز (لإعادة الربط إذا لزم)
+      localStorage.removeItem("HAYEK_AUTH_SESSION_V1");
+      localStorage.removeItem("HAYEK_AUTH_DEVICE_ID_V1");
+      $("msg").textContent = "تم مسح بيانات الجهاز. أعد تحميل الصفحة.";
+    };
   </script>
 </body>
 </html>
