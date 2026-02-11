@@ -77,109 +77,12 @@
     </div>
   </div>
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <span class="dot" id="onlineDot"></span>
-        <div>
-          <div style="font-weight:900;font-size:18px">لوحة الأدمن — HAYEK SPOT</div>
-          <div class="mut" id="adminInfo">…</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <button class="btn ghost" id="refreshBtn">تحديث</button>
-        <button class="btn danger" id="logoutBtn">خروج</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="head">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <label class="mut">الفترة</label>
-          <select id="range" class="select">
-            <option value="today">اليوم</option>
-            <option value="7d" selected>آخر 7 أيام</option>
-            <option value="30d">آخر 30 يوم</option>
-            <option value="all">الكل</option>
-          </select>
-          <input id="searchUser" class="input" placeholder="بحث باسم المستخدم…">
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="btn primary" id="addUserBtn">إضافة مستخدم</button>
-        </div>
-      </div>
-      <div class="body">
-        <div class="row">
-          <div class="col">
-            <div class="stat">
-              <div class="k">إجمالي الفواتير (حسب الفترة)</div>
-              <div class="v" id="stInvoices">—</div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="stat">
-              <div class="k">إجمالي المستخدمين</div>
-              <div class="v" id="stUsers">—</div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="stat">
-              <div class="k">نشطين تقريبًا (آخر 24 ساعة)</div>
-              <div class="v" id="stActive">—</div>
-            </div>
-          </div>
-        </div>
-        <div class="hr"></div>
-        <div style="font-weight:900;margin-bottom:8px">إدارة المستخدمين ونشاطهم</div>
-        <div class="mut">ملاحظة: الأرقام تتحدث تلقائيًا حسب الفترة التي اخترتها.</div>
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>المستخدم</th>
-                <th>الدور</th>
-                <th>الحالة</th>
-                <th>الفواتير</th>
-                <th>آخر نشاط</th>
-                <th>device_id</th>
-                <th>إجراءات</th>
-              </tr>
-            </thead>
-            <tbody id="usersTbody"></tbody>
-          </table>
-        </div>
-        <div class="foot">HAYEK SPOT — Admin</div>
-      </div>
-    </div>
+    <!-- ... (نفس الكود اللي عندك للـ topbar والـ card والجدول) ... -->
   </div>
 
   <!-- Modal: Add User -->
   <div id="addModalBack" class="modalBack">
-    <div class="modal">
-      <div class="modalHead">
-        <div style="font-weight:900">إضافة مستخدم</div>
-        <button class="btn" id="closeAddModal">إغلاق</button>
-      </div>
-      <div class="modalBody">
-        <div class="grid2">
-          <div>
-            <div class="mut">اسم المستخدم</div>
-            <input id="newUsername" class="input" placeholder="مثال: ahmad" style="width:100%;margin-top:6px">
-          </div>
-          <div>
-            <div class="mut">كلمة السر</div>
-            <input id="newPass" class="input" placeholder="مثال: 1234" style="width:100%;margin-top:6px">
-          </div>
-        </div>
-        <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <label class="mut" style="display:flex;align-items:center;gap:8px">
-            <input type="checkbox" id="newIsAdmin"> جعله أدمن
-          </label>
-        </div>
-        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn primary" id="saveUserBtn">حفظ</button>
-          <div class="mut" id="addUserMsg"></div>
-        </div>
-      </div>
-    </div>
+    <!-- ... (نفس الكود) ... -->
   </div>
 
   <!-- Modal: User Invoices -->
