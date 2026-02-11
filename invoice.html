@@ -334,51 +334,52 @@
           </tr>
         `).join("");
 
-        return `
-          <div style="direction:rtl;font-family:Arial,system-ui; background:#fff; color:#111; padding:18px;">
-            <div style="border:2px solid #111;border-radius:14px;padding:16px;">
-              <div style="text-align:center;font-weight:800;font-size:22px;margin-bottom:6px;">شركة الحايك</div>
-              <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
+       op:1px solid #111;margin:10px 0"></div>
+return `
+  <div style="direction:rtl;font-family:Arial,system-ui; background:#fff; color:#111; padding:18px;">
+    <div style="border:2px solid #111;border-radius:14px;padding:16px;">
+      <div style="text-align:center;font-weight:800;font-size:22px;margin-bottom:6px;">شركة الحايك</div>
+      <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
 
-              <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
-                <div>اسم الزبون: <b>${escapeHtml(cust)}</b></div>
-                <div>اسم المستخدم: <b>${escapeHtml(session.username||"—")}</b></div>
-                <div>رقم: <b>${invId}</b></div>
-                <div>التاريخ: <b>${new Date().toLocaleString()}</b></div>
-              </div>
+      <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
+        <div>اسم الزبون: <b>${escapeHtml(cust)}</b></div>
+        <div>اسم المستخدم: <b>${escapeHtml(session.username||"—")}</b></div>
+        <div>رقم: <b>${invId}</b></div>
+        <div>التاريخ: <b>${new Date().toLocaleString()}</b></div>
+      </div>
 
-              <div style="border-top:1px solid #111;margin:10px 0"></div>
+      <div style="border-top:2px solid #111;margin:10px 0"></div>
 
-              <div style="font-weight:800;margin:6px 0 8px;">سجل العمليات</div>
+      <div style="font-weight:800;margin:6px 0 8px;">سجل العمليات</div>
 
-              <table style="width:100%;border-collapse:collapse;font-size:13px">
-                <thead>
-                  <tr>
-                    <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
-                    <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
-                    <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
-                    <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rowsHtml}
-                </tbody>
-              </table>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;background:#fff">
+        <thead>
+          <tr>
+            <th style="border:2px solid #111;padding:9px;text-align:center;background:#f2f2f2;color:#111">الوقت</th>
+            <th style="border:2px solid #111;padding:9px;text-align:center;background:#f2f2f2;color:#111">البيان</th>
+            <th style="border:2px solid #111;padding:9px;text-align:center;background:#f2f2f2;color:#111">العملية</th>
+            <th style="border:2px solid #111;padding:9px;text-align:center;background:#f2f2f2;color:#111">النتيجة</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml.replaceAll("<td", "<td style='border:1.5px solid #111;padding:8px;background:#fff;color:#111;font-weight:700;text-align:center' ")}
+        </tbody>
+      </table>
 
-              <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:800">
-                <span>إجمالي الكشف:</span>
-                <span>${state.total}</span>
-              </div>
+      <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
+        <span>إجمالي الكشف:</span>
+        <span>${state.total}</span>
+      </div>
 
-              <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
-                تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-                شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية<br/>
-                <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }
+      <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
+        تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
+        شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية<br/>
+        <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
+      </div>
+    </div>
+  </div>
+`;
+ }
 
       async function buildPdfBlob(){
         if(!state.rows.length){ alert("لا يوجد عمليات لتصديرها"); return null; }
@@ -462,3 +463,4 @@
   </script>
 </body>
 </html>
+
