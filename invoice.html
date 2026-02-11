@@ -1,154 +1,248 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HAYEK SPOT — الحاسبة</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>HAYEK SPOT — الحاسبة</title>
 
-<style>
-:root{
-  --bg:#0b1f2a;
-  --card:#122b3a;
-  --accent:#1e90ff;
-  --muted:#9fb6c6;
-}
-*{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma}
-body{
-  margin:0;min-height:100vh;
-  background:linear-gradient(135deg,#0b1f2a,#0f3a3f);
-  color:#fff;
-}
-.overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.75);
-  display:flex;align-items:center;justify-content:center;
-  z-index:999;
-}
-.overlay.hidden{display:none}
-.overlay .box{
-  background:#111;padding:30px;border-radius:16px;
-  text-align:center;max-width:320px
-}
-.app{
-  max-width:900px;margin:40px auto;padding:20px
-}
-.card{
-  background:var(--card);
-  border-radius:18px;padding:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.35)
-}
-h1{margin:0 0 10px}
-label{font-size:13px;color:var(--muted)}
-input{
-  width:100%;padding:14px;border-radius:14px;
-  border:none;margin:6px 0 16px;font-size:16px
-}
-input[readonly]{background:#0e2431;color:#7fa}
-.table{
-  width:100%;border-collapse:collapse;margin-top:10px
-}
-.table th,.table td{
-  border-bottom:1px dashed #355;
-  padding:8px;font-size:14px
-}
-.total{
-  margin-top:12px;
-  border:2px dashed #355;
-  padding:12px;border-radius:12px;
-  font-size:18px
-}
-.calc{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;margin-top:10px
-}
-.calc button{
-  padding:18px;font-size:18px;
-  border-radius:14px;border:none;
-  background:#17394b;color:#fff
-}
-.calc button.op{background:#1f4f6b}
-.calc button.eq{background:#1e90ff}
-.actions{
-  display:flex;gap:10px;margin-top:16px
-}
-.actions button{
-  flex:1;padding:14px;border-radius:14px;
-  border:none;font-size:15px
-}
-.pdf{background:#1e90ff;color:#fff}
-.wa{background:#25d366;color:#000}
-.footer{
-  text-align:center;margin-top:10px;
-  font-size:12px;color:#8aa
-}
-</style>
+  <style>
+    :root{
+      --bg:#0b1f2a;
+      --card:#122b3a;
+      --accent:#1e90ff;
+      --muted:#9fb6c6;
+      --btn:#17394b;
+      --btn2:#1f4f6b;
+      --ok:#25d366;
+    }
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
+    body{
+      margin:0;min-height:100vh;
+      background:linear-gradient(135deg,#0b1f2a,#0f3a3f);
+      color:#fff;
+    }
+
+    /* Login Lock Overlay */
+    .overlay{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.78);
+      display:flex;align-items:center;justify-content:center;
+      z-index:9999;
+      padding:18px;
+    }
+    .overlay.hidden{display:none}
+    .overlay .box{
+      width:min(420px,100%);
+      background:#101820;
+      border:1px solid rgba(255,255,255,.08);
+      padding:22px;border-radius:18px;
+      text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    .overlay h3{margin:0 0 8px}
+    .overlay p{margin:0 0 14px;color:#c6d6e2;font-size:14px;line-height:1.6}
+    .overlay .btn{
+      width:100%;padding:14px;border-radius:14px;border:none;
+      background:var(--accent);color:#fff;font-size:15px;cursor:pointer;
+    }
+
+    .app{max-width:900px;margin:34px auto;padding:18px}
+    .card{
+      background:rgba(18,43,58,.92);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;padding:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.35);
+      backdrop-filter: blur(6px);
+    }
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:10px;margin-bottom:8px;
+    }
+    .brand{display:flex;flex-direction:column;gap:4px}
+    h1{margin:0;font-size:20px}
+    .sub{font-size:12px;color:var(--muted)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:12px;color:#d7e6f2;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:#49e39a;
+      box-shadow:0 0 0 6px rgba(73,227,154,.12);
+    }
+
+    label{font-size:13px;color:var(--muted)}
+    input{
+      width:100%;padding:14px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(10,24,33,.55);
+      color:#fff;
+      margin:6px 0 14px;font-size:16px;
+      outline:none;
+    }
+    input::placeholder{color:rgba(255,255,255,.35)}
+    input[readonly]{background:rgba(10,24,33,.35);color:#cfe6ff}
+
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:700px){.grid2{grid-template-columns:1fr}}
+
+    .calc{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;margin-top:10px
+    }
+    .calc button{
+      padding:18px;font-size:18px;
+      border-radius:14px;border:none;
+      background:var(--btn);color:#fff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .calc button:active{transform:scale(.98)}
+    .calc button.op{background:var(--btn2)}
+    .calc button.eq{background:var(--accent)}
+    .calc button.danger{background:#5b2230}
+
+    .tableWrap{
+      margin-top:14px;
+      border:1px dashed rgba(160,200,220,.25);
+      border-radius:14px;
+      overflow:hidden;
+      background:rgba(0,0,0,.10);
+    }
+    table{width:100%;border-collapse:collapse}
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px dashed rgba(160,200,220,.20);
+      font-size:14px;
+      text-align:right;
+      vertical-align:top;
+    }
+    th{color:#eaf6ff;background:rgba(255,255,255,.04);font-size:13px}
+    tr:last-child td{border-bottom:none}
+
+    .total{
+      margin-top:12px;
+      border:2px dashed rgba(160,200,220,.25);
+      padding:12px;border-radius:14px;
+      font-size:18px;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:10px;
+    }
+    .total strong{font-size:20px}
+
+    .actions{display:flex;gap:10px;margin-top:14px}
+    .actions button{
+      flex:1;padding:14px;border-radius:14px;
+      border:none;font-size:15px;cursor:pointer;
+      user-select:none;
+    }
+    .pdf{background:var(--accent);color:#fff}
+    .wa{background:var(--ok);color:#05210f}
+    .ghost{background:rgba(255,255,255,.06);color:#dbeaf7;border:1px solid rgba(255,255,255,.10)}
+    .footer{
+      text-align:center;margin-top:10px;
+      font-size:12px;color:#8aa
+    }
+  </style>
+
+  <!-- Config + Supabase + Auth -->
+  <script src="config.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js?v=1"></script>
+
+  <!-- PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
 
-<!-- حماية مؤقتة (نفعّلها بالخطوة 2) -->
+<!-- قفل الشاشة للغرباء -->
 <div id="lock" class="overlay hidden">
   <div class="box">
     <h3>تسجيل الدخول مطلوب</h3>
-    <p>غير مسموح تصفح الصفحة</p>
+    <p>غير مسموح تصفح الصفحة قبل تسجيل الدخول.</p>
+    <button id="goLogin" class="btn">اذهب لتسجيل الدخول</button>
   </div>
 </div>
 
 <div class="app">
   <div class="card">
-    <h1>حاسبة الحايك</h1>
+    <div class="topbar">
+      <div class="brand">
+        <h1>حاسبة الحايك</h1>
+        <div class="sub">PDF + واتساب — مع حفظ أوفلاين</div>
+      </div>
+      <div class="pill" title="الحالة">
+        <span id="onlineDot" class="dot"></span>
+        <span id="userPill">المستخدم: —</span>
+      </div>
+    </div>
 
-    <!-- اسم الزبون -->
-    <label>اسم الزبون (إجباري)</label>
-    <input id="customer" placeholder="مثال: أبو علي">
+    <div class="grid2">
+      <!-- اسم الزبون -->
+      <div>
+        <label>اسم الزبون (إجباري)</label>
+        <input id="customer" placeholder="مثال: أبو علي" autocomplete="off">
+      </div>
 
-    <!-- نص اختياري -->
-    <label>نص السطر (اختياري)</label>
-    <input id="textNote" placeholder="مثال: محارم">
+      <!-- نص اختياري -->
+      <div>
+        <label>نص السطر (اختياري)</label>
+        <input id="textNote" placeholder="مثال: محارم" autocomplete="off">
+      </div>
+    </div>
 
     <!-- العملية -->
-    <label>العملية الحسابية</label>
+    <label>العملية الحسابية (من الأزرار فقط)</label>
     <input id="expr" readonly placeholder="5+5">
 
     <!-- لوحة الأرقام -->
-    <div class="calc">
-      <button onclick="add('7')">7</button>
-      <button onclick="add('8')">8</button>
-      <button onclick="add('9')">9</button>
-      <button class="op" onclick="add('/')">÷</button>
+    <div class="calc" id="pad">
+      <button class="k" data-k="7">7</button>
+      <button class="k" data-k="8">8</button>
+      <button class="k" data-k="9">9</button>
+      <button class="k op" data-k="÷">÷</button>
 
-      <button onclick="add('4')">4</button>
-      <button onclick="add('5')">5</button>
-      <button onclick="add('6')">6</button>
-      <button class="op" onclick="add('*')">×</button>
+      <button class="k" data-k="4">4</button>
+      <button class="k" data-k="5">5</button>
+      <button class="k" data-k="6">6</button>
+      <button class="k op" data-k="×">×</button>
 
-      <button onclick="add('1')">1</button>
-      <button onclick="add('2')">2</button>
-      <button onclick="add('3')">3</button>
-      <button class="op" onclick="add('-')">−</button>
+      <button class="k" data-k="1">1</button>
+      <button class="k" data-k="2">2</button>
+      <button class="k" data-k="3">3</button>
+      <button class="k op" data-k="-">−</button>
 
-      <button onclick="clearExpr()">C</button>
-      <button onclick="add('0')">0</button>
-      <button class="eq" onclick="commit()">=</button>
-      <button class="op" onclick="add('+')">+</button>
+      <button class="k danger" data-k="C">C</button>
+      <button class="k" data-k="0">0</button>
+      <button class="k eq" data-k="=">=</button>
+      <button class="k op" data-k="+">+</button>
     </div>
 
     <!-- الجدول -->
-    <table class="table">
-      <thead>
-        <tr><th>البيان</th><th>العملية</th><th>النتيجة</th></tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr><th>البيان</th><th>العملية</th><th>النتيجة</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
 
     <div class="total">
-      إجمالي الكشف: <strong id="sum">0</strong>
+      <span>إجمالي الكشف:</span>
+      <strong id="sum">0</strong>
     </div>
 
     <div class="actions">
-      <button class="pdf" onclick="exportPDF()">تصدير PDF</button>
-      <button class="wa" onclick="sendWA()">إرسال واتساب</button>
+      <button class="ghost" id="clearAll">مسح السجل</button>
+      <button class="pdf" id="pdfBtn">تصدير PDF</button>
+      <button class="wa" id="waBtn">إرسال واتساب</button>
     </div>
 
     <div class="footer">HAYEK SPOT</div>
@@ -156,36 +250,393 @@ input[readonly]{background:#0e2431;color:#7fa}
 </div>
 
 <script>
-let total=0;
+(() => {
+  // ===== Helpers =====
+  const $ = (id) => document.getElementById(id);
+  const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_V2";
+  const LS_QUEUE   = "HAYEK_USER_UPLOAD_QUEUE_V2";
 
-function add(v){
-  document.getElementById('expr').value+=v;
-}
-function clearExpr(){
-  document.getElementById('expr').value='';
-}
-function commit(){
-  const name=document.getElementById('customer').value.trim();
-  if(!name){alert('أدخل اسم الزبون');return;}
-  const expr=document.getElementById('expr').value;
-  if(!expr)return;
-  let res;
-  try{res=Function('return '+expr)()}catch(e){return}
-  const note=document.getElementById('textNote').value;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td>${note||'—'}</td><td>${expr}</td><td>${res}</td>`;
-  document.getElementById('rows').appendChild(tr);
-  total+=res;
-  document.getElementById('sum').textContent=total;
-  document.getElementById('expr').value='';
-  document.getElementById('textNote').value='';
-}
-function exportPDF(){
-  alert('PDF — سنفعّلها بالخطوة التالية');
-}
-function sendWA(){
-  alert('واتساب — سنفعّلها بالخطوة التالية');
-}
+  const lock = $("lock");
+  const goLogin = $("goLogin");
+
+  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
+  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+  function nowIso(){ return new Date().toISOString(); }
+  function uuid(){
+    return (crypto?.randomUUID?.() || ("id_" + Math.random().toString(16).slice(2) + Date.now()));
+  }
+  function toNumber(x){
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function vibrateTiny(){ try { if (navigator.vibrate) navigator.vibrate(18); } catch {} }
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  // ===== AUTH GATE =====
+  function hardLock(){
+    lock.classList.remove("hidden");
+    goLogin.onclick = () => (window.location.href = "index.html?v=" + Date.now());
+  }
+
+  if (!window.HAYEK_AUTH || !window.HAYEK_AUTH.isAuthed || !window.HAYEK_AUTH.isAuthed()) {
+    hardLock();
+    return;
+  }
+
+  const session = window.HAYEK_AUTH.getUser ? (window.HAYEK_AUTH.getUser() || {}) : {};
+  const username = session.username || "user";
+  const deviceId = session.deviceId || (window.HAYEK_AUTH.getOrCreateDeviceId ? window.HAYEK_AUTH.getOrCreateDeviceId() : "");
+
+  // ===== Online indicator =====
+  const onlineDot = $("onlineDot");
+  function refreshOnline(){
+    const on = navigator.onLine;
+    onlineDot.style.background = on ? "#49e39a" : "#ffb1b1";
+    onlineDot.style.boxShadow  = on ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
+  }
+  window.addEventListener("online", () => { refreshOnline(); tryUploadQueue(); });
+  window.addEventListener("offline", refreshOnline);
+  refreshOnline();
+
+  // ===== State =====
+  const state = {
+    invoice: null,
+    expr: ""
+  };
+
+  // ===== UI =====
+  $("userPill").textContent = "المستخدم: " + username;
+
+  const customer = $("customer");
+  const textNote = $("textNote");
+  const expr = $("expr");
+  const rows = $("rows");
+  const sum = $("sum");
+
+  function setExpr(v){
+    state.expr = v;
+    expr.value = v;
+  }
+
+  function loadCurrent(){
+    const cur = jparse(localStorage.getItem(LS_CURRENT), null);
+    if (cur && cur.id && cur.username === username && !cur.closed_at) {
+      state.invoice = cur;
+      customer.value = cur.customer_name || "";
+    }
+  }
+  loadCurrent();
+
+  function ensureInvoice(){
+    const cust = (customer.value || "").trim();
+    if (!cust) return null;
+
+    if (!state.invoice || state.invoice.closed_at) {
+      state.invoice = {
+        id: uuid(),
+        username,
+        device_id: deviceId || "",
+        customer_name: cust,
+        created_at: nowIso(),
+        status: "open",
+        total: 0,
+        items: []
+      };
+    } else {
+      state.invoice.customer_name = cust;
+    }
+    jset(LS_CURRENT, state.invoice);
+    return state.invoice;
+  }
+
+  customer.addEventListener("input", () => {
+    const v = (customer.value || "").trim();
+    if (v) ensureInvoice();
+  });
+
+  function appendToken(tok){
+    if (tok === "C") { setExpr(""); return; }
+    if (tok === "×") tok = "*";
+    if (tok === "÷") tok = "/";
+    if (tok === "−") tok = "-";
+
+    if (tok === "=") { commit(); return; }
+
+    if (!/^[0-9+\-*/().]$/.test(tok)) return;
+    setExpr(state.expr + tok);
+  }
+
+  function safeEval(exprStr){
+    const cleaned = (exprStr || "").replace(/\s+/g,"");
+    if (!cleaned) throw new Error("empty");
+    if (!/^[0-9+\-*/().]+$/.test(cleaned)) throw new Error("badchars");
+    // eslint-disable-next-line no-new-func
+    const val = Function(`"use strict"; return (${cleaned});`)();
+    const n = Number(val);
+    if (!Number.isFinite(n)) throw new Error("nan");
+    return n;
+  }
+
+  function render(){
+    const inv = state.invoice;
+    const items = inv?.items || [];
+    rows.innerHTML = items.map(it => `
+      <tr>
+        <td>${escapeHtml(it.text || "—")}</td>
+        <td>${escapeHtml(it.expr || "")}</td>
+        <td>${escapeHtml(String(it.result ?? ""))}</td>
+      </tr>
+    `).join("");
+
+    const total = inv?.total ?? 0;
+    sum.textContent = String(total);
+  }
+  render();
+
+  function commit(){
+    const inv = ensureInvoice();
+    if (!inv) { alert("أدخل اسم الزبون"); customer.focus(); vibrateTiny(); return; }
+
+    const e = (state.expr || "").trim();
+    if (!e) return;
+
+    let r;
+    try { r = safeEval(e); }
+    catch { vibrateTiny(); return; }
+
+    const t = (textNote.value || "").trim(); // اختياري
+
+    inv.items.push({
+      text: t,
+      expr: e,
+      result: r,
+      at: nowIso()
+    });
+
+    inv.total = inv.items.reduce((a,x)=> a + toNumber(x.result), 0);
+    inv.customer_name = (customer.value || "").trim();
+
+    jset(LS_CURRENT, inv);
+
+    // reset line
+    textNote.value = "";
+    setExpr("");
+    render();
+  }
+
+  $("pad").addEventListener("click", (e) => {
+    const btn = e.target.closest(".k");
+    if (!btn) return;
+    vibrateTiny();
+    appendToken(btn.getAttribute("data-k"));
+  });
+
+  $("clearAll").addEventListener("click", () => {
+    vibrateTiny();
+    // يمسح السجل الحالي فقط (ويبقي اسم الزبون حتى لو بدك تمسحه لاحقاً)
+    if (state.invoice && !state.invoice.closed_at) {
+      state.invoice.items = [];
+      state.invoice.total = 0;
+      jset(LS_CURRENT, state.invoice);
+    }
+    render();
+  });
+
+  // ===== Supabase client =====
+  async function getSupabase(){
+    try{
+      const cfg = window.APP_CONFIG || {};
+      if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
+      if (!window.supabase) return null;
+      return window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    }catch{ return null; }
+  }
+
+  // ===== Upload Queue (silent) =====
+  function getQueue(){ return jparse(localStorage.getItem(LS_QUEUE), []); }
+  function setQueue(q){ jset(LS_QUEUE, q); }
+
+  async function uploadInvoiceSilent(inv){
+    const sb = await getSupabase();
+    if (!sb) return false;
+
+    try{
+      // IMPORTANT: table name = app_invoices
+      const payload = {
+        id: inv.id,
+        username: inv.username,
+        device_id: inv.device_id || "",
+        customer_name: inv.customer_name || "",
+        status: inv.status || "closed",
+        total: inv.total || 0,
+        created_at: inv.created_at,
+        closed_at: inv.closed_at,
+        items: inv.items || []
+      };
+
+      const { error } = await sb.from("app_invoices").insert([payload]);
+      if (error) return false;
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  async function tryUploadQueue(){
+    if (!navigator.onLine) return;
+    const q = getQueue();
+    if (!q.length) return;
+
+    const rest = [];
+    for (const inv of q) {
+      const ok = await uploadInvoiceSilent(inv);
+      if (!ok) rest.push(inv);
+    }
+    setQueue(rest);
+  }
+
+  // ===== Auto-close (silent) on Export/WhatsApp =====
+  async function closeInvoiceSilent(){
+    const inv = ensureInvoice();
+    if (!inv) { alert("أدخل اسم الزبون"); return null; }
+    if (!inv.items || inv.items.length === 0) return null;
+
+    inv.status = "closed";
+    inv.closed_at = nowIso();
+    jset(LS_CURRENT, inv);
+
+    // queue + try upload silently (no user messages)
+    const q = getQueue();
+    q.unshift(inv);
+    setQueue(q);
+    tryUploadQueue();
+
+    // reset for new invoice
+    state.invoice = null;
+    localStorage.removeItem(LS_CURRENT);
+    customer.value = "";
+    textNote.value = "";
+    setExpr("");
+    render();
+
+    return inv;
+  }
+
+  // ===== PDF =====
+  function ensureJsPdfOrAlert(){
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      alert("مكتبة PDF غير محمّلة. تأكد من وجود jsPDF داخل invoice.html");
+      return false;
+    }
+    return true;
+  }
+
+  async function buildPdfBlob(inv){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+    let y = 52;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("HAYEK SPOT", 540, y, { align:"right" });
+
+    y += 24;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(`Customer: ${inv.customer_name || "-"}`, 540, y, { align:"right" }); y += 16;
+    doc.text(`User: ${inv.username || "-"}`, 540, y, { align:"right" }); y += 16;
+    doc.text(`Invoice: ${inv.id}`, 540, y, { align:"right" }); y += 16;
+    doc.text(`Date: ${new Date(inv.closed_at || inv.created_at).toLocaleString()}`, 540, y, { align:"right" }); y += 20;
+
+    // Headers
+    doc.setFont("helvetica","bold");
+    doc.text("Text", 52, y);
+    doc.text("Expr", 270, y);
+    doc.text("Result", 540, y, { align:"right" });
+    y += 10;
+    doc.setLineWidth(0.6);
+    doc.line(52, y, 540, y);
+    y += 18;
+
+    doc.setFont("helvetica","normal");
+
+    for (const it of (inv.items || [])) {
+      if (y > 770) { doc.addPage(); y = 60; }
+      doc.text(String(it.text || "—").slice(0,24), 52, y);
+      doc.text(String(it.expr || "").slice(0,26), 270, y);
+      doc.text(String(it.result ?? ""), 540, y, { align:"right" });
+      y += 18;
+    }
+
+    y += 10;
+    doc.setFont("helvetica","bold");
+    doc.text(`Total: ${inv.total || 0}`, 540, y, { align:"right" });
+
+    return doc.output("blob");
+  }
+
+  async function exportPDF(){
+    if (!ensureJsPdfOrAlert()) return;
+    const inv = await closeInvoiceSilent();
+    if (!inv) return;
+
+    try{
+      const blob = await buildPdfBlob(inv);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `HAYEK_${(inv.customer_name||"invoice").replace(/\s+/g,"_")}_${inv.id.slice(-6)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }catch(e){
+      console.log("PDF error:", e);
+      alert("فشل إنشاء PDF");
+    }
+  }
+
+  async function sendWA(){
+    if (!ensureJsPdfOrAlert()) return;
+    const inv = await closeInvoiceSilent();
+    if (!inv) return;
+
+    const msg =
+      `فاتورة\n` +
+      `الزبون: ${inv.customer_name}\n` +
+      `الإجمالي: ${inv.total}\n` +
+      `رقم: ${inv.id.slice(-6)}`;
+
+    // Mobile share with PDF if available
+    try{
+      const blob = await buildPdfBlob(inv);
+      const file = new File([blob], `HAYEK_${inv.id.slice(-6)}.pdf`, { type: "application/pdf" });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ text: msg, files: [file], title: "فاتورة" });
+        return;
+      }
+    }catch {}
+
+    // Fallback: open WhatsApp text
+    const waUrl = "https://wa.me/?text=" + encodeURIComponent(msg);
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+  }
+
+  $("pdfBtn").addEventListener("click", () => { vibrateTiny(); exportPDF(); });
+  $("waBtn").addEventListener("click", () => { vibrateTiny(); sendWA(); });
+
+  // try queue upload on load
+  tryUploadQueue();
+})();
 </script>
 
 </body>
