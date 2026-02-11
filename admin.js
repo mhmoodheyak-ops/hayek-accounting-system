@@ -1,3 +1,4 @@
+
 /* HAYEK SPOT — Admin (robust) */
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -601,6 +602,6 @@
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
-  // Init - مهم جداً: هذه الدالة اللي كانت ناقصة
+  // Init - هذه الدالة اللي كانت ناقصة وسببت الخطأ
   refreshAll();
 })();
