@@ -1,62 +1,52 @@
-/* service-worker.js */
-const CACHE_NAME = "hayekspot-v1";
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./auth.js",
+/* service-worker.js - HAYEK SPOT offline cache
+   - Caches user page assets so it opens without internet.
+*/
+const CACHE = "hayek-user-v1";
+
+const ASSETS = [
+  "./user.html",
+  "./user.js",
+  "./service-worker.js",
   "./config.js",
-  "./amiri-font.js",
-  "./Amiri-Regular.ttf",
+  "./auth.js",
   "./jspdf.umd.min.js",
-  "./invoice.html",
-  "./admin.html",
-  "./admin.js"
+  "./amiri-font.js",
+  "./style.css",
+  "./"
 ];
 
-// install
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-// activate
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : null))))
-      .then(() => self.clients.claim())
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : null)))).then(() => self.clients.claim())
   );
 });
 
-// fetch (cache-first للواجهة + ملفات ثابتة)
-self.addEventListener("fetch", (e) => {
-  const req = e.request;
-  const url = new URL(req.url);
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
 
-  // فقط نفس الدومين
-  if (url.origin !== location.origin) return;
-
-  e.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(req).then((res) => {
-        // خزّن الملفات الثابتة
-        const isStatic =
-          url.pathname.endsWith(".js") ||
-          url.pathname.endsWith(".css") ||
-          url.pathname.endsWith(".html") ||
-          url.pathname.endsWith(".ttf") ||
-          url.pathname.endsWith(".json");
-
-        if (isStatic) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(()=>{});
-        }
+  // Network-first for html, cache-first for others
+  if (req.headers.get("accept")?.includes("text/html")) {
+    event.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(cache => cache.put(req, copy));
         return res;
-      }).catch(() => caches.match("./index.html"));
-    })
+      }).catch(() => caches.match(req).then(r => r || caches.match("./user.html")))
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+      const copy = res.clone();
+      caches.open(CACHE).then((cache) => cache.put(req, copy));
+      return res;
+    }).catch(() => cached))
   );
 });
