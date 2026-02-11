@@ -1,172 +1,253 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>لوحة الأدمن — HAYEK SPOT</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-  
+  <title>HAYEK SPOT — لوحة الأدمن</title>
+
+  <link rel="stylesheet" href="./style.css?v=1" />
+
   <style>
-    :root{ --bg:#071820; --panel:rgba(255,255,255,.05); --line:rgba(255,255,255,.1); --txt:#eaf4ff; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a; }
-    body{margin:0; background:var(--bg); color:var(--txt); font-family:system-ui; direction:rtl; min-height:100vh}
-    .header{display:flex; justify-content:space-between; padding:15px 25px; border-bottom:1px solid var(--line); background:rgba(0,0,0,0.2)}
-    .container{max-width:1100px; margin:auto; padding:20px}
-    .grid-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:25px}
-    .card{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px; backdrop-filter:blur(10px)}
-    table{width:100%; border-collapse:collapse; margin-top:15px}
-    th{text-align:right; color:#888; font-size:12px; padding:10px; border-bottom:1px solid var(--line)}
-    td{padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:14px}
-    .btn-sm{padding:7px 14px; border-radius:8px; border:none; cursor:pointer; font-size:12px; transition:0.2s}
-    .blue{background:var(--blue); color:#fff}
-    .danger-btn{background:rgba(255,107,107,0.1); color:var(--danger)}
-    .user-click{color:var(--blue); cursor:pointer; font-weight:bold; text-decoration:underline}
-    
-    /* نافذة الفواتير */
-    #invModal{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; padding:20px; backdrop-filter:blur(10px)}
-    .modal-box{background:#0d2129; border:1px solid var(--line); max-width:700px; margin:30px auto; border-radius:24px; padding:25px; max-height:85vh; overflow-y:auto}
-    .badge{padding:4px 8px; border-radius:6px; font-size:11px}
-    .active-tag{background:rgba(73,227,154,0.1); color:var(--ok)}
+    :root{
+      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66;
+    }
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
+    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
+    .wrap{max-width:1200px;margin:18px auto;padding:16px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:10px}
+    .dot{width:12px;height:12px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
+    .btn{border:none;border-radius:14px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+    .btn.primary{background:rgba(31,98,255,.85)}
+    .btn.danger{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
+    .btn.success{background:rgba(73,227,154,.18);border:1px solid rgba(73,227,154,.35)}
+    .btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1;min-width:280px}
+    .stat{padding:14px;border-radius:18px;background:rgba(0,0,0,.16);border:1px solid var(--line)}
+    .stat .v{font-weight:900;font-size:28px;margin-top:6px}
+    .stat .k{color:var(--mut);font-size:13px}
+    .head{padding:14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .body{padding:14px}
+    .select, .input{
+      background:rgba(0,0,0,.18);color:var(--txt);
+      border:1px solid var(--line);border-radius:14px;
+      padding:10px 12px;outline:none
+    }
+    .select{cursor:pointer}
+    .tableWrap{margin-top:12px;overflow:auto;border-radius:16px;border:1px solid var(--line)}
+    table{width:100%;border-collapse:collapse;min-width:980px;background:rgba(0,0,0,.12)}
+    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;white-space:nowrap}
+    th{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);text-align:right}
+    td{color:rgba(255,255,255,.92);text-align:right}
+    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06)}
+    .badge.green{border-color:rgba(73,227,154,.35);background:rgba(73,227,154,.14)}
+    .badge.red{border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.14)}
+    .badge.blue{border-color:rgba(31,98,255,.45);background:rgba(31,98,255,.18)}
+    .badge.amber{border-color:rgba(255,204,102,.45);background:rgba(255,204,102,.14)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
+    .mini{border:none;border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:13px}
+    .mini.red{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
+    .mini.green{background:rgba(73,227,154,.18);border:1px solid rgba(73,227,154,.35)}
+    .mini.blue{background:rgba(31,98,255,.18);border:1px solid rgba(31,98,255,.35)}
+    .mini.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+    .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.35);font-size:12px}
+
+    /* Modal */
+    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.70);display:none;align-items:center;justify-content:center;z-index:9999;padding:14px}
+    .modal{width:min(980px,100%);max-height:85vh;overflow:auto;background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px}
+    .modalHead{padding:14px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+    .modalBody{padding:14px}
+    .mut{color:var(--mut);font-size:13px}
+    .hr{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:820px){ .grid2{grid-template-columns:1fr} table{min-width:860px} }
   </style>
 </head>
+
 <body>
 
-  <div class="header">
-    <div style="display:flex; align-items:center; gap:10px">
-        <span class="badge active-tag">أدمن: متصل</span>
-        <strong id="admName">admin</strong>
+  <!-- قفل -->
+  <div id="lock" class="modalBack" style="display:flex">
+    <div class="modal">
+      <div class="modalHead">
+        <div style="font-weight:900">تسجيل الدخول مطلوب</div>
+        <button class="btn" id="goLogin">الذهاب لتسجيل الدخول</button>
+      </div>
+      <div class="modalBody">
+        <div class="mut">غير مسموح دخول لوحة الأدمن بدون صلاحية.</div>
+      </div>
     </div>
-    <button class="btn-sm danger-btn" onclick="logout()">خروج</button>
   </div>
 
-  <div class="container">
-    <div class="grid-stats">
-        <div class="card" style="text-align:center">
-            <h2 id="uCount">0</h2>
-            <p style="margin:0; color:#888; font-size:13px">المستخدمين</p>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <span class="dot" id="onlineDot"></span>
+        <div>
+          <div style="font-weight:900;font-size:18px">لوحة الأدمن — HAYEK SPOT</div>
+          <div class="mut" id="adminInfo">…</div>
         </div>
-        <div class="card" style="text-align:center">
-            <h2 id="iCount">0</h2>
-            <p style="margin:0; color:#888; font-size:13px">إجمالي الفواتير</p>
-        </div>
-        <div class="card">
-            <select id="timeRange" onchange="init()" style="width:100%; background:#000; color:#fff; border:1px solid var(--line); padding:8px; border-radius:8px">
-                <option value="all">كل الأوقات</option>
-                <option value="7">آخر 7 أيام</option>
-            </select>
-        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn ghost" id="refreshBtn">تحديث</button>
+        <button class="btn danger" id="logoutBtn">خروج</button>
+      </div>
     </div>
 
     <div class="card">
-        <h3 style="margin:0 0 15px">قائمة الأعضاء ونشاطهم</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>المستخدم</th>
-                    <th>الفواتير</th>
-                    <th>آخر ظهور</th>
-                    <th>الحالة</th>
-                    <th>إجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="userRows"></tbody>
-        </table>
-    </div>
-  </div>
+      <div class="head">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label class="mut">الفترة</label>
+          <select id="range" class="select">
+            <option value="today">اليوم</option>
+            <option value="7d" selected>آخر 7 أيام</option>
+            <option value="30d">آخر 30 يوم</option>
+            <option value="all">الكل</option>
+          </select>
 
-  <div id="invModal">
-    <div class="modal-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-            <h3 id="modalUser">فواتير المستخدم</h3>
-            <div>
-                <button class="btn-sm blue" id="pdfBtn">تصدير PDF 📄</button>
-                <button class="btn-sm" style="background:#333; color:#fff" onclick="closeM()">إغلاق</button>
-            </div>
+          <input id="searchUser" class="input" placeholder="بحث باسم المستخدم…">
         </div>
-        <table id="targetTable">
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn primary" id="addUserBtn">إضافة مستخدم</button>
+        </div>
+      </div>
+
+      <div class="body">
+
+        <div class="row">
+          <div class="col">
+            <div class="stat">
+              <div class="k">إجمالي الفواتير (حسب الفترة)</div>
+              <div class="v" id="stInvoices">—</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="stat">
+              <div class="k">إجمالي المستخدمين</div>
+              <div class="v" id="stUsers">—</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="stat">
+              <div class="k">نشطين تقريبًا (آخر 24 ساعة)</div>
+              <div class="v" id="stActive">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div style="font-weight:900;margin-bottom:8px">إدارة المستخدمين ونشاطهم</div>
+        <div class="mut">ملاحظة: الأرقام تتحدث تلقائيًا حسب الفترة التي اخترتها.</div>
+
+        <div class="tableWrap">
+          <table>
             <thead>
-                <tr>
-                    <th>رقم الفاتورة</th>
-                    <th>التاريخ</th>
-                    <th>المبلغ</th>
-                    <th>الحالة</th>
-                </tr>
+              <tr>
+                <th>المستخدم</th>
+                <th>الدور</th>
+                <th>الحالة</th>
+                <th>الفواتير</th>
+                <th>آخر نشاط</th>
+                <th>device_id</th>
+                <th>إجراءات</th>
+              </tr>
             </thead>
-            <tbody id="invRows"></tbody>
-        </table>
+            <tbody id="usersTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="foot">HAYEK SPOT — Admin</div>
+      </div>
     </div>
   </div>
 
-  <script>
-    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-    const sb = supabase.createClient(SB_URL, SB_KEY);
+  <!-- Modal: Add User -->
+  <div id="addModalBack" class="modalBack">
+    <div class="modal">
+      <div class="modalHead">
+        <div style="font-weight:900">إضافة مستخدم</div>
+        <button class="btn" id="closeAddModal">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid2">
+          <div>
+            <div class="mut">اسم المستخدم</div>
+            <input id="newUsername" class="input" placeholder="مثال: ahmad" style="width:100%;margin-top:6px">
+          </div>
+          <div>
+            <div class="mut">كلمة السر</div>
+            <input id="newPass" class="input" placeholder="مثال: 1234" style="width:100%;margin-top:6px">
+          </div>
+        </div>
 
-    let viewingNow = "";
+        <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <label class="mut" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="newIsAdmin"> جعله أدمن
+          </label>
+        </div>
 
-    // حماية الصفحة
-    const sess = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
-    if(sess.role !== "admin") location.href = "index.html";
-    document.getElementById("admName").textContent = sess.username;
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn primary" id="saveUserBtn">حفظ</button>
+          <div class="mut" id="addUserMsg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    async function init() {
-        const { count: uc } = await sb.from('app_users').select('*', { count: 'exact', head: true });
-        const { count: ic } = await sb.from('app_invoices').select('*', { count: 'exact', head: true });
-        document.getElementById("uCount").textContent = uc || 0;
-        document.getElementById("iCount").textContent = ic || 0;
-        
-        loadUsers();
-    }
+  <!-- Modal: User Invoices -->
+  <div id="invModalBack" class="modalBack">
+    <div class="modal">
+      <div class="modalHead">
+        <div>
+          <div style="font-weight:900">فواتير المستخدم</div>
+          <div class="mut" id="invModalTitle">—</div>
+        </div>
+        <button class="btn" id="closeInvModal">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+          <input id="invSearch" class="input" placeholder="بحث (اسم الزبون / رقم / تاريخ)..." style="flex:1;min-width:240px">
+          <button class="btn ghost" id="reloadInvBtn">تحديث</button>
+        </div>
 
-    async function loadUsers() {
-        const body = document.getElementById("userRows");
-        body.innerHTML = "جاري التحميل...";
-        const { data: users } = await sb.from('app_users').select('*').order('last_seen', {ascending:false});
-        
-        body.innerHTML = "";
-        for(const u of users) {
-            const { count: invs } = await sb.from('app_invoices').select('*', { count: 'exact', head: true }).eq('username', u.username);
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><span class="user-click" onclick="showInv('${u.username}')">${u.username}</span></td>
-                <td>${invs || 0}</td>
-                <td>${u.last_seen ? new Date(u.last_seen).toLocaleTimeString('ar-EG') : '---'}</td>
-                <td><span class="badge ${u.blocked ? 'danger-btn' : 'active-tag'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
-                <td><button class="btn-sm" onclick="resetD('${u.username}')">مسح الجهاز</button></td>
-            `;
-            body.appendChild(tr);
-        }
-    }
+        <div class="tableWrap" style="margin-top:12px">
+          <table>
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>الزبون</th>
+                <th>الإجمالي</th>
+                <th>رقم/معرّف</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="invTbody"></tbody>
+          </table>
+        </div>
 
-    async function showInv(user) {
-        viewingNow = user;
-        document.getElementById("invModal").style.display = "block";
-        document.getElementById("modalUser").textContent = `فواتير: ${user}`;
-        const list = document.getElementById("invRows");
-        list.innerHTML = "تحميل...";
+        <div class="mut" style="margin-top:10px">
+          * تنزيل PDF يعمل إذا كانت بيانات الفاتورة محفوظة (rows/items) داخل جدول الفواتير.
+        </div>
+      </div>
+    </div>
+  </div>
 
-        const { data: invs } = await sb.from('app_invoices').select('*').eq('username', user).order('created_at', {ascending:false});
-        list.innerHTML = "";
-        invs.forEach(i => {
-            list.innerHTML += `<tr><td>#${i.id}</td><td>${new Date(i.created_at).toLocaleDateString()}</td><td>${i.total}</td><td>مغلقة</td></tr>`;
-        });
-    }
+  <!-- libs -->
+  <script src="./config.js?v=1"></script>
+  <script src="./auth.js?v=1"></script>
 
-    document.getElementById("pdfBtn").onclick = () => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`Report: ${viewingNow}`, 14, 15);
-        doc.autoTable({ html: '#targetTable', margin: { top: 25 } });
-        doc.save(`Invoices_${viewingNow}.pdf`);
-    };
+  <!-- ✅ PDF عربي (صورة) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-    function closeM() { document.getElementById("invModal").style.display="none"; }
-    function logout() { localStorage.clear(); location.href="index.html"; }
-    async function resetD(u) { await sb.from('app_users').update({device_id: null}).eq('username', u); alert("تم المسح"); }
+  <!-- Supabase: إذا عندك ملف محلي supabase.js خليها كما هي -->
+  <script src="./supabase.js?v=1"></script>
 
-    init();
-  </script>
+  <script src="./admin.js?v=1"></script>
 </body>
 </html>
