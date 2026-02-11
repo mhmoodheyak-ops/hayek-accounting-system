@@ -78,13 +78,12 @@
 
         window.HAYEK_AUTH.setSession(session);
 
-        // تحديث last_seen داخل try/catch منفصل (عشان ما يوقف الدخول لو فشل)
+        // تحديث last_seen (منفصل حتى لو فشل ما يوقف الدخول)
         try {
           await sb
             .from('app_users')
             .update({ last_seen: new Date().toISOString() })
             .eq('id', data.id);
-          console.log("تم تحديث last_seen");
         } catch (updateErr) {
           console.warn("فشل تحديث last_seen:", updateErr.message);
         }
