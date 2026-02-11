@@ -1,8 +1,8 @@
-/* HAYEK SPOT — Admin (fixed: use username instead of user_id) */
+/* HAYEK SPOT — Admin (final fix: username only, PDF safe) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // UI
+  // UI elements
   const lock = $("lock");
   const goLogin = $("goLogin");
   const onlineDot = $("onlineDot");
@@ -150,10 +150,10 @@
     const invoicesTable = SB.tables.invoices;
 
     invoiceCounts = new Map();
-    let q = sb.from(invoicesTable).select("id,created_at,username,customer,total,grand_total,amount");
+    let q = sb.from(invoicesTable).select("id,created_at,username");
     if (sinceISO) q = q.gte("created_at", sinceISO);
 
-    const { data, error } = await q.limit(5000);
+    const { data, error } = await q;
     if (error) {
       console.warn("countInvoices error:", error);
       return { totalInvoices: 0 };
@@ -175,10 +175,12 @@
     const { data, error } = await sb
       .from(usersTable)
       .select("id,username,is_admin,blocked,created_at,device_id,last_seen")
-      .order("id", { ascending: true })
-      .limit(2000);
+      .order("username", { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error("fetchUsers error:", error);
+      return [];
+    }
     return data || [];
   }
 
@@ -251,17 +253,16 @@
       stInvoices.textContent = String(totalInvoices);
       renderUsers();
     } catch (e) {
-      console.error("خطأ في refreshAll:", e);
-      alert("خطأ تحميل البيانات:\n" + (e.message || e));
+      console.error("refreshAll error:", e);
     } finally {
       refreshBtn.disabled = false;
       refreshBtn.textContent = "تحديث";
     }
   }
 
-  rangeSel.onchange = () => { vibrateTiny(); refreshAll(); };
-  searchUser.oninput = () => renderUsers();
-  refreshBtn.onclick = () => { vibrateTiny(); refreshAll(); };
+  rangeSel.onchange = refreshAll;
+  searchUser.oninput = renderUsers;
+  refreshBtn.onclick = refreshAll;
 
   // User actions
   usersTbody.addEventListener("click", async (e) => {
@@ -273,122 +274,72 @@
     const u = users.find((x) => x.username === username);
     if (!u) return;
 
-    try {
-      if (act === "block") {
-        if (!confirm(`حظر ${u.username}؟`)) return;
-        await updateUser(u.id, { blocked: true });
-      }
-      if (act === "unblock") {
-        if (!confirm(`فك حظر ${u.username}؟`)) return;
-        await updateUser(u.id, { blocked: false });
-      }
-      if (act === "resetDevice") {
-        if (!confirm(`مسح ربط جهاز ${u.username}؟`)) return;
-        await updateUser(u.id, { device_id: null });
-      }
-      if (act === "mkAdmin") {
-        if (!confirm(`جعل ${u.username} أدمن؟`)) return;
-        await updateUser(u.id, { is_admin: true });
-      }
-      if (act === "rmAdmin") {
-        if (!confirm(`إلغاء أدمن عن ${u.username}؟`)) return;
-        await updateUser(u.id, { is_admin: false });
-      }
-      if (act === "delete") {
-        if (!confirm(`حذف نهائي لـ ${u.username}؟`)) return;
-        await deleteUser(u.id);
-      }
-      if (act === "invoices") {
-        await openInvoicesModal(u);
-      }
-      await refreshAll();
-    } catch (err) {
-      console.error(err);
-      alert("فشل العملية:\n" + (err.message || JSON.stringify(err)));
+    if (act === "invoices") {
+      await openInvoicesModal(u);
+      return;
     }
+
+    if (act === "block") {
+      if (!confirm(`حظر ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ blocked: true }).eq("id", u.id);
+    }
+    if (act === "unblock") {
+      if (!confirm(`فك حظر ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ blocked: false }).eq("id", u.id);
+    }
+    if (act === "resetDevice") {
+      if (!confirm(`مسح جهاز ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ device_id: null }).eq("id", u.id);
+    }
+    if (act === "mkAdmin") {
+      if (!confirm(`جعل ${u.username} أدمن؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ is_admin: true }).eq("id", u.id);
+    }
+    if (act === "rmAdmin") {
+      if (!confirm(`إلغاء أدمن عن ${u.username}؟`)) return;
+      await SB.sb.from(SB.tables.users).update({ is_admin: false }).eq("id", u.id);
+    }
+    if (act === "delete") {
+      if (!confirm(`حذف ${u.username} نهائيًا؟`)) return;
+      await SB.sb.from(SB.tables.users).delete().eq("id", u.id);
+    }
+
+    await refreshAll();
   });
 
-  async function updateUser(id, patch) {
-    const { sb } = SB;
-    const { error } = await sb.from(SB.tables.users).update(patch).eq("id", id);
-    if (error) throw error;
-  }
-
-  async function deleteUser(id) {
-    const { sb } = SB;
-    const { error } = await sb.from(SB.tables.users).delete().eq("id", id);
-    if (error) throw error;
-  }
-
-  // Add user modal
-  function openAddModal() {
-    addUserMsg.textContent = "";
-    newUsername.value = "";
-    newPass.value = "";
-    newIsAdmin.checked = false;
-    addModalBack.style.display = "flex";
-    newUsername.focus();
-  }
-
-  function closeAddModalFunc() {
-    addModalBack.style.display = "none";
-  }
-
-  addUserBtn.onclick = () => { vibrateTiny(); openAddModal(); };
-  closeAddModalBtn.onclick = closeAddModalFunc;
-  addModalBack.addEventListener("click", (e) => {
-    if (e.target === addModalBack) closeAddModalFunc();
-  });
+  // Add user
+  addUserBtn.onclick = () => addModalBack.style.display = "flex";
+  closeAddModalBtn.onclick = () => addModalBack.style.display = "none";
+  addModalBack.onclick = (e) => { if (e.target === addModalBack) addModalBack.style.display = "none"; };
 
   saveUserBtn.onclick = async () => {
-    vibrateTiny();
-    addUserMsg.textContent = "";
-    const username = (newUsername.value || "").trim();
-    const pass = (newPass.value || "").trim();
-    const is_admin = !!newIsAdmin.checked;
+    const username = newUsername.value.trim();
+    const pass = newPass.value.trim();
+    const is_admin = newIsAdmin.checked;
 
     if (!username || !pass) {
-      addUserMsg.textContent = "أدخل اسم المستخدم وكلمة السر";
+      addUserMsg.textContent = "املأ الاسم وكلمة السر";
       return;
     }
 
     try {
-      const { sb } = SB;
-      const payload = { username, pass, is_admin, blocked: false };
-      const { error } = await sb.from(SB.tables.users).insert(payload);
+      const { error } = await SB.sb.from(SB.tables.users).insert({ username, pass, is_admin, blocked: false });
       if (error) throw error;
-
-      addUserMsg.textContent = "✅ تم إضافة المستخدم";
-      setTimeout(closeAddModalFunc, 450);
+      addUserMsg.textContent = "تم الإضافة!";
+      setTimeout(() => addModalBack.style.display = "none", 800);
       await refreshAll();
     } catch (e) {
-      console.error(e);
-      addUserMsg.textContent = "❌ فشل: " + (e.message || e);
+      addUserMsg.textContent = "فشل: " + e.message;
     }
   };
 
   // Invoices modal
-  function openInvModal() {
+  async function openInvoicesModal(user) {
+    currentUserForInvoices = user;
+    invModalTitle.textContent = `فواتير: ${user.username}`;
     invSearch.value = "";
     invTbody.innerHTML = "";
     invModalBack.style.display = "flex";
-  }
-
-  function closeInvModalFunc() {
-    invModalBack.style.display = "none";
-    currentUserForInvoices = null;
-    invoicesForUser = [];
-  }
-
-  closeInvModalBtn.onclick = closeInvModalFunc;
-  invModalBack.addEventListener("click", (e) => {
-    if (e.target === invModalBack) closeInvModalFunc();
-  });
-
-  async function openInvoicesModal(user) {
-    currentUserForInvoices = user;
-    invModalTitle.textContent = `المستخدم: ${user.username}`;
-    openInvModal();
     await loadInvoicesForCurrentUser();
   }
 
@@ -398,206 +349,98 @@
     const invTable = SB.tables.invoices;
     const sinceISO = rangeToSince(rangeSel.value);
 
-    let q = sb.from(invTable)
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
-
+    let q = sb.from(invTable).select("*").order("created_at", { ascending: false }).limit(200);
     if (sinceISO) q = q.gte("created_at", sinceISO);
 
-    // استخدام username بدل user_id
-    const res = await q.eq("username", currentUserForInvoices.username);
+    const { data, error } = await q.eq("username", currentUserForInvoices.username);
 
-    if (res.error) {
-      console.error(res.error);
-      invTbody.innerHTML = `<tr><td colspan="5" class="mut">تعذر تحميل (${escapeHtml(res.error.message)})</td></tr>`;
+    if (error) {
+      console.error(error);
+      invTbody.innerHTML = `<tr><td colspan="5">خطأ: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
-    invoicesForUser = res.data || [];
+    invoicesForUser = data || [];
     renderInvoices();
   }
 
-  function pickField(inv, candidates) {
-    for (const c of candidates) {
-      if (inv?.[c] != null) return inv[c];
-    }
-    return null;
-  }
-
   function renderInvoices() {
-    const term = (invSearch.value || "").trim().toLowerCase();
-    const filtered = invoicesForUser.filter((inv) => {
-      const c = String(pickField(inv, ["customer", "customer_name", "client", "name"]) || "").toLowerCase();
-      const id = String(pickField(inv, ["invoice_no", "inv_id", "code", "id"]) || "").toLowerCase();
-      const dt = String(pickField(inv, ["created_at", "date"]) || "").toLowerCase();
-      return (c + " " + id + " " + dt).includes(term);
+    const term = invSearch.value.trim().toLowerCase();
+    const filtered = invoicesForUser.filter(inv => {
+      const fields = [inv.customer, inv.customer_name, inv.client, inv.name, inv.invoice_no, inv.code, inv.created_at];
+      return fields.some(f => String(f || "").toLowerCase().includes(term));
     });
 
-    invTbody.innerHTML = filtered
-      .map((inv) => {
-        const created = pickField(inv, ["created_at", "date"]) || "";
-        const cust = pickField(inv, ["customer", "customer_name", "client", "name"]) || "—";
-        const total = pickField(inv, ["total", "grand_total", "amount", "sum"]) ?? "—";
-        const code = pickField(inv, ["invoice_no", "inv_id", "code", "id"]) ?? "—";
+    invTbody.innerHTML = filtered.map(inv => {
+      const date = inv.created_at ? new Date(inv.created_at).toLocaleString() : "—";
+      const cust = inv.customer || inv.customer_name || inv.client || inv.name || "—";
+      const total = inv.total || inv.grand_total || inv.amount || "—";
+      const code = inv.invoice_no || inv.code || inv.id || "—";
 
-        return `
-          <tr>
-            <td>${escapeHtml(new Date(created).toLocaleString() || String(created))}</td>
-            <td>${escapeHtml(cust)}</td>
-            <td><b>${escapeHtml(total)}</b></td>
-            <td>${escapeHtml(code)}</td>
-            <td>
-              <div class="actions">
-                <button class="mini ghost" data-act="viewJson" data-id="${escapeHtml(inv.id)}">عرض</button>
-                <button class="mini blue" data-act="pdf" data-id="${escapeHtml(inv.id)}">PDF</button>
-              </div>
-            </td>
-          </tr>
-        `;
-      })
-      .join("") || `<tr><td colspan="5" class="mut">لا يوجد فواتير</td></tr>`;
+      return `
+        <tr>
+          <td>${escapeHtml(date)}</td>
+          <td>${escapeHtml(cust)}</td>
+          <td><b>${escapeHtml(total)}</b></td>
+          <td>${escapeHtml(code)}</td>
+          <td>
+            <button class="mini ghost" data-act="viewJson" data-id="${inv.id}">عرض</button>
+            <button class="mini blue" data-act="pdf" data-id="${inv.id}">PDF</button>
+          </td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="5" class="mut">لا فواتير</td></tr>`;
   }
 
-  invSearch.oninput = () => renderInvoices();
-  reloadInvBtn.onclick = async () => { vibrateTiny(); await loadInvoicesForCurrentUser(); };
+  invSearch.oninput = renderInvoices;
+  reloadInvBtn.onclick = loadInvoicesForCurrentUser;
 
-  invTbody.addEventListener("click", async (e) => {
+  invTbody.addEventListener("click", e => {
     const btn = e.target.closest("button");
     if (!btn) return;
 
     const act = btn.getAttribute("data-act");
     const id = btn.getAttribute("data-id");
-    const inv = invoicesForUser.find((x) => String(x.id) === String(id));
+    const inv = invoicesForUser.find(i => i.id === id);
     if (!inv) return;
 
     if (act === "viewJson") {
       alert(JSON.stringify(inv, null, 2));
-      return;
     }
 
     if (act === "pdf") {
       try {
-        await downloadInvoicePdf(inv, currentUserForInvoices);
+        const html = `
+          <div style="direction:rtl; font-family:Arial; padding:20px; background:#fff;">
+            <h2 style="text-align:center; color:#0a7c3a;">HAYEK SPOT</h2>
+            <p>اسم المستخدم: ${escapeHtml(currentUserForInvoices.username)}</p>
+            <p>رقم الفاتورة: ${escapeHtml(inv.invoice_no || inv.code || inv.id || "—")}</p>
+            <p>الزبون: ${escapeHtml(inv.customer || inv.customer_name || "—")}</p>
+            <p>التاريخ: ${escapeHtml(new Date(inv.created_at).toLocaleString())}</p>
+            <p>الإجمالي: <b>${escapeHtml(inv.total || inv.grand_total || inv.amount || "—")}</b></p>
+            <hr>
+            <p style="text-align:center; color:#777;">لا تفاصيل عمليات محفوظة في الفاتورة</p>
+          </div>
+        `;
+
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html;
+        tmp.style.width = "794px";
+        document.body.appendChild(tmp);
+
+        html2canvas(tmp).then(canvas => {
+          const imgData = canvas.toDataURL("image/jpeg", 0.95);
+          const pdf = new jsPDF("p", "pt", "a4");
+          pdf.addImage(imgData, "JPEG", 0, 0, pdf.internal.pageSize.getWidth(), canvas.height * (pdf.internal.pageSize.getWidth() / canvas.width));
+          pdf.save(`فاتورة_${currentUserForInvoices.username}_${Date.now()}.pdf`);
+          tmp.remove();
+        });
       } catch (err) {
         console.error(err);
-        alert("تعذر إنشاء PDF:\n" + (err.message || err));
+        alert("فشل إنشاء PDF");
       }
     }
   });
-
-  // PDF generation
-  function buildInvoiceHtmlFromRow(inv, user) {
-    const cust = pickField(inv, ["customer", "customer_name", "client", "name"]) || "—";
-    const total = pickField(inv, ["total", "grand_total", "amount", "sum"]) ?? "—";
-    const code = pickField(inv, ["invoice_no", "inv_id", "code", "id"]) ?? "—";
-    const created = pickField(inv, ["created_at", "date"]) || new Date().toISOString();
-
-    const rows = pickField(inv, ["rows", "items", "lines", "operations"]) || [];
-    let arr = rows;
-    try { if (typeof rows === "string") arr = JSON.parse(rows); } catch {}
-    if (!Array.isArray(arr)) arr = [];
-
-    const rowsHtml = arr.map((r, i) => {
-      const t = r.t || r.time || r.created_at || "—";
-      const text = r.text || r.note || r.title || r.desc || "عملية";
-      const expr = r.expr || r.expression || r.op || "—";
-      const result = r.result ?? r.value ?? "—";
-      return `
-        <tr>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${i + 1}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(t))}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(text))}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(expr))}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(result))}</td>
-        </tr>
-      `;
-    }).join("");
-
-    return `
-      <div style="direction:rtl;font-family:Arial,system-ui;background:#fff;color:#111;padding:18px;">
-        <div style="border:2px solid #111;border-radius:14px;padding:16px;">
-          <div style="text-align:center;font-weight:800;font-size:22px;margin-bottom:6px;">شركة الحايك</div>
-          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
-          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
-            <div>اسم الزبون: <b>${escapeHtml(cust)}</b></div>
-            <div>اسم المستخدم: <b>${escapeHtml(user?.username || "—")}</b></div>
-            <div>رقم: <b>${escapeHtml(String(code))}</b></div>
-            <div>التاريخ: <b>${escapeHtml(new Date(created).toLocaleString())}</b></div>
-          </div>
-          <div style="border-top:1px solid #111;margin:10px 0"></div>
-          <div style="font-weight:800;margin:6px 0 8px;">سجل العمليات</div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead>
-              <tr>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml || `<tr><td colspan="5" style="border:1px solid #111;padding:10px;text-align:center;color:#777">لا يوجد تفاصيل</td></tr>`}
-            </tbody>
-          </table>
-          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:800">
-            <span>إجمالي الكشف:</span>
-            <span>${escapeHtml(String(total))}</span>
-          </div>
-          <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-            شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية<br/>
-            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function downloadInvoicePdf(inv, user) {
-    const html = buildInvoiceHtmlFromRow(inv, user);
-    const tmp = document.createElement("div");
-    tmp.style.position = "fixed";
-    tmp.style.left = "-99999px";
-    tmp.style.top = "0";
-    tmp.style.width = "794px";
-    tmp.innerHTML = html;
-    document.body.appendChild(tmp);
-
-    const canvas = await html2canvas(tmp, { scale: 2, backgroundColor: "#ffffff" });
-    tmp.remove();
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "pt", "a4");
-
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = canvas.height * (imgW / canvas.width);
-
-    let y = 0;
-    let remaining = imgH;
-    while (remaining > 0) {
-      pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
-      remaining -= pageH;
-      if (remaining > 0) {
-        pdf.addPage();
-        y -= pageH;
-      }
-    }
-
-    const blob = pdf.output("blob");
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `HAYEK_INV_${user?.username || "user"}_${Date.now()}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-  }
 
   // Init
   refreshAll();
