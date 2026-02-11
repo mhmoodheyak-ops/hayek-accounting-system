@@ -1,4 +1,4 @@
-/* HAYEK SPOT — Admin (fixed null checks + safe execution) */
+/* HAYEK SPOT — Admin (safe null checks + full table rendering) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
@@ -203,7 +203,7 @@
 
   function renderUsers() {
     if (!usersTbody) {
-      console.warn("usersTbody غير موجود في الصفحة");
+      console.warn("usersTbody غير موجود في الصفحة - الجدول لن يظهر");
       return;
     }
     const term = (searchUser?.value || "").trim().toLowerCase();
@@ -521,6 +521,6 @@
     });
   }
 
-  // Init
+  // Init - call refreshAll safely
   refreshAll();
 })();
