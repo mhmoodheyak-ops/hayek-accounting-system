@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -32,6 +31,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <script>
+    // إعدادات مشروعك الحقيقية من الصور
     window.APP_CONFIG = {
       APP_NAME: "HAYEK SPOT",
       SUPABASE_URL: "https://itidwqvyrjydmegjzuvn.supabase.co",
@@ -43,7 +43,7 @@
     };
   </script>
 
-  <script src="./auth.js?v=2"></script>
+  <script src="./auth.js?v=final_fix"></script>
 </head>
 
 <body>
@@ -53,7 +53,7 @@
         <span class="dot" id="onlineDot"></span>
         <div>
           <div style="font-weight:900;font-size:18px">تسجيل الدخول</div>
-          <div class="mut">مرة واحدة فقط — بعدها يدخل تلقائيًا على نفس الجهاز.</div>
+          <div class="mut">بمجرد الدخول، سيتم ربط حسابك بهذا الجهاز.</div>
         </div>
       </div>
       <div class="pill">
@@ -63,7 +63,7 @@
     </div>
 
     <label>اسم المستخدم</label>
-    <input id="u" placeholder="مثال: admin" autocomplete="username">
+    <input id="u" placeholder="admin" autocomplete="username">
 
     <label>كلمة السر</label>
     <input id="p" type="password" placeholder="••••••" autocomplete="current-password">
@@ -81,94 +81,78 @@
 (() => {
   const $ = (id)=>document.getElementById(id);
   const onlineDot = $("onlineDot");
+  
   function refreshOnline(){
     onlineDot.style.background = navigator.onLine ? "#49e39a" : "#ffb1b1";
-    onlineDot.style.boxShadow = navigator.onLine ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
   }
   window.addEventListener("online", refreshOnline);
   window.addEventListener("offline", refreshOnline);
   refreshOnline();
 
-  // تأكد من تحميل مكتبة auth أولاً
-  if (!window.HAYEK_AUTH) {
-      $("err").textContent = "خطأ: لم يتم تحميل ملف auth.js";
-      return;
-  }
-
+  // جلب معرف الجهاز
   const devId = window.HAYEK_AUTH.getOrCreateDeviceId();
   $("devId").textContent = devId.slice(0,8);
 
+  // تحويل تلقائي إذا كان مسجلاً
   if (window.HAYEK_AUTH.isAuthed()) {
     const s = window.HAYEK_AUTH.getUser();
-    location.href = (s.role === "admin" ? "admin.html" : "invoice.html") + "?v=" + Date.now();
+    location.href = (s.role === "admin" ? "admin.html" : "invoice.html");
     return;
   }
 
   function setErr(msg){ $("err").textContent = msg || ""; }
 
-  function getSB(){
-    const cfg = window.APP_CONFIG;
-    return supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-  }
-
-  async function findUserRow(sb, username){
-    const table = window.APP_CONFIG.TABLE_USERS;
-    const { data, error } = await sb
-      .from(table)
-      .select("*")
-      .or(`username.eq.${username},t.eq.${username}`);
-    if (error) throw error;
-    return (data && data[0]) ? data[0] : null;
-  }
-
   $("loginBtn").onclick = async () => {
     setErr("");
     const u = ($("u").value||"").trim();
     const p = ($("p").value||"").trim();
-    if(!u || !p){ setErr("أدخل اسم المستخدم وكلمة السر."); return; }
+    
+    if(!u || !p){ setErr("أدخل البيانات كاملة."); return; }
 
-    const sb = getSB();
-    try{
-      const row = await findUserRow(sb, u);
-      if(!row){ setErr("اسم المستخدم غير موجود."); return; }
-      if (row.blocked === true) { setErr("هذا الحساب محظور."); return; }
+    const sb = supabase.createClient(window.APP_CONFIG.SUPABASE_URL, window.APP_CONFIG.SUPABASE_ANON_KEY);
 
-      const pass = String(row.pass ?? "");
-      if (pass !== p){ setErr("كلمة السر غير صحيحة."); return; }
+    try {
+      // البحث عن المستخدم باستخدام عمود username فقط (إصلاح الخطأ المذكور في الصورة)
+      const { data: row, error } = await sb
+        .from('app_users')
+        .select("*")
+        .eq('username', u)
+        .single();
+
+      if (error || !row) { setErr("اسم المستخدم غير صحيح."); return; }
+      if (row.blocked) { setErr("هذا الحساب محظور."); return; }
+      if (String(row.pass) !== p) { setErr("كلمة السر خطأ."); return; }
 
       const isAdmin = (row.is_admin === true);
-      const rowDevice = row.device_id ? String(row.device_id) : "";
+      const rowDevice = row.device_id;
 
+      // منطق ربط الجهاز
       if (!isAdmin) {
-        if (!rowDevice || rowDevice === "EMPTY") {
-          const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS)
-            .update({ device_id: devId })
-            .eq('id', row.id);
-          if (error) { setErr("فشل ربط الجهاز."); return; }
+        if (!rowDevice || rowDevice === "EMPTY" || rowDevice === "NULL") {
+          await sb.from('app_users').update({ device_id: devId }).eq('id', row.id);
         } else if (rowDevice !== devId) {
-          setErr("هذا الحساب مربوط بجهاز آخر.");
+          setErr("الحساب مربوط بجهاز آخر.");
           return;
         }
       }
 
+      // حفظ الجلسة
       window.HAYEK_AUTH.setSession({
-        username: row.username || row.t || u,
+        username: row.username,
         role: isAdmin ? "admin" : "user",
-        deviceId: devId,
-        loggedAt: new Date().toISOString(),
+        deviceId: devId
       });
 
       location.href = (isAdmin ? "admin.html" : "invoice.html") + "?v=" + Date.now();
-    }catch(e){
+      
+    } catch(e) {
+      setErr("حدث خطأ في الاتصال.");
       console.error(e);
-      setErr("خطأ في الاتصال بالسيرفر.");
     }
   };
 
   $("wipeBtn").onclick = () => {
-    Object.keys(localStorage).forEach(k=>{
-      if (k.startsWith("HAYEK_")) localStorage.removeItem(k);
-    });
+    localStorage.clear();
     location.reload();
   };
 })();
