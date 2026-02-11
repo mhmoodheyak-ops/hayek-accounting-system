@@ -1,5 +1,4 @@
-
-/* HAYEK SPOT — Admin (robust) */
+/* HAYEK SPOT — Admin (robust - fixed for username instead of user_id) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
@@ -151,7 +150,7 @@
     const invoicesTable = SB.tables.invoices;
 
     invoiceCounts = new Map();
-    let q = sb.from(invoicesTable).select("id,created_at,user_id,username,user_username,customer,total,grand_total,amount");
+    let q = sb.from(invoicesTable).select("id,created_at,username,customer,total,grand_total,amount");
     if (sinceISO) q = q.gte("created_at", sinceISO);
 
     const { data, error } = await q.limit(5000);
@@ -163,7 +162,7 @@
     let totalInvoices = 0;
     for (const inv of data || []) {
       totalInvoices++;
-      const key = inv.user_id ?? inv.username ?? inv.user_username ?? null;
+      const key = inv.username ?? null;
       if (key) invoiceCounts.set(String(key), (invoiceCounts.get(String(key)) || 0) + 1);
     }
     return { totalInvoices };
@@ -207,7 +206,7 @@
     const list = users
       .filter((u) => (u.username || "").toLowerCase().includes(term))
       .map((u) => {
-        const invCount = invoiceCounts.get(String(u.id)) ?? invoiceCounts.get(String(u.username)) ?? 0;
+        const invCount = invoiceCounts.get(String(u.username)) ?? 0;
         const last = timeAgo(u.last_seen);
         const dev = u.device_id ? escapeHtml(String(u.device_id)) : "—";
 
@@ -221,15 +220,15 @@
             <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${dev}</td>
             <td>
               <div class="actions">
-                <button class="mini ghost" data-act="invoices" data-id="${u.id}">الفواتير</button>
+                <button class="mini ghost" data-act="invoices" data-id="${u.username}">الفواتير</button>
                 ${u.blocked
-                  ? `<button class="mini green" data-act="unblock" data-id="${u.id}">فك حظر</button>`
-                  : `<button class="mini red" data-act="block" data-id="${u.id}">حظر</button>`}
-                <button class="mini ghost" data-act="resetDevice" data-id="${u.id}">مسح الجهاز</button>
+                  ? `<button class="mini green" data-act="unblock" data-id="${u.username}">فك حظر</button>`
+                  : `<button class="mini red" data-act="block" data-id="${u.username}">حظر</button>`}
+                <button class="mini ghost" data-act="resetDevice" data-id="${u.username}">مسح الجهاز</button>
                 ${u.is_admin
-                  ? `<button class="mini ghost" data-act="rmAdmin" data-id="${u.id}">إلغاء أدمن</button>`
-                  : `<button class="mini blue" data-act="mkAdmin" data-id="${u.id}">جعله أدمن</button>`}
-                <button class="mini red" data-act="delete" data-id="${u.id}">حذف</button>
+                  ? `<button class="mini ghost" data-act="rmAdmin" data-id="${u.username}">إلغاء أدمن</button>`
+                  : `<button class="mini blue" data-act="mkAdmin" data-id="${u.username}">جعله أدمن</button>`}
+                <button class="mini red" data-act="delete" data-id="${u.username}">حذف</button>
               </div>
             </td>
           </tr>
@@ -264,14 +263,14 @@
   searchUser.oninput = () => renderUsers();
   refreshBtn.onclick = () => { vibrateTiny(); refreshAll(); };
 
-  // User actions
+  // User actions (غيرنا data-id إلى username بدل id عشان التوافق)
   usersTbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
 
     const act = btn.getAttribute("data-act");
-    const userId = btn.getAttribute("data-id");
-    const u = users.find((x) => String(x.id) === String(userId));
+    const username = btn.getAttribute("data-id");
+    const u = users.find((x) => x.username === username);
     if (!u) return;
 
     try {
@@ -406,10 +405,8 @@
 
     if (sinceISO) q = q.gte("created_at", sinceISO);
 
-    let res = await q.eq("user_id", currentUserForInvoices.id);
-    if (res.error) {
-      res = await q.eq("username", currentUserForInvoices.username);
-    }
+    // استخدام username بدل user_id
+    const res = await q.eq("username", currentUserForInvoices.username);
 
     if (res.error) {
       console.error(res.error);
@@ -602,6 +599,6 @@
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
-  // Init - هذه الدالة اللي كانت ناقصة وسببت الخطأ
+  // Init
   refreshAll();
 })();
