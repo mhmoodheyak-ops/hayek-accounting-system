@@ -1,82 +1,189 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ستايل -->
   <link rel="stylesheet" href="style.css?v=1" />
 
-  <!-- منع الكاش -->
-  <meta http-equiv="Cache-Control" content="no-store" />
+  <style>
+    body{
+      margin:0; min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Arial;
+      background: radial-gradient(1000px 600px at 20% 10%, rgba(0,255,170,.10), transparent 60%),
+                  radial-gradient(1000px 600px at 80% 30%, rgba(80,120,255,.12), transparent 60%),
+                  linear-gradient(180deg, #061a22, #071f2b);
+      color:#eaf4ff;
+      display:flex; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .card{
+      width:min(520px, 96vw);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      padding: 22px;
+      backdrop-filter: blur(12px);
+    }
+    .top{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; margin-bottom:10px;
+    }
+    .title{
+      font-size: 24px; font-weight: 800;
+      margin:0;
+    }
+    .sub{
+      margin:0; opacity:.85; font-size: 13px;
+    }
+    .device{
+      font-size: 12px;
+      opacity:.9;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      white-space: nowrap;
+    }
+    label{ display:block; margin:12px 0 6px; opacity:.9; font-size: 13px; }
+    input{
+      width:100%;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      color:#fff;
+      outline: none;
+      font-size: 16px;
+    }
+    input:focus{ border-color: rgba(80,120,255,.55); box-shadow: 0 0 0 3px rgba(80,120,255,.18); }
+    .row{
+      display:flex; gap:10px; margin-top: 14px; align-items:center;
+      flex-wrap: wrap;
+    }
+    .btn{
+      border:0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 15px;
+      cursor:pointer;
+    }
+    .btn.primary{
+      background: linear-gradient(90deg, #1d5cff, #2b7bff);
+      color:#fff;
+      flex: 1 1 200px;
+      font-weight: 700;
+    }
+    .btn.ghost{
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      border: 1px solid rgba(255,255,255,.14);
+      flex: 0 0 auto;
+    }
+    .msg{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      font-size: 13px;
+      min-height: 18px;
+    }
+    .ok{ color:#7dffb7; }
+    .bad{ color:#ffb1b1; }
+    .foot{
+      margin-top: 10px;
+      opacity:.7;
+      font-size: 12px;
+      text-align:center;
+    }
+  </style>
+
+  <!-- 1) config -->
+  <script src="config.js?v=1"></script>
+
+  <!-- 2) supabase lib -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 3) auth -->
+  <script src="auth.js?v=1"></script>
 </head>
 
 <body>
-
-  <!-- خلفية -->
-  <div class="login-bg"></div>
-
-  <!-- صندوق تسجيل الدخول -->
-  <div class="login-card">
-    <h2>تسجيل الدخول</h2>
-    <p class="login-note">
-      مرة واحدة فقط — بعدها يتم الدخول تلقائياً على نفس الجهاز
-    </p>
-
-    <div class="device-box">
-      <span id="deviceId">Device: ...</span>
+  <div class="card">
+    <div class="top">
+      <div>
+        <h1 class="title">تسجيل الدخول</h1>
+        <p class="sub">مرة واحدة فقط — بعدها يدخل تلقائياً على نفس الجهاز.</p>
+      </div>
+      <div class="device" id="deviceTag">Device: …</div>
     </div>
 
     <label>اسم المستخدم</label>
-    <input
-      id="username"
-      type="text"
-      placeholder="مثال: أبو علي"
-      autocomplete="off"
-    />
+    <input id="u" autocomplete="username" placeholder="مثال: admin" />
 
     <label>كلمة السر</label>
-    <input
-      id="password"
-      type="password"
-      placeholder="••••••"
-      autocomplete="off"
-    />
+    <input id="p" type="password" autocomplete="current-password" placeholder="••••••" />
 
-    <div class="login-actions">
-      <button id="loginBtn" class="btn-primary">
-        تسجيل دخول
-      </button>
-
-      <button id="resetDeviceBtn" class="btn-secondary">
-        مسح بيانات الجهاز
-      </button>
+    <div class="row">
+      <button class="btn ghost" id="resetBtn" type="button">مسح بيانات الجهاز</button>
+      <button class="btn primary" id="loginBtn" type="button">تسجيل دخول</button>
     </div>
 
-    <div id="loginError" class="login-error"></div>
-
-    <div class="login-footer">
-      HAYEK SPOT
-    </div>
+    <div class="msg" id="msg"></div>
+    <div class="foot">HAYEK SPOT</div>
   </div>
 
-  <!-- ================== -->
-  <!-- تحميل السكربتات -->
-  <!-- ================== -->
-
-  <!-- config أولاً -->
-  <script src="config.js?v=1"></script>
-
-  <!-- auth.js إلزامي -->
-  <script src="auth.js?v=1"></script>
-
-  <!-- حماية -->
   <script>
-    if (typeof window.HAYEK_AUTH === "undefined") {
-      alert("auth.js غير محمل بشكل صحيح.\nتأكد أن الملف موجود بنفس المجلد.");
-    }
-  </script>
+    (function(){
+      // ✅ Stop the old false alert forever
+      if (!window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH) {
+        alert("تعذر تحميل نظام الدخول. تأكد أن auth.js موجود بنفس المجلد.");
+        return;
+      }
 
+      const msg = document.getElementById("msg");
+      const u = document.getElementById("u");
+      const p = document.getElementById("p");
+      const deviceTag = document.getElementById("deviceTag");
+
+      const devId = window.HAYEK_AUTH.getOrCreateDeviceId();
+      deviceTag.textContent = "Device: " + devId.slice(-8);
+
+      // Auto redirect if already logged in
+      if (window.HAYEK_AUTH.isAuthed()) {
+        const s = window.HAYEK_AUTH.getUser() || {};
+        const target = (s.role === "admin") ? "admin.html" : "invoice.html";
+        window.location.href = target + "?v=" + Date.now();
+        return;
+      }
+
+      function setMsg(text, ok){
+        msg.textContent = text || "";
+        msg.className = "msg " + (ok ? "ok" : "bad");
+      }
+
+      document.getElementById("resetBtn").onclick = () => {
+        window.HAYEK_AUTH.resetDevice();
+        setMsg("تم مسح بيانات الجهاز. أعد تسجيل الدخول.", true);
+      };
+
+      document.getElementById("loginBtn").onclick = async () => {
+        setMsg("جارٍ التحقق…", true);
+        const res = await window.HAYEK_AUTH.login(u.value, p.value);
+        if (!res.ok) {
+          setMsg(res.message || "فشل تسجيل الدخول.", false);
+          return;
+        }
+        setMsg("تم تسجيل الدخول… يتم التحويل.", true);
+
+        const s = (res.session || window.HAYEK_AUTH.getUser() || {});
+        const target = (s.role === "admin") ? "admin.html" : "invoice.html";
+        window.location.href = target + "?v=" + Date.now();
+      };
+    })();
+  </script>
 </body>
 </html>
