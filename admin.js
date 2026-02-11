@@ -1,4 +1,4 @@
-/* HAYEK SPOT — Admin (final: tools visible + modal close + PDF working) */
+/* HAYEK SPOT — Admin (complete + fixed renderInvoices) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
@@ -262,7 +262,7 @@
   searchUser.oninput = renderUsers;
   refreshBtn.onclick = refreshAll;
 
-  // User actions - هذا الجزء اللي كان ناقص وسبب اختفاء الأزرار
+  // User actions
   usersTbody.addEventListener("click", async (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -273,7 +273,7 @@
     if (!u) return;
 
     if (act === "invoices") {
-      await openInvoicesModal(u);
+      openInvoicesModal(u);
       return;
     }
 
@@ -331,7 +331,7 @@
     }
   };
 
-  // Invoices modal - fixed close
+  // Invoices modal
   function openInvoicesModal(user) {
     currentUserForInvoices = user;
     invModalTitle.textContent = `فواتير: ${user.username}`;
@@ -451,11 +451,7 @@
         html2canvas(tmp, { scale: 2 }).then(canvas => {
           const imgData = canvas.toDataURL("image/jpeg", 0.95);
           const { jsPDF } = window.jspdf;
-          if (!jsPDF) {
-            console.error("jsPDF غير متوفر");
-            alert("مكتبة PDF غير محملة");
-            return;
-          }
+          if (!jsPDF) throw new Error("jsPDF غير متوفر");
           const pdf = new jsPDF("p", "pt", "a4");
           pdf.addImage(imgData, "JPEG", 0, 0, pdf.internal.pageSize.getWidth(), canvas.height * (pdf.internal.pageSize.getWidth() / canvas.width));
           pdf.save(`فاتورة_${currentUserForInvoices.username}_${Date.now()}.pdf`);
