@@ -4,90 +4,100 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
-
   <style>
-    :root{--bg:#081a23;--card:#102b3a;--muted:#9fb6c6;--accent:#1e90ff}
+    :root{--bg:#071820;--card:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);--txt:#eaf4ff;--mut:#9db1c1;--btn:#1f62ff;}
     *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    body{margin:0;min-height:100vh;background:linear-gradient(135deg,#071a22,#0b3a3f);display:flex;align-items:center;justify-content:center;color:#fff}
-    .box{width:min(520px,92vw);background:rgba(16,43,58,.92);border:1px solid rgba(255,255,255,.06);border-radius:22px;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt);display:flex;align-items:center;justify-content:center;padding:18px}
+    .card{width:min(520px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px)}
     h1{margin:0 0 6px;font-size:28px}
-    .sub{margin:0 0 18px;color:var(--muted);font-size:13px}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06);color:#d9eefc;font-size:12px;margin-bottom:14px}
-    label{display:block;color:var(--muted);font-size:13px;margin:8px 0 6px}
-    input{width:100%;padding:14px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);color:#fff;font-size:16px;outline:none}
-    .row{display:flex;gap:10px;margin-top:12px}
-    button{flex:1;padding:14px;border-radius:14px;border:none;font-size:15px;cursor:pointer}
-    .btn{background:var(--accent);color:#fff}
-    .btn2{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.08)}
-    .err{margin-top:12px;color:#ff9a9a;font-size:13px;min-height:18px}
-    .foot{margin-top:12px;text-align:center;color:#9bb;opacity:.9;font-size:12px}
+    .sub{color:var(--mut);margin:0 0 16px;font-size:14px}
+    label{display:block;color:var(--mut);font-size:13px;margin:10px 0 6px}
+    input{width:100%;padding:14px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--txt);font-size:16px;outline:none}
+    .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    button{cursor:pointer;border:none;border-radius:14px;padding:12px 14px;font-size:15px}
+    .primary{background:var(--btn);color:#fff;flex:1}
+    .ghost{background:rgba(255,255,255,.08);color:#fff}
+    .err{margin-top:12px;color:#ffb6b6;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.18);padding:10px;border-radius:12px;display:none}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid var(--line);padding:8px 10px;border-radius:999px;color:var(--mut);font-size:13px}
+    .dot{width:10px;height:10px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
+    .footer{margin-top:14px;text-align:center;color:rgba(255,255,255,.35);font-size:12px}
   </style>
-
-  <!-- config.js لازم يكون موجود -->
-  <script src="config.js?v=1"></script>
-  <!-- supabase-js -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- auth -->
-  <script src="auth.js?v=1"></script>
 </head>
-
 <body>
-  <div class="box">
-    <h1>تسجيل الدخول</h1>
-    <p class="sub">مرة واحدة فقط — بعدها يدخل تلقائياً على نفس الجهاز.</p>
 
-    <div class="pill" id="devPill">Device: …</div>
+  <div class="card">
+    <div class="pill"><span class="dot" id="dot"></span><span id="dev">Device: …</span></div>
+    <h1>تسجيل الدخول</h1>
+    <p class="sub">مرة واحدة فقط — بعدها يدخل تلقائيًا على نفس الجهاز.</p>
 
     <label>اسم المستخدم</label>
-    <input id="u" autocomplete="username" placeholder="مثال: أبو علي">
+    <input id="u" autocomplete="username" placeholder="مثال: lab_top">
 
     <label>كلمة السر</label>
     <input id="p" type="password" autocomplete="current-password" placeholder="••••••">
 
     <div class="row">
-      <button class="btn2" id="reset">مسح بيانات الجهاز</button>
-      <button class="btn" id="login">تسجيل دخول</button>
+      <button class="primary" id="btn">تسجيل دخول</button>
+      <button class="ghost" id="wipe">مسح بيانات الجهاز</button>
     </div>
 
-    <div class="err" id="err"></div>
-    <div class="foot">HAYEK SPOT</div>
+    <div class="err" id="errBox"></div>
+    <div class="footer">HAYEK SPOT</div>
   </div>
 
-<script>
-  const $ = (id)=>document.getElementById(id);
+  <!-- config + auth -->
+  <script src="./config.js?v=1"></script>
+  <script src="./auth.js?v=1"></script>
 
-  function hardFail(msg){
-    $("err").textContent = msg;
-  }
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const errBox = $("errBox");
+    function showErr(msg){ errBox.style.display="block"; errBox.textContent=msg; }
+    function hideErr(){ errBox.style.display="none"; errBox.textContent=""; }
 
-  if (!window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH) {
-    hardFail("auth.js غير محمل بشكل صحيح. تأكد أن الملف موجود بنفس المجلد.");
-  } else {
-    $("devPill").textContent = "Device: " + (window.HAYEK_AUTH.getOrCreateDeviceId().slice(-8));
+    // device id
+    try{
+      const id = window.HAYEK_AUTH?.getOrCreateDeviceId?.() || "—";
+      $("dev").textContent = "Device: " + String(id).slice(-8);
+    }catch{}
 
-    // إذا مسجل مسبقاً -> تحويل تلقائي
-    if (window.HAYEK_AUTH.isAuthed()) {
-      const s = window.HAYEK_AUTH.getUser() || {};
-      location.href = (s.isAdmin ? "admin.html" : "invoice.html") + "?v=" + Date.now();
-    }
+    // auto redirect if already authed
+    (function(){
+      if (window.HAYEK_AUTH && window.__HAYEK_AUTH_LOADED__ && window.HAYEK_AUTH.isAuthed()) {
+        const s = window.HAYEK_AUTH.getUser() || {};
+        if (s.role === "admin") location.href = "admin.html?v=" + Date.now();
+        else location.href = "invoice.html?v=" + Date.now();
+      }
+    })();
 
-    $("reset").onclick = () => {
-      window.HAYEK_AUTH.resetDevice();
-      location.reload();
-    };
+    $("btn").onclick = async () => {
+      hideErr();
+      if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__) {
+        showErr("auth.js غير محمل بشكل صحيح. تأكد أن الملف موجود بنفس المجلد.");
+        return;
+      }
+      const u = $("u").value;
+      const p = $("p").value;
 
-    $("login").onclick = async () => {
-      $("err").textContent = "";
       try{
-        const r = await window.HAYEK_AUTH.login($("u").value, $("p").value);
-        if (!r.ok) { $("err").textContent = r.msg || "فشل الدخول"; return; }
-        const s = r.session || {};
-        location.href = (s.isAdmin ? "admin.html" : "invoice.html") + "?v=" + Date.now();
+        const s = await window.HAYEK_AUTH.login(u,p);
+        if (s.role === "admin") location.href = "admin.html?v=" + Date.now();
+        else location.href = "invoice.html?v=" + Date.now();
       }catch(e){
-        $("err").textContent = "خطأ في الاتصال بالسيرفر";
+        const code = String(e && e.message || e);
+        if (code === "NOT_FOUND") showErr("اسم المستخدم غير موجود.");
+        else if (code === "BAD_PASS") showErr("كلمة السر غير صحيحة.");
+        else if (code === "BLOCKED") showErr("هذا المستخدم محظور.");
+        else if (code === "DEVICE_LOCK") showErr("هذا الحساب مربوط بجهاز آخر.");
+        else if (code === "NO_SUPABASE") showErr("config.js غير صحيح أو مفاتيح Supabase غير موجودة.");
+        else showErr("خطأ في الاتصال بالسيرفر.");
       }
     };
-  }
-</script>
+
+    $("wipe").onclick = () => {
+      try{ window.HAYEK_AUTH.resetDeviceData(); }catch{}
+      location.reload();
+    };
+  </script>
 </body>
 </html>
