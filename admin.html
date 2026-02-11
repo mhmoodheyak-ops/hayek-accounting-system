@@ -1,171 +1,166 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>لوحة الأدمن — HAYEK SPOT</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>HAYEK SPOT — لوحة التحكم الاحترافية</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b141a; --card: rgba(255,255,255,0.05); --border: rgba(255,255,255,0.1);
+            --blue: #2196f3; --green: #4caf50; --red: #f44336; --amber: #ffb300; --txt: #e1e1e1;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--txt); min-height: 100vh; padding-bottom: 40px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Header & Stats */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 15px; text-align: center; }
+        .stat-card h3 { margin: 0; color: #888; font-size: 14px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; margin-top: 10px; color: var(--blue); }
 
-  <style>
-    :root{
-      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66;
-    }
-    *{box-sizing:border-box; font-family:system-ui, Tahoma, Arial}
-    body{margin:0; min-height:100vh; background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%); color:var(--txt); direction:rtl}
-    .wrap{max-width:1240px; margin:18px auto; padding:16px}
-    .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap}
-    .brand{display:flex; align-items:center; gap:10px}
-    .dot{width:12px; height:12px; border-radius:50%; background:#49e39a; box-shadow:0 0 0 6px rgba(73,227,154,.12)}
-    .btn{border:none; border-radius:14px; padding:10px 14px; background:rgba(255,255,255,.08); color:#fff; cursor:pointer; font-weight:600}
-    .btn.primary{background:var(--blue)}
-    .btn.danger{background:rgba(255,107,107,.18); border:1px solid rgba(255,107,107,.35)}
-    .btn.ghost{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10)}
-    .card{background:var(--panel); border:1px solid var(--line); border-radius:22px; backdrop-filter:blur(10px); overflow:hidden; margin-bottom:20px}
-    .row{display:flex; gap:12px; flex-wrap:wrap; padding:15px}
-    .stat{flex:1; min-width:200px; padding:18px; border-radius:18px; background:rgba(0,0,0,.16); border:1px solid var(--line); text-align:center}
-    .stat .v{font-weight:900; font-size:32px; margin-top:8px; color:var(--blue)}
-    .stat .k{color:var(--mut); font-size:14px}
-    .head{padding:16px; border-bottom:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
-    .input, .select{background:rgba(0,0,0,.2); border:1px solid var(--line); color:#fff; padding:10px; border-radius:12px; outline:none}
-    .tableWrap{overflow:auto; max-height:600px}
-    table{width:100%; border-collapse:collapse; min-width:900px}
-    th, td{padding:14px; text-align:right; border-bottom:1px solid var(--line)}
-    th{background:rgba(255,255,255,.05); color:var(--mut); font-size:13px}
-    .user-link{color:var(--blue); font-weight:bold; cursor:pointer; text-decoration:underline}
-    .badge{padding:4px 10px; border-radius:10px; font-size:12px}
-    .badge.green{background:rgba(73,227,154,.1); color:var(--green); border:1px solid var(--green)}
-    .badge.red{background:rgba(255,107,107,.1); color:var(--red); border:1px solid var(--red)}
-    .modalBack{position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter:blur(10px)}
-    .modal{width:95%; max-width:1000px; background:#0b1820; border:1px solid var(--line); border-radius:24px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column}
-  </style>
+        /* Controls */
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input, select { background: #1a242b; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; outline: none; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-blue { background: var(--blue); color: #fff; }
+        .btn-red { background: rgba(244,67,54,0.15); color: var(--red); border: 1px solid var(--red); }
+        .btn-ghost { background: transparent; border: 1px solid var(--border); color: #fff; }
+
+        /* Tables */
+        .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 15px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 15px; text-align: right; border-bottom: 1px solid var(--border); }
+        th { background: rgba(255,255,255,0.02); color: #888; font-size: 13px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+        .bg-green { background: rgba(76,175,80,0.1); color: var(--green); }
+        .bg-red { background: rgba(244,67,54,0.1); color: var(--red); }
+
+        /* Modal */
+        .modal-back { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal { background: #121c24; width: 90%; max-width: 900px; max-height: 85vh; border-radius: 20px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
+        .modal-head { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+        /* PDF Template (Hidden) */
+        #pdfTemplate { position: fixed; top: -10000px; left: 0; width: 750px; background: white; color: black; padding: 40px; direction: rtl; }
+    </style>
 </head>
 <body>
 
-  <div id="lock" class="modalBack" style="display:flex">
-    <div class="modal" style="padding:40px; text-align:center; max-width:400px">
-      <h2>دخول الإدارة</h2>
-      <p class="mut">يرجى تسجيل الدخول كأدمن للمتابعة</p>
-      <button class="btn primary" onclick="location.href='index.html'">صفحة تسجيل الدخول</button>
+<div id="lock" class="modal-back" style="display: flex;">
+    <div class="modal" style="max-width: 400px; padding: 30px; text-align: center;">
+        <h2>الدخول للإدارة</h2>
+        <button class="btn btn-blue" onclick="location.href='index.html'">العودة لتسجيل الدخول</button>
     </div>
-  </div>
+</div>
 
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <span class="dot" id="onlineDot"></span>
+<div class="container">
+    <div class="header">
         <div>
-          <div style="font-weight:900; font-size:20px">HAYEK SPOT — الإدارة</div>
-          <div class="mut" id="adminInfo">جاري التحميل...</div>
+            <h1 style="margin:0; font-size:24px;">HAYEK SPOT</h1>
+            <span id="adminName" style="color:var(--green)">متصل...</span>
         </div>
-      </div>
-      <div style="display:flex; gap:10px">
-        <button class="btn ghost" onclick="refreshData()">تحديث 🔄</button>
-        <button class="btn danger" onclick="logout()">خروج</button>
-      </div>
+        <button class="btn btn-red" id="logoutBtn">خروج</button>
     </div>
 
-    <div class="row">
-      <div class="stat"><div class="k">إجمالي المستخدمين</div><div class="v" id="stUsers">0</div></div>
-      <div class="stat"><div class="k">الفواتير (حسب الفترة)</div><div class="v" id="stInvoices">0</div></div>
-      <div class="stat"><div class="k">نشط حالياً</div><div class="v" id="stActive">0</div></div>
+    <div class="stats-grid">
+        <div class="stat-card"><h3>إجمالي المستخدمين</h3><div class="value" id="stUsers">0</div></div>
+        <div class="stat-card"><h3>الفواتير المنجزة</h3><div class="value" id="stInvoices">0</div></div>
+        <div class="stat-card"><h3>المتصلون الآن</h3><div class="value" id="stActive">0</div></div>
     </div>
 
-    <div class="card" style="margin-top:20px">
-      <div class="head">
-        <div style="display:flex; gap:10px">
-          <select id="range" class="select" onchange="refreshData()">
+    <div class="controls">
+        <select id="rangeSelect">
             <option value="today">اليوم</option>
-            <option value="7d" selected>آخر 7 أيام</option>
-            <option value="all">كل الأوقات</option>
-          </select>
-          <input type="text" id="searchUser" class="input" placeholder="ابحث عن مستخدم..." oninput="renderUsersTable()">
-        </div>
-        <button class="btn primary" onclick="openAddModal()">إضافة مستخدم +</button>
-      </div>
-      <div class="tableWrap">
+            <option value="7d">آخر 7 أيام</option>
+            <option value="all" selected>كل الأوقات</option>
+        </select>
+        <input type="text" id="userSearch" placeholder="بحث عن مستخدم..." style="flex:1">
+        <button class="btn btn-blue" id="refreshBtn">تحديث البيانات</button>
+    </div>
+
+    <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>المستخدم</th>
-              <th>الحالة</th>
-              <th>الرتبة</th>
-              <th>آخر ظهور</th>
-              <th>ID الجهاز</th>
-              <th>الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="usersTbody"></tbody>
+            <thead>
+                <tr>
+                    <th>المستخدم</th>
+                    <th>الرتبة</th>
+                    <th>الحالة</th>
+                    <th>الفواتير</th>
+                    <th>آخر ظهور</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="usersTbody"></tbody>
         </table>
-      </div>
     </div>
-  </div>
+</div>
 
-  <div id="invModalBack" class="modalBack">
+<div id="invModal" class="modal-back">
     <div class="modal">
-      <div class="head">
-        <div>
-          <h3 id="invModalTitle" style="margin:0">فواتير المستخدم</h3>
-          <span class="mut">يمكنك معاينة وتصدير التقارير كملف PDF</span>
+        <div class="modal-head">
+            <h2 id="invTitle">فواتير المستخدم</h2>
+            <button class="btn btn-ghost" onclick="closeInvModal()">إغلاق ×</button>
         </div>
-        <button class="btn ghost" onclick="closeModal('invModalBack')">إغلاق</button>
-      </div>
-      <div style="padding:15px; overflow:auto">
-        <table id="pdfSourceTable">
-          <thead>
-            <tr>
-              <th>رقم الفاتورة</th>
-              <th>التاريخ</th>
-              <th>اسم الزبون</th>
-              <th>المبلغ</th>
-              <th>تقرير PDF</th>
-            </tr>
-          </thead>
-          <tbody id="invTbody"></tbody>
+        <div style="overflow:auto; padding:10px;">
+            <table style="min-width: 100%;">
+                <thead>
+                    <tr>
+                        <th>رقم</th>
+                        <th>التاريخ</th>
+                        <th>الزبون</th>
+                        <th>المبلغ</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="invTbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="pdfTemplate">
+    <div style="border: 4px solid #000; padding: 25px; border-radius: 20px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="margin:0; font-size: 35px;">شركة الحايك</h1>
+            <h2 style="margin:5px 0; color: #0a7c3a; font-size: 28px;">HAYEK SPOT</h2>
+            <p style="font-size: 18px; margin: 10px 0;">كشف حساب عمليات العميل</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+            <span>الزبون: <b id="pdf_cust"></b></span>
+            <span>التاريخ: <b id="pdf_date"></b></span>
+            <span>رقم الفاتورة: <b id="pdf_code"></b></span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="background: #f0f0f0;">
+                    <th style="border: 2px solid #000; padding: 10px;">البيان</th>
+                    <th style="border: 2px solid #000; padding: 10px;">العملية</th>
+                    <th style="border: 2px solid #000; padding: 10px;">الناتج</th>
+                </tr>
+            </thead>
+            <tbody id="pdf_rows"></tbody>
         </table>
-      </div>
+        <div style="background: #000; color: #fff; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; font-size: 22px;">
+            <span>الإجمالي المستحق:</span>
+            <span id="pdf_total"></span>
+        </div>
+        <div style="margin-top: 30px; text-align: center;">
+            <p style="font-size: 14px; margin: 0;">شركة الحايك / تجارة عامة / حلول تقنية</p>
+            <div style="display: inline-block; border: 3px solid #0a7c3a; color: #0a7c3a; padding: 8px 25px; border-radius: 12px; font-weight: bold; font-size: 20px; margin-top: 10px;">05510217646</div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <div id="pdfTemplate" style="position:fixed; top:-5000px; left:0; width:800px; padding:40px; background:white; color:black; direction:rtl">
-    <div style="text-align:center; border:4px solid #000; padding:20px; border-radius:20px">
-      <h1 style="margin:0; font-size:35px">شركة الحايك</h1>
-      <h2 style="margin:5px 0; color:#0a7c3a">HAYEK SPOT</h2>
-      <div style="margin:20px 0; border-bottom:2px solid #eee"></div>
-      <div style="display:flex; justify-content:space-between; font-size:18px">
-        <span>الزبون: <b id="pCust"></b></span>
-        <span>التاريخ: <b id="pDate"></b></span>
-      </div>
-      <div style="text-align:right; margin:15px 0; font-size:18px">رقم الفاتورة: <b id="pId"></b></div>
-      
-      <table style="width:100%; border-collapse:collapse; margin-top:20px">
-        <thead>
-            <tr style="background:#f4f4f4">
-                <th style="border:2px solid #000; padding:12px">البيان</th>
-                <th style="border:2px solid #000; padding:12px">القيمة</th>
-            </tr>
-        </thead>
-        <tbody id="pRows"></tbody>
-      </table>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="admin.js"></script>
 
-      <div style="margin-top:30px; background:#000; color:#fff; padding:20px; font-size:24px; display:flex; justify-content:space-between">
-        <span>الإجمالي المستحق:</span>
-        <span id="pTotal"></span>
-      </div>
-
-      <div style="margin-top:40px; font-size:14px">
-        <p>شركة الحايك / تجارة عامة / حلول محاسبية</p>
-        <div style="display:inline-block; border:3px solid #0a7c3a; padding:10px 30px; border-radius:15px; font-size:22px; font-weight:bold; color:#0a7c3a">05510217646</div>
-      </div>
-    </div>
-  </div>
-
-  <script src="./config.js"></script>
-  <script src="./auth.js"></script>
-  <script src="./admin.js"></script>
 </body>
 </html>
