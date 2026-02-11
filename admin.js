@@ -128,9 +128,9 @@
     };
   }
 
-  let SB;
+  let SB_ADMIN; // قمت بتغيير الاسم هنا فقط لمنع التعارض
   try {
-    SB = getSB();
+    SB_ADMIN = getSB();
   } catch (e) {
     console.error("خطأ في getSB:", e);
     alert("خطأ إعداد Supabase:\n" + e.message);
@@ -144,8 +144,8 @@
   let invoicesForUser = [];
 
   async function countInvoicesForUsers(sinceISO) {
-    const { sb } = SB;
-    const invoicesTable = SB.tables.invoices;
+    const { sb } = SB_ADMIN;
+    const invoicesTable = SB_ADMIN.tables.invoices;
 
     invoiceCounts = new Map();
     let q = sb.from(invoicesTable).select("id,created_at,username");
@@ -167,8 +167,8 @@
   }
 
   async function fetchUsers() {
-    const { sb } = SB;
-    const usersTable = SB.tables.users;
+    const { sb } = SB_ADMIN;
+    const usersTable = SB_ADMIN.tables.users;
 
     const { data, error } = await sb
       .from(usersTable)
@@ -288,27 +288,27 @@
 
       if (act === "block") {
         if (!confirm(`حظر ${u.username}؟`)) return;
-        await SB.sb.from(SB.tables.users).update({ blocked: true }).eq("id", u.id);
+        await SB_ADMIN.sb.from(SB_ADMIN.tables.users).update({ blocked: true }).eq("id", u.id);
       }
       if (act === "unblock") {
         if (!confirm(`فك حظر ${u.username}؟`)) return;
-        await SB.sb.from(SB.tables.users).update({ blocked: false }).eq("id", u.id);
+        await SB_ADMIN.sb.from(SB_ADMIN.tables.users).update({ blocked: false }).eq("id", u.id);
       }
       if (act === "resetDevice") {
         if (!confirm(`مسح جهاز ${u.username}؟`)) return;
-        await SB.sb.from(SB.tables.users).update({ device_id: null }).eq("id", u.id);
+        await SB_ADMIN.sb.from(SB_ADMIN.tables.users).update({ device_id: null }).eq("id", u.id);
       }
       if (act === "mkAdmin") {
         if (!confirm(`جعل ${u.username} أدمن؟`)) return;
-        await SB.sb.from(SB.tables.users).update({ is_admin: true }).eq("id", u.id);
+        await SB_ADMIN.sb.from(SB_ADMIN.tables.users).update({ is_admin: true }).eq("id", u.id);
       }
       if (act === "rmAdmin") {
         if (!confirm(`إلغاء أدمن عن ${u.username}؟`)) return;
-        await SB.sb.from(SB.tables.users).update({ is_admin: false }).eq("id", u.id);
+        await SB_ADMIN.sb.from(SB_ADMIN.tables.users).update({ is_admin: false }).eq("id", u.id);
       }
       if (act === "delete") {
         if (!confirm(`حذف ${u.username} نهائيًا؟`)) return;
-        await SB.sb.from(SB.tables.users).delete().eq("id", u.id);
+        await SB_ADMIN.sb.from(SB_ADMIN.tables.users).delete().eq("id", u.id);
       }
 
       await refreshAll();
@@ -332,7 +332,7 @@
       }
 
       try {
-        const { error } = await SB.sb.from(SB.tables.users).insert({ username, pass, is_admin, blocked: false });
+        const { error } = await SB_ADMIN.sb.from(SB_ADMIN.tables.users).insert({ username, pass, is_admin, blocked: false });
         if (error) throw error;
         if (addUserMsg) addUserMsg.textContent = "تم الإضافة!";
         setTimeout(() => { if (addModalBack) addModalBack.style.display = "none"; }, 800);
@@ -368,8 +368,8 @@
 
   async function loadInvoicesForCurrentUser() {
     if (!currentUserForInvoices) return;
-    const { sb } = SB;
-    const invTable = SB.tables.invoices;
+    const { sb } = SB_ADMIN;
+    const invTable = SB_ADMIN.tables.invoices;
     const sinceISO = rangeToSince(rangeSel?.value);
 
     let q = sb.from(invTable).select("*").order("created_at", { ascending: false }).limit(200);
