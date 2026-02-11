@@ -54,8 +54,6 @@
     clearSession,
   };
 
-  // A small flag that pages check
   window.__HAYEK_AUTH_LOADED__ = true;
-
   console.log("HAYEK AUTH loaded ✓");
 })();
