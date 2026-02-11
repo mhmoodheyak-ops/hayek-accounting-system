@@ -1,8 +1,8 @@
-/* HAYEK SPOT — Admin (final fix: username only, PDF safe) */
+/* HAYEK SPOT — Admin (final: modal close + PDF working) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // UI elements
+  // UI
   const lock = $("lock");
   const goLogin = $("goLogin");
   const onlineDot = $("onlineDot");
@@ -307,7 +307,7 @@
     await refreshAll();
   });
 
-  // Add user
+  // Add user modal
   addUserBtn.onclick = () => addModalBack.style.display = "flex";
   closeAddModalBtn.onclick = () => addModalBack.style.display = "none";
   addModalBack.onclick = (e) => { if (e.target === addModalBack) addModalBack.style.display = "none"; };
@@ -333,15 +333,26 @@
     }
   };
 
-  // Invoices modal
-  async function openInvoicesModal(user) {
+  // Invoices modal - fixed close
+  function openInvoicesModal(user) {
     currentUserForInvoices = user;
     invModalTitle.textContent = `فواتير: ${user.username}`;
     invSearch.value = "";
     invTbody.innerHTML = "";
     invModalBack.style.display = "flex";
-    await loadInvoicesForCurrentUser();
+    loadInvoicesForCurrentUser();
   }
+
+  function closeInvModalFunc() {
+    invModalBack.style.display = "none";
+    currentUserForInvoices = null;
+    invoicesForUser = [];
+  }
+
+  closeInvModalBtn.onclick = closeInvModalFunc;
+  invModalBack.addEventListener("click", (e) => {
+    if (e.target === invModalBack) closeInvModalFunc();
+  });
 
   async function loadInvoicesForCurrentUser() {
     if (!currentUserForInvoices) return;
@@ -409,9 +420,10 @@
     }
 
     if (act === "pdf") {
+      console.log("بدء إنشاء PDF للفاتورة:", inv.id);
       try {
         const html = `
-          <div style="direction:rtl; font-family:Arial; padding:20px; background:#fff;">
+          <div style="direction:rtl; font-family:Arial; padding:20px; background:#fff; text-align:right;">
             <h2 style="text-align:center; color:#0a7c3a;">HAYEK SPOT</h2>
             <p>اسم المستخدم: ${escapeHtml(currentUserForInvoices.username)}</p>
             <p>رقم الفاتورة: ${escapeHtml(inv.invoice_no || inv.code || inv.id || "—")}</p>
@@ -428,15 +440,20 @@
         tmp.style.width = "794px";
         document.body.appendChild(tmp);
 
-        html2canvas(tmp).then(canvas => {
+        html2canvas(tmp, { scale: 2 }).then(canvas => {
           const imgData = canvas.toDataURL("image/jpeg", 0.95);
+          const { jsPDF } = window.jspdf;
           const pdf = new jsPDF("p", "pt", "a4");
           pdf.addImage(imgData, "JPEG", 0, 0, pdf.internal.pageSize.getWidth(), canvas.height * (pdf.internal.pageSize.getWidth() / canvas.width));
           pdf.save(`فاتورة_${currentUserForInvoices.username}_${Date.now()}.pdf`);
           tmp.remove();
+          console.log("PDF تم إنشاؤه بنجاح");
+        }).catch(err => {
+          console.error("خطأ في html2canvas:", err);
+          alert("فشل عرض الفاتورة كصورة");
         });
       } catch (err) {
-        console.error(err);
+        console.error("خطأ عام في PDF:", err);
         alert("فشل إنشاء PDF");
       }
     }
