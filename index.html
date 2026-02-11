@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -5,7 +6,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- أضفنا تحميل auth.js هنا عشان HAYEK_AUTH يتوفر -->
   <script src="./auth.js"></script>
   <style>
     :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; }
@@ -28,16 +28,6 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
-
-    // انتظر لحظة صغيرة حتى يتحمل auth.js تماماً (آمن)
-    window.addEventListener('load', () => {
-      if (!window.HAYEK_AUTH) {
-        $("err").textContent = "خطأ داخلي: نظام المصادقة غير محمل";
-        console.error("HAYEK_AUTH غير موجود بعد تحميل الصفحة");
-        return;
-      }
-      console.log("HAYEK_AUTH جاهز ✓");
-    });
 
     // إعدادات Supabase
     const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
@@ -67,7 +57,7 @@
           return;
         }
 
-        // مقارنة كلمة السر (plain text حالياً)
+        // مقارنة كلمة السر
         if (String(data.pass) !== passVal) {
           $("err").textContent = "كلمة السر غير صحيحة";
           return;
@@ -78,7 +68,7 @@
           return;
         }
 
-        // إنشاء الجلسة بالشكل المتوافق مع auth.js
+        // إنشاء الجلسة
         const session = {
           id: data.id,
           username: data.username,
@@ -86,17 +76,20 @@
           device_id: data.device_id || (window.HAYEK_AUTH?.getOrCreateDeviceId?.() || "unknown")
         };
 
-        // حفظ الجلسة
         window.HAYEK_AUTH.setSession(session);
 
-        // تحديث last_seen إذا العمود موجود
-        await sb
-          .from('app_users')
-          .update({ last_seen: new Date().toISOString() })
-          .eq('id', data.id)
-          .catch(err => console.warn("فشل تحديث last_seen:", err));
+        // تحديث last_seen داخل try/catch منفصل (عشان ما يوقف الدخول لو فشل)
+        try {
+          await sb
+            .from('app_users')
+            .update({ last_seen: new Date().toISOString() })
+            .eq('id', data.id);
+          console.log("تم تحديث last_seen");
+        } catch (updateErr) {
+          console.warn("فشل تحديث last_seen:", updateErr.message);
+        }
 
-        // توجيه مع تجنب الكاش
+        // توجيه
         const ts = Date.now();
         if (data.is_admin) {
           window.location.replace("admin.html?v=" + ts);
