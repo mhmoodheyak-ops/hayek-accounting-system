@@ -4,69 +4,80 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأدمن</title>
+  <title>لوحة الأدمن — HAYEK SPOT</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  
   <style>
     :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66; }
-    *{box-sizing:border-box;font-family:system-ui}
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
-    .wrap{max-width:1200px;margin:18px auto;padding:16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-    .btn{border:none;border-radius:14px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+    *{box-sizing:border-box; font-family:system-ui, Segoe UI, Tahoma, Arial}
+    body{margin:0; min-height:100vh; background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%); color:var(--txt)}
+    .wrap{max-width:1200px; margin:18px auto; padding:16px}
+    .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+    .btn{border:none; border-radius:14px; padding:10px 14px; background:rgba(255,255,255,.08); color:#fff; cursor:pointer; font-size:14px}
     .btn.primary{background:var(--blue)}
-    .btn.danger{background:rgba(255,107,107,.2);border:1px solid var(--red)}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(10px);overflow:hidden}
-    .row{display:flex;gap:12px;flex-wrap:wrap;padding:15px}
-    .stat{flex:1;min-width:200px;padding:14px;border-radius:18px;background:rgba(0,0,0,.16);border:1px solid var(--line);text-align:center}
-    .stat .v{font-weight:900;font-size:28px;color:var(--blue)}
-    table{width:100%;border-collapse:collapse;background:rgba(0,0,0,.12)}
-    th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
-    .badge{padding:4px 8px;border-radius:8px;font-size:11px}
-    .badge.green{background:rgba(73,227,154,.15);color:var(--green)}
-    #lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column}
-    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:1000}
-    .modal{background:#0b1820;width:90%;max-width:600px;border-radius:20px;padding:20px;border:1px solid var(--line)}
+    .btn.danger{background:rgba(255,107,107,.18); border:1px solid rgba(255,107,107,.35)}
+    .card{background:var(--panel); border:1px solid var(--line); border-radius:22px; backdrop-filter:blur(10px); overflow:hidden}
+    .row{display:flex; gap:12px; flex-wrap:wrap; padding:15px}
+    .stat{flex:1; min-width:250px; padding:14px; border-radius:18px; background:rgba(0,0,0,.16); border:1px solid var(--line)}
+    .stat .v{font-weight:900; font-size:28px; margin-top:6px; color:var(--blue)}
+    .stat .k{color:var(--mut); font-size:13px}
+    .head{padding:14px; border-bottom:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
+    .tableWrap{margin-top:12px; overflow:auto; border-radius:16px; border:1px solid var(--line)}
+    table{width:100%; border-collapse:collapse; min-width:900px; background:rgba(0,0,0,.12)}
+    th,td{padding:12px; border-bottom:1px dashed var(--line); font-size:14px; text-align:right}
+    th{background:rgba(255,255,255,.05); color:var(--mut)}
+    .user-link{color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:bold}
+    .badge{padding:5px 10px; border-radius:12px; font-size:11px}
+    .badge.green{background:rgba(73,227,154,.1); color:var(--green); border:1px solid var(--green)}
+    .badge.red{background:rgba(255,107,107,.1); color:var(--red); border:1px solid var(--red)}
+    .modalBack{position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px; backdrop-filter:blur(10px)}
+    .modal{width:100%; max-width:800px; background:#0b1820; border:1px solid var(--line); border-radius:24px; padding:25px; max-height:90vh; overflow-y:auto}
   </style>
 </head>
 <body>
 
-  <div id="lock">
-    <h2>يجب تسجيل الدخول كأدمن</h2>
-    <button class="btn primary" onclick="location.href='index.html'">العودة لتسجيل الدخول</button>
+  <div id="lock" class="modalBack" style="display:flex">
+    <div class="modal" style="text-align:center">
+      <h2>تسجيل الدخول مطلوب</h2>
+      <p class="mut">يرجى تسجيل الدخول بحساب أدمن للوصول لهذه الصفحة.</p>
+      <button class="btn primary" onclick="location.href='index.html'">الذهاب لتسجيل الدخول</button>
+    </div>
   </div>
 
-  <div class="wrap" id="mainContent" style="display:none">
+  <div class="wrap">
     <div class="topbar">
       <div>
-        <h2 style="margin:0">لوحة الأدمن — HAYEK SPOT</h2>
-        <small id="adminName" style="color:var(--mut)"></small>
+        <div style="font-weight:900; font-size:20px">HAYEK SPOT — لوحة الأدمن</div>
+        <div class="mut" id="adminInfo">جاري التحقق...</div>
       </div>
-      <div>
-        <button class="btn" onclick="refreshAll()">تحديث</button>
+      <div style="display:flex; gap:10px">
+        <button class="btn" onclick="refreshData()">تحديث القائمة 🔄</button>
         <button class="btn danger" onclick="logout()">خروج</button>
       </div>
     </div>
 
-    <div class="grid-stats row">
-      <div class="stat"><div class="k">المستخدمين</div><div class="v" id="stUsers">0</div></div>
-      <div class="stat"><div class="k">إجمالي الفواتير</div><div class="v" id="stInvoices">0</div></div>
+    <div class="row">
+      <div class="stat"><div class="k">إجمالي المستخدمين</div><div class="v" id="stUsers">—</div></div>
+      <div class="stat"><div class="k">إجمالي الفواتير</div><div class="v" id="stInvoices">—</div></div>
+      <div class="stat"><div class="k">نشطين الآن</div><div class="v" id="stActive">—</div></div>
     </div>
 
-    <div class="card">
-      <div style="padding:15px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between">
-        <h3 style="margin:0">إدارة المستخدمين</h3>
-        <button class="btn primary" onclick="openAddModal()">إضافة مستخدم +</button>
+    <div class="card" style="margin-top:20px">
+      <div class="head">
+        <h3 style="margin:0">إدارة الأعضاء</h3>
+        <button class="btn primary" onclick="openAddModal()">إضافة مستخدم جديد +</button>
       </div>
-      <div style="overflow-x:auto">
+      <div class="tableWrap">
         <table>
           <thead>
             <tr>
-              <th>المستخدم</th>
+              <th>المستخدم (اضغط للفواتير)</th>
               <th>الحالة</th>
-              <th>الفواتير</th>
+              <th>الدور</th>
+              <th>آخر ظهور</th>
+              <th>الجهاز</th>
               <th>إجراءات</th>
             </tr>
           </thead>
@@ -78,16 +89,26 @@
 
   <div id="invModal" class="modalBack">
     <div class="modal">
-        <div style="display:flex; justify-content:space-between">
-            <h3 id="invTitle">فواتير المستخدم</h3>
-            <button class="btn" onclick="closeInv()">إغلاق</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+        <h3 id="invModalTitle">فواتير المستخدم</h3>
+        <div style="display:flex; gap:10px">
+            <button class="btn primary" id="exportFullPdf">تصدير كشف PDF 📄</button>
+            <button class="btn" onclick="closeModal('invModal')">إغلاق</button>
         </div>
-        <div style="max-height:400px; overflow-y:auto; margin-top:15px">
-            <table id="pdfTable">
-                <thead><tr><th>التاريخ</th><th>المبلغ</th><th>PDF</th></tr></thead>
-                <tbody id="invTbody"></tbody>
-            </table>
-        </div>
+      </div>
+      <div class="tableWrap">
+        <table id="pdfTable">
+          <thead>
+            <tr>
+              <th>رقم الفاتورة</th>
+              <th>التاريخ</th>
+              <th>المبلغ</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="invTbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
