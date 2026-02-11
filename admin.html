@@ -1,202 +1,79 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>لوحة الأدمن — HAYEK SPOT</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a; }
-    body{margin:0; background:var(--bg); color:var(--txt); font-family:system-ui; padding-bottom:50px}
-    .nav{display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid var(--line); backdrop-filter:blur(10px); position:sticky; top:0; z-index:100}
-    .container{max-width:1000px; margin:20px auto; padding:0 15px}
-    .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px}
-    .stat-card{background:var(--panel); border:1px solid var(--line); padding:20px; border-radius:18px; text-align:center}
-    .stat-card h3{margin:0; font-size:24px; color:var(--blue)}
-    .stat-card p{margin:5px 0 0; color:var(--mut); font-size:13px}
-    .admin-box{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px; margin-bottom:20px}
-    table{width:100%; border-collapse:collapse; margin-top:15px}
-    th{text-align:right; color:var(--mut); font-size:13px; padding:10px; border-bottom:1px solid var(--line)}
-    td{padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:14px}
-    .badge{padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold}
-    .bg-ok{background:rgba(73,227,154,0.1); color:var(--ok)}
-    .bg-err{background:rgba(255,107,107,0.1); color:var(--danger)}
-    .btn-sm{padding:6px 10px; border-radius:8px; border:none; cursor:pointer; font-size:12px; margin-left:5px}
-    input, select{background:rgba(0,0,0,0.2); border:1px solid var(--line); color:#fff; padding:10px; border-radius:8px; outline:none}
-    #lock{display:none; position:fixed; inset:0; background:var(--bg); z-index:9999; align-items:center; justify-content:center; flex-direction:column}
-  </style>
-</head>
-<body>
-
-  <div id="lock">
-    <h2>تسجيل الدخول مطلوب</h2>
-    <p>غير مسموح تصفح هذه الصفحة بدون صلاحية أدمن</p>
-    <button class="btn-sm bg-ok" onclick="location.href='index.html'" style="padding:12px 25px">الذهاب لتسجيل الدخول</button>
-  </div>
-
-  <div class="nav">
-    <div style="display:flex; align-items:center; gap:10px">
-        <span class="badge bg-ok" id="adminTag">متصل</span>
-        <strong id="adminName">الأدمن</strong>
-    </div>
-    <button class="btn-sm bg-err" onclick="logout()">خروج</button>
-  </div>
-
-  <div class="container">
-    <div class="grid">
-        <div class="stat-card">
-            <h3 id="totalUsers">0</h3>
-            <p>إجمالي المستخدمين</p>
+<div id="invoiceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; padding:20px; backdrop-filter:blur(5px);">
+    <div style="background:var(--bg); border:1px solid var(--line); max-width:600px; margin:20px auto; border-radius:20px; padding:25px; max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 id="modalTitle" style="margin:0">فواتير المستخدم</h3>
+            <button class="btn-sm bg-err" onclick="closeModal()">إغلاق</button>
         </div>
-        <div class="stat-card">
-            <h3 id="totalInvoices">0</h3>
-            <p>إجمالي الفواتير</p>
-        </div>
-        <div class="stat-card">
-            <select id="timeFilter" onchange="loadStats()" style="margin-top:5px; width:100%">
-                <option value="today">اليوم</option>
-                <option value="7days">آخر 7 أيام</option>
-                <option value="30days" selected>آخر 30 يوم</option>
-                <option value="all">الكل</option>
-            </select>
-            <p>فلتر المدة الإحصائية</p>
-        </div>
-    </div>
-
-    <div class="admin-box">
-        <h4 style="margin:0 0 15px">إضافة مستخدم جديد</h4>
-        <div style="display:flex; gap:10px; flex-wrap:wrap">
-            <input id="newU" placeholder="اسم المستخدم" style="flex:1">
-            <input id="newP" placeholder="كلمة السر" style="flex:1">
-            <button class="btn-sm bg-ok" onclick="addUser()" style="flex:0.5">إضافة</button>
-        </div>
-    </div>
-
-    <div class="admin-box">
-        <h4 style="margin:0">إدارة المستخدمين ونشاطهم</h4>
-        <table id="userTable">
+        <table style="width:100%">
             <thead>
                 <tr>
-                    <th>المستخدم</th>
-                    <th>الفواتير</th>
-                    <th>آخر نشاط</th>
+                    <th>رقم الفاتورة</th>
+                    <th>التاريخ</th>
+                    <th>المبلغ</th>
                     <th>الحالة</th>
-                    <th>إجراءات</th>
                 </tr>
             </thead>
-            <tbody id="userList">
+            <tbody id="invoiceDetailsList">
                 </tbody>
         </table>
     </div>
-  </div>
+</div>
 
-  <script>
-    // 1. إعدادات الاتصال (مباشرة لتفادي خطأ 404)
-    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-    const sb = supabase.createClient(SB_URL, SB_KEY);
+<script>
+    // --- أضف هذه الدوال داخل قسم الـ Script الموجود سابقاً ---
 
-    // 2. التحقق من الهوية (Security)
-    const session = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
-    if (session.role !== "admin") {
-        document.getElementById("lock").style.display = "flex";
-    } else {
-        document.getElementById("adminName").textContent = session.username;
-    }
-
-    function logout() { localStorage.clear(); location.href = 'index.html'; }
-
-    // 3. تحميل البيانات والإحصائيات
-    async function loadStats() {
-        const filter = document.getElementById("timeFilter").value;
-        let dateLimit = new Date();
+    // دالة لفتح النافذة وجلب فواتير المستخدم المختار
+    async function viewUserInvoices(username) {
+        const modal = document.getElementById("invoiceModal");
+        const list = document.getElementById("invoiceDetailsList");
+        const title = document.getElementById("modalTitle");
         
-        if(filter === "today") dateLimit.setHours(0,0,0,0);
-        else if(filter === "7days") dateLimit.setDate(dateLimit.getDate() - 7);
-        else if(filter === "30days") dateLimit.setDate(dateLimit.getDate() - 30);
-        else dateLimit = new Date(0);
+        modal.style.display = "block";
+        title.textContent = `فواتير: ${username}`;
+        list.innerHTML = "<tr><td colspan='4'>جاري تحميل الفواتير...</td></tr>";
 
-        // جلب عدد المستخدمين
-        const { count: uCount } = await sb.from('app_users').select('*', { count: 'exact', head: true });
-        document.getElementById("totalUsers").textContent = uCount || 0;
+        try {
+            // جلب البيانات من جدول app_invoices
+            const { data: invoices, error } = await sb
+                .from('app_invoices')
+                .select('*')
+                .eq('username', username)
+                .order('created_at', { ascending: false });
 
-        // جلب عدد الفواتير حسب الفلتر
-        const { count: iCount } = await sb.from('app_invoices')
-            .select('*', { count: 'exact', head: true })
-            .gt('created_at', dateLimit.toISOString());
-        document.getElementById("totalInvoices").textContent = iCount || 0;
+            if (error) throw error;
 
-        loadUsers();
-    }
+            list.innerHTML = "";
+            if (invoices.length === 0) {
+                list.innerHTML = "<tr><td colspan='4'>لا توجد فواتير لهذا المستخدم</td></tr>";
+                return;
+            }
 
-    async function loadUsers() {
-        const list = document.getElementById("userList");
-        list.innerHTML = "<tr><td colspan='5'>جاري التحميل...</td></tr>";
-
-        const { data: users, error } = await sb.from('app_users').select('*').order('last_seen', { ascending: false });
-        
-        if(error) return;
-        list.innerHTML = "";
-
-        for (const u of users) {
-            // جلب عدد فواتير كل مستخدم (المطلوب A)
-            const { count: invCount } = await sb.from('app_invoices')
-                .select('*', { count: 'exact', head: true })
-                .eq('username', u.username);
-
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>
-                    <b>${u.username}</b><br>
-                    <small style="color:var(--mut)">${u.is_admin ? 'أدمن' : 'مستخدم'}</small>
-                </td>
-                <td>${invCount || 0}</td>
-                <td>${u.last_seen ? new Date(u.last_seen).toLocaleString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : 'لم يدخل بعد'}</td>
-                <td>
-                    <span class="badge ${u.blocked ? 'bg-err' : 'bg-ok'}">${u.blocked ? 'محظور' : 'نشط'}</span>
-                </td>
-                <td>
-                    <button class="btn-sm" onclick="toggleBlock('${u.username}', ${u.blocked})">${u.blocked ? 'فك حظر' : 'حظر'}</button>
-                    <button class="btn-sm bg-err" onclick="deleteUser('${u.username}')">حذف</button>
-                    <button class="btn-sm" style="background:#555" onclick="resetDevice('${u.username}')">مسح الجهاز</button>
-                </td>
-            `;
-            list.appendChild(row);
+            invoices.forEach(inv => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>#${inv.id}</td>
+                    <td>${new Date(inv.created_at).toLocaleDateString('ar-EG')}</td>
+                    <td style="color:var(--ok)">${inv.total || 0}</td>
+                    <td><span class="badge ${inv.status === 'closed' ? 'bg-ok' : 'bg-err'}">${inv.status}</span></td>
+                `;
+                list.appendChild(row);
+            });
+        } catch (err) {
+            list.innerHTML = `<tr><td colspan='4' style="color:var(--danger)">خطأ: ${err.message}</td></tr>`;
         }
     }
 
-    // 4. العمليات (إضافة، حظر، مسح جهاز)
-    async function addUser() {
-        const u = document.getElementById("newU").value.trim();
-        const p = document.getElementById("newP").value.trim();
-        if(!u || !p) return alert("أدخل البيانات");
-
-        const { error } = await sb.from('app_users').insert([{ username: u, pass: p, is_admin: false, blocked: false }]);
-        if(error) alert("خطأ: " + error.message);
-        else { alert("تمت الإضافة"); loadStats(); }
+    function closeModal() {
+        document.getElementById("invoiceModal").style.display = "none";
     }
 
-    async function toggleBlock(user, currentStatus) {
-        await sb.from('app_users').update({ blocked: !currentStatus }).eq('username', user);
-        loadUsers();
-    }
-
-    async function resetDevice(user) {
-        if(confirm("سيتمكن المستخدم من التسجيل من جهاز جديد، استمرار؟")) {
-            await sb.from('app_users').update({ device_id: null }).eq('username', user);
-            alert("تم مسح بيانات الجهاز");
-        }
-    }
-
-    async function deleteUser(user) {
-        if(confirm("حذف المستخدم نهائياً؟ لا يمكن التراجع")) {
-            await sb.from('app_users').delete().eq('username', user);
-            loadUsers();
-        }
-    }
-
-    // التشغيل الأول
-    loadStats();
-  </script>
-</body>
-</html>
+    // --- تعديل بسيط في دالة loadUsers ليصبح الاسم قابلاً للضغط ---
+    // ابحث عن السطر الذي يعرض اسم المستخدم (u.username) في دالة loadUsers واستبدله بهذا:
+    /*
+    <td>
+        <b style="cursor:pointer; color:var(--blue); text-decoration:underline" 
+           onclick="viewUserInvoices('${u.username}')">${u.username}</b>
+        <br><small style="color:var(--mut)">${u.is_admin ? 'أدمن' : 'مستخدم'}</small>
+    </td>
+    */
+</script>
