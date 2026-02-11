@@ -4,8 +4,8 @@ window.APP_CONFIG = {
 
   // ====== Supabase ======
   // ضع بيانات مشروعك هنا مرة واحدة فقط:
-  SUPABASE_URL: "PUT_SUPABASE_URL_HERE",
-  SUPABASE_ANON_KEY: "PUT_SUPABASE_ANON_KEY_HERE",
+  SUPABASE_URL: "https://itidwqvyrjydmegjzuvn.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_",
 
   // ====== Tables ======
   TABLE_USERS: "app_users",
@@ -15,3 +15,4 @@ window.APP_CONFIG = {
   // ====== WhatsApp removed by requirement ======
   WHATSAPP_ENABLED: false,
 };
+
