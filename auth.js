@@ -1,145 +1,129 @@
-// auth.js (FULL) — HAYEK SPOT
+// auth.js (HAYEK SPOT) — Supabase auth using app_users + device lock
 (() => {
-  "use strict";
+  const LS_DEVICE = "HAYEK_DEVICE_ID_V1";
+  const LS_SESSION = "HAYEK_SESSION_V1";
 
-  const LS_SESSION = "HAYEK_AUTH_SESSION_V1";
-  const LS_DEVICE  = "HAYEK_AUTH_DEVICE_ID_V1";
+  const TABLE_USERS = "app_users";
 
-  const USERS_TABLE = "app_users"; // ✅ جدولك الحقيقي
-
-  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
-  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
-
-  function uuid(){
+  function uuid() {
     return (crypto?.randomUUID?.() || ("dev_" + Math.random().toString(16).slice(2) + Date.now()));
   }
 
-  function getOrCreateDeviceId(){
-    let d = localStorage.getItem(LS_DEVICE);
-    if (!d) { d = uuid(); localStorage.setItem(LS_DEVICE, d); }
-    return d;
+  function getOrCreateDeviceId() {
+    let id = localStorage.getItem(LS_DEVICE);
+    if (!id) {
+      id = uuid();
+      localStorage.setItem(LS_DEVICE, id);
+    }
+    return id;
   }
 
-  function getCfg(){
+  function getConfig() {
     const cfg = window.APP_CONFIG || {};
     return {
-      url: cfg.SUPABASE_URL || "",
-      key: cfg.SUPABASE_ANON_KEY || ""
+      url: cfg.SUPABASE_URL,
+      key: cfg.SUPABASE_ANON_KEY,
     };
   }
 
-  function getClient(){
-    try{
-      const { url, key } = getCfg();
-      if (!url || !key) return null;
-      if (!window.supabase) return null;
-      return window.supabase.createClient(url, key);
-    }catch{
-      return null;
-    }
+  function getClient() {
+    const { url, key } = getConfig();
+    if (!url || !key) throw new Error("Missing SUPABASE config");
+    if (!window.supabase) throw new Error("supabase-js not loaded");
+    return window.supabase.createClient(url, key);
   }
 
-  function getSession(){
-    return jparse(localStorage.getItem(LS_SESSION), null);
+  function setSession(s) {
+    localStorage.setItem(LS_SESSION, JSON.stringify(s));
   }
 
-  function setSession(sess){
-    jset(LS_SESSION, sess);
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem(LS_SESSION) || "null"); }
+    catch { return null; }
   }
 
-  function clearSession(){
+  function clearSession() {
     localStorage.removeItem(LS_SESSION);
   }
 
-  function isAuthed(){
-    const s = getSession();
-    return !!(s && s.username && s.deviceId && (s.isAdmin === true || s.isAdmin === false));
-  }
+  async function login(username, pass) {
+    username = String(username || "").trim();
+    pass = String(pass || "").trim();
+    if (!username || !pass) return { ok: false, msg: "أدخل اسم المستخدم وكلمة السر" };
 
-  function getUser(){
-    return getSession();
-  }
-
-  async function login(username, pass){
     const sb = getClient();
-    if (!sb) return { ok:false, msg:"Supabase غير جاهز. تأكد من config.js و supabase." };
-
-    const u = String(username || "").trim();
-    const p = String(pass || "").trim();
-    if (!u || !p) return { ok:false, msg:"الرجاء إدخال اسم المستخدم وكلمة السر." };
-
     const deviceId = getOrCreateDeviceId();
 
-    // اقرأ المستخدم
-    let row = null;
-    try{
-      const { data, error } = await sb
-        .from(USERS_TABLE)
-        .select("id, username, pass, is_admin, blocked, device_id")
-        .eq("username", u)
-        .limit(1)
-        .maybeSingle();
+    // IMPORTANT: table is app_users (not users)
+    const { data, error } = await sb
+      .from(TABLE_USERS)
+      .select("id, username, pass, device_id, is_admin, blocked")
+      .eq("username", username)
+      .maybeSingle();
 
-      if (error) return { ok:false, msg:"خطأ في الاتصال بالسيرفر." };
-      row = data;
-    }catch{
-      return { ok:false, msg:"خطأ في الاتصال بالسيرفر." };
+    if (error) return { ok: false, msg: "خطأ في الاتصال بالسيرفر" };
+    if (!data) return { ok: false, msg: "المستخدم غير موجود" };
+    if (data.blocked) return { ok: false, msg: "هذا الحساب محظور" };
+    if (String(data.pass || "") !== pass) return { ok: false, msg: "كلمة السر غير صحيحة" };
+
+    // Device lock:
+    // - إذا أول مرة: نخزن device_id في جدول app_users
+    // - إذا كان موجود ومختلف: نمنع الدخول
+    const storedDevice = String(data.device_id || "").trim();
+    if (storedDevice && storedDevice !== deviceId) {
+      return { ok: false, msg: "هذا الحساب مربوط بجهاز آخر" };
     }
 
-    if (!row) return { ok:false, msg:"اسم المستخدم غير موجود." };
-    if (row.blocked) return { ok:false, msg:"هذا الحساب محظور." };
-
-    // تحقق كلمة السر (حسب تصميم جدولك)
-    if (String(row.pass || "") !== p) return { ok:false, msg:"كلمة السر غير صحيحة." };
-
-    // ✅ جهاز واحد فقط:
-    // - أول تسجيل دخول: إذا device_id فاضي => نثبّت الجهاز الحالي
-    // - إذا موجود ومختلف => نرفض الدخول
-    const dbDevice = (row.device_id || "").trim();
-
-    if (!dbDevice) {
-      // ثبّت الجهاز لأول مرة
-      try{
-        const { error } = await sb
-          .from(USERS_TABLE)
-          .update({ device_id: deviceId })
-          .eq("id", row.id);
-
-        if (error) {
-          return { ok:false, msg:"تعذّر تثبيت الجهاز. حاول مجدداً." };
-        }
-      }catch{
-        return { ok:false, msg:"تعذّر تثبيت الجهاز. حاول مجدداً." };
-      }
-    } else if (dbDevice !== deviceId) {
-      return { ok:false, msg:"هذا الحساب مربوط بجهاز آخر." };
+    if (!storedDevice) {
+      const { error: upErr } = await sb
+        .from(TABLE_USERS)
+        .update({ device_id: deviceId })
+        .eq("id", data.id);
+      if (upErr) return { ok: false, msg: "تعذر ربط الحساب بالجهاز" };
     }
 
-    // احفظ جلسة محلية (مرة واحدة وبعدها دخول تلقائي على نفس الجهاز)
-    const sess = {
-      username: row.username,
-      isAdmin: !!row.is_admin,
-      deviceId
+    const session = {
+      username: data.username,
+      deviceId,
+      isAdmin: !!data.is_admin,
+      ts: Date.now()
     };
-    setSession(sess);
 
-    return { ok:true, user:sess };
+    setSession(session);
+    return { ok: true, session };
   }
 
-  function logout(){
+  function logout() {
     clearSession();
   }
 
-  // Export
+  function isAuthed() {
+    const s = getSession();
+    if (!s || !s.username || !s.deviceId) return false;
+    // لازم نفس الجهاز
+    const deviceId = getOrCreateDeviceId();
+    return s.deviceId === deviceId;
+  }
+
+  function getUser() {
+    return getSession() || null;
+  }
+
+  function resetDevice() {
+    // يمسح ربط هذا المتصفح (لا يغير في السيرفر)
+    localStorage.removeItem(LS_DEVICE);
+    clearSession();
+  }
+
   window.HAYEK_AUTH = {
     login,
     logout,
     isAuthed,
     getUser,
-    getOrCreateDeviceId
+    getOrCreateDeviceId,
+    resetDevice,
   };
 
-  // Flag used by pages
   window.__HAYEK_AUTH_LOADED__ = true;
   console.log("HAYEK AUTH loaded ✓");
 })();
