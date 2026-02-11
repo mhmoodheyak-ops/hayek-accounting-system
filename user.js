@@ -41,8 +41,6 @@
   }
 
   const session = window.HAYEK_AUTH.getUser() || {};
-  // Optional: block admin from using user page (إذا بتحب)
-  // if (session.role === "admin") { window.location.href = "admin.html?v=" + Date.now(); return; }
 
   // show body now
   document.body.style.opacity = "1";
@@ -146,42 +144,31 @@
       return;
     }
     if (tok === "±") {
-      // toggle leading minus for last number (simple)
       const s = state.expr;
       if (!s) { setExpr("-"); return; }
-      // find last token start
       let i = s.length - 1;
       while (i >= 0 && /[0-9.]/.test(s[i])) i--;
       const start = i + 1;
       const before = s.slice(0, start);
       const num = s.slice(start);
       if (!num) { setExpr(s + "-"); return; }
-      if (before.endsWith("-")) {
-        setExpr(before.slice(0, -1) + num);
-      } else {
-        setExpr(before + "-" + num);
-      }
+      if (before.endsWith("-")) setExpr(before.slice(0, -1) + num);
+      else setExpr(before + "-" + num);
       return;
     }
 
-    // Normalize symbols
     if (tok === "×") tok = "*";
     if (tok === "÷") tok = "/";
 
-    // Only allow safe chars
     if (!/^[0-9+\-*/().]$/.test(tok)) return;
-
     setExpr(state.expr + tok);
   }
 
   function safeEval(expr){
-    // allow digits, ops, dot, spaces, parentheses only
     const cleaned = (expr || "").replace(/\s+/g,"");
     if (!cleaned) throw new Error("empty");
     if (!/^[0-9+\-*/().]+$/.test(cleaned)) throw new Error("badchars");
-    // prevent dangerous patterns
     if (cleaned.includes("..")) throw new Error("bad");
-    // Evaluate
     // eslint-disable-next-line no-new-func
     const val = Function(`"use strict"; return (${cleaned});`)();
     const n = Number(val);
@@ -192,7 +179,6 @@
   function commitLine(){
     const inv = ensureInvoice();
     if (!inv) {
-      // customer required
       customerName.focus();
       vibrateTiny();
       return;
@@ -219,7 +205,6 @@
     };
     inv.rows.push(row);
 
-    // total = sum of results
     inv.total = inv.rows.reduce((a,r) => a + toNumber(r.result), 0);
     inv.customer = (customerName.value || "").trim();
     jset(LS_CURRENT, inv);
@@ -227,7 +212,6 @@
     state.lastResult = result;
     resEl.textContent = String(result);
 
-    // reset line inputs
     lineText.value = "";
     setExpr("");
     renderAll();
@@ -256,7 +240,6 @@
 
   clearAllBtn.addEventListener("click", () => {
     vibrateTiny();
-    // wipe current invoice rows only (keep customer)
     if (state.invoice && !state.invoice.closedAt) {
       state.invoice.rows = [];
       state.invoice.total = 0;
@@ -288,13 +271,22 @@
     invPill.textContent = `فاتورة: ${id}`;
   }
 
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
   function renderTables(){
     const inv = state.invoice;
     const arr = inv?.rows || [];
 
     rowsTbody.innerHTML = arr.map(r => `
       <tr>
-        <td>${r.t}</td>
+        <td>${escapeHtml(r.t || "")}</td>
         <td>${escapeHtml(r.text || "")}</td>
         <td>${escapeHtml(r.expr || "")}</td>
         <td>${escapeHtml(String(r.result ?? ""))}</td>
@@ -306,15 +298,6 @@
     const total = inv?.total ?? 0;
     totalEl.textContent = String(total);
     totalEl2.textContent = String(total);
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
   }
 
   function renderAll(){
@@ -343,25 +326,51 @@
     }
   }
 
+  // ✅ IMPORTANT: Use your real table names
+  const T_INVOICES = "app_invoices";
+  const T_OPS      = "app_operations";
+
   async function uploadInvoiceSilent(inv){
-    // table name: invoices (إذا ما كانت موجودة، رح يفشل بصمت ونتركها بالصف)
     const sb = await getSupabase();
     if (!sb) return false;
 
     try{
-      const payload = {
+      // ✅ payload matches columns visible in your screenshots:
+      // id, username, device_id, total, created_at, customer_name, status, closed_at
+      const invoicePayload = {
         id: inv.id,
         username: inv.username,
         device_id: inv.deviceId || "",
-        customer: inv.customer || "",
-        created_at: inv.createdAt,
-        closed_at: inv.closedAt,
         total: inv.total,
-        items: inv.rows
+        created_at: inv.createdAt,
+        customer_name: inv.customer || "",
+        status: "closed",
+        closed_at: inv.closedAt || nowIso()
       };
 
-      const { error } = await sb.from("invoices").insert([payload]);
-      if (error) return false;
+      const { error: e1 } = await sb.from(T_INVOICES).insert([invoicePayload]);
+      if (e1) return false;
+
+      // ✅ Try to insert operations too (silent)
+      // إذا أعمدتك مختلفة، هالإدخال رح يفشل بصمت وما رح يوقف الفاتورة.
+      if (Array.isArray(inv.rows) && inv.rows.length) {
+        const opsPayload = inv.rows.map((r) => ({
+          invoice_id: inv.id,
+          username: inv.username,
+          device_id: inv.deviceId || "",
+          time: r.t || "",
+          text: r.text || "",
+          expr: r.expr || "",
+          result: toNumber(r.result),
+          created_at: inv.closedAt || inv.createdAt || nowIso()
+        }));
+
+        const { error: e2 } = await sb.from(T_OPS).insert(opsPayload);
+        // لا نعتبرها فشل قاتل — لأن الفاتورة وصلت
+        // لو بدك نضمن 100% للعمليات، لازم أعرف أسماء الأعمدة عندك في app_operations.
+        void e2;
+      }
+
       return true;
     }catch{
       return false;
@@ -387,22 +396,19 @@
     const inv = ensureInvoice();
     if (!inv) return null;
 
-    // must have at least one row to close
     if (!inv.rows || inv.rows.length === 0) {
-      // إذا بدك تسمح بإغلاق فاتورة فارغة، قلّي
       return null;
     }
 
     inv.closedAt = nowIso();
     jset(LS_CURRENT, inv);
 
-    // push to queue and try upload silently
     const q = getQueue();
     q.unshift(inv);
     setQueue(q);
     tryUploadQueue();
 
-    // After close, start fresh invoice (keep customer empty)
+    // After close, start fresh
     state.invoice = null;
     localStorage.removeItem(LS_CURRENT);
     customerName.value = "";
@@ -421,7 +427,6 @@
 
     const doc = new jsPDF({ unit: "pt", format: "a4" });
 
-    // Simple layout (works even if arabic shaping not perfect on some devices)
     let y = 52;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -435,7 +440,6 @@
     doc.text(`Invoice: ${inv.id}`, 420, y, { align: "right" }); y += 16;
     doc.text(`Date: ${new Date(inv.closedAt || inv.createdAt).toLocaleString()}`, 420, y, { align: "right" }); y += 22;
 
-    // Table headers
     doc.setFont("helvetica", "bold");
     doc.text("Time", 52, y);
     doc.text("Text", 130, y);
@@ -495,7 +499,6 @@
       `الإجمالي: ${inv.total}\n` +
       `رقم: ${inv.id.slice(-6)}`;
 
-    // Try share (mobile) with PDF file if possible
     try{
       const blob = await buildPdfBlob(inv);
       const file = new File([blob], `HAYEK_${inv.id.slice(-6)}.pdf`, { type: "application/pdf" });
@@ -506,7 +509,6 @@
       }
     }catch {}
 
-    // Fallback: open whatsapp text
     const waUrl = "https://wa.me/?text=" + encodeURIComponent(text);
     window.open(waUrl, "_blank", "noopener,noreferrer");
   }
