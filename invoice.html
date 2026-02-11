@@ -1,295 +1,192 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK SPOT — صفحة المستخدم (فواتير)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HAYEK SPOT — الحاسبة</title>
 
-  <link rel="stylesheet" href="style.css?v=5000" />
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <!-- Config -->
-  <script src="config.js?v=5000"></script>
-
-  <!-- منطق الصفحة -->
-  <script defer src="app.js?v=5000"></script>
-
-  <style>
-    :root{
-      --bg1:#07161b; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
-      --txt:#eaf2ff; --muted:rgba(234,242,255,.70);
-      --good:#10b981; --bad:#ef4444; --warn:#f59e0b;
-      --btn:#0d2a39; --btn2:#1d4ed8;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:
-      radial-gradient(1100px 600px at 50% -220px, #14333c, var(--bg1));
-      color:var(--txt);
-    }
-    .wrap{max-width:1200px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
-    .card{background:var(--card);border:1px solid var(--stroke);border-radius:22px;padding:16px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
-    h1,h2{margin:0 0 10px}
-    .muted{opacity:.78;font-size:13px}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    input{
-      width:100%;padding:12px;border-radius:16px;border:1px solid var(--stroke);
-      background:rgba(0,0,0,.20);color:#fff;outline:none
-    }
-    .btn{
-      padding:12px 14px;border-radius:16px;border:1px solid var(--stroke);
-      background:var(--btn);color:#fff;cursor:pointer;font-weight:800
-    }
-    .btn.primary{background:rgba(29,78,216,.85)}
-    .btn.success{background:rgba(16,185,129,.22);border-color:rgba(16,185,129,.35)}
-    .btn.danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
-    .btn:disabled{opacity:.45;cursor:not-allowed}
-    .pill{padding:7px 12px;border-radius:999px;border:1px solid var(--stroke);background:rgba(0,0,0,.18);font-size:13px}
-    .pill.good{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.12);color:#bff7df}
-    .pill.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12);color:#ffd1d1}
-    .note{padding:10px 12px;border-radius:16px;border:1px solid var(--stroke);background:rgba(0,0,0,.14);font-size:13px}
-    .note.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
-    .divider{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
-    .kpi{display:flex;gap:10px;flex-wrap:wrap}
-
-    .tableWrap{overflow:auto;border-radius:18px;border:1px solid var(--stroke)}
-    table{width:100%;border-collapse:collapse;min-width:760px;background:rgba(0,0,0,.12)}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);text-align:right}
-    th{color:var(--muted);font-weight:800}
-    .tdActions{white-space:nowrap}
-    .mini{padding:8px 10px;border-radius:14px}
-    .mini.red{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
-    .mini.gray{background:rgba(0,0,0,.15)}
-    .center{text-align:center}
-
-    .calc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    .display{
-      padding:14px;border-radius:18px;border:1px solid var(--stroke);
-      background:rgba(0,0,0,.20);font-size:26px;font-weight:900;min-height:58px;
-      display:flex;align-items:center;justify-content:flex-end
-    }
-    .key{padding:14px;border-radius:18px;border:1px solid var(--stroke);background:rgba(0,0,0,.18);cursor:pointer;font-weight:900}
-    .key.op{background:rgba(29,78,216,.20);border-color:rgba(29,78,216,.35)}
-    .key.danger{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35)}
-    .key.wide{grid-column:span 2}
-    .key.wider{grid-column:span 4}
-
-    /* printable (PDF) */
-    #printable{
-      background:#ffffff;color:#111;direction:rtl;padding:16mm;display:none;
-      font-family:"Segoe UI",Tahoma,Arial;
-    }
-    .p-head{
-      border:1px solid #0b2a39;
-      border-radius:10px;
-      padding:10px 12px;
-      background:#0b2a39;
-      color:#fff;
-      margin-bottom:10px;
-    }
-    .p-head h3{margin:0;font-size:18px}
-    .p-sub{margin:6px 0 0;font-size:12px;opacity:.95}
-    .p-meta{
-      border:1px solid #e6e6e6;border-radius:10px;padding:10px 12px;margin:10px 0;
-      background:#fafafa;font-size:12px;color:#222;
-    }
-    .p-meta b{color:#0b2a39}
-    .p-note{
-      margin:10px 0;
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px dashed #c9c9c9;
-      font-size:12px;color:#333;
-    }
-    #printable table{width:100%;border-collapse:collapse;border:1px solid #ddd}
-    #printable th{
-      background:#0b2a39;color:#fff;font-size:12px;padding:8px;border-bottom:1px solid #ddd
-    }
-    #printable td{
-      font-size:12px;padding:8px;border-bottom:1px solid #eee;color:#111
-    }
-    .p-total{
-      margin-top:10px;
-      border:1px solid #0b2a39;
-      border-radius:10px;
-      padding:10px 12px;
-      background:#f3f7fa;
-      font-size:13px;
-    }
-    .p-total b{color:#0b2a39}
-    .p-footer{
-      margin-top:12px;
-      font-size:12px;
-      color:#333;
-      border-top:1px solid #e6e6e6;
-      padding-top:10px;
-    }
-  </style>
+<style>
+:root{
+  --bg:#0b1f2a;
+  --card:#122b3a;
+  --accent:#1e90ff;
+  --muted:#9fb6c6;
+}
+*{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma}
+body{
+  margin:0;min-height:100vh;
+  background:linear-gradient(135deg,#0b1f2a,#0f3a3f);
+  color:#fff;
+}
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.75);
+  display:flex;align-items:center;justify-content:center;
+  z-index:999;
+}
+.overlay.hidden{display:none}
+.overlay .box{
+  background:#111;padding:30px;border-radius:16px;
+  text-align:center;max-width:320px
+}
+.app{
+  max-width:900px;margin:40px auto;padding:20px
+}
+.card{
+  background:var(--card);
+  border-radius:18px;padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35)
+}
+h1{margin:0 0 10px}
+label{font-size:13px;color:var(--muted)}
+input{
+  width:100%;padding:14px;border-radius:14px;
+  border:none;margin:6px 0 16px;font-size:16px
+}
+input[readonly]{background:#0e2431;color:#7fa}
+.table{
+  width:100%;border-collapse:collapse;margin-top:10px
+}
+.table th,.table td{
+  border-bottom:1px dashed #355;
+  padding:8px;font-size:14px
+}
+.total{
+  margin-top:12px;
+  border:2px dashed #355;
+  padding:12px;border-radius:12px;
+  font-size:18px
+}
+.calc{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;margin-top:10px
+}
+.calc button{
+  padding:18px;font-size:18px;
+  border-radius:14px;border:none;
+  background:#17394b;color:#fff
+}
+.calc button.op{background:#1f4f6b}
+.calc button.eq{background:#1e90ff}
+.actions{
+  display:flex;gap:10px;margin-top:16px
+}
+.actions button{
+  flex:1;padding:14px;border-radius:14px;
+  border:none;font-size:15px
+}
+.pdf{background:#1e90ff;color:#fff}
+.wa{background:#25d366;color:#000}
+.footer{
+  text-align:center;margin-top:10px;
+  font-size:12px;color:#8aa
+}
+</style>
 </head>
 
 <body>
-  <div class="wrap">
 
-    <div class="card">
-      <h1>صفحة المستخدم — HAYEK SPOT</h1>
-      <div class="muted">الترتيب الإجباري: (اسم + كلمة سر) ثم (اسم الزبون) ثم السطور… وبعدها إنهاء الفاتورة قبل النسخ أو PDF.</div>
-      <div class="divider"></div>
-      <div class="row kpi">
-        <span id="statePill" class="pill bad">غير مسجّل</span>
-        <span class="pill">الحالة: <b id="statusText">جاهز</b></span>
-        <span class="pill">الفاتورة: <b id="invoiceState">غير مفتوحة</b></span>
-        <span class="pill">الإجمالي: <b id="totalText">0</b></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>تسجيل المستخدم</h2>
-      <div class="grid">
-        <div>
-          <label>اسم المستخدم (إجباري)</label>
-          <input id="username" placeholder="مثال: محمود" />
-        </div>
-        <div>
-          <label>كلمة السر (إجباري)</label>
-          <input id="password" type="password" placeholder="••••••••" />
-        </div>
-        <div style="align-self:end">
-          <button id="btnLogin" class="btn primary">دخول</button>
-        </div>
-        <div style="align-self:end">
-          <button id="btnLogout" class="btn">خروج</button>
-        </div>
-      </div>
-
-      <div class="note warn" style="margin-top:10px">
-        ✅ الحساب يقفل على جهاز واحد فقط (device_id). إذا حاول من جهاز ثاني يتم رفض الدخول.
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>الفاتورة</h2>
-      <div class="grid">
-        <div style="grid-column: span 2">
-          <label>اسم الزبون (إجباري)</label>
-          <input id="customerName" placeholder="اكتب اسم الزبون ثم Enter — تُفتح فاتورة تلقائيًا" />
-        </div>
-        <div style="align-self:end">
-          <button id="btnOpenInvoice" class="btn success">فتح فاتورة (احتياطي)</button>
-        </div>
-        <div style="align-self:end">
-          <button id="btnFinalize" class="btn primary">إنهاء الفاتورة (إجباري)</button>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button id="btnCopyTable" class="btn" disabled>نسخ الجدول</button>
-        <button id="btnPdf" class="btn" disabled>تصدير PDF للزبون</button>
-        <span class="pill">اسم الفاتورة على السيرفر: <b id="serverName">—</b></span>
-      </div>
-
-      <div class="note" style="margin-top:10px">
-        ✅ لا يمكن النسخ أو PDF قبل الضغط على: <b>إنهاء الفاتورة</b>.
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>إضافة سطر</h2>
-
-      <div class="grid">
-        <div style="grid-column: span 2">
-          <label>بيان / ملاحظة للسطر (اختياري)</label>
-          <input id="lineNote" placeholder="مثال: أجرة / خصم / كمية..." />
-        </div>
-        <div>
-          <label>المبلغ (من الحاسبة)</label>
-          <input id="lineAmount" inputmode="decimal" placeholder="0" />
-        </div>
-        <div style="align-self:end">
-          <button id="btnAddLine" class="btn primary">إضافة السطر</button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="grid">
-        <div class="card" style="grid-column: span 2; padding:14px">
-          <div class="row" style="justify-content:space-between">
-            <h2 style="margin:0">الآلة الحاسبة</h2>
-            <span class="pill">اهتزاز خفيف ✅</span>
-          </div>
-
-          <div style="margin-top:10px" class="display" id="calcDisplay">0</div>
-
-          <div class="calc" style="margin-top:10px">
-            <button class="key danger" data-k="C">C</button>
-            <button class="key" data-k="(">(</button>
-            <button class="key" data-k=")">)</button>
-            <button class="key op" data-k="/">÷</button>
-
-            <button class="key" data-k="3">3</button>
-            <button class="key" data-k="2">2</button>
-            <button class="key" data-k="1">1</button>
-            <button class="key op" data-k="*">×</button>
-
-            <button class="key" data-k="6">6</button>
-            <button class="key" data-k="5">5</button>
-            <button class="key" data-k="4">4</button>
-            <button class="key op" data-k="-">−</button>
-
-            <button class="key" data-k="9">9</button>
-            <button class="key" data-k="8">8</button>
-            <button class="key" data-k="7">7</button>
-            <button class="key op" data-k="+">+</button>
-
-            <button class="key wide" data-k="0">0</button>
-            <button class="key" data-k=".">.</button>
-            <button class="key op" data-k="=">=</button>
-
-            <button class="key wider" data-k="PUT" style="background:rgba(16,185,129,.20);border-color:rgba(16,185,129,.35)">
-              إدخال النتيجة في مبلغ السطر
-            </button>
-          </div>
-        </div>
-
-        <div class="card" style="grid-column: span 2; padding:14px">
-          <div class="row" style="justify-content:space-between">
-            <h2 style="margin:0">سطور الفاتورة</h2>
-          </div>
-
-          <div class="tableWrap" style="margin-top:10px">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>البيان</th>
-                  <th>المبلغ</th>
-                  <th>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="linesBody">
-                <tr><td colspan="4" class="center muted">لا يوجد سطور بعد.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="row">
-            <span class="pill">السجل: <b id="opsCount">0</b></span>
-            <button id="btnClearLines" class="btn danger">مسح السطور</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="printable"></div>
+<!-- حماية مؤقتة (نفعّلها بالخطوة 2) -->
+<div id="lock" class="overlay hidden">
+  <div class="box">
+    <h3>تسجيل الدخول مطلوب</h3>
+    <p>غير مسموح تصفح الصفحة</p>
   </div>
+</div>
+
+<div class="app">
+  <div class="card">
+    <h1>حاسبة الحايك</h1>
+
+    <!-- اسم الزبون -->
+    <label>اسم الزبون (إجباري)</label>
+    <input id="customer" placeholder="مثال: أبو علي">
+
+    <!-- نص اختياري -->
+    <label>نص السطر (اختياري)</label>
+    <input id="textNote" placeholder="مثال: محارم">
+
+    <!-- العملية -->
+    <label>العملية الحسابية</label>
+    <input id="expr" readonly placeholder="5+5">
+
+    <!-- لوحة الأرقام -->
+    <div class="calc">
+      <button onclick="add('7')">7</button>
+      <button onclick="add('8')">8</button>
+      <button onclick="add('9')">9</button>
+      <button class="op" onclick="add('/')">÷</button>
+
+      <button onclick="add('4')">4</button>
+      <button onclick="add('5')">5</button>
+      <button onclick="add('6')">6</button>
+      <button class="op" onclick="add('*')">×</button>
+
+      <button onclick="add('1')">1</button>
+      <button onclick="add('2')">2</button>
+      <button onclick="add('3')">3</button>
+      <button class="op" onclick="add('-')">−</button>
+
+      <button onclick="clearExpr()">C</button>
+      <button onclick="add('0')">0</button>
+      <button class="eq" onclick="commit()">=</button>
+      <button class="op" onclick="add('+')">+</button>
+    </div>
+
+    <!-- الجدول -->
+    <table class="table">
+      <thead>
+        <tr><th>البيان</th><th>العملية</th><th>النتيجة</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <div class="total">
+      إجمالي الكشف: <strong id="sum">0</strong>
+    </div>
+
+    <div class="actions">
+      <button class="pdf" onclick="exportPDF()">تصدير PDF</button>
+      <button class="wa" onclick="sendWA()">إرسال واتساب</button>
+    </div>
+
+    <div class="footer">HAYEK SPOT</div>
+  </div>
+</div>
+
+<script>
+let total=0;
+
+function add(v){
+  document.getElementById('expr').value+=v;
+}
+function clearExpr(){
+  document.getElementById('expr').value='';
+}
+function commit(){
+  const name=document.getElementById('customer').value.trim();
+  if(!name){alert('أدخل اسم الزبون');return;}
+  const expr=document.getElementById('expr').value;
+  if(!expr)return;
+  let res;
+  try{res=Function('return '+expr)()}catch(e){return}
+  const note=document.getElementById('textNote').value;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${note||'—'}</td><td>${expr}</td><td>${res}</td>`;
+  document.getElementById('rows').appendChild(tr);
+  total+=res;
+  document.getElementById('sum').textContent=total;
+  document.getElementById('expr').value='';
+  document.getElementById('textNote').value='';
+}
+function exportPDF(){
+  alert('PDF — سنفعّلها بالخطوة التالية');
+}
+function sendWA(){
+  alert('واتساب — سنفعّلها بالخطوة التالية');
+}
+</script>
+
 </body>
 </html>
