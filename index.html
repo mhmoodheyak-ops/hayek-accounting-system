@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,144 +7,76 @@
   <title>HAYEK SPOT — تسجيل الدخول</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a; }
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt);display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui, -apple-system, sans-serif}
-    .card{width:min(400px,100%);background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:30px;backdrop-filter:blur(12px);box-shadow:0 20px 50px rgba(0,0,0,0.3);text-align:center}
-    h2{margin:0 0 10px; font-size:24px}
-    p{color:var(--mut); font-size:14px; margin-bottom:25px}
-    input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,0.3);color:#fff;margin-bottom:15px;outline:none;transition:0.3s;box-sizing:border-box}
-    input:focus{border-color:var(--blue); background:rgba(0,0,0,0.5)}
-    .btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-weight:bold;font-size:16px;transition:0.3s}
+    :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; }
+    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt);display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui}
+    .card{width:min(450px,100%);background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:30px;backdrop-filter:blur(10px);text-align:center}
+    input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:#fff;margin-bottom:15px;outline:none;box-sizing:border-box}
+    .btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-weight:bold;font-size:16px}
     .blue{background:var(--blue);color:#fff}
-    .blue:hover{opacity:0.9; transform:scale(0.98)}
-    .err{color:var(--danger);font-size:13px;margin-top:15px;min-height:18px}
-    .device-info{font-size:11px; color:var(--mut); margin-top:20px; opacity:0.6}
+    .err{color:var(--danger);font-size:13px;text-align:center;margin-top:15px;min-height:1.2em}
   </style>
 </head>
 <body>
-
   <div class="card">
-    <h2>HAYEK SPOT</h2>
-    <p>نظام المحاسبة وإدارة المستخدمين</p>
-    
-    <input id="u" type="text" placeholder="اسم المستخدم" spellcheck="false">
+    <h2 style="margin:0 0 20px">HAYEK SPOT</h2>
+    <input id="u" placeholder="اسم المستخدم" spellcheck="false">
     <input id="p" type="password" placeholder="كلمة السر">
-    
-    <button class="btn blue" id="loginBtn">تسجيل الدخول</button>
-    
+    <button class="btn blue" id="loginBtn">دخول للنظام</button>
     <div class="err" id="err"></div>
-    <div class="device-info" id="devTag">جاري التعرف على الجهاز...</div>
   </div>
 
   <script>
-    (() => {
-      const $ = (id) => document.getElementById(id);
+    const $ = (id) => document.getElementById(id);
+    
+    // الإعدادات من جداول Supabase الخاصة بك
+    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+    const sb = supabase.createClient(SB_URL, SB_KEY);
 
-      // الإعدادات المباشرة من قاعدة بياناتك
-      const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-      const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-      const sb = supabase.createClient(SB_URL, SB_KEY);
-
-      // توليد معرف جهاز ثابت لهذا المتصفح
-      function getDeviceId() {
-        let id = localStorage.getItem("HAYEK_DEVICE_ID");
-        if (!id) {
-          id = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-          localStorage.setItem("HAYEK_DEVICE_ID", id);
-        }
-        return id;
-      }
-
-      const currentDeviceId = getDeviceId();
-      $("devTag").textContent = "ID: " + currentDeviceId;
-
-      $("loginBtn").onclick = async () => {
-        const btn = $("loginBtn");
-        const userVal = $("u").value.trim();
-        const passVal = $("p").value.trim();
-        const errorEl = $("err");
-
-        if(!userVal || !passVal) { 
-          errorEl.textContent = "يرجى إدخال اسم المستخدم وكلمة السر"; 
-          return; 
-        }
-
-        errorEl.textContent = "جاري التحقق...";
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-
-        try {
-          // البحث في عمود username حصراً لتجنب خطأ "column t does not exist"
-          const { data, error } = await sb
-            .from('app_users')
-            .select('*')
-            .eq('username', userVal)
-            .single();
-
-          if (error || !data) {
-            errorEl.textContent = "خطأ: المستخدم غير موجود في النظام";
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            return;
-          }
-
-          // التحقق من كلمة السر
-          if (String(data.pass) !== passVal) {
-            errorEl.textContent = "عذراً، كلمة السر غير صحيحة";
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            return;
-          }
-
-          // التأكد من أن المستخدم غير محظور
-          if (data.blocked === true) {
-            errorEl.textContent = "هذا الحساب محظور من قبل الأدمن";
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            return;
-          }
-
-          // حفظ الجلسة بصيغة يفهمها ملف admin.html وملف user.html
-          const sessionData = {
-            username: data.username,
-            role: data.is_admin ? "admin" : "user",
-            deviceId: currentDeviceId,
-            loginTime: Date.now()
-          };
-          
-          localStorage.setItem("HAYEK_SESSION", JSON.stringify(sessionData));
-
-          // تحديث آخر ظهور ومعرف الجهاز في قاعدة البيانات
-          await sb.from('app_users')
-            .update({ 
-              last_seen: new Date().toISOString(),
-              device_id: currentDeviceId 
-            })
-            .eq('username', data.username);
-
-          errorEl.style.color = "var(--ok)";
-          errorEl.textContent = "تم الدخول بنجاح! جاري التحويل...";
-
-          // التوجيه الصحيح بناءً على الرتبة
-          setTimeout(() => {
-            if (data.is_admin === true) {
-              location.href = "admin.html?v=" + Date.now();
-            } else {
-              location.href = "invoice.html?v=" + Date.now();
-            }
-          }, 800);
-
-        } catch (e) {
-          console.error(e);
-          errorEl.textContent = "فشل الاتصال بالسيرفر، تأكد من الإنترنت";
-          btn.disabled = false;
-          btn.style.opacity = "1";
-        }
-      };
+    $("loginBtn").onclick = async () => {
+      $("err").textContent = "";
+      const userVal = $("u").value.trim();
+      const passVal = $("p").value.trim();
       
-      // الضغط على Enter للإدخال السريع
-      document.onkeydown = (e) => { if(e.key === "Enter") $("loginBtn").click(); };
-    })();
+      if(!userVal || !passVal) { $("err").textContent = "يرجى ملء كافة الحقول"; return; }
+
+      try {
+        // 1. البحث باستخدام username (تجاوز خطأ العمود t)
+        const { data, error } = await sb
+          .from('app_users')
+          .select('*')
+          .eq('username', userVal)
+          .single();
+
+        if (error || !data) { $("err").textContent = "المستخدم غير موجود"; return; }
+        
+        // 2. مطابقة كلمة السر
+        if (String(data.pass) !== passVal) { $("err").textContent = "كلمة السر غير صحيحة"; return; }
+
+        // 3. التحقق من الحظر
+        if (data.blocked) { $("err").textContent = "هذا الحساب محظور"; return; }
+
+        // 4. إنشاء الجلسة بالشكل الذي تطلبه صفحة الأدمن (مهم جداً)
+        const session = {
+          username: data.username,
+          role: data.is_admin ? "admin" : "user",
+          lastLogin: new Date().toISOString()
+        };
+        
+        // حفظ الجلسة في LocalStorage
+        localStorage.setItem("HAYEK_SESSION", JSON.stringify(session));
+
+        // 5. التوجيه الفوري
+        if (data.is_admin) {
+          window.location.replace("admin.html");
+        } else {
+          window.location.replace("invoice.html");
+        }
+
+      } catch (e) {
+        $("err").textContent = "خطأ في الاتصال: " + e.message;
+      }
+    };
   </script>
 </body>
 </html>
