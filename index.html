@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- أضفنا تحميل auth.js هنا عشان HAYEK_AUTH يتوفر -->
+  <script src="./auth.js"></script>
   <style>
     :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; }
     body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt);display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui}
@@ -27,7 +29,17 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
-    // إعدادات Supabase (من config.js أو مباشرة)
+    // انتظر لحظة صغيرة حتى يتحمل auth.js تماماً (آمن)
+    window.addEventListener('load', () => {
+      if (!window.HAYEK_AUTH) {
+        $("err").textContent = "خطأ داخلي: نظام المصادقة غير محمل";
+        console.error("HAYEK_AUTH غير موجود بعد تحميل الصفحة");
+        return;
+      }
+      console.log("HAYEK_AUTH جاهز ✓");
+    });
+
+    // إعدادات Supabase
     const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
     const sb = supabase.createClient(SB_URL, SB_KEY);
@@ -66,7 +78,7 @@
           return;
         }
 
-        // إنشاء الجلسة بالشكل المتوافق مع auth.js و admin.js
+        // إنشاء الجلسة بالشكل المتوافق مع auth.js
         const session = {
           id: data.id,
           username: data.username,
@@ -74,18 +86,17 @@
           device_id: data.device_id || (window.HAYEK_AUTH?.getOrCreateDeviceId?.() || "unknown")
         };
 
-        // حفظ الجلسة باستخدام دالة auth.js
+        // حفظ الجلسة
         window.HAYEK_AUTH.setSession(session);
 
-        // تحديث last_seen إذا كان العمود موجود
+        // تحديث last_seen إذا العمود موجود
         await sb
           .from('app_users')
           .update({ last_seen: new Date().toISOString() })
           .eq('id', data.id)
-          .then(() => console.log("تم تحديث آخر ظهور"))
-          .catch(err => console.warn("فشل تحديث last_seen", err));
+          .catch(err => console.warn("فشل تحديث last_seen:", err));
 
-        // توجيه حسب الدور مع تجنب الكاش
+        // توجيه مع تجنب الكاش
         const ts = Date.now();
         if (data.is_admin) {
           window.location.replace("admin.html?v=" + ts);
