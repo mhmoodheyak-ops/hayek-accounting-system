@@ -1,338 +1,314 @@
-/* user.js - HAYEK SPOT User (from scratch)
-   - Login overlay mandatory
-   - One-time login on same device (uses auth.js if available)
-   - Invoice open/close + offline queue
-   - PDF export + WhatsApp share (best effort)
-   - No "copy as table" (removed)
-*/
-
 (() => {
-  "use strict";
-
-  // ---------- helpers ----------
+  // ========= Helpers =========
   const $ = (id) => document.getElementById(id);
-  const now = () => new Date();
-  const pad2 = (n) => String(n).padStart(2, "0");
-  const fmtDT = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())} ${d.getFullYear()}/${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`;
-  const fmtTime = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_V1";
+  const LS_QUEUE   = "HAYEK_USER_UPLOAD_QUEUE_V1";
 
-  const LS = {
-    auth: "HAYEK_USER_AUTH",
-    invoice: "HAYEK_USER_ACTIVE_INVOICE",
-    history: "HAYEK_USER_HISTORY",
-    queue: "HAYEK_USER_SYNC_QUEUE",
-    settings: "HAYEK_USER_SETTINGS"
+  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
+  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+  function nowTime(){
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    return `${hh}:${mm}`;
+  }
+  function nowIso(){ return new Date().toISOString(); }
+  function uuid(){
+    return (crypto?.randomUUID?.() || ("id_" + Math.random().toString(16).slice(2) + Date.now()));
+  }
+  function toNumber(x){
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function vibrateTiny(){
+    try { if (navigator.vibrate) navigator.vibrate(18); } catch {}
+  }
+
+  // ========= AUTH Gate (no content for strangers) =========
+  const lock = $("lock");
+  const goLogin = $("goLogin");
+
+  function hardLock(){
+    lock.style.display = "flex";
+    document.body.style.opacity = "1";
+  }
+
+  // require login
+  if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH.isAuthed()) {
+    hardLock();
+    goLogin.onclick = () => window.location.href = "index.html?v=" + Date.now();
+    return;
+  }
+
+  const session = window.HAYEK_AUTH.getUser() || {};
+  // Optional: block admin from using user page (إذا بتحب)
+  // if (session.role === "admin") { window.location.href = "admin.html?v=" + Date.now(); return; }
+
+  // show body now
+  document.body.style.opacity = "1";
+
+  // ========= State =========
+  const state = {
+    invoice: null,      // {id, username, deviceId, customer, createdAt, rows:[...], total, closedAt?}
+    expr: "",
+    lastResult: 0
   };
 
-  function loadJSON(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key) || "") ?? fallback; } catch { return fallback; }
+  const onlineDot = $("onlineDot");
+  function refreshOnline(){
+    onlineDot.style.background = navigator.onLine ? "#49e39a" : "#ffb1b1";
+    onlineDot.style.boxShadow = navigator.onLine ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
   }
-  function saveJSON(key, val) {
-    localStorage.setItem(key, JSON.stringify(val));
-  }
+  window.addEventListener("online", () => { refreshOnline(); tryUploadQueue(); });
+  window.addEventListener("offline", refreshOnline);
+  refreshOnline();
 
-  function setMsg(el, text, isErr=false) {
-    el.textContent = text;
-    el.classList.toggle("err", !!isErr);
-    el.style.display = "block";
-  }
+  // ========= UI refs =========
+  const customerName = $("customerName");
+  const lineText = $("lineText");
+  const exprInput = $("expr");
+  const resEl = $("res");
+  const rowsTbody = $("rows");
+  const rowsTbody2 = $("rows2");
+  const totalEl = $("total");
+  const totalEl2 = $("total2");
+  const invPill = $("invPill");
+  const userPill = $("userPill");
 
-  function vibe(enabled) {
-    if (!enabled) return;
-    if (navigator.vibrate) navigator.vibrate(18);
-  }
+  const clearLineBtn = $("clearLine");
+  const clearAllBtn = $("clearAllBtn");
+  const pdfBtn = $("pdfBtn");
+  const waBtn = $("waBtn");
+  const logoutBtn = $("logoutBtn");
 
-  function netUI() {
-    const dot = $("netDot");
-    const online = navigator.onLine;
-    dot.style.background = online ? "#22c55e" : "#ef4444";
-    dot.style.boxShadow = online ? "0 0 0 6px rgba(34,197,94,.15)" : "0 0 0 6px rgba(239,68,68,.15)";
-  }
+  // Tabs
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
 
-  // ---------- auth (use auth.js if available, else local fallback) ----------
-  function getDeviceIdFallback() {
-    let v = localStorage.getItem("HAYEK_DEVICE_ID");
-    if (!v) {
-      v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-      localStorage.setItem("HAYEK_DEVICE_ID", v);
+      const key = tab.getAttribute("data-tab");
+      $("tab_calc").style.display = (key === "calc") ? "block" : "none";
+      $("tab_log").style.display  = (key === "log") ? "block" : "none";
+    });
+  });
+
+  // ========= Load persisted current invoice =========
+  function loadCurrent(){
+    const cur = jparse(localStorage.getItem(LS_CURRENT), null);
+    if (cur && cur.id && cur.username === session.username) {
+      state.invoice = cur;
+      customerName.value = cur.customer || "";
     }
-    return v;
   }
+  loadCurrent();
 
-  function authApi() {
-    const A = window.HAYEK_AUTH;
-    const has = A && (typeof A === "object");
-    return {
-      has,
-      getDeviceId: () => {
-        try {
-          if (has && typeof A.getDeviceId === "function") return A.getDeviceId();
-        } catch {}
-        return getDeviceIdFallback();
-      },
-      isLoggedIn: () => {
-        try {
-          if (has && typeof A.isLoggedIn === "function") return !!A.isLoggedIn();
-          if (has && typeof A.getSession === "function") return !!A.getSession();
-        } catch {}
-        const s = loadJSON(LS.auth, null);
-        return !!(s && s.ok && s.deviceId === getDeviceIdFallback());
-      },
-      login: async (username, password) => {
-        // Prefer auth.js if offers login()
-        try {
-          if (has && typeof A.login === "function") {
-            const res = await A.login(username, password);
-            // assume res truthy means success
-            return { ok: !!res, user: username };
-          }
-          if (has && typeof A.signIn === "function") {
-            const res = await A.signIn(username, password);
-            return { ok: !!res, user: username };
-          }
-        } catch (e) {
-          return { ok:false, error: (e && e.message) ? e.message : "فشل تسجيل الدخول" };
-        }
+  // ========= Invoice auto-create =========
+  function ensureInvoice(){
+    const cust = (customerName.value || "").trim();
+    if (!cust) return null;
 
-        // Fallback (local only) — for safety if auth.js doesn't expose functions
-        // WARNING: this is local, device only.
-        const deviceId = getDeviceIdFallback();
-        saveJSON(LS.auth, { ok:true, user: username, deviceId, ts: Date.now() });
-        return { ok:true, user: username };
-      },
-      logout: async () => {
-        try {
-          if (has && typeof A.logout === "function") await A.logout();
-        } catch {}
-        localStorage.removeItem(LS.auth);
-      },
-      resetDevice: async () => {
-        try {
-          if (has && typeof A.clearDevice === "function") await A.clearDevice();
-        } catch {}
-        // wipe local auth/device
-        localStorage.removeItem(LS.auth);
-        localStorage.removeItem("HAYEK_DEVICE_ID");
-      },
-      getUserName: () => {
-        try {
-          if (has && typeof A.getUserName === "function") return A.getUserName();
-          if (has && typeof A.getSession === "function") {
-            const s = A.getSession();
-            if (s && s.username) return s.username;
-          }
-        } catch {}
-        const s = loadJSON(LS.auth, null);
-        return s?.user || "—";
-      }
-    };
-  }
-
-  const AUTH = authApi();
-
-  // ---------- app state ----------
-  const settings = loadJSON(LS.settings, { vibe:true, eachLine:true });
-  $("toggleVibe").checked = !!settings.vibe;
-  $("toggleEachLine").checked = !!settings.eachLine;
-
-  let history = loadJSON(LS.history, []);
-  let active = loadJSON(LS.invoice, null); // {id, user, customer, status, createdAt, rows:[...], total}
-  let syncQueue = loadJSON(LS.queue, []); // invoices closed pending sync
-
-  function persistAll() {
-    saveJSON(LS.settings, settings);
-    saveJSON(LS.history, history);
-    saveJSON(LS.invoice, active);
-    saveJSON(LS.queue, syncQueue);
-  }
-
-  function ensureActiveInvoice() {
-    if (!active) {
-      active = {
-        id: null,
-        user: AUTH.getUserName(),
-        customer: "",
-        status: "closed",
-        createdAt: null,
+    if (!state.invoice || state.invoice.closedAt) {
+      state.invoice = {
+        id: uuid(),
+        username: session.username || "user",
+        deviceId: session.deviceId || (window.HAYEK_AUTH.getOrCreateDeviceId ? window.HAYEK_AUTH.getOrCreateDeviceId() : ""),
+        customer: cust,
+        createdAt: nowIso(),
         rows: [],
         total: 0
       };
+      jset(LS_CURRENT, state.invoice);
+    } else {
+      // keep customer synced
+      state.invoice.customer = cust;
+      jset(LS_CURRENT, state.invoice);
     }
+    return state.invoice;
   }
 
-  function setActiveStatus(st) {
-    ensureActiveInvoice();
-    active.status = st;
-    $("invoiceStatus").value = st;
-    persistAll();
-  }
-
-  function calcTotal(rows) {
-    // sum numeric results only
-    let sum = 0;
-    for (const r of rows) {
-      const n = Number(r.result);
-      if (Number.isFinite(n)) sum += n;
-    }
-    return sum;
-  }
-
-  // ---------- UI: tabs ----------
-  function setTab(name) {
-    for (const el of document.querySelectorAll(".tab")) {
-      el.classList.toggle("active", el.dataset.tab === name);
-    }
-    $("tab-calc").style.display = name === "calc" ? "" : "none";
-    $("tab-invoice").style.display = name === "invoice" ? "" : "none";
-    $("tab-history").style.display = name === "history" ? "" : "none";
-    $("tab-tools").style.display = name === "tools" ? "" : "none";
-  }
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.addEventListener("click", () => setTab(btn.dataset.tab));
+  // If customer typed, create invoice immediately
+  customerName.addEventListener("input", () => {
+    const cust = (customerName.value || "").trim();
+    if (cust) ensureInvoice();
+    renderMeta();
   });
 
-  // ---------- keyboard ----------
-  const KEYS = [
-    {t:"÷", v:"/"},
-    {t:"⌫", v:"back", cls:"warn"},
-    {t:"(", v:"("},
-    {t:")", v:")"},
-
-    {t:"×", v:"*"},
-    {t:"7", v:"7"},
-    {t:"8", v:"8"},
-    {t:"9", v:"9"},
-
-    {t:"−", v:"-"},
-    {t:"4", v:"4"},
-    {t:"5", v:"5"},
-    {t:"6", v:"6"},
-
-    {t:"+", v:"+"},
-    {t:"1", v:"1"},
-    {t:"2", v:"2"},
-    {t:"3", v:"3"},
-
-    {t:"=", v:"enter", cls:"ok"},
-    {t:"±", v:"pm", cls:"soft"},
-    {t:"0", v:"0"},
-    {t:".", v:"."},
-  ];
-
-  function buildKeys() {
-    const box = $("keys");
-    box.innerHTML = "";
-    for (const k of KEYS) {
-      const b = document.createElement("div");
-      b.className = "key " + (k.cls || "");
-      b.textContent = k.t;
-      b.addEventListener("click", () => {
-        vibe(settings.vibe);
-        applyKey(k.v);
-      });
-      box.appendChild(b);
-    }
+  // ========= Calculator =========
+  function setExpr(v){
+    state.expr = v;
+    exprInput.value = v;
   }
-  buildKeys();
 
-  function applyKey(v) {
-    const inp = $("lineInput");
-    if (v === "back") {
-      inp.value = inp.value.slice(0, -1);
-      renderLive();
+  function appendToken(tok){
+    if (tok === "BACK") {
+      setExpr(state.expr.slice(0, -1));
       return;
     }
-    if (v === "enter") {
+    if (tok === "±") {
+      // toggle leading minus for last number (simple)
+      const s = state.expr;
+      if (!s) { setExpr("-"); return; }
+      // find last token start
+      let i = s.length - 1;
+      while (i >= 0 && /[0-9.]/.test(s[i])) i--;
+      const start = i + 1;
+      const before = s.slice(0, start);
+      const num = s.slice(start);
+      if (!num) { setExpr(s + "-"); return; }
+      if (before.endsWith("-")) {
+        setExpr(before.slice(0, -1) + num);
+      } else {
+        setExpr(before + "-" + num);
+      }
+      return;
+    }
+
+    // Normalize symbols
+    if (tok === "×") tok = "*";
+    if (tok === "÷") tok = "/";
+
+    // Only allow safe chars
+    if (!/^[0-9+\-*/().]$/.test(tok)) return;
+
+    setExpr(state.expr + tok);
+  }
+
+  function safeEval(expr){
+    // allow digits, ops, dot, spaces, parentheses only
+    const cleaned = (expr || "").replace(/\s+/g,"");
+    if (!cleaned) throw new Error("empty");
+    if (!/^[0-9+\-*/().]+$/.test(cleaned)) throw new Error("badchars");
+    // prevent dangerous patterns
+    if (cleaned.includes("..")) throw new Error("bad");
+    // Evaluate
+    // eslint-disable-next-line no-new-func
+    const val = Function(`"use strict"; return (${cleaned});`)();
+    const n = Number(val);
+    if (!Number.isFinite(n)) throw new Error("nan");
+    return n;
+  }
+
+  function commitLine(){
+    const inv = ensureInvoice();
+    if (!inv) {
+      // customer required
+      customerName.focus();
+      vibrateTiny();
+      return;
+    }
+
+    const expr = (state.expr || "").trim();
+    if (!expr) return;
+
+    let result;
+    try {
+      result = safeEval(expr);
+    } catch {
+      vibrateTiny();
+      resEl.textContent = "خطأ";
+      return;
+    }
+
+    const text = (lineText.value || "").trim(); // optional
+    const row = {
+      t: nowTime(),
+      text,
+      expr,
+      result
+    };
+    inv.rows.push(row);
+
+    // total = sum of results
+    inv.total = inv.rows.reduce((a,r) => a + toNumber(r.result), 0);
+    inv.customer = (customerName.value || "").trim();
+    jset(LS_CURRENT, inv);
+
+    state.lastResult = result;
+    resEl.textContent = String(result);
+
+    // reset line inputs
+    lineText.value = "";
+    setExpr("");
+    renderAll();
+  }
+
+  // Keypad
+  $("pad").addEventListener("click", (e) => {
+    const btn = e.target.closest(".k");
+    if (!btn) return;
+    const k = btn.getAttribute("data-k");
+    vibrateTiny();
+
+    if (k === "=") {
       commitLine();
       return;
     }
-    if (v === "pm") {
-      // toggle last number sign: simplest
-      inp.value = inp.value + "*-1";
-      renderLive();
+    appendToken(k);
+  });
+
+  clearLineBtn.addEventListener("click", () => {
+    vibrateTiny();
+    lineText.value = "";
+    setExpr("");
+    resEl.textContent = "0";
+  });
+
+  clearAllBtn.addEventListener("click", () => {
+    vibrateTiny();
+    // wipe current invoice rows only (keep customer)
+    if (state.invoice && !state.invoice.closedAt) {
+      state.invoice.rows = [];
+      state.invoice.total = 0;
+      jset(LS_CURRENT, state.invoice);
+    } else {
+      localStorage.removeItem(LS_CURRENT);
+      state.invoice = null;
+    }
+    renderAll();
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    window.HAYEK_AUTH.logout();
+    window.location.href = "index.html?v=" + Date.now();
+  });
+
+  // ========= Rendering =========
+  function renderMeta(){
+    const inv = state.invoice;
+    const cust = (customerName.value || "").trim();
+
+    userPill.textContent = `المستخدم: ${session.username || "—"}`;
+
+    if (!cust) {
+      invPill.textContent = "—";
       return;
     }
-    inp.value += v;
-    renderLive();
+    const id = inv?.id ? inv.id.slice(-6) : "—";
+    invPill.textContent = `فاتورة: ${id}`;
   }
 
-  $("lineInput").addEventListener("input", renderLive);
+  function renderTables(){
+    const inv = state.invoice;
+    const arr = inv?.rows || [];
 
-  function safeEval(expr) {
-    // accept only digits, operators, dot, parentheses, spaces
-    const cleaned = expr.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d)); // arabic indic digits
-    if (!/^[0-9+\-*/().\s]+$/.test(cleaned)) return { ok:false, value:0 };
-    try {
-      // eslint-disable-next-line no-new-func
-      const val = Function(`"use strict"; return (${cleaned});`)();
-      if (!Number.isFinite(val)) return { ok:false, value:0 };
-      return { ok:true, value: val };
-    } catch {
-      return { ok:false, value:0 };
-    }
-  }
-
-  function splitTextAndExpr(line) {
-    // allow "محارم 5+5" => text="محارم", expr="5+5"
-    // if contains any digit/operator, take last token-ish as expr
-    const m = line.match(/^(.*?)([0-9٠-٩+\-*/().\s]+)$/);
-    if (!m) return { text: line.trim(), expr: "" };
-    return { text: (m[1] || "").trim(), expr: (m[2] || "").trim() };
-  }
-
-  function renderLive() {
-    const v = $("lineInput").value || "";
-    const { text, expr } = splitTextAndExpr(v);
-
-    $("exprView").textContent = expr ? `${text ? (text + " — ") : ""}${expr}` : (text || "—");
-    if (!expr) {
-      $("valView").textContent = "0";
-      return;
-    }
-    const r = safeEval(expr);
-    $("valView").textContent = r.ok ? String(r.value) : "0";
-  }
-
-  // ---------- invoice + history ----------
-  function renderTables() {
-    // history table
-    const h = $("historyRows");
-    h.innerHTML = "";
-    for (const r of history) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.time}</td>
+    rowsTbody.innerHTML = arr.map(r => `
+      <tr>
+        <td>${r.t}</td>
         <td>${escapeHtml(r.text || "")}</td>
         <td>${escapeHtml(r.expr || "")}</td>
         <td>${escapeHtml(String(r.result ?? ""))}</td>
-      `;
-      h.appendChild(tr);
-    }
+      </tr>
+    `).join("");
 
-    // paper table from active invoice
-    ensureActiveInvoice();
-    const p = $("paperRows");
-    p.innerHTML = "";
-    for (const r of active.rows) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.time}</td>
-        <td>${escapeHtml(r.text || "")}</td>
-        <td>${escapeHtml(r.expr || "")}</td>
-        <td>${escapeHtml(String(r.result ?? ""))}</td>
-      `;
-      p.appendChild(tr);
-    }
-    active.total = calcTotal(active.rows);
-    $("paperTotal").textContent = String(active.total);
+    rowsTbody2.innerHTML = rowsTbody.innerHTML;
 
-    $("pUser").textContent = active.user || "—";
-    $("pId").textContent = active.id || "—";
-    $("pCustomer").textContent = active.customer || "—";
-    $("pDate").textContent = active.createdAt ? fmtDT(new Date(active.createdAt)) : "—";
+    const total = inv?.total ?? 0;
+    totalEl.textContent = String(total);
+    totalEl2.textContent = String(total);
   }
 
-  function escapeHtml(s) {
+  function escapeHtml(s){
     return String(s)
       .replaceAll("&","&amp;")
       .replaceAll("<","&lt;")
@@ -341,376 +317,203 @@
       .replaceAll("'","&#039;");
   }
 
-  function newInvoice(customer) {
-    active = {
-      id: crypto.randomUUID ? crypto.randomUUID() : ("inv_" + Date.now() + "_" + Math.random().toString(16).slice(2)),
-      user: AUTH.getUserName(),
-      customer: customer.trim(),
-      status: "open",
-      createdAt: Date.now(),
-      rows: [],
-      total: 0
-    };
-    history = []; // reset history per invoice session
-    persistAll();
+  function renderAll(){
+    renderMeta();
     renderTables();
-    setActiveStatus("open");
   }
 
-  function commitLine() {
-    ensureActiveInvoice();
-    if (active.status !== "open") {
-      alert("لا يمكنك إدخال عمليات لأن الفاتورة مغلقة. افتح فاتورة جديدة أولاً.");
-      setTab("invoice");
-      return;
-    }
-    const raw = ($("lineInput").value || "").trim();
-    if (!raw) return;
+  renderAll();
 
-    const { text, expr } = splitTextAndExpr(raw);
-    let result = "";
-    if (expr) {
-      const r = safeEval(expr);
-      result = r.ok ? r.value : "";
-    }
-
-    const row = {
-      time: fmtTime(now()),
-      text: text || "",
-      expr: expr || "",
-      result: result
-    };
-
-    // add
-    active.rows.push(row);
-    history.push(row);
-
-    active.total = calcTotal(active.rows);
-    persistAll();
-    renderTables();
-
-    // clear input for next line
-    if (settings.eachLine) $("lineInput").value = "";
-    renderLive();
+  // ========= Hidden Upload Queue (no user alerts) =========
+  function getQueue(){
+    return jparse(localStorage.getItem(LS_QUEUE), []);
+  }
+  function setQueue(q){
+    jset(LS_QUEUE, q);
   }
 
-  // ---------- actions ----------
-  $("btnClearAll").addEventListener("click", () => {
-    vibe(settings.vibe);
-    $("lineInput").value = "";
-    renderLive();
-  });
-
-  $("toggleVibe").addEventListener("change", (e) => {
-    settings.vibe = !!e.target.checked;
-    persistAll();
-  });
-
-  $("toggleEachLine").addEventListener("change", (e) => {
-    settings.eachLine = !!e.target.checked;
-    persistAll();
-  });
-
-  $("btnClearHistory").addEventListener("click", () => {
-    if (!confirm("مسح السجل الحالي؟")) return;
-    history = [];
-    ensureActiveInvoice();
-    active.rows = [];
-    active.total = 0;
-    persistAll();
-    renderTables();
-  });
-
-  $("customerName").addEventListener("input", (e) => {
-    ensureActiveInvoice();
-    active.customer = e.target.value || "";
-    persistAll();
-    renderTables();
-  });
-
-  $("invoiceStatus").addEventListener("change", (e) => {
-    setActiveStatus(e.target.value);
-  });
-
-  $("btnOpenInvoice").addEventListener("click", () => {
-    vibe(settings.vibe);
-    const customer = ($("customerName").value || "").trim();
-    if (!customer) {
-      alert("اسم العميل إجباري.");
-      $("customerName").focus();
-      return;
+  async function getSupabase(){
+    try{
+      const cfg = window.APP_CONFIG || {};
+      if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
+      if (!window.supabase) return null;
+      return window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    }catch{
+      return null;
     }
-    newInvoice(customer);
-    setTab("calc");
-  });
-
-  $("btnCloseInvoice").addEventListener("click", async () => {
-    vibe(settings.vibe);
-    ensureActiveInvoice();
-    if (!active.id || active.status !== "open") {
-      alert("لا توجد فاتورة مفتوحة لإغلاقها.");
-      return;
-    }
-    if (!active.customer) {
-      alert("اسم العميل إجباري.");
-      setTab("invoice");
-      return;
-    }
-
-    // close invoice
-    active.status = "closed";
-    persistAll();
-    renderTables();
-    $("invoiceStatus").value = "closed";
-
-    // silently enqueue for sync
-    enqueueForSync(active);
-
-    // attempt sync if online (silent)
-    if (navigator.onLine) {
-      await syncQueueNow(true);
-    }
-
-    // show minimal success without mentioning server/admin
-    const msg = $("toolMsg");
-    setMsg(msg, "تم إغلاق الفاتورة بنجاح ✅", false);
-    setTab("tools");
-  });
-
-  // ---------- sync queue (silent) ----------
-  function enqueueForSync(invoice) {
-    const copy = JSON.parse(JSON.stringify(invoice));
-    syncQueue.unshift(copy);
-    // keep small
-    syncQueue = syncQueue.slice(0, 200);
-    persistAll();
   }
 
-  async function syncQueueNow(silent=false) {
+  async function uploadInvoiceSilent(inv){
+    // table name: invoices (إذا ما كانت موجودة، رح يفشل بصمت ونتركها بالصف)
+    const sb = await getSupabase();
+    if (!sb) return false;
+
+    try{
+      const payload = {
+        id: inv.id,
+        username: inv.username,
+        device_id: inv.deviceId || "",
+        customer: inv.customer || "",
+        created_at: inv.createdAt,
+        closed_at: inv.closedAt,
+        total: inv.total,
+        items: inv.rows
+      };
+
+      const { error } = await sb.from("invoices").insert([payload]);
+      if (error) return false;
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  async function tryUploadQueue(){
     if (!navigator.onLine) return;
 
-    // If app.js provides a save endpoint, use it; else keep queued.
-    const maybeSave = window.HAYEK_APP && typeof window.HAYEK_APP.saveInvoice === "function"
-      ? window.HAYEK_APP.saveInvoice
-      : null;
+    const q = getQueue();
+    if (!q.length) return;
 
-    if (!maybeSave) {
-      // no server hook available yet
-      if (!silent) setMsg($("toolMsg"), "لا يوجد موصل رفع جاهز حالياً (سيبقى محفوظاً محلياً).", true);
-      return;
+    const rest = [];
+    for (const inv of q) {
+      const ok = await uploadInvoiceSilent(inv);
+      if (!ok) rest.push(inv);
     }
-
-    const remaining = [];
-    for (const inv of syncQueue) {
-      try {
-        await maybeSave(inv); // expected to throw on fail
-      } catch {
-        remaining.push(inv);
-      }
-    }
-    syncQueue = remaining;
-    persistAll();
-    if (!silent) setMsg($("toolMsg"), remaining.length ? "بعض العناصر لم تُرفع، ستُعاد المحاولة تلقائياً." : "تمت المزامنة ✅", !!remaining.length);
+    setQueue(rest);
   }
 
-  $("btnForceSync").addEventListener("click", async () => {
-    vibe(settings.vibe);
-    await syncQueueNow(false);
-  });
+  // ========= Auto-close invoice (on export/send) =========
+  async function closeInvoiceSilent(){
+    const inv = ensureInvoice();
+    if (!inv) return null;
 
-  // ---------- PDF + WhatsApp ----------
-  async function buildPdfBlob() {
-    ensureActiveInvoice();
-
-    if (active.status !== "closed") {
-      alert("لازم تغلق الفاتورة قبل تصدير PDF.");
-      throw new Error("invoice not closed");
+    // must have at least one row to close
+    if (!inv.rows || inv.rows.length === 0) {
+      // إذا بدك تسمح بإغلاق فاتورة فارغة، قلّي
+      return null;
     }
 
-    // Use jsPDF basic (Arabic in PDF depends on your embedding strategy).
-    // Here we export a clean table in Arabic UI; PDF text rendering depends on your jsPDF setup.
+    inv.closedAt = nowIso();
+    jset(LS_CURRENT, inv);
+
+    // push to queue and try upload silently
+    const q = getQueue();
+    q.unshift(inv);
+    setQueue(q);
+    tryUploadQueue();
+
+    // After close, start fresh invoice (keep customer empty)
+    state.invoice = null;
+    localStorage.removeItem(LS_CURRENT);
+    customerName.value = "";
+    lineText.value = "";
+    setExpr("");
+    resEl.textContent = "0";
+    renderAll();
+
+    return inv;
+  }
+
+  // ========= PDF Export (works offline) =========
+  async function buildPdfBlob(inv){
     const { jsPDF } = window.jspdf || {};
-    if (!jsPDF) {
-      alert("jsPDF غير محمل.");
-      throw new Error("jspdf missing");
-    }
+    if (!jsPDF) throw new Error("jspdf");
 
     const doc = new jsPDF({ unit: "pt", format: "a4" });
-    // Simple layout (works reliably)
-    const margin = 36;
-    let y = 50;
 
+    // Simple layout (works even if arabic shaping not perfect on some devices)
+    let y = 52;
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("HAYEK SPOT", margin, y); y += 18;
+    doc.text("HAYEK SPOT", 420, y, { align: "right" });
+
+    y += 28;
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
-    doc.text(`User: ${active.user || ""}`, margin, y); y += 14;
-    doc.text(`Customer: ${active.customer || ""}`, margin, y); y += 14;
-    doc.text(`Invoice: ${active.id || ""}`, margin, y); y += 14;
-    doc.text(`Date: ${active.createdAt ? fmtDT(new Date(active.createdAt)) : ""}`, margin, y); y += 18;
+    doc.text(`Customer: ${inv.customer || "-"}`, 420, y, { align: "right" }); y += 16;
+    doc.text(`User: ${inv.username || "-"}`, 420, y, { align: "right" }); y += 16;
+    doc.text(`Invoice: ${inv.id}`, 420, y, { align: "right" }); y += 16;
+    doc.text(`Date: ${new Date(inv.closedAt || inv.createdAt).toLocaleString()}`, 420, y, { align: "right" }); y += 22;
 
-    // Table header
-    doc.setFontSize(10);
-    doc.text("Time", margin, y);
-    doc.text("Text", margin + 90, y);
-    doc.text("Expr", margin + 300, y);
-    doc.text("Result", margin + 440, y);
+    // Table headers
+    doc.setFont("helvetica", "bold");
+    doc.text("Time", 52, y);
+    doc.text("Text", 130, y);
+    doc.text("Expr", 270, y);
+    doc.text("Result", 520, y, { align: "right" });
     y += 10;
-    doc.line(margin, y, 560, y);
-    y += 14;
 
-    for (const r of active.rows) {
-      if (y > 780) { doc.addPage(); y = 50; }
-      doc.text(String(r.time || ""), margin, y);
-      doc.text(String(r.text || ""), margin + 90, y, { maxWidth: 200 });
-      doc.text(String(r.expr || ""), margin + 300, y, { maxWidth: 120 });
-      doc.text(String(r.result ?? ""), margin + 440, y);
-      y += 14;
+    doc.setLineWidth(0.5);
+    doc.line(52, y, 540, y);
+    y += 16;
+
+    doc.setFont("helvetica", "normal");
+    for (const r of inv.rows) {
+      if (y > 760) { doc.addPage(); y = 60; }
+      doc.text(String(r.t || ""), 52, y);
+      doc.text(String(r.text || "").slice(0,20), 130, y);
+      doc.text(String(r.expr || "").slice(0,22), 270, y);
+      doc.text(String(r.result ?? ""), 520, y, { align: "right" });
+      y += 16;
     }
 
     y += 10;
-    doc.line(margin, y, 560, y);
-    y += 18;
-    doc.setFontSize(12);
-    doc.text(`Total: ${String(active.total || 0)}`, margin, y);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Total: ${inv.total}`, 520, y, { align: "right" });
 
     const blob = doc.output("blob");
     return blob;
   }
 
-  $("btnExportPdf").addEventListener("click", async () => {
-    try {
-      vibe(settings.vibe);
-      const blob = await buildPdfBlob();
-      const fileName = `invoice_${active.id || "hayek"}.pdf`;
+  async function exportPdf(){
+    const inv = await closeInvoiceSilent();
+    if (!inv) { vibrateTiny(); return; }
+
+    try{
+      const blob = await buildPdfBlob(inv);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = fileName;
+      a.download = `HAYEK_${(inv.customer||"invoice").replace(/\s+/g,"_")}_${inv.id.slice(-6)}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 8000);
-    } catch {}
-  });
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    }catch(e){
+      console.log("PDF error", e);
+    }
+  }
 
-  $("btnSendWhatsApp").addEventListener("click", async () => {
-    try {
-      vibe(settings.vibe);
-      const blob = await buildPdfBlob();
-      const fileName = `invoice_${active.id || "hayek"}.pdf`;
-      const file = new File([blob], fileName, { type: "application/pdf" });
+  // ========= WhatsApp Send =========
+  async function sendWhatsApp(){
+    const inv = await closeInvoiceSilent();
+    if (!inv) { vibrateTiny(); return; }
 
-      // Best: share as file (mobile)
-      if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-        await navigator.share({
-          title: "فاتورة",
-          text: `فاتورة العميل: ${active.customer || ""}`,
-          files: [file]
-        });
+    const text =
+      `فاتورة\n` +
+      `الزبون: ${inv.customer}\n` +
+      `الإجمالي: ${inv.total}\n` +
+      `رقم: ${inv.id.slice(-6)}`;
+
+    // Try share (mobile) with PDF file if possible
+    try{
+      const blob = await buildPdfBlob(inv);
+      const file = new File([blob], `HAYEK_${inv.id.slice(-6)}.pdf`, { type: "application/pdf" });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ text, files: [file], title: "فاتورة" });
         return;
       }
+    }catch {}
 
-      // Fallback: download then open WhatsApp with text
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 8000);
-
-      const msg = encodeURIComponent(`فاتورة العميل: ${active.customer || ""} — تم حفظ PDF باسم: ${fileName}`);
-      window.open(`https://wa.me/?text=${msg}`, "_blank");
-    } catch {}
-  });
-
-  // ---------- login overlay flow ----------
-  async function showLoginIfNeeded() {
-    netUI();
-
-    // show device id
-    $("devicePill").textContent = `Device: ${AUTH.getDeviceId().slice(-8)}`;
-
-    // If auth.js didn't load, block with message
-    const overlay = $("loginOverlay");
-    const msg = $("loginMsg");
-
-    if (!window.HAYEK_AUTH && !loadJSON(LS.auth, null)) {
-      // still allow fallback login (local) but warn softly
-      setMsg(msg, "تنبيه: auth.js غير ظاهر كـ window.HAYEK_AUTH — سيتم استخدام تسجيل محلي على هذا الجهاز.", true);
-    }
-
-    if (AUTH.isLoggedIn()) {
-      overlay.style.display = "none";
-      $("userPill").textContent = `مستخدم: ${AUTH.getUserName()}`;
-      $("userPill").style.display = "block";
-      return;
-    } else {
-      overlay.style.display = "flex";
-      return;
-    }
+    // Fallback: open whatsapp text
+    const waUrl = "https://wa.me/?text=" + encodeURIComponent(text);
+    window.open(waUrl, "_blank", "noopener,noreferrer");
   }
 
-  $("btnLogin").addEventListener("click", async () => {
-    const u = ($("loginUser").value || "").trim();
-    const p = ($("loginPass").value || "").trim();
-    const msg = $("loginMsg");
+  pdfBtn.addEventListener("click", () => { vibrateTiny(); exportPdf(); });
+  waBtn.addEventListener("click", () => { vibrateTiny(); sendWhatsApp(); });
 
-    if (!u || !p) {
-      setMsg(msg, "الرجاء إدخال اسم المستخدم وكلمة السر.", true);
-      return;
-    }
-
-    const r = await AUTH.login(u, p);
-    if (!r.ok) {
-      setMsg(msg, r.error || "فشل تسجيل الدخول.", true);
-      return;
-    }
-
-    setMsg(msg, "تم تسجيل الدخول ✅", false);
-    $("userPill").textContent = `مستخدم: ${AUTH.getUserName() || u}`;
-    setTimeout(() => {
-      $("loginOverlay").style.display = "none";
-    }, 450);
-  });
-
-  $("btnResetDevice").addEventListener("click", async () => {
-    if (!confirm("مسح بيانات الجهاز؟ سيطلب تسجيل الدخول من جديد.")) return;
-    await AUTH.resetDevice();
-    location.reload();
-  });
-
-  $("btnLogout").addEventListener("click", async () => {
-    if (!confirm("تسجيل خروج؟")) return;
-    await AUTH.logout();
-    location.reload();
-  });
-
-  // ---------- init ----------
-  function initFromStorage() {
-    ensureActiveInvoice();
-    $("customerName").value = active.customer || "";
-    $("invoiceStatus").value = active.status || "closed";
-    $("userPill").textContent = `مستخدم: ${AUTH.getUserName()}`;
-    renderTables();
-    renderLive();
-    netUI();
-  }
-
-  // silent auto-sync when back online
-  window.addEventListener("online", async () => {
-    netUI();
-    await syncQueueNow(true);
-  });
-  window.addEventListener("offline", netUI);
-
-  // service worker
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-  }
-
-  // Start
-  initFromStorage();
-  showLoginIfNeeded();
+  // ========= Start upload attempts silently on load =========
+  tryUploadQueue();
 })();
