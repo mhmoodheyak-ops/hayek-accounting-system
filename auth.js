@@ -1,129 +1,116 @@
-// auth.js (HAYEK SPOT) — Supabase auth using app_users + device lock
-(() => {
-  const LS_DEVICE = "HAYEK_DEVICE_ID_V1";
-  const LS_SESSION = "HAYEK_SESSION_V1";
+// auth.js (FULL) — HAYEK SPOT
+// يعتمد على Supabase + جدول app_users
+// تسجيل مرة واحدة لكل جهاز (device_id يُثبت لأول تسجيل)
 
-  const TABLE_USERS = "app_users";
+(function () {
+  "use strict";
 
-  function uuid() {
-    return (crypto?.randomUUID?.() || ("dev_" + Math.random().toString(16).slice(2) + Date.now()));
-  }
+  window.__HAYEK_AUTH_LOADED__ = true;
+
+  const LS_KEY = "HAYEK_AUTH_SESSION_V2";
+  const DEVICE_KEY = "HAYEK_DEVICE_ID_V1";
+
+  function jparse(s, fb) { try { return JSON.parse(s) ?? fb; } catch { return fb; } }
+  function jset(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function getCfg() { return window.APP_CONFIG || {}; }
 
   function getOrCreateDeviceId() {
-    let id = localStorage.getItem(LS_DEVICE);
+    let id = localStorage.getItem(DEVICE_KEY);
     if (!id) {
-      id = uuid();
-      localStorage.setItem(LS_DEVICE, id);
+      id = (crypto?.randomUUID?.() || ("dev_" + Math.random().toString(16).slice(2) + Date.now()));
+      localStorage.setItem(DEVICE_KEY, id);
     }
     return id;
   }
 
-  function getConfig() {
-    const cfg = window.APP_CONFIG || {};
-    return {
-      url: cfg.SUPABASE_URL,
-      key: cfg.SUPABASE_ANON_KEY,
-    };
+  async function getSupabase() {
+    const cfg = getCfg();
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
+
+    // إذا supabase-js مش موجود حمّلو من CDN (حل جذري)
+    if (!window.supabase) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    return window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
   }
 
-  function getClient() {
-    const { url, key } = getConfig();
-    if (!url || !key) throw new Error("Missing SUPABASE config");
-    if (!window.supabase) throw new Error("supabase-js not loaded");
-    return window.supabase.createClient(url, key);
-  }
-
-  function setSession(s) {
-    localStorage.setItem(LS_SESSION, JSON.stringify(s));
-  }
-
-  function getSession() {
-    try { return JSON.parse(localStorage.getItem(LS_SESSION) || "null"); }
-    catch { return null; }
-  }
-
-  function clearSession() {
-    localStorage.removeItem(LS_SESSION);
-  }
+  function saveSession(sess) { jset(LS_KEY, sess); }
+  function getSession() { return jparse(localStorage.getItem(LS_KEY), null); }
+  function clearSession() { localStorage.removeItem(LS_KEY); }
 
   async function login(username, pass) {
-    username = String(username || "").trim();
-    pass = String(pass || "").trim();
-    if (!username || !pass) return { ok: false, msg: "أدخل اسم المستخدم وكلمة السر" };
+    username = (username || "").trim();
+    pass = (pass || "").trim();
+    if (!username || !pass) throw new Error("EMPTY");
 
-    const sb = getClient();
+    const sb = await getSupabase();
+    if (!sb) throw new Error("NO_SUPABASE");
+
     const deviceId = getOrCreateDeviceId();
 
-    // IMPORTANT: table is app_users (not users)
+    // ✅ جدولك الحقيقي: app_users
     const { data, error } = await sb
-      .from(TABLE_USERS)
-      .select("id, username, pass, device_id, is_admin, blocked")
+      .from("app_users")
+      .select("id, username, pass, is_admin, blocked, device_id")
       .eq("username", username)
       .maybeSingle();
 
-    if (error) return { ok: false, msg: "خطأ في الاتصال بالسيرفر" };
-    if (!data) return { ok: false, msg: "المستخدم غير موجود" };
-    if (data.blocked) return { ok: false, msg: "هذا الحساب محظور" };
-    if (String(data.pass || "") !== pass) return { ok: false, msg: "كلمة السر غير صحيحة" };
+    if (error) throw new Error("DB");
+    if (!data) throw new Error("NOT_FOUND");
+    if (data.blocked) throw new Error("BLOCKED");
+    if ((data.pass || "") !== pass) throw new Error("BAD_PASS");
 
-    // Device lock:
-    // - إذا أول مرة: نخزن device_id في جدول app_users
-    // - إذا كان موجود ومختلف: نمنع الدخول
-    const storedDevice = String(data.device_id || "").trim();
-    if (storedDevice && storedDevice !== deviceId) {
-      return { ok: false, msg: "هذا الحساب مربوط بجهاز آخر" };
+    // ✅ تثبيت الجهاز لأول مرة
+    if (data.device_id && data.device_id !== deviceId) {
+      throw new Error("DEVICE_LOCK");
     }
-
-    if (!storedDevice) {
+    if (!data.device_id) {
       const { error: upErr } = await sb
-        .from(TABLE_USERS)
+        .from("app_users")
         .update({ device_id: deviceId })
         .eq("id", data.id);
-      if (upErr) return { ok: false, msg: "تعذر ربط الحساب بالجهاز" };
+      if (upErr) throw new Error("DEVICE_BIND_FAIL");
     }
 
-    const session = {
+    const sess = {
       username: data.username,
+      role: data.is_admin ? "admin" : "user",
       deviceId,
-      isAdmin: !!data.is_admin,
       ts: Date.now()
     };
-
-    setSession(session);
-    return { ok: true, session };
+    saveSession(sess);
+    return sess;
   }
 
-  function logout() {
-    clearSession();
-  }
-
-  function isAuthed() {
-    const s = getSession();
-    if (!s || !s.username || !s.deviceId) return false;
-    // لازم نفس الجهاز
-    const deviceId = getOrCreateDeviceId();
-    return s.deviceId === deviceId;
-  }
-
-  function getUser() {
-    return getSession() || null;
-  }
-
-  function resetDevice() {
-    // يمسح ربط هذا المتصفح (لا يغير في السيرفر)
-    localStorage.removeItem(LS_DEVICE);
-    clearSession();
-  }
-
-  window.HAYEK_AUTH = {
-    login,
-    logout,
-    isAuthed,
-    getUser,
+  const HAYEK_AUTH = {
+    isAuthed() {
+      const s = getSession();
+      return !!(s && s.username && s.deviceId);
+    },
+    getUser() {
+      return getSession();
+    },
     getOrCreateDeviceId,
-    resetDevice,
+    async login(username, pass) {
+      return login(username, pass);
+    },
+    logout() {
+      clearSession();
+    },
+    resetDeviceData() {
+      clearSession();
+      localStorage.removeItem(DEVICE_KEY);
+    }
   };
 
-  window.__HAYEK_AUTH_LOADED__ = true;
+  window.HAYEK_AUTH = HAYEK_AUTH;
+
   console.log("HAYEK AUTH loaded ✓");
 })();
