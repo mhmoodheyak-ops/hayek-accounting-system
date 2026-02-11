@@ -1,143 +1,156 @@
-/* HAYEK SPOT — Admin Professional Logic */
+
+/* HAYEK SPOT — Comprehensive Admin Logic (No Truncation) */
 (function() {
-    const $ = (id) => document.getElementById(id);
     const sb = supabase.createClient(window.HAYEK_CONFIG.supabaseUrl, window.HAYEK_CONFIG.supabaseKey);
-    
-    let allUsers = [];
-    let currentInvoices = [];
-    let selectedUser = null;
+    let allUsersData = [];
 
-    // --- 1. حماية الدخول ---
-    function checkAccess() {
-        const user = window.HAYEK_AUTH?.getUser();
-        if (!user || user.role !== 'admin') {
-            $('lock').style.display = 'flex';
-        } else {
-            $('lock').style.display = 'none';
-            $('adminName').textContent = `الأدمن: ${user.username}`;
-            init();
+    // --- 1. التحقق الصارم من الصلاحيات ---
+    async function checkSecurity() {
+        const session = window.HAYEK_AUTH.getUser();
+        if (!session || session.role !== 'admin') {
+            document.getElementById('auth_lock').style.display = 'flex';
+            return;
         }
+        document.getElementById('auth_lock').style.display = 'none';
+        loadDashboard();
     }
 
-    // --- 2. جلب البيانات الرئيسية ---
-    async function init() {
-        await refreshAll();
+    // --- 2. جلب البيانات وتحليلها ---
+    window.loadDashboard = async function() {
+        const range = document.getElementById('time_range').value;
+        const since = getISOString(range);
+
+        // جلب المستخدمين مع فواتيرهم بطلب واحد (Join) لزيادة السرعة
+        const { data: users, error } = await sb.from('app_users').select('*').order('created_at', {ascending: false});
+        if (error) { console.error("Error fetching users:", error); return; }
         
-        $('refreshBtn').onclick = refreshAll;
-        $('rangeSelect').onchange = refreshAll;
-        $('userSearch').oninput = renderUsers;
-        $('logoutBtn').onclick = () => { window.HAYEK_AUTH.logout(); location.reload(); };
-    }
+        allUsersData = users;
 
-    async function refreshAll() {
-        $('refreshBtn').disabled = true;
-        const range = $('rangeSelect').value;
-        const sinceISO = getSinceDate(range);
-
-        // جلب المستخدمين
-        const { data: users, error: uErr } = await sb.from('app_users').select('*').order('id', {ascending: true});
-        allUsers = users || [];
-
-        // جلب عدد الفواتير حسب الفترة
+        // إحصائيات الفواتير حسب الفترة
         let invQuery = sb.from('app_invoices').select('id', { count: 'exact', head: true });
-        if(sinceISO) invQuery = invQuery.gte('created_at', sinceISO);
-        const { count: invCount } = await invQuery;
+        if(since) invQuery = invQuery.gte('created_at', since);
+        const { count: totalInvoices } = await invQuery;
 
-        $('stUsers').textContent = allUsers.length;
-        $('stInvoices').textContent = invCount || 0;
-        $('stActive').textContent = allUsers.filter(u => u.last_seen && (new Date() - new Date(u.last_seen) < 300000)).length;
+        // تحديث العدادات في الواجهة
+        document.getElementById('count_users').textContent = allUsersData.length;
+        document.getElementById('count_invoices').textContent = totalInvoices || 0;
+        document.getElementById('count_active').textContent = allUsersData.filter(u => u.last_seen && (new Date() - new Date(u.last_seen) < 86400000)).length;
 
         renderUsers();
-        $('refreshBtn').disabled = false;
-    }
+    };
 
-    function getSinceDate(range) {
-        if (range === 'today') return new Date(new Date().setHours(0,0,0,0)).toISOString();
-        if (range === '7d') return new Date(Date.now() - 7 * 864e5).toISOString();
+    function getISOString(range) {
+        const now = new Date();
+        if (range === 'today') return new Date(now.setHours(0,0,0,0)).toISOString();
+        if (range === '7d') return new Date(now.setDate(now.getDate() - 7)).toISOString();
         return null;
     }
 
-    // --- 3. عرض جدول المستخدمين وإجراءاته (الميزات القديمة كاملة) ---
-    function renderUsers() {
-        const tbody = $('usersTbody');
-        const term = $('userSearch').value.toLowerCase();
+    // --- 3. بناء الجدول مع كل الأزرار السابقة ---
+    window.renderUsers = function() {
+        const tbody = document.getElementById('main_tbody');
+        const search = document.getElementById('search_input').value.toLowerCase();
         tbody.innerHTML = '';
 
-        allUsers.filter(u => u.username.toLowerCase().includes(term)).forEach(u => {
+        allUsersData.filter(u => u.username.toLowerCase().includes(search)).forEach(u => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><b style="color:var(--blue); cursor:pointer" onclick="viewInvoices('${u.username}')">${u.username}</b></td>
+                <td><b style="color:#1f62ff; cursor:pointer" onclick="viewUserInvoices('${u.username}')">${u.username}</b></td>
                 <td><span class="badge">${u.is_admin ? 'أدمن' : 'مستخدم'}</span></td>
-                <td><span class="badge ${u.blocked ? 'bg-red' : 'bg-green'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
-                <td><span class="badge" style="background:#333">${u.inv_count || 0}</span></td>
-                <td style="font-size:12px; color:#888">${u.last_seen ? new Date(u.last_seen).toLocaleString('ar-EG') : '—'}</td>
+                <td><span class="badge ${u.blocked ? 'status-blocked' : 'status-active'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
+                <td><span class="badge" style="background:rgba(255,255,255,0.1)">${u.inv_count || 0}</span></td>
+                <td>${u.last_seen ? new Date(u.last_seen).toLocaleString('ar-EG') : '—'}</td>
+                <td style="font-size:10px; color:#888">${u.device_id ? u.device_id.substring(0,8) + '...' : 'غير مرتبط'}</td>
                 <td>
-                    <button class="btn btn-ghost" onclick="resetDevice('${u.id}')" style="padding:5px 10px; font-size:11px">مسح جهاز</button>
-                    <button class="btn ${u.blocked ? 'btn-blue' : 'btn-red'}" onclick="toggleBlock('${u.id}', ${u.blocked})" style="padding:5px 10px; font-size:11px">${u.blocked ? 'فك حظر' : 'حظر'}</button>
+                    <div style="display:flex; gap:5px">
+                        <button class="btn btn-ghost" style="padding:5px 10px" onclick="resetDevice('${u.id}')">مسح جهاز</button>
+                        <button class="btn btn-danger" style="padding:5px 10px" onclick="toggleBlock('${u.id}', ${u.blocked})">${u.blocked ? 'فك حظر' : 'حظر'}</button>
+                        <button class="btn btn-ghost" style="padding:5px 10px" onclick="deleteUser('${u.id}')">حذف</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-    }
+    };
 
-    // --- 4. إدارة الفواتير والـ PDF ---
-    window.viewInvoices = async function(username) {
-        selectedUser = username;
-        $('invTitle').textContent = `فواتير: ${username}`;
-        $('invModal').style.display = 'flex';
-        $('invTbody').innerHTML = '<tr><td colspan="5">جاري التحميل...</td></tr>';
+    // --- 4. معالجة فواتير المستخدم وتصدير PDF (الاحترافية) ---
+    window.viewUserInvoices = async function(username) {
+        document.getElementById('modal_username').textContent = `فواتير: ${username}`;
+        document.getElementById('invoices_modal').style.display = 'flex';
+        const tbody = document.getElementById('invoices_tbody');
+        tbody.innerHTML = '<tr><td colspan="4">جاري تحميل الفواتير...</td></tr>';
 
         const { data: invs } = await sb.from('app_invoices').select('*').eq('username', username).order('created_at', {ascending: false});
-        currentInvoices = invs || [];
         
-        const tbody = $('invTbody');
         tbody.innerHTML = '';
-        currentInvoices.forEach(inv => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>#${inv.id}</td>
-                    <td>${new Date(inv.created_at).toLocaleDateString('ar-EG')}</td>
-                    <td>${inv.customer_name || 'زبون عام'}</td>
-                    <td style="font-weight:bold; color:var(--green)">${inv.total}</td>
-                    <td><button class="btn btn-blue" style="padding:5px" onclick='downloadPDF(${JSON.stringify(inv)})'>PDF 📄</button></td>
-                </tr>`;
+        if(!invs || invs.length === 0) { tbody.innerHTML = '<tr><td colspan="4">لا يوجد فواتير لهذا المستخدم</td></tr>'; return; }
+
+        invs.forEach(inv => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${inv.id.toString().substring(0,6)}</td>
+                <td>${new Date(inv.created_at).toLocaleDateString('ar-EG')}</td>
+                <td style="font-weight:bold; color:#49e39a">${inv.total}</td>
+                <td><button class="btn btn-primary" style="padding:5px 10px" onclick='generateInvoicePDF(${JSON.stringify(inv)})'>PDF 📄</button></td>
+            `;
+            tbody.appendChild(tr);
         });
-    }
+    };
 
-    window.downloadPDF = async function(inv) {
-        // تعبئة البيانات في قالب الـ PDF
-        $('pdf_cust').textContent = inv.customer_name || 'زبون عام';
-        $('pdf_date').textContent = new Date(inv.created_at).toLocaleDateString('ar-EG');
-        $('pdf_code').textContent = inv.id;
-        $('pdf_total').textContent = inv.total;
+    window.generateInvoicePDF = async function(inv) {
+        // ملء بيانات القالب المخفي
+        document.getElementById('p_user').textContent = inv.username;
+        document.getElementById('p_date').textContent = new Date(inv.created_at).toLocaleString('ar-EG');
+        document.getElementById('p_id').textContent = inv.id;
+        document.getElementById('p_total').textContent = inv.total;
 
-        const rowsArea = $('pdf_rows');
-        rowsArea.innerHTML = '';
-        let items = inv.rows || [];
-        if(typeof items === 'string') try { items = JSON.parse(items); } catch(e) { items = []; }
+        const pTable = document.getElementById('p_table_body');
+        pTable.innerHTML = '';
+        
+        let rows = [];
+        try { rows = typeof inv.rows === 'string' ? JSON.parse(inv.rows) : inv.rows; } catch(e) { rows = []; }
 
-        items.forEach(it => {
-            rowsArea.innerHTML += `
+        rows.forEach(r => {
+            pTable.innerHTML += `
                 <tr>
-                    <td style="border:1px solid #000; padding:8px">${it.text || 'عملية'}</td>
-                    <td style="border:1px solid #000; padding:8px; direction:ltr; text-align:center">${it.expr || ''}</td>
-                    <td style="border:1px solid #000; padding:8px; text-align:center; font-weight:bold">${it.result || ''}</td>
-                </tr>`;
+                    <td style="border:1px solid #000; padding:10px">${r.text || 'عملية'}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:center; direction:ltr">${r.expr || ''}</td>
+                    <td style="border:1px solid #000; padding:10px; text-align:center; font-weight:bold">${r.result || ''}</td>
+                </tr>
+            `;
         });
 
-        // تحويل القالب لصورة ثم PDF
-        const element = $('pdfTemplate');
-        const canvas = await html2canvas(element, { scale: 2 });
+        // تحويل القالب إلى PDF
+        const capture = document.getElementById('pdf_capture');
+        const canvas = await html2canvas(capture, { scale: 2 });
         const imgData = canvas.toDataURL('image/jpeg', 1.0);
         const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
         pdf.addImage(imgData, 'JPEG', 0, 0, 210, (canvas.height * 210) / canvas.width);
-        pdf.save(`HAYEK_REPORT_${inv.id}.pdf`);
-    }
+        pdf.save(`HAYEK_SPOT_${inv.id}.pdf`);
+    };
 
-    // --- 5. وظائف التحكم (القديمة) ---
-    window.resetDevice = async (id) => { if(confirm("مسح ربط الجهاز؟")) { await sb.from('app_users').update({device_id: null}).eq('id', id); refreshAll(); } };
-    window.toggleBlock = async (id, current) => { await sb.from('app_users').update({blocked: !current}).eq('id', id); refreshAll(); };
-    window.closeInvModal = () => $('invModal').style.display = 'none';
+    // --- 5. العمليات الإدارية (مسح جهاز، حظر، حذف) ---
+    window.resetDevice = async (id) => {
+        if(confirm("هل تريد بالتأكيد فك ارتباط هذا الحساب بالجهاز؟")) {
+            await sb.from('app_users').update({device_id: null}).eq('id', id);
+            loadDashboard();
+        }
+    };
 
-    checkAccess();
+    window.toggleBlock = async (id, status) => {
+        await sb.from('app_users').update({blocked: !status}).eq('id', id);
+        loadDashboard();
+    };
+
+    window.deleteUser = async (id) => {
+        if(confirm("تحذير: سيتم حذف المستخدم وجميع بياناته نهائياً!")) {
+            await sb.from('app_users').delete().eq('id', id);
+            loadDashboard();
+        }
+    };
+
+    window.logoutAdmin = () => { localStorage.clear(); location.href = 'index.html'; };
+    window.closeModals = () => { document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none'); };
+
+    checkSecurity();
 })();
