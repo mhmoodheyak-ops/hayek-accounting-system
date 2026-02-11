@@ -31,13 +31,8 @@
       display:flex; align-items:center; justify-content:space-between;
       gap:10px; margin-bottom:10px;
     }
-    .title{
-      font-size: 24px; font-weight: 800;
-      margin:0;
-    }
-    .sub{
-      margin:0; opacity:.85; font-size: 13px;
-    }
+    .title{ font-size: 24px; font-weight: 800; margin:0; }
+    .sub{ margin:0; opacity:.85; font-size: 13px; }
     .device{
       font-size: 12px;
       opacity:.9;
@@ -59,10 +54,7 @@
       font-size: 16px;
     }
     input:focus{ border-color: rgba(80,120,255,.55); box-shadow: 0 0 0 3px rgba(80,120,255,.18); }
-    .row{
-      display:flex; gap:10px; margin-top: 14px; align-items:center;
-      flex-wrap: wrap;
-    }
+    .row{ display:flex; gap:10px; margin-top: 14px; align-items:center; flex-wrap: wrap; }
     .btn{
       border:0;
       border-radius: 14px;
@@ -101,13 +93,8 @@
     }
   </style>
 
-  <!-- 1) config -->
   <script src="config.js?v=1"></script>
-
-  <!-- 2) supabase lib -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- 3) auth -->
   <script src="auth.js?v=1"></script>
 </head>
 
@@ -138,7 +125,6 @@
 
   <script>
     (function(){
-      // ✅ Stop the old false alert forever
       if (!window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH) {
         alert("تعذر تحميل نظام الدخول. تأكد أن auth.js موجود بنفس المجلد.");
         return;
@@ -152,10 +138,9 @@
       const devId = window.HAYEK_AUTH.getOrCreateDeviceId();
       deviceTag.textContent = "Device: " + devId.slice(-8);
 
-      // Auto redirect if already logged in
       if (window.HAYEK_AUTH.isAuthed()) {
         const s = window.HAYEK_AUTH.getUser() || {};
-        const target = (s.role === "admin") ? "admin.html" : "invoice.html";
+        const target = (s.role === "admin") ? "admin.html" : "user.html";
         window.location.href = target + "?v=" + Date.now();
         return;
       }
@@ -173,14 +158,11 @@
       document.getElementById("loginBtn").onclick = async () => {
         setMsg("جارٍ التحقق…", true);
         const res = await window.HAYEK_AUTH.login(u.value, p.value);
-        if (!res.ok) {
-          setMsg(res.message || "فشل تسجيل الدخول.", false);
-          return;
-        }
-        setMsg("تم تسجيل الدخول… يتم التحويل.", true);
+        if (!res.ok) { setMsg(res.message || "فشل تسجيل الدخول.", false); return; }
 
+        setMsg("تم تسجيل الدخول… يتم التحويل.", true);
         const s = (res.session || window.HAYEK_AUTH.getUser() || {});
-        const target = (s.role === "admin") ? "admin.html" : "invoice.html";
+        const target = (s.role === "admin") ? "admin.html" : "user.html";
         window.location.href = target + "?v=" + Date.now();
       };
     })();
