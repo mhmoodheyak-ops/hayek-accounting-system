@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -20,11 +19,11 @@
     .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
     .head{padding:16px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(0,0,0,.12);color:#fff}
+    .pill-ok{border-color:var(--ok);color:var(--ok)}
     .mut{color:var(--mut);font-size:13px}
     .body{padding:16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:900px){ .grid{grid-template-columns:1fr} }
-
     label{display:block;color:var(--mut);font-size:13px;margin:0 0 6px}
     input,select{
       width:100%;padding:12px;border-radius:14px;border:1px solid var(--line);
@@ -39,14 +38,11 @@
     th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right}
     th{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85)}
     .err{color:var(--danger);min-height:18px;font-size:13px;margin-top:8px}
-    /* lock */
     #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
     #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js?v=1"></script>
-  <script src="./auth.js?v=1"></script>
 </head>
 <body>
 
@@ -61,11 +57,11 @@
   <div class="wrap">
     <div class="topbar">
       <div>
-        <div style="font-weight:900;font-size:18px">لوحة الأدمن</div>
+        <div style="font-weight:900;font-size:18px">HAYEK SPOT — لوحة الأدمن</div>
         <div class="mut">إدارة مستخدمين + إحصائيات فواتير</div>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
-        <span class="pill" id="adminPill">—</span>
+        <span class="pill pill-ok" id="adminPill">أدمن: متصل</span>
         <button class="btnSmall" id="logoutBtn">خروج</button>
       </div>
     </div>
@@ -79,66 +75,56 @@
           <option value="30">آخر 30 يوم</option>
           <option value="all">الكل</option>
         </select>
-
-        <button class="btnSmall" id="refreshBtn">تحديث</button>
-        <span class="mut" id="hint">—</span>
+        <button class="btnSmall" id="refreshBtn">تحديث البيانات</button>
+        <span class="mut" id="hint">جاهز</span>
       </div>
 
       <div class="body">
         <div class="grid">
-
           <div>
-            <div style="font-weight:900;margin-bottom:10px">إضافة مستخدم</div>
+            <div style="font-weight:900;margin-bottom:10px">إضافة عضو جديد</div>
             <div class="row">
-              <div style="flex:1;min-width:220px">
-                <label>اسم المستخدم</label>
-                <input id="newU" placeholder="مثال: ابو قروب">
+              <div style="flex:1;min-width:200px">
+                <label>الاسم</label>
+                <input id="newU" placeholder="اسم المستخدم">
               </div>
-              <div style="flex:1;min-width:220px">
+              <div style="flex:1;min-width:200px">
                 <label>كلمة السر</label>
-                <input id="newP" placeholder="1234">
+                <input id="newP" placeholder="••••">
               </div>
             </div>
-
             <div class="row" style="margin-top:10px">
               <button class="btn ok" id="addUserBtn">إضافة مستخدم</button>
-              <button class="btn blue" id="addAdminBtn">إضافة أدمن</button>
+              <button class="btn blue" id="addAdminBtn">ترقية لأدمن</button>
             </div>
-
             <div class="err" id="err"></div>
           </div>
 
           <div>
-            <div style="font-weight:900;margin-bottom:10px">ملخص</div>
+            <div style="font-weight:900;margin-bottom:10px">ملخص النظام</div>
             <div class="row">
-              <div class="pill">عدد المستخدمين: <b id="usersCount">0</b></div>
-              <div class="pill">عدد الفواتير (الفترة): <b id="invCount">0</b></div>
+              <div class="pill">المستخدمين: <b id="usersCount">0</b></div>
+              <div class="pill">الفواتير: <b id="invCount">0</b></div>
             </div>
-            <div class="mut" style="margin-top:10px">
-              ملاحظة: العدّاد يعتمد على app_invoices (status = closed).
-            </div>
+            <div class="mut" style="margin-top:10px">يتم احتساب الفواتير المغلقة فقط في الفترة المحددة.</div>
           </div>
-
         </div>
 
-        <div style="margin-top:16px;font-weight:900">قائمة المستخدمين</div>
-        <div class="mut">مرتّبة من الأكثر استخدامًا إلى الأقل (حسب الفترة)</div>
-
-        <div style="overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:16px;margin-top:10px">
+        <div style="margin-top:20px;font-weight:900">قائمة الأعضاء</div>
+        <div style="overflow:auto;border:1px solid var(--line);border-radius:16px;margin-top:10px">
           <table>
             <thead>
               <tr>
                 <th>المستخدم</th>
                 <th>فواتير</th>
                 <th>آخر نشاط</th>
-                <th>حالة</th>
+                <th>الحالة</th>
                 <th>إجراءات</th>
               </tr>
             </thead>
             <tbody id="usersRows"></tbody>
           </table>
         </div>
-
       </div>
     </div>
   </div>
@@ -146,205 +132,103 @@
 <script>
 (() => {
   const $ = (id)=>document.getElementById(id);
-  const lock = $("lock");
-  $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
+  
+  // إعدادات Supabase مدمجة لضمان الاتصال
+  const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+  const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+  const sb = supabase.createClient(SB_URL, SB_KEY);
 
-  if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH.isAuthed()) {
-    lock.style.display = "flex"; return;
-  }
-  const session = window.HAYEK_AUTH.getUser() || {};
-  if (session.role !== "admin") { lock.style.display="flex"; return; }
-
-  $("adminPill").textContent = "أدمن: " + (session.username||"—");
-  $("logoutBtn").onclick = () => { window.HAYEK_AUTH.logout(); location.href="index.html?v="+Date.now(); };
-
-  function setErr(msg){ $("err").textContent = msg || ""; }
-
-  function getSB(){
-    const cfg = window.APP_CONFIG || {};
-    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
-    return supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  // التحقق من الجلسة (بسيط)
+  const session = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "null");
+  if (!session || session.role !== "admin") {
+      $("lock").style.display = "flex";
   }
 
-  function isoDayStart(d){
-    const x = new Date(d); x.setHours(0,0,0,0); return x.toISOString();
-  }
-  function daysAgo(n){
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    return d;
-  }
+  $("goLogin").onclick = () => location.href = "index.html";
+  $("logoutBtn").onclick = () => { localStorage.removeItem("HAYEK_SESSION"); location.href = "index.html"; };
 
-  function getRangeFilter(){
-    const v = $("range").value;
-    if (v === "all") return null;
-    if (v === "today") return isoDayStart(new Date());
-    return isoDayStart(daysAgo(Number(v)));
+  function setErr(msg, isOk=false){ 
+      $("err").textContent = msg || ""; 
+      $("err").style.color = isOk ? "var(--ok)" : "var(--danger)";
   }
 
-  // username column might be username or t in app_users
-  function rowUsername(row){ return row?.username ?? row?.t ?? ""; }
-
-  async function loadUsersAndStats(){
-    setErr("");
+  async function loadData() {
     $("hint").textContent = "جاري التحميل...";
-    const sb = getSB();
-    if(!sb){ setErr("Supabase غير مضبوط."); return; }
+    try {
+      // 1. جلب المستخدمين
+      const { data: users, error: uErr } = await sb.from('app_users').select('*');
+      if (uErr) throw uErr;
+      $("usersCount").textContent = users.length;
 
-    // 1) users
-    const { data: users, error: eU } = await sb.from(window.APP_CONFIG.TABLE_USERS).select("*");
-    if(eU){ console.log(eU); setErr("فشل تحميل المستخدمين."); return; }
+      // 2. جلب إحصائيات الفواتير
+      const { data: invs, error: iErr } = await sb.from('app_invoices').select('username, created_at').eq('status', 'closed');
+      if (iErr) throw iErr;
+      $("invCount").textContent = invs.length;
 
-    $("usersCount").textContent = String(users.length);
-
-    // 2) invoices in range (only closed)
-    const fromIso = getRangeFilter();
-    let q = sb.from(window.APP_CONFIG.TABLE_INVOICES).select("username,closed_at,created_at,status,total", { count: "exact" });
-    q = q.eq("status", "closed");
-    if(fromIso) q = q.gte("closed_at", fromIso);
-
-    const { data: inv, error: eI, count } = await q;
-    if(eI){ console.log(eI); setErr("فشل تحميل الفواتير."); return; }
-
-    $("invCount").textContent = String(count ?? inv?.length ?? 0);
-
-    // aggregate counts + last activity
-    const map = new Map(); // username -> {count,last}
-    (inv||[]).forEach(x=>{
-      const u = x.username || "";
-      if(!u) return;
-      const t = x.closed_at || x.created_at || null;
-      const prev = map.get(u) || { count:0, last:null };
-      prev.count += 1;
-      if (t && (!prev.last || new Date(t) > new Date(prev.last))) prev.last = t;
-      map.set(u, prev);
-    });
-
-    // build rows sorted desc by count
-    const rows = users
-      .filter(u => (u.is_admin !== true)) // show users first
-      .map(u => {
-        const name = rowUsername(u);
-        const stat = map.get(name) || {count:0,last:null};
-        return { row:u, name, count: stat.count, last: stat.last };
-      })
-      .sort((a,b)=> b.count - a.count);
-
-    // render
-    const tbody = $("usersRows");
-    tbody.innerHTML = rows.map(r=>{
-      const blocked = r.row.blocked === true;
-      const status = blocked ? "محظور" : "فعال";
-      const last = r.last ? new Date(r.last).toLocaleString() : "—";
-      return `
-        <tr>
-          <td><b>${escapeHtml(r.name||"—")}</b></td>
-          <td>${r.count}</td>
-          <td>${escapeHtml(last)}</td>
-          <td>${blocked ? "🔴 محظور" : "🟢 فعال"}</td>
-          <td style="white-space:nowrap">
-            <button class="btn ${blocked ? "ok" : "danger"}" data-act="${blocked ? "unblock" : "block"}" data-u="${escapeAttr(r.name)}">
-              ${blocked ? "فك حظر" : "حظر"}
-            </button>
-            <button class="btn danger" data-act="del" data-u="${escapeAttr(r.name)}">حذف</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-    // attach handlers
-    tbody.querySelectorAll("button[data-act]").forEach(btn=>{
-      btn.onclick = async ()=>{
-        const act = btn.getAttribute("data-act");
-        const u = btn.getAttribute("data-u");
-        await doAction(act, u);
-      };
-    });
-
-    $("hint").textContent = "تم التحديث ✓";
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-  function escapeAttr(s){ return escapeHtml(s).replaceAll('"',"&quot;"); }
-
-  async function doAction(act, username){
-    setErr("");
-    const sb = getSB();
-    if(!sb){ setErr("Supabase غير مضبوط."); return; }
-
-    // app_users username might be in column username OR t, so update with OR
-    try{
-      if(act === "block" || act === "unblock"){
-        const blocked = (act === "block");
-        const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS)
-          .update({ blocked })
-          .or(`username.eq.${username},t.eq.${username}`);
-        if(error) throw error;
-      }
-
-      if(act === "del"){
-        // delete user
-        const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS)
-          .delete()
-          .or(`username.eq.${username},t.eq.${username}`);
-        if(error) throw error;
-      }
-
-      await loadUsersAndStats();
-    }catch(e){
-      console.log(e);
-      setErr("فشل تنفيذ العملية.");
+      // 3. بناء الجدول
+      const tbody = $("usersRows");
+      tbody.innerHTML = "";
+      users.forEach(u => {
+          const isBlocked = u.blocked === true;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><b>${u.username}</b> ${u.is_admin ? '<small>(Admin)</small>':''}</td>
+            <td>${invs.filter(i => i.username === u.username).length}</td>
+            <td>${u.device_id ? 'جهاز مرتبط' : 'لم يدخل بعد'}</td>
+            <td>${isBlocked ? '🔴 محظور' : '🟢 فعال'}</td>
+            <td>
+                <button class="btnSmall ${isBlocked?'ok':'danger'}" onclick="toggleBlock('${u.username}', ${isBlocked})">
+                    ${isBlocked ? 'فك حظر' : 'حظر'}
+                </button>
+                <button class="btnSmall danger" onclick="deleteUser('${u.username}')">حذف</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+      });
+      $("hint").textContent = "تم التحديث ✓";
+    } catch (e) {
+      console.error(e);
+      $("hint").textContent = "خطأ في التحميل";
     }
   }
 
-  async function addUser(isAdmin){
-    setErr("");
-    const u = ($("newU").value||"").trim();
-    const p = ($("newP").value||"").trim();
-    if(!u || !p){ setErr("أدخل اسم المستخدم وكلمة السر."); return; }
+  window.toggleBlock = async (uname, currentStatus) => {
+      const { error } = await sb.from('app_users').update({ blocked: !currentStatus }).eq('username', uname);
+      if (!error) loadData();
+  };
 
-    const sb = getSB();
-    if(!sb){ setErr("Supabase غير مضبوط."); return; }
+  window.deleteUser = async (uname) => {
+      if (!confirm("هل أنت متأكد من حذف " + uname + "؟")) return;
+      const { error } = await sb.from('app_users').delete().eq('username', uname);
+      if (!error) loadData();
+  };
 
-    try{
-      const payload = {
-        username: u,   // we store in "username" (SQL below creates it)
-        pass: p,
-        is_admin: !!isAdmin,
-        blocked: false,
-        device_id: null,
-      };
+  async function addNewUser(isAdmin) {
+      setErr("");
+      const u = $("newU").value.trim();
+      const p = $("newP").value.trim();
+      if (!u || !p) return setErr("أدخل البيانات");
 
-      const { error } = await sb.from(window.APP_CONFIG.TABLE_USERS).insert([payload]);
-      if(error) throw error;
+      const { error } = await sb.from('app_users').insert([{
+          username: u,
+          pass: p,
+          is_admin: isAdmin,
+          blocked: false
+      }]);
 
-      $("newU").value = "";
-      $("newP").value = "";
-      await loadUsersAndStats();
-    }catch(e){
-      console.log(e);
-      setErr("فشل إضافة المستخدم (قد يكون الاسم موجود).");
-    }
+      if (error) setErr("خطأ: الاسم قد يكون مستخدماً");
+      else {
+          setErr("تمت الإضافة بنجاح", true);
+          $("newU").value = ""; $("newP").value = "";
+          loadData();
+      }
   }
 
-  $("addUserBtn").onclick  = ()=> addUser(false);
-  $("addAdminBtn").onclick = ()=> addUser(true);
-  $("refreshBtn").onclick  = ()=> loadUsersAndStats();
-  $("range").onchange = ()=> loadUsersAndStats();
+  $("addUserBtn").onclick = () => addNewUser(false);
+  $("addAdminBtn").onclick = () => addNewUser(true);
+  $("refreshBtn").onclick = () => loadData();
 
-  loadUsersAndStats();
-
-  // SW
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  }
+  loadData();
 })();
 </script>
 </body>
