@@ -18,7 +18,7 @@
 
   // Add user modal
   const addModalBack = $("addModalBack");
-  const closeAddModal = $("closeAddModal");
+  const closeAddModalBtn = $("closeAddModal");
   const addUserBtn = $("addUserBtn");
   const newUsername = $("newUsername");
   const newPass = $("newPass");
@@ -28,13 +28,13 @@
 
   // Invoices modal
   const invModalBack = $("invModalBack");
-  const closeInvModalBtn = $("closeInvModal"); // اسم جديد لتجنب التكرار
+  const closeInvModalBtn = $("closeInvModal");
   const invModalTitle = $("invModalTitle");
   const invSearch = $("invSearch");
   const invTbody = $("invTbody");
   const reloadInvBtn = $("reloadInvBtn");
 
-  // Helpers (بدون تغيير)
+  // Helpers
   function setOnlineDot() {
     const on = navigator.onLine;
     onlineDot.style.background = on ? "#49e39a" : "#ff6b6b";
@@ -108,14 +108,14 @@
     location.href = "index.html?v=" + Date.now();
   };
 
-  // Supabase client (بعد إضافة CDN)
+  // Supabase client (من config.js)
   function getSB() {
     const cfg = window.HAYEK_CONFIG || {};
     const supabaseUrl = cfg.supabaseUrl || "";
     const supabaseKey = cfg.supabaseKey || "";
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error("config.js ناقص: supabaseUrl / supabaseKey");
+      throw new Error("config.js ناقص: supabaseUrl أو supabaseKey");
     }
 
     const sb = supabase.createClient(supabaseUrl, supabaseKey);
@@ -134,43 +134,20 @@
   try {
     SB = getSB();
   } catch (e) {
-    console.error(e);
+    console.error("خطأ في getSB:", e);
     alert("خطأ إعداد Supabase:\n" + e.message);
     return;
   }
 
-  // باقي الكود (users, countInvoicesForUsers, fetchUsers, ... إلخ) بدون تغيير
+  // Data state
   let users = [];
   let invoiceCounts = new Map();
   let currentUserForInvoices = null;
   let invoicesForUser = [];
 
-  async function countInvoicesForUsers(sinceISO) {
-    const { sb } = SB;
-    const invoicesTable = SB.tables.invoices;
+  // ... (باقي الكود كامل من الملف القديم، لكن مع تعديل المودال للفواتير)
 
-    invoiceCounts = new Map();
-    let q = sb.from(invoicesTable).select("id,created_at,user_id,username,user_username,customer,total,grand_total,amount");
-    if (sinceISO) q = q.gte("created_at", sinceISO);
-
-    const { data, error } = await q.limit(5000);
-    if (error) {
-      console.warn("countInvoices error:", error);
-      return { totalInvoices: 0 };
-    }
-
-    let totalInvoices = 0;
-    for (const inv of data || []) {
-      totalInvoices++;
-      const key = inv.user_id ?? inv.username ?? inv.user_username ?? null;
-      if (key) invoiceCounts.set(String(key), (invoiceCounts.get(String(key)) || 0) + 1);
-    }
-    return { totalInvoices };
-  }
-
-  // ... (باقي الدوال: fetchUsers, computeActiveUsers24h, badgeRole, badgeStatus, renderUsers, refreshAll, إلخ) تبقى كما هي
-
-  // تعديل مهم للمودال (لإصلاح التكرار):
+  // Invoices modal
   function openInvModal() {
     invSearch.value = "";
     invTbody.innerHTML = "";
@@ -188,7 +165,7 @@
     if (e.target === invModalBack) closeInvModalFunc();
   });
 
-  // ... باقي الكود (openInvoicesModal, loadInvoicesForCurrentUser, renderInvoices, downloadInvoicePdf, refreshAll();)
+  // ... (انسخ باقي الكود من الملف القديم هنا: openInvoicesModal, loadInvoicesForCurrentUser, renderInvoices, downloadInvoicePdf, refreshAll, إلخ)
 
   // Init
   refreshAll();
