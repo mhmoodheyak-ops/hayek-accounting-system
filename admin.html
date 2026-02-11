@@ -3,115 +3,197 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>لوحة الأدمن — HAYEK SPOT</title>
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
   
   <style>
     :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66; }
-    *{box-sizing:border-box; font-family:system-ui, Segoe UI, Tahoma, Arial}
-    body{margin:0; min-height:100vh; background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%); color:var(--txt)}
-    .wrap{max-width:1200px; margin:18px auto; padding:16px}
-    .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap}
-    .btn{border:none; border-radius:14px; padding:10px 14px; background:rgba(255,255,255,.08); color:#fff; cursor:pointer; font-size:14px}
-    .btn.primary{background:var(--blue)}
-    .btn.danger{background:rgba(255,107,107,.18); border:1px solid rgba(255,107,107,.35)}
-    .card{background:var(--panel); border:1px solid var(--line); border-radius:22px; backdrop-filter:blur(10px); overflow:hidden}
-    .row{display:flex; gap:12px; flex-wrap:wrap; padding:15px}
-    .stat{flex:1; min-width:250px; padding:14px; border-radius:18px; background:rgba(0,0,0,.16); border:1px solid var(--line)}
-    .stat .v{font-weight:900; font-size:28px; margin-top:6px; color:var(--blue)}
-    .stat .k{color:var(--mut); font-size:13px}
-    .head{padding:14px; border-bottom:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
-    .tableWrap{margin-top:12px; overflow:auto; border-radius:16px; border:1px solid var(--line)}
-    table{width:100%; border-collapse:collapse; min-width:900px; background:rgba(0,0,0,.12)}
-    th,td{padding:12px; border-bottom:1px dashed var(--line); font-size:14px; text-align:right}
-    th{background:rgba(255,255,255,.05); color:var(--mut)}
-    .user-link{color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:bold}
-    .badge{padding:5px 10px; border-radius:12px; font-size:11px}
-    .badge.green{background:rgba(73,227,154,.1); color:var(--green); border:1px solid var(--green)}
-    .badge.red{background:rgba(255,107,107,.1); color:var(--red); border:1px solid var(--red)}
-    .modalBack{position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:9999; padding:20px; backdrop-filter:blur(10px)}
-    .modal{width:100%; max-width:800px; background:#0b1820; border:1px solid var(--line); border-radius:24px; padding:25px; max-height:90vh; overflow-y:auto}
+    *{box-sizing:border-box; font-family:system-ui, sans-serif}
+    body{margin:0; min-height:100vh; background:var(--bg); color:var(--txt); direction:rtl}
+    .wrap{max-width:1200px; margin:20px auto; padding:20px}
+    .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:25px}
+    .btn{border:none; border-radius:12px; padding:10px 18px; cursor:pointer; font-weight:bold; transition:0.3s}
+    .btn-blue{background:var(--blue); color:#fff}
+    .btn-danger{background:rgba(255,107,107,.2); color:var(--red); border:1px solid var(--red)}
+    .btn-outline{background:transparent; border:1px solid var(--line); color:var(--txt)}
+    
+    .stats-row{display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px}
+    .stat-card{background:var(--panel); border:1px solid var(--line); padding:20px; border-radius:18px; text-align:center}
+    .stat-card .val{font-size:32px; font-weight:bold; color:var(--blue); margin-top:5px}
+    
+    .main-card{background:var(--panel); border:1px solid var(--line); border-radius:20px; overflow:hidden}
+    .card-header{padding:20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center}
+    
+    table{width:100%; border-collapse:collapse}
+    th, td{padding:15px; text-align:right; border-bottom:1px solid var(--line)}
+    th{color:var(--mut); font-size:13px}
+    .user-name{color:var(--blue); cursor:pointer; font-weight:bold; text-decoration:underline}
+    
+    .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(5px)}
+    .modal-content{background:#0b1d26; width:90%; max-width:800px; padding:30px; border-radius:25px; border:1px solid var(--line); max-height:85vh; overflow-y:auto}
   </style>
 </head>
 <body>
 
-  <div id="lock" class="modalBack" style="display:flex">
-    <div class="modal" style="text-align:center">
-      <h2>تسجيل الدخول مطلوب</h2>
-      <p class="mut">يرجى تسجيل الدخول بحساب أدمن للوصول لهذه الصفحة.</p>
-      <button class="btn primary" onclick="location.href='index.html'">الذهاب لتسجيل الدخول</button>
+  <div id="authLock" class="modal-overlay" style="display:flex">
+    <div class="modal-content" style="text-align:center">
+      <h2>يجب تسجيل الدخول</h2>
+      <button class="btn btn-blue" onclick="location.href='index.html'">العودة للرئيسية</button>
     </div>
   </div>
 
   <div class="wrap">
     <div class="topbar">
-      <div>
-        <div style="font-weight:900; font-size:20px">HAYEK SPOT — لوحة الأدمن</div>
-        <div class="mut" id="adminInfo">جاري التحقق...</div>
-      </div>
+      <h2>لوحة تحكم HAYEK SPOT</h2>
       <div style="display:flex; gap:10px">
-        <button class="btn" onclick="refreshData()">تحديث القائمة 🔄</button>
-        <button class="btn danger" onclick="logout()">خروج</button>
+        <button class="btn btn-outline" onclick="loadAdminData()">تحديث 🔄</button>
+        <button class="btn btn-danger" onclick="logout()">خروج</button>
       </div>
     </div>
 
-    <div class="row">
-      <div class="stat"><div class="k">إجمالي المستخدمين</div><div class="v" id="stUsers">—</div></div>
-      <div class="stat"><div class="k">إجمالي الفواتير</div><div class="v" id="stInvoices">—</div></div>
-      <div class="stat"><div class="k">نشطين الآن</div><div class="v" id="stActive">—</div></div>
+    <div class="stats-row">
+      <div class="stat-card"><div>إجمالي المستخدمين</div><div class="val" id="totalUsers">0</div></div>
+      <div class="stat-card"><div>إجمالي الفواتير</div><div class="val" id="totalInvs">0</div></div>
+      <div class="stat-card"><div>نشط الآن</div><div class="val" id="activeNow">0</div></div>
     </div>
 
-    <div class="card" style="margin-top:20px">
-      <div class="head">
-        <h3 style="margin:0">إدارة الأعضاء</h3>
-        <button class="btn primary" onclick="openAddModal()">إضافة مستخدم جديد +</button>
+    <div class="main-card">
+      <div class="card-header">
+        <h3>إدارة الأعضاء ونشاطهم</h3>
+        <input type="text" id="searchBar" placeholder="بحث باسم المستخدم..." style="background:rgba(0,0,0,0.2); border:1px solid var(--line); padding:8px; border-radius:10px; color:#fff" oninput="filterUsers()">
       </div>
-      <div class="tableWrap">
+      <div style="overflow-x:auto">
         <table>
           <thead>
             <tr>
-              <th>المستخدم (اضغط للفواتير)</th>
+              <th>المستخدم</th>
               <th>الحالة</th>
-              <th>الدور</th>
-              <th>آخر ظهور</th>
+              <th>الرتبة</th>
               <th>الجهاز</th>
-              <th>إجراءات</th>
+              <th>إجراءات الإدارة</th>
             </tr>
           </thead>
-          <tbody id="usersTbody"></tbody>
+          <tbody id="userTableBody"></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <div id="invModal" class="modalBack">
-    <div class="modal">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <h3 id="invModalTitle">فواتير المستخدم</h3>
-        <div style="display:flex; gap:10px">
-            <button class="btn primary" id="exportFullPdf">تصدير كشف PDF 📄</button>
-            <button class="btn" onclick="closeModal('invModal')">إغلاق</button>
+  <div id="invoiceModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; margin-bottom:20px">
+        <h3 id="modalUserName">فواتير المستخدم</h3>
+        <div>
+          <button class="btn btn-blue" onclick="downloadPDF()">تصدير PDF 📄</button>
+          <button class="btn btn-outline" onclick="closeInvModal()">إغلاق</button>
         </div>
       </div>
-      <div class="tableWrap">
-        <table id="pdfTable">
-          <thead>
-            <tr>
-              <th>رقم الفاتورة</th>
-              <th>التاريخ</th>
-              <th>المبلغ</th>
-              <th>الحالة</th>
-            </tr>
-          </thead>
-          <tbody id="invTbody"></tbody>
-        </table>
-      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الفاتورة</th>
+            <th>التاريخ</th>
+            <th>المبلغ</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceTableBody"></tbody>
+      </table>
     </div>
   </div>
 
-  <script src="./admin.js"></script>
+  <script>
+    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+    const sb = supabase.createClient(SB_URL, SB_KEY);
+
+    let allUsers = [];
+    let selectedUserForPdf = "";
+
+    // التحقق من الأدمن
+    function checkAuth() {
+        const sess = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
+        if (sess.role === "admin") {
+            document.getElementById("authLock").style.display = "none";
+            loadAdminData();
+        }
+    }
+
+    async function loadAdminData() {
+        const { data: users } = await sb.from('app_users').select('*').order('created_at', {ascending:false});
+        const { count: invCount } = await sb.from('app_invoices').select('*', { count: 'exact', head: true });
+        
+        allUsers = users || [];
+        document.getElementById("totalUsers").textContent = allUsers.length;
+        document.getElementById("totalInvs").textContent = invCount || 0;
+        
+        renderTable(allUsers);
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = "";
+        data.forEach(u => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><span class="user-name" onclick="showInvoices('${u.username}')">${u.username}</span></td>
+                    <td><span style="color:${u.blocked ? 'var(--red)' : 'var(--green)'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
+                    <td>${u.is_admin ? 'أدمن' : 'مستخدم'}</td>
+                    <td style="font-size:11px">${u.device_id || 'غير مرتبط'}</td>
+                    <td>
+                        <button class="btn btn-outline" style="padding:5px" onclick="resetDevice('${u.username}')">مسح جهاز</button>
+                        <button class="btn btn-danger" style="padding:5px" onclick="toggleBlock('${u.username}', ${u.blocked})">${u.blocked ? 'فك حظر' : 'حظر'}</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function showInvoices(username) {
+        selectedUserForPdf = username;
+        document.getElementById("modalUserName").textContent = `فواتير: ${username}`;
+        document.getElementById("invoiceModal").style.display = "flex";
+        
+        const { data: invs } = await sb.from('app_invoices').select('*').eq('username', username);
+        const tbody = document.getElementById("invoiceTableBody");
+        tbody.innerHTML = invs.length ? "" : "<tr><td colspan='3'>لا يوجد بيانات</td></tr>";
+        invs.forEach(i => {
+            tbody.innerHTML += `<tr><td>#${i.id}</td><td>${new Date(i.created_at).toLocaleDateString()}</td><td>${i.total}</td></tr>`;
+        });
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Activity Report: ${selectedUserForPdf}`, 10, 10);
+        doc.autoTable({ html: '#invoiceTableBody' });
+        doc.save(`Report_${selectedUserForPdf}.pdf`);
+    }
+
+    async function resetDevice(user) {
+        if(confirm("هل تريد مسح ربط الجهاز؟")) {
+            await sb.from('app_users').update({ device_id: null }).eq('username', user);
+            loadAdminData();
+        }
+    }
+
+    async function toggleBlock(user, current) {
+        await sb.from('app_users').update({ blocked: !current }).eq('username', user);
+        loadAdminData();
+    }
+
+    function filterUsers() {
+        const val = document.getElementById("searchBar").value.toLowerCase();
+        const filtered = allUsers.filter(u => u.username.toLowerCase().includes(val));
+        renderTable(filtered);
+    }
+
+    function closeInvModal() { document.getElementById("invoiceModal").style.display = "none"; }
+    function logout() { localStorage.clear(); location.href="index.html"; }
+
+    window.onload = checkAuth;
+  </script>
 </body>
 </html>
