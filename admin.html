@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -10,81 +11,81 @@
   
   <style>
     :root{ --bg:#071820; --panel:rgba(255,255,255,.05); --line:rgba(255,255,255,.1); --txt:#eaf4ff; --blue:#1f62ff; --danger:#ff6b6b; --ok:#49e39a; }
-    body{margin:0; background:var(--bg); color:var(--txt); font-family:system-ui; direction:rtl}
-    .header{display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid var(--line); backdrop-filter:blur(10px)}
+    body{margin:0; background:var(--bg); color:var(--txt); font-family:system-ui; direction:rtl; min-height:100vh}
+    .header{display:flex; justify-content:space-between; padding:15px 25px; border-bottom:1px solid var(--line); background:rgba(0,0,0,0.2)}
     .container{max-width:1100px; margin:auto; padding:20px}
-    .stats-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin-bottom:30px}
-    .card{background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px}
+    .grid-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:25px}
+    .card{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px; backdrop-filter:blur(10px)}
     table{width:100%; border-collapse:collapse; margin-top:15px}
-    th{text-align:right; color:#888; font-size:13px; padding:12px}
-    td{padding:15px 12px; border-bottom:1px solid rgba(255,255,255,0.05)}
-    .btn-sm{padding:6px 12px; border-radius:8px; border:none; cursor:pointer; font-size:12px; margin-left:5px; background:#333; color:#fff}
-    .user-link{color:var(--blue); cursor:pointer; text-decoration:underline; font-weight:bold}
+    th{text-align:right; color:#888; font-size:12px; padding:10px; border-bottom:1px solid var(--line)}
+    td{padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:14px}
+    .btn-sm{padding:7px 14px; border-radius:8px; border:none; cursor:pointer; font-size:12px; transition:0.2s}
+    .blue{background:var(--blue); color:#fff}
+    .danger-btn{background:rgba(255,107,107,0.1); color:var(--danger)}
+    .user-click{color:var(--blue); cursor:pointer; font-weight:bold; text-decoration:underline}
     
-    /* النافذة المنبثقة للفواتير */
-    #invoiceModal{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; padding:20px; backdrop-filter:blur(8px)}
-    .modal-content{background:#0d2129; border:1px solid var(--line); max-width:700px; margin:40px auto; border-radius:20px; padding:25px}
+    /* نافذة الفواتير */
+    #invModal{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; padding:20px; backdrop-filter:blur(10px)}
+    .modal-box{background:#0d2129; border:1px solid var(--line); max-width:700px; margin:30px auto; border-radius:24px; padding:25px; max-height:85vh; overflow-y:auto}
     .badge{padding:4px 8px; border-radius:6px; font-size:11px}
-    .bg-ok{background:var(--ok); color:#000}
-    .bg-err{background:var(--danger); color:#fff}
+    .active-tag{background:rgba(73,227,154,0.1); color:var(--ok)}
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div style="display:flex; gap:15px; align-items:center">
-        <span class="badge bg-ok">أدمن: متصل</span>
-        <h3 style="margin:0" id="adminDisplayName">admin</h3>
+    <div style="display:flex; align-items:center; gap:10px">
+        <span class="badge active-tag">أدمن: متصل</span>
+        <strong id="admName">admin</strong>
     </div>
-    <button class="btn-sm bg-err" onclick="logout()">خروج</button>
+    <button class="btn-sm danger-btn" onclick="logout()">خروج</button>
   </div>
 
   <div class="container">
-    <div class="stats-row">
+    <div class="grid-stats">
         <div class="card" style="text-align:center">
-            <h2 id="totalUsersCount">0</h2>
-            <p style="color:#888; margin:0">إجمالي المستخدمين</p>
+            <h2 id="uCount">0</h2>
+            <p style="margin:0; color:#888; font-size:13px">المستخدمين</p>
         </div>
         <div class="card" style="text-align:center">
-            <h2 id="totalInvoicesCount">0</h2>
-            <p style="color:#888; margin:0">إجمالي الفواتير</p>
+            <h2 id="iCount">0</h2>
+            <p style="margin:0; color:#888; font-size:13px">إجمالي الفواتير</p>
         </div>
         <div class="card">
-            <select id="timeFilter" onchange="refreshData()" style="width:100%; background:#000; color:#fff; border:1px solid var(--line); padding:10px; border-radius:8px">
-                <option value="today">اليوم</option>
-                <option value="7days" selected>آخر 7 أيام</option>
-                <option value="all">الكل</option>
+            <select id="timeRange" onchange="init()" style="width:100%; background:#000; color:#fff; border:1px solid var(--line); padding:8px; border-radius:8px">
+                <option value="all">كل الأوقات</option>
+                <option value="7">آخر 7 أيام</option>
             </select>
         </div>
     </div>
 
     <div class="card">
-        <h4 style="margin:0">إدارة المستخدمين ونشاطهم</h4>
+        <h3 style="margin:0 0 15px">قائمة الأعضاء ونشاطهم</h3>
         <table>
             <thead>
                 <tr>
-                    <th>المستخدم (اضغط للعرض)</th>
+                    <th>المستخدم</th>
                     <th>الفواتير</th>
-                    <th>آخر نشاط</th>
+                    <th>آخر ظهور</th>
                     <th>الحالة</th>
                     <th>إجراءات</th>
                 </tr>
             </thead>
-            <tbody id="userTableBody"></tbody>
+            <tbody id="userRows"></tbody>
         </table>
     </div>
   </div>
 
-  <div id="invoiceModal">
-    <div class="modal-content">
+  <div id="invModal">
+    <div class="modal-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-            <h3 id="modalTitle">فواتير المستخدم</h3>
+            <h3 id="modalUser">فواتير المستخدم</h3>
             <div>
-                <button class="btn-sm bg-ok" id="exportPdfBtn">تصدير PDF 📄</button>
-                <button class="btn-sm" onclick="closeModal()">إغلاق</button>
+                <button class="btn-sm blue" id="pdfBtn">تصدير PDF 📄</button>
+                <button class="btn-sm" style="background:#333; color:#fff" onclick="closeM()">إغلاق</button>
             </div>
         </div>
-        <table id="userInvoicesTable">
+        <table id="targetTable">
             <thead>
                 <tr>
                     <th>رقم الفاتورة</th>
@@ -93,7 +94,7 @@
                     <th>الحالة</th>
                 </tr>
             </thead>
-            <tbody id="invoiceListBody"></tbody>
+            <tbody id="invRows"></tbody>
         </table>
     </div>
   </div>
@@ -102,88 +103,70 @@
     const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
     const sb = supabase.createClient(SB_URL, SB_KEY);
-    
-    let currentViewingUser = ""; // لحفظ اسم المستخدم المفتوح حالياً للتصدير
 
-    // التحقق من الجلسة
-    const session = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
-    if (session.role !== "admin") { location.href = "index.html"; }
-    document.getElementById("adminDisplayName").textContent = session.username;
+    let viewingNow = "";
 
-    async function refreshData() {
-        // تحديث أرقام الملخص
-        const { count: uCount } = await sb.from('app_users').select('*', { count: 'exact', head: true });
-        const { count: iCount } = await sb.from('app_invoices').select('*', { count: 'exact', head: true });
-        document.getElementById("totalUsersCount").textContent = uCount;
-        document.getElementById("totalInvoicesCount").textContent = iCount;
+    // حماية الصفحة
+    const sess = JSON.parse(localStorage.getItem("HAYEK_SESSION") || "{}");
+    if(sess.role !== "admin") location.href = "index.html";
+    document.getElementById("admName").textContent = sess.username;
+
+    async function init() {
+        const { count: uc } = await sb.from('app_users').select('*', { count: 'exact', head: true });
+        const { count: ic } = await sb.from('app_invoices').select('*', { count: 'exact', head: true });
+        document.getElementById("uCount").textContent = uc || 0;
+        document.getElementById("iCount").textContent = ic || 0;
         
         loadUsers();
     }
 
     async function loadUsers() {
-        const tbody = document.getElementById("userTableBody");
-        tbody.innerHTML = "<tr><td colspan='5'>جاري التحميل...</td></tr>";
-
-        const { data: users } = await sb.from('app_users').select('*').order('last_seen', { ascending: false });
-
-        tbody.innerHTML = "";
-        for (const u of users) {
+        const body = document.getElementById("userRows");
+        body.innerHTML = "جاري التحميل...";
+        const { data: users } = await sb.from('app_users').select('*').order('last_seen', {ascending:false});
+        
+        body.innerHTML = "";
+        for(const u of users) {
             const { count: invs } = await sb.from('app_invoices').select('*', { count: 'exact', head: true }).eq('username', u.username);
-            
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td><span class="user-link" onclick="viewInvoices('${u.username}')">${u.username}</span></td>
+                <td><span class="user-click" onclick="showInv('${u.username}')">${u.username}</span></td>
                 <td>${invs || 0}</td>
                 <td>${u.last_seen ? new Date(u.last_seen).toLocaleTimeString('ar-EG') : '---'}</td>
-                <td><span class="badge ${u.blocked ? 'bg-err' : 'bg-ok'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
-                <td>
-                    <button class="btn-sm" onclick="resetDevice('${u.username}')">مسح الجهاز</button>
-                    <button class="btn-sm bg-err" onclick="deleteUser('${u.username}')">حذف</button>
-                </td>
+                <td><span class="badge ${u.blocked ? 'danger-btn' : 'active-tag'}">${u.blocked ? 'محظور' : 'نشط'}</span></td>
+                <td><button class="btn-sm" onclick="resetD('${u.username}')">مسح الجهاز</button></td>
             `;
-            tbody.appendChild(tr);
+            body.appendChild(tr);
         }
     }
 
-    async function viewInvoices(username) {
-        currentViewingUser = username;
-        document.getElementById("invoiceModal").style.display = "block";
-        document.getElementById("modalTitle").textContent = `فواتير: ${username}`;
-        const list = document.getElementById("invoiceListBody");
-        list.innerHTML = "جاري التحميل...";
+    async function showInv(user) {
+        viewingNow = user;
+        document.getElementById("invModal").style.display = "block";
+        document.getElementById("modalUser").textContent = `فواتير: ${user}`;
+        const list = document.getElementById("invRows");
+        list.innerHTML = "تحميل...";
 
-        const { data: invs } = await sb.from('app_invoices').select('*').eq('username', username).order('created_at', { ascending: false });
-        
+        const { data: invs } = await sb.from('app_invoices').select('*').eq('username', user).order('created_at', {ascending:false});
         list.innerHTML = "";
-        invs.forEach(inv => {
-            list.innerHTML += `
-                <tr>
-                    <td>#${inv.id}</td>
-                    <td>${new Date(inv.created_at).toLocaleDateString('ar-EG')}</td>
-                    <td style="color:var(--ok)">${inv.total}</td>
-                    <td><span class="badge bg-ok">${inv.status}</span></td>
-                </tr>`;
+        invs.forEach(i => {
+            list.innerHTML += `<tr><td>#${i.id}</td><td>${new Date(i.created_at).toLocaleDateString()}</td><td>${i.total}</td><td>مغلقة</td></tr>`;
         });
     }
 
-    // وظيفة تصدير PDF للمستخدم المفتوح (المطلوب تصدير ملف PDF)
-    document.getElementById("exportPdfBtn").onclick = () => {
+    document.getElementById("pdfBtn").onclick = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(`User Report: ${currentViewingUser}`, 14, 15);
-        doc.autoTable({ html: '#userInvoicesTable', theme: 'grid', headStyles: { fillColor: [31, 98, 255] } });
-        doc.save(`Invoices_${currentViewingUser}.pdf`);
+        doc.text(`Report: ${viewingNow}`, 14, 15);
+        doc.autoTable({ html: '#targetTable', margin: { top: 25 } });
+        doc.save(`Invoices_${viewingNow}.pdf`);
     };
 
-    function closeModal() { document.getElementById("invoiceModal").style.display = "none"; }
-    function logout() { localStorage.clear(); location.href = "index.html"; }
+    function closeM() { document.getElementById("invModal").style.display="none"; }
+    function logout() { localStorage.clear(); location.href="index.html"; }
+    async function resetD(u) { await sb.from('app_users').update({device_id: null}).eq('username', u); alert("تم المسح"); }
 
-    async function resetDevice(u) {
-        await sb.from('app_users').update({ device_id: null }).eq('username', u);
-        alert("تم مسح بيانات الجهاز لـ " + u);
-    }
-
-    refreshData();
+    init();
   </script>
 </body>
 </html>
