@@ -1,119 +1,172 @@
-/***********************
- * HAYEK ADMIN PANEL
- * Clean & Stable Version
- * Step 2 – Core Logic
- ***********************/
+// admin.js — نسخة مستقرة بدون Supabase Auth
+(() => {
+  // ===== Helpers =====
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Number(n || 0).toLocaleString("ar");
+  const now = () => new Date().toISOString();
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-/* ========= CONFIG ========= */
-const SUPABASE_URL = window.HAYEK_CONFIG.supabaseUrl;
-const SUPABASE_KEY = window.HAYEK_CONFIG.supabaseKey;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* ========= HELPERS ========= */
-const $ = (id) => document.getElementById(id);
-const show = (el) => el && (el.style.display = "block");
-const hide = (el) => el && (el.style.display = "none");
-
-/* ========= STATE ========= */
-let USERS = [];
-let CURRENT_USER = null;
-
-/* ========= INIT ========= */
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("Admin panel init…");
-
-  await loadUsers();
-  renderUsersTable();
-});
-
-/* ========= LOAD USERS ========= */
-async function loadUsers() {
-  const { data, error } = await supabase
-    .from("app_users")
-    .select("id, username, blocked, is_admin, created_at, last_seen");
-
-  if (error) {
-    alert("خطأ تحميل المستخدمين");
-    console.error(error);
+  // ===== Config =====
+  if (!window.HAYEK_CONFIG || !window.supabase) {
+    console.error("config.js أو supabase غير محمّل");
     return;
   }
 
-  USERS = data || [];
-}
+  const CFG = window.HAYEK_CONFIG;
+  const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
 
-/* ========= RENDER USERS ========= */
-function renderUsersTable() {
-  const tbody = document.querySelector("#users-table tbody");
-  if (!tbody) return;
+  const T_USERS = CFG.tables.users;
+  const T_INV   = CFG.tables.invoices;
+  const T_OPS   = CFG.tables.operations;
 
-  tbody.innerHTML = "";
+  // ===== UI =====
+  const usersBody = $("usersBody");
+  const invBody   = $("invBody");
+  const opsBody   = $("opsBody");
 
-  USERS.forEach((u) => {
-    const tr = document.createElement("tr");
+  const statInvCount = $("statInvCount");
+  const statInvSum   = $("statInvSum");
 
-    tr.innerHTML = `
-      <td>${u.username}</td>
-      <td>${u.blocked ? "محظور" : "نشط"}</td>
-      <td>${u.last_seen ? timeAgo(u.last_seen) : "-"}</td>
-      <td>
-        <button class="btn" onclick="openInvoices('${u.username}')">الفواتير</button>
-        <button class="btn" onclick="toggleBlock(${u.id}, ${u.blocked})">
-          ${u.blocked ? "فك الحظر" : "حظر"}
-        </button>
-        <button class="btn danger" onclick="deleteUser(${u.id})">حذف</button>
-      </td>
-    `;
+  const opsBack  = $("opsBack");
+  const opsClose = $("opsClose");
 
-    tbody.appendChild(tr);
+  const selInvId = $("selInvId");
+  const selUser  = $("selUser");
+  const selCust  = $("selCust");
+  const selTotal = $("selTotal");
+  const selStatus= $("selStatus");
+
+  // ===== Network dot =====
+  const netDot = $("netDot");
+  function refreshNet(){
+    const on = navigator.onLine;
+    netDot.className = "dot " + (on ? "on" : "off");
+  }
+  window.addEventListener("online", refreshNet);
+  window.addEventListener("offline", refreshNet);
+  refreshNet();
+
+  // ===== Tabs =====
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.onclick=()=>{
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      $("pane-users").style.display = tab.dataset.tab==="users" ? "block" : "none";
+      $("pane-inv").style.display   = tab.dataset.tab==="inv"   ? "block" : "none";
+    };
   });
-}
 
-/* ========= ACTIONS ========= */
-window.openInvoices = async (username) => {
-  alert("فتح فواتير المستخدم: " + username);
-};
+  // ===== Load users =====
+  async function loadUsers(){
+    usersBody.innerHTML = "";
+    const { data: users, error } = await sb
+      .from(T_USERS)
+      .select("id, username, blocked, last_seen");
 
-window.toggleBlock = async (id, blocked) => {
-  const { error } = await supabase
-    .from("app_users")
-    .update({ blocked: !blocked })
-    .eq("id", id);
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  if (error) {
-    alert("فشل تغيير الحالة");
-    return;
+    for (const u of users) {
+      const { count } = await sb
+        .from(T_INV)
+        .select("*", { count: "exact", head: true })
+        .eq("username", u.username);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.username}</td>
+        <td><span class="chip">${count || 0}</span></td>
+        <td>
+          <span class="chip ${u.blocked ? "bad" : "ok"}">
+            ${u.blocked ? "محظور" : "نشط"}
+          </span>
+        </td>
+        <td class="mini">${u.last_seen ? new Date(u.last_seen).toLocaleString("ar") : "—"}</td>
+        <td class="actRow">
+          <button class="aBtn blue" data-user="${u.username}">فواتير</button>
+        </td>
+      `;
+      tr.querySelector("button").onclick = () => loadInvoices(u.username);
+      usersBody.appendChild(tr);
+    }
   }
 
-  await loadUsers();
-  renderUsersTable();
-};
+  // ===== Load invoices =====
+  async function loadInvoices(username=""){
+    invBody.innerHTML = "";
 
-window.deleteUser = async (id) => {
-  if (!confirm("هل أنت متأكد من الحذف؟")) return;
+    let q = sb.from(T_INV).select("*").order("created_at", { ascending:false });
+    if (username) q = q.eq("username", username);
 
-  const { error } = await supabase
-    .from("app_users")
-    .delete()
-    .eq("id", id);
+    const { data: invs, error } = await q;
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  if (error) {
-    alert("فشل الحذف");
-    return;
+    let sum = 0;
+    for (const inv of invs) {
+      sum += Number(inv.total || 0);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${new Date(inv.created_at).toLocaleString("ar")}</td>
+        <td>${inv.username}</td>
+        <td>${inv.customer_name || "—"}</td>
+        <td>${fmt(inv.total)}</td>
+        <td>${inv.status}</td>
+        <td>${String(inv.id).slice(-6)}</td>
+        <td>
+          <button class="aBtn blue">العمليات</button>
+        </td>
+      `;
+
+      tr.querySelector("button").onclick = () => openOps(inv);
+      invBody.appendChild(tr);
+    }
+
+    statInvCount.textContent = invs.length;
+    statInvSum.textContent   = fmt(sum);
   }
 
-  await loadUsers();
-  renderUsersTable();
-};
+  // ===== Operations =====
+  async function openOps(inv){
+    selInvId.textContent = String(inv.id).slice(-6);
+    selUser.textContent  = inv.username;
+    selCust.textContent  = inv.customer_name || "—";
+    selTotal.textContent = fmt(inv.total);
+    selStatus.textContent= inv.status;
 
-/* ========= UTILS ========= */
-function timeAgo(date) {
-  const diff = Math.floor((Date.now() - new Date(date)) / 60000);
-  if (diff < 1) return "الآن";
-  if (diff < 60) return `منذ ${diff} دقيقة`;
-  const h = Math.floor(diff / 60);
-  if (h < 24) return `منذ ${h} ساعة`;
-  return `منذ ${Math.floor(h / 24)} يوم`;
-}
+    opsBody.innerHTML = "";
+
+    const { data: ops, error } = await sb
+      .from(T_OPS)
+      .select("*")
+      .eq("invoiceId", inv.id)
+      .order("created_at", { ascending:true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    for (const r of ops) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${new Date(r.created_at).toLocaleString("ar")}</td>
+        <td>${r.text || "—"}</td>
+        <td>${r.expr || "—"}</td>
+        <td>${r.result}</td>
+      `;
+      opsBody.appendChild(tr);
+    }
+
+    opsBack.style.display = "flex";
+  }
+
+  opsClose.onclick = () => opsBack.style.display = "none";
+
+  // ===== Init =====
+  loadUsers();
+})();
