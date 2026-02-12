@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -14,7 +15,7 @@
     }
     *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
     body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
-    .wrap{max-width:1200px;margin:18px auto;padding:16px}
+    .wrap{max-width:1200px;margin:18px auto;padding:16px;width:100%}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
     .brand{display:flex;align-items:center;gap:10px}
     .dot{width:12px;height:12px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
@@ -29,8 +30,14 @@
     .head{padding:14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
     .input, .select{background:rgba(0,0,0,.18);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:10px 12px;outline:none}
 
-    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line)}
-    table{width:100%;border-collapse:collapse;min-width:1100px;background:rgba(0,0,0,.12)}
+    /* ✅ أهم تعديل للهاتف: ممنوع الصفحة تصير عريضة وتكبر */
+    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line);max-width:100%;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;min-width:980px;background:rgba(0,0,0,.12)}
+    @media (max-width: 820px){
+      .wrap{padding:12px}
+      table{min-width:1100px;} /* نخليها تتمرّر أفقياً داخل الـ tableWrap بدون ما تكبّر الصفحة */
+    }
+
     th,td{padding:12px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right;vertical-align:middle}
     th{background:rgba(255,255,255,.06)}
     .badge{border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid rgba(255,255,255,.12)}
@@ -39,6 +46,7 @@
     .badge.blue{color:#9fd0ff; border-color:rgba(159,208,255,.55)}
     .badge.amber{color:var(--amber); border-color:rgba(255,204,102,.55)}
 
+    /* ✅ أزرار الإجراءات + زر الفواتير */
     .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .mini{
       padding:7px 10px;
@@ -59,24 +67,9 @@
 
     .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:14px; backdrop-filter:blur(10px)}
     .modal{width:min(980px,100%);max-height:85vh;overflow:auto;background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px}
-
     .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     @media (max-width:720px){ .formGrid{grid-template-columns:1fr} }
-
     .mut{color:var(--mut);font-size:13px}
-
-    /* ===== ✅ Responsive fix للهاتف والكمبيوتر ===== */
-    @media (max-width: 820px){
-      .wrap{padding:12px}
-      table{min-width:760px} /* Scroll داخل tableWrap */
-      .btn{padding:10px 12px;border-radius:12px}
-      #searchUser{min-width:160px}
-    }
-    @media (max-width: 480px){
-      .brand{gap:8px}
-      .mut{font-size:12px}
-      table{min-width:720px}
-    }
   </style>
 </head>
 
@@ -194,7 +187,7 @@
       </div>
       <div style="padding:15px">
         <div class="tableWrap">
-          <table>
+          <table style="min-width:860px">
             <thead>
               <tr>
                 <th>التاريخ</th>
@@ -207,19 +200,23 @@
             <tbody id="invTbody"></tbody>
           </table>
         </div>
+        <div class="mut" style="margin-top:10px">داخل كل فاتورة يوجد زر PDF (سيتم تشغيله في الخطوة القادمة).</div>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Scripts (✅ ترتيب صحيح مهم جداً) -->
   <script src="./config.js?v=2"></script>
-  <script src="./auth.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./auth.js?v=2"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <script src="./admin.js?v=2"></script>
 
   <script>
+    // اسم الأدمن في الهيدر (تجميل فقط)
     try{
       const s = window.HAYEK_AUTH?.getUser?.() || {};
       document.getElementById("adminName").textContent = s.username || "—";
