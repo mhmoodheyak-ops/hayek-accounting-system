@@ -3,87 +3,88 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأدمن</title>
-  <link rel="stylesheet" href="./style.css?v=1" />
+  <title>HAYEK SPOT — لوحة الإدارة</title>
+
+  <link rel="stylesheet" href="./style.css?v=2" />
+  <script src="./config.js?v=2"></script>
+  <script src="./auth.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    :root{
-      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66;
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .mini{padding:6px 10px;border-radius:10px;border:none;cursor:pointer;font-size:12px}
+    .mini.blue{background:#2d7dff;color:#fff}
+    .mini.red{background:#ff5a6b;color:#fff}
+    .mini.green{background:#27d17f;color:#003b22}
+    .mini.ghost{background:transparent;border:1px solid #ffffff44;color:#fff}
+
+    .modalBack{
+      position:fixed;inset:0;background:rgba(0,0,0,.75);
+      display:none;align-items:center;justify-content:center;z-index:9999;padding:14px
     }
-    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
-    .wrap{max-width:1200px;margin:18px auto;padding:16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-    .brand{display:flex;align-items:center;gap:10px}
-    .dot{width:12px;height:12px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
-    .btn{border:none;border-radius:14px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .btn.primary{background:rgba(31,98,255,.85)}
-    .btn.danger{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden; margin-bottom: 20px;}
-    .stat-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:15px;padding:15px}
-    .stat{padding:14px;border-radius:18px;background:rgba(0,0,0,.16);border:1px solid var(--line);text-align:center}
-    .stat .v{font-weight:900;font-size:28px;margin-top:6px; color:var(--blue)}
-    .stat .k{color:var(--mut);font-size:13px}
-    .head{padding:14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .input, .select{background:rgba(0,0,0,.18);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:10px 12px;outline:none}
-    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line)}
-    table{width:100%;border-collapse:collapse;min-width:980px;background:rgba(0,0,0,.12)}
-    th,td{padding:12px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right}
-    .badge{border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid rgba(255,255,255,.12)}
-    .badge.green{color:var(--green); border-color:var(--green)}
-    .badge.red{color:var(--red); border-color:var(--red)}
-    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:14px; backdrop-filter:blur(10px)}
-    .modal{width:min(980px,100%);max-height:85vh;overflow:auto;background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px}
-    .mini{padding:6px 10px; border-radius:10px; border:none; cursor:pointer; font-size:12px; margin-left:5px}
-    /* قالب PDF المخفي */
-    #pdf_capture{position:absolute;left:-9999px;width:800px;background:#fff;color:#000;padding:40px;direction:rtl}
+    .modal{
+      width:min(520px,100%);background:#0b1820;border:1px solid #ffffff22;
+      border-radius:18px;padding:16px
+    }
+    .modal h3{margin:0 0 10px}
+    .modal .field{margin-bottom:10px}
+    .modal .field input{width:100%}
+    .modal .actions{display:flex;gap:10px;justify-content:flex-end}
+    .msg{font-size:12px;margin-top:6px}
   </style>
 </head>
+
 <body>
+  <!-- قفل -->
   <div id="lock" class="modalBack" style="display:flex">
-    <div class="modal" style="max-width:400px; padding:30px; text-align:center">
-      <h2 style="color:var(--red)">دخول الإدارة</h2>
-      <button class="btn primary" id="goLogin">الذهاب لتسجيل الدخول</button>
+    <div class="modal" style="text-align:center">
+      <h3 style="color:#ff5a6b">دخول غير مصرح</h3>
+      <p>هذه الصفحة مخصصة للأدمن فقط</p>
+      <button class="btn primary" id="goLogin">العودة لتسجيل الدخول</button>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot online" id="onlineDot"></span>
+      <div class="titles">
+        <div class="title" id="adminInfo">HAYEK SPOT — Admin</div>
+        <div class="subtitle">إدارة المستخدمين والفواتير</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn primary" id="addUserBtn">➕ إضافة مستخدم</button>
+      <button class="btn danger" id="logoutBtn">خروج</button>
     </div>
   </div>
 
   <div class="wrap">
-    <div class="topbar">
-      <div class="brand"><div class="dot" id="onlineDot"></div><h2 id="adminInfo">HAYEK SPOT — لوحة الإدارة</h2></div>
-      <button class="btn danger" id="logoutBtn">خروج</button>
-    </div>
-
+    <!-- إحصائيات -->
     <div class="card">
-      <div class="stat-row">
-        <div class="stat"><div class="k">المستخدمين</div><div class="v" id="stUsers">0</div></div>
-        <div class="stat"><div class="k">الفواتير</div><div class="v" id="stInvoices">0</div></div>
-        <div class="stat"><div class="k">نشط حالياً</div><div class="v" id="stActive">0</div></div>
+      <div class="grid2">
+        <div class="pill">المستخدمون: <b id="stUsers">0</b></div>
+        <div class="pill">الفواتير: <b id="stInvoices">0</b></div>
+        <div class="pill">نشط خلال 24 ساعة: <b id="stActive">0</b></div>
       </div>
     </div>
 
+    <!-- جدول المستخدمين -->
     <div class="card">
-      <div class="head">
-        <div style="display:flex;gap:10px">
-          <input id="searchUser" class="input" placeholder="بحث باسم المستخدم...">
-          <select id="range" class="select">
-            <option value="all">كل الأوقات</option>
-            <option value="today">اليوم</option>
-            <option value="7d">آخر 7 أيام</option>
-          </select>
-        </div>
-        <button class="btn primary" id="refreshBtn">تحديث</button>
+      <div class="field">
+        <input id="searchUser" placeholder="بحث باسم المستخدم..." />
       </div>
-      <div class="tableWrap">
-        <table>
+
+      <div class="tableWrap" style="margin-top:10px">
+        <table class="tbl">
           <thead>
             <tr>
               <th>المستخدم</th>
-              <th>الرتبة</th>
+              <th>الدور</th>
               <th>الحالة</th>
-              <th>الفواتير</th>
-              <th>آخر ظهور</th>
               <th>الجهاز</th>
-              <th>إجراءات التحكم</th>
+              <th>آخر ظهور</th>
+              <th>إجراءات</th>
             </tr>
           </thead>
           <tbody id="usersTbody"></tbody>
@@ -92,43 +93,28 @@
     </div>
   </div>
 
-  <div id="invModalBack" class="modalBack">
+  <!-- نافذة إضافة مستخدم -->
+  <div id="addModalBack" class="modalBack">
     <div class="modal">
-      <div class="head">
-        <h3 id="invModalTitle">الفواتير</h3>
-        <button class="btn" id="closeInvModal">إغلاق</button>
+      <h3>إضافة مستخدم</h3>
+      <div class="field">
+        <input id="newUsername" placeholder="اسم المستخدم">
       </div>
-      <div style="padding:15px">
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr><th>التاريخ</th><th>الزبون</th><th>الإجمالي</th><th>رقم الفاتورة</th><th>إجراء</th></tr>
-            </thead>
-            <tbody id="invTbody"></tbody>
-          </table>
-        </div>
+      <div class="field">
+        <input id="newPass" type="password" placeholder="كلمة المرور">
       </div>
+      <div class="field chk">
+        <input id="newIsAdmin" type="checkbox">
+        <label for="newIsAdmin">أدمن</label>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="closeAddModal">إلغاء</button>
+        <button class="btn primary" id="saveUserBtn">حفظ</button>
+      </div>
+      <div class="msg" id="addUserMsg"></div>
     </div>
   </div>
 
-  <div id="pdf_capture">
-    <center><h1>شركة الحايك</h1><h2>HAYEK SPOT</h2><hr></center>
-    <div style="display:flex;justify-content:space-between">
-      <p>المستخدم: <b id="p_user"></b></p>
-      <p>التاريخ: <b id="p_date"></b></p>
-    </div>
-    <table style="width:100%;border-collapse:collapse" border="1">
-      <thead><tr><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
-      <tbody id="p_rows"></tbody>
-    </table>
-    <h3 style="background:#000;color:#fff;padding:15px;text-align:center">الإجمالي: <span id="p_total"></span></h3>
-  </div>
-
-  <script src="./config.js"></script>
-  <script src="./auth.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="./admin.js"></script>
+  <script src="./admin.js?v=2"></script>
 </body>
 </html>
