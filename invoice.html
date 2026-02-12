@@ -3,652 +3,186 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — الحاسبة</title>
+  <title>HAYEK SPOT — الفاتورة</title>
 
   <link rel="manifest" href="./manifest.json" />
   <meta name="theme-color" content="#071820" />
 
-  <style>
-    :root{
-      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff;
-    }
-    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
-    .wrap{max-width:980px;margin:18px auto;padding:16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .dot{width:12px;height:12px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
-    .btnSmall{border:none;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
-    .head{padding:16px;border-bottom:1px solid var(--line);display:flex;gap:12px;flex-wrap:wrap;align-items:end}
-    .field{flex:1;min-width:220px}
-    label{display:block;color:var(--mut);font-size:13px;margin:0 0 6px}
-    input{width:100%;padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--txt);font-size:16px;outline:none}
-    input[readonly]{opacity:.95}
-    .tabs{display:flex;gap:10px;margin-inline-start:auto}
-    .tab{border:none;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .tab.active{background:rgba(31,98,255,.35);border:1px solid rgba(31,98,255,.55)}
-    .body{padding:16px}
-    .row2{display:flex;gap:12px;flex-wrap:wrap}
-    .panel{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:18px;padding:14px;flex:1;min-width:300px}
-    .kpad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-    .k{padding:18px;border:none;border-radius:16px;background:rgba(255,255,255,.08);color:#fff;font-size:18px;cursor:pointer}
-    .k.op{background:rgba(255,255,255,.12)}
-    .k.eq{background:rgba(31,98,255,.85)}
-    .k.wide{grid-column:span 2}
-    .tableWrap{margin-top:12px;overflow:auto;border-radius:16px;border:1px solid var(--line)}
-    table{width:100%;border-collapse:collapse;min-width:700px;background:rgba(0,0,0,.12)}
-    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px}
-    th{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);text-align:right}
-    td{text-align:right;color:rgba(255,255,255,.95)}
-    .total{margin-top:12px;border:2px dashed rgba(255,255,255,.18);border-radius:16px;padding:12px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
-    .actions{display:flex;gap:10px;margin-top:12px}
-    .a{flex:1;border:none;border-radius:16px;padding:14px;font-size:16px;cursor:pointer}
-    .a.pdf{background:var(--blue);color:#fff}
-    .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;line-height:1.7}
-    /* شاشة قفل */
-    #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
-    #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
-    #lock .box h3{margin:0 0 8px}
-    .hintList{margin:0;padding:0;list-style:none}
-    .hintList li{padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;margin-top:8px;background:rgba(0,0,0,.12);cursor:pointer}
-  </style>
-
-  <!-- PDF -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="./config.js?v=1"></script>
-  <script src="./auth.js?v=1"></script>
+  <script src="./config.js?v=2"></script>
+  <script src="./auth.js?v=2"></script>
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      background:#071820;
+      color:#eaf4ff;
+      font-family:system-ui,Segoe UI,Arial;
+    }
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer}
+    .btn.pdf{background:#1f62ff;color:#fff}
+    .btn.logout{background:#ff6b6b;color:#fff}
+
+    .card{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:20px;
+      padding:16px;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.25);
+      color:#fff;
+      font-size:16px;
+      margin-bottom:10px;
+    }
+
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.15)}
+    th{background:rgba(255,255,255,.08)}
+
+    .total{
+      margin-top:12px;
+      border:2px dashed rgba(255,255,255,.2);
+      border-radius:14px;
+      padding:12px;
+      display:flex;
+      justify-content:space-between;
+      font-size:18px;
+      font-weight:900;
+    }
+  </style>
 </head>
 
 <body>
+<div class="wrap">
 
-  <div id="lock">
-    <div class="box">
-      <h3>تسجيل الدخول مطلوب</h3>
-      <p style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
-      <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
+  <div class="topbar">
+    <h2>الفاتورة</h2>
+    <button class="btn logout" id="logoutBtn">خروج</button>
+  </div>
+
+  <div class="card">
+    <label>اسم الزبون (إجباري)</label>
+    <input id="customer" placeholder="اسم الزبون">
+
+    <label>النص</label>
+    <input id="text" placeholder="مثال: مصروف / مواد">
+
+    <label>العملية</label>
+    <input id="expr" placeholder="5+5" readonly>
+
+    <div style="margin:10px 0">
+      <button class="btn pdf" id="addLine">إضافة سطر</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>الوقت</th>
+          <th>البيان</th>
+          <th>العملية</th>
+          <th>النتيجة</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <div class="total">
+      <span>الإجمالي</span>
+      <span id="total">0</span>
+    </div>
+
+    <div style="margin-top:12px;text-align:center">
+      <button class="btn pdf" id="pdfBtn">تصدير PDF</button>
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <span class="dot" id="onlineDot"></span>
-        <div>
-          <div style="font-weight:800;font-size:18px">حاسبة الحايك</div>
-          <div style="color:var(--mut);font-size:13px">زر واحد: تصدير PDF</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="btnSmall" id="logoutBtn">خروج</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="head">
-        <div class="field">
-          <label>اسم الزبون (إجباري)</label>
-          <input id="customerName" placeholder="مثال: أبو إبراهيم">
-          <ul id="custHints" class="hintList" style="display:none"></ul>
-        </div>
-
-        <div class="field">
-          <label>نص السطر (اختياري — من كيبورد الهاتف/اللابتوب)</label>
-          <input id="lineText" placeholder="مثال: محارم / رز / مصروف...">
-          <ul id="textHints" class="hintList" style="display:none"></ul>
-        </div>
-
-        <div class="tabs">
-          <button class="tab active" data-tab="calc">الحاسبة</button>
-          <button class="tab" data-tab="log">سجل العمليات</button>
-        </div>
-      </div>
-
-      <div class="body">
-        <div id="tab_calc">
-          <div class="row2">
-            <div class="panel">
-              <label>العملية الحسابية (من أزرار الشاشة)</label>
-              <input id="expr" readonly placeholder="5+5">
-              <div style="margin-top:8px;color:var(--mut);font-size:13px">
-                النتيجة: <span id="res" style="font-weight:800;color:#fff">0</span>
-              </div>
-
-              <div class="kpad" id="pad">
-                <button class="k" data-k="7">7</button>
-                <button class="k" data-k="8">8</button>
-                <button class="k" data-k="9">9</button>
-                <button class="k op" data-k="÷">÷</button>
-
-                <button class="k" data-k="4">4</button>
-                <button class="k" data-k="5">5</button>
-                <button class="k" data-k="6">6</button>
-                <button class="k op" data-k="×">×</button>
-
-                <button class="k" data-k="1">1</button>
-                <button class="k" data-k="2">2</button>
-                <button class="k" data-k="3">3</button>
-                <button class="k op" data-k="-">-</button>
-
-                <button class="k op" data-k="(">(</button>
-                <button class="k" data-k="0">0</button>
-                <button class="k op" data-k=")">)</button>
-                <button class="k op" data-k="+">+</button>
-
-                <button class="k wide op" data-k="BACK">⌫</button>
-                <button class="k wide eq" data-k="=">=</button>
-              </div>
-
-              <div class="actions">
-                <button class="a pdf" id="pdfBtn">تصدير PDF</button>
-              </div>
-
-              <div class="foot">
-                تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
-              </div>
-            </div>
-
-            <div class="panel">
-              <div class="tableWrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>الوقت</th>
-                      <th>البيان</th>
-                      <th>العملية</th>
-                      <th>النتيجة</th>
-                    </tr>
-                  </thead>
-                  <tbody id="rows"></tbody>
-                </table>
-              </div>
-
-              <div class="total">
-                <span>إجمالي الكشف:</span>
-                <strong id="total">0</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="tab_log" style="display:none">
-          <div class="panel">
-            <div class="tableWrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>الوقت</th>
-                    <th>البيان</th>
-                    <th>العملية</th>
-                    <th>النتيجة</th>
-                  </tr>
-                </thead>
-                <tbody id="rows2"></tbody>
-              </table>
-            </div>
-
-            <div class="total">
-              <span>الإجمالي:</span>
-              <strong id="total2">0</strong>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
+</div>
 
 <script>
 (() => {
-  const $ = (id)=>document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
-  // ====== AUTH Gate ======
-  const lock = $("lock");
-  $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
-  if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH.isAuthed()) {
-    lock.style.display = "flex";
+  if (!window.HAYEK_AUTH || !window.HAYEK_AUTH.isAuthed()) {
+    location.href = "index.html";
     return;
   }
-  const session = window.HAYEK_AUTH.getUser() || {};
-  if (session.role === "admin") { location.href = "admin.html?v="+Date.now(); return; }
 
-  // ====== Online dot ======
-  const onlineDot = $("onlineDot");
-  function refreshOnline(){
-    onlineDot.style.background = navigator.onLine ? "#49e39a" : "#ffb1b1";
-    onlineDot.style.boxShadow = navigator.onLine ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
-  }
-  window.addEventListener("online", () => { refreshOnline(); tryUploadQueue(); });
-  window.addEventListener("offline", refreshOnline);
-  refreshOnline();
-
-  $("logoutBtn").onclick = () => { window.HAYEK_AUTH.logout(); location.href="index.html?v="+Date.now(); };
-
-  // ====== Tabs ======
-  document.querySelectorAll(".tab").forEach(tab=>{
-    tab.onclick=()=>{
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-      const key = tab.getAttribute("data-tab");
-      $("tab_calc").style.display = key==="calc" ? "block" : "none";
-      $("tab_log").style.display  = key==="log"  ? "block" : "none";
-    };
-  });
-
-  // ====== Local storage keys ======
-  const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_V3";
-  const LS_QUEUE   = "HAYEK_USER_UPLOAD_QUEUE_V3";
-  const LS_HINTS_C = "HAYEK_HINTS_CUSTOMERS_V1";
-  const LS_HINTS_T = "HAYEK_HINTS_TEXTS_V1";
-
-  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
-  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
-  function nowIso(){ return new Date().toISOString(); }
-  function nowTime(){
-    const d = new Date();
-    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  }
-  function vibrateTiny(){ try{ navigator.vibrate && navigator.vibrate(18);}catch{} }
-
-  // ====== Supabase client ======
-  function getSB(){
-    const cfg = window.APP_CONFIG || {};
-    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
-    return supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-  }
-
-  // ====== State ======
-  const state = {
-    invoice: null, // {id, username, device_id, customer_name, created_at, rows:[...], total, status, closed_at}
-    expr: "",
-    lastResult: 0,
+  $("logoutBtn").onclick = () => {
+    window.HAYEK_AUTH.logout();
+    location.href = "index.html";
   };
 
-  const customerName = $("customerName");
-  const lineText = $("lineText");
-  const exprInput = $("expr");
-  const resEl = $("res");
-  const rowsEl = $("rows");
-  const rows2El = $("rows2");
-  const totalEl = $("total");
-  const total2El = $("total2");
+  const rows = [];
+  let total = 0;
 
-  // ====== Predictive hints (local only) ======
-  const custHints = $("custHints");
-  const textHints = $("textHints");
+  $("addLine").onclick = () => {
+    const c = $("customer").value.trim();
+    if (!c) { alert("أدخل اسم الزبون"); return; }
 
-  function loadHints(key){ return jparse(localStorage.getItem(key), []); }
-  function saveHint(key, value){
-    const v = (value||"").trim();
-    if(!v) return;
-    const arr = loadHints(key);
-    const next = [v, ...arr.filter(x => x !== v)].slice(0, 20);
-    jset(key, next);
-  }
-  function renderHints(inputEl, hintEl, key){
-    const q = (inputEl.value||"").trim();
-    const arr = loadHints(key);
-    const list = q ? arr.filter(x => x.startsWith(q) && x !== q).slice(0, 5) : arr.slice(0, 5);
-    if(!list.length){ hintEl.style.display="none"; hintEl.innerHTML=""; return; }
-    hintEl.style.display="block";
-    hintEl.innerHTML = list.map(x => `<li>${escapeHtml(x)}</li>`).join("");
-    hintEl.querySelectorAll("li").forEach(li=>{
-      li.onclick = () => { inputEl.value = li.textContent; hintEl.style.display="none"; };
-    });
-  }
+    const t = $("text").value.trim();
+    const e = $("expr").value.trim() || "0";
 
-  customerName.addEventListener("input", ()=>renderHints(customerName, custHints, LS_HINTS_C));
-  customerName.addEventListener("focus", ()=>renderHints(customerName, custHints, LS_HINTS_C));
-  customerName.addEventListener("blur", ()=>setTimeout(()=>custHints.style.display="none", 120));
+    let r = 0;
+    try { r = eval(e); } catch { alert("عملية غير صحيحة"); return; }
 
-  lineText.addEventListener("input", ()=>renderHints(lineText, textHints, LS_HINTS_T));
-  lineText.addEventListener("focus", ()=>renderHints(lineText, textHints, LS_HINTS_T));
-  lineText.addEventListener("blur", ()=>setTimeout(()=>textHints.style.display="none", 120));
+    rows.push({ time:new Date().toLocaleTimeString(), text:t, expr:e, result:r });
+    total += r;
 
-  // ====== Load current invoice ======
-  function loadCurrent(){
-    const cur = jparse(localStorage.getItem(LS_CURRENT), null);
-    if(cur && cur.username === session.username && cur.status === "open"){
-      state.invoice = cur;
-      customerName.value = cur.customer_name || "";
-    }
-  }
-  loadCurrent();
-
-  function uuid(){
-    return (crypto?.randomUUID?.() || ("inv_" + Math.random().toString(16).slice(2) + Date.now()));
-  }
-
-  function ensureInvoice(){
-    const cust = (customerName.value||"").trim();
-    if(!cust) return null;
-
-    if(!state.invoice || state.invoice.status !== "open"){
-      state.invoice = {
-        id: uuid(),
-        username: session.username,
-        device_id: session.deviceId || window.HAYEK_AUTH.getOrCreateDeviceId(),
-        customer_name: cust,
-        created_at: nowIso(),
-        status: "open",
-        rows: [],
-        total: 0,
-      };
-      jset(LS_CURRENT, state.invoice);
-    } else {
-      state.invoice.customer_name = cust;
-      jset(LS_CURRENT, state.invoice);
-    }
-    return state.invoice;
-  }
-
-  // ====== Calculator ======
-  function setExpr(v){ state.expr = v; exprInput.value = v; }
-  function appendToken(tok){
-    if(tok==="BACK"){ setExpr(state.expr.slice(0,-1)); return; }
-    if(tok==="×") tok="*";
-    if(tok==="÷") tok="/";
-    if(!/^[0-9+\-*/().]$/.test(tok)) return;
-    setExpr(state.expr + tok);
-  }
-  function safeEval(expr){
-    const cleaned=(expr||"").replace(/\s+/g,"");
-    if(!cleaned) throw 0;
-    if(!/^[0-9+\-*/().]+$/.test(cleaned)) throw 0;
-    // eslint-disable-next-line no-new-func
-    const val = Function('"use strict";return ('+cleaned+');')();
-    const n = Number(val);
-    if(!Number.isFinite(n)) throw 0;
-    return n;
-  }
-
-  $("pad").addEventListener("click",(e)=>{
-    const btn = e.target.closest(".k"); if(!btn) return;
-    const k = btn.getAttribute("data-k");
-    vibrateTiny();
-    if(k==="=") commitLine();
-    else appendToken(k);
-  });
-
-  function commitLine(){
-    const inv = ensureInvoice();
-    if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
-
-    const expr = (state.expr||"").trim();
-    if(!expr) return;
-
-    let result;
-    try{ result = safeEval(expr); }catch{ resEl.textContent="خطأ"; return; }
-
-    const text = (lineText.value||"").trim();
-    inv.rows.push({ t: nowTime(), text, expr, result });
-    inv.total = inv.rows.reduce((a,r)=>a + Number(r.result||0), 0);
-    inv.customer_name = (customerName.value||"").trim();
-
-    // save hints locally
-    saveHint(LS_HINTS_C, inv.customer_name);
-    saveHint(LS_HINTS_T, text);
-
-    jset(LS_CURRENT, inv);
-
-    state.lastResult = result;
-    resEl.textContent = String(result);
-
-    lineText.value = "";
-    setExpr("");
-    render();
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function render(){
-    const inv = state.invoice;
-    const arr = inv?.rows || [];
-    rowsEl.innerHTML = arr.map((r, i)=>`
+    $("rows").innerHTML = rows.map(x => `
       <tr>
-        <td>${escapeHtml(r.t||"")}</td>
-        <td>${escapeHtml(r.text||"—")}</td>
-        <td>${escapeHtml(r.expr||"")}</td>
-        <td>${escapeHtml(String(r.result ?? ""))}</td>
-      </tr>
-    `).join("");
-    rows2El.innerHTML = rowsEl.innerHTML;
-    totalEl.textContent  = String(inv?.total ?? 0);
-    total2El.textContent = String(inv?.total ?? 0);
-  }
-  render();
-
-  // ====== Hidden upload queue ======
-  function getQueue(){ return jparse(localStorage.getItem(LS_QUEUE), []); }
-  function setQueue(q){ jset(LS_QUEUE, q); }
-
-  async function uploadInvoiceSilent(inv){
-    const sb = getSB();
-    if(!sb) return false;
-
-    try{
-      // 1) insert invoice
-      const invPayload = {
-        id: inv.id,
-        username: inv.username,
-        device_id: inv.device_id,
-        customer_name: inv.customer_name,
-        status: "closed",
-        created_at: inv.created_at,
-        closed_at: inv.closed_at,
-        total: inv.total,
-        rows_count: (inv.rows||[]).length,
-      };
-
-      const { error: e1 } = await sb.from(window.APP_CONFIG.TABLE_INVOICES).insert([invPayload]);
-      if(e1) return false;
-
-      // 2) insert operations
-      const ops = (inv.rows||[]).map((r, idx)=>({
-        id: (crypto?.randomUUID?.() || ("op_"+Date.now()+"_"+idx)),
-        invoice_id: inv.id,
-        username: inv.username,
-        device_id: inv.device_id,
-        customer_name: inv.customer_name,
-        line_no: idx + 1,
-        t: r.t,
-        text: r.text || "",
-        expr: r.expr || "",
-        result: Number(r.result||0),
-        created_at: inv.closed_at,
-      }));
-
-      if (ops.length) {
-        const { error: e2 } = await sb.from(window.APP_CONFIG.TABLE_OPERATIONS).insert(ops);
-        if(e2) return false;
-      }
-
-      return true;
-    }catch{
-      return false;
-    }
-  }
-
-  async function tryUploadQueue(){
-    if(!navigator.onLine) return;
-    const q = getQueue();
-    if(!q.length) return;
-
-    const rest = [];
-    for(const inv of q){
-      const ok = await uploadInvoiceSilent(inv);
-      if(!ok) rest.push(inv);
-    }
-    setQueue(rest);
-  }
-
-  // ====== Close invoice on export ======
-  function closeInvoiceForExport(){
-    const inv = ensureInvoice();
-    if(!inv) return null;
-    if(!inv.rows || inv.rows.length === 0){ alert("لا يوجد عمليات لتصديرها"); return null; }
-
-    inv.status = "closed";
-    inv.closed_at = nowIso();
-
-    // queue silently
-    const q = getQueue();
-    q.unshift(inv);
-    setQueue(q);
-    tryUploadQueue();
-
-    // reset local current invoice
-    localStorage.removeItem(LS_CURRENT);
-    state.invoice = null;
-    customerName.value="";
-    lineText.value="";
-    setExpr("");
-    resEl.textContent="0";
-    render();
-
-    return inv;
-  }
-
-  // ====== PDF: Arabic 100% by rendering HTML => image ======
-  function buildInvoiceHtml(inv){
-    // high contrast, no transparent backgrounds => numbers always visible
-    const rowsHtml = (inv.rows||[]).map((r, i)=>`
-      <tr>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:10%">${i+1}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:16%">${escapeHtml(r.t||"")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:right;width:34%">${escapeHtml(r.text||"عملية")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(r.expr||"")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(String(r.result ?? ""))}</td>
+        <td>${x.time}</td>
+        <td>${x.text}</td>
+        <td>${x.expr}</td>
+        <td>${x.result}</td>
       </tr>
     `).join("");
 
-    return `
-      <div style="direction:rtl;font-family:Arial,system-ui; background:#fff; color:#111; padding:18px;">
-        <div style="border:2px solid #111;border-radius:14px;padding:16px;">
-          <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px;">شركة الحايك</div>
-          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
+    $("total").textContent = total;
+    $("text").value = "";
+    $("expr").value = "";
+  };
 
-          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
-            <div>اسم الزبون: <b>${escapeHtml(inv.customer_name||"-")}</b></div>
-            <div>اسم المستخدم: <b>${escapeHtml(inv.username||"-")}</b></div>
-            <div>رقم: <b>${escapeHtml(String(inv.id).slice(-6))}</b></div>
-            <div>التاريخ: <b>${new Date(inv.closed_at||inv.created_at).toLocaleString()}</b></div>
-          </div>
+  $("pdfBtn").onclick = () => {
+    if (!rows.length) { alert("لا يوجد بيانات"); return; }
 
-          <div style="border-top:1px solid #111;margin:10px 0"></div>
-
-          <div style="font-weight:900;margin:6px 0 10px;">سجل العمليات</div>
-
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead>
-              <tr>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
-            <span>إجمالي الكشف:</span>
-            <span>${inv.total}</span>
-          </div>
-
-          <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-            شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية<br/>
-            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function buildPdfBlob(inv){
-    // render temp A4 width
-    const tmp = document.createElement("div");
-    tmp.style.position="fixed";
-    tmp.style.left="-99999px";
-    tmp.style.top="0";
-    tmp.style.width="794px"; // A4-ish on 96dpi
-    tmp.innerHTML = buildInvoiceHtml(inv);
-    document.body.appendChild(tmp);
-
-    const canvas = await html2canvas(tmp, { scale: 2, backgroundColor:"#ffffff" });
-    tmp.remove();
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p","pt","a4");
+    const doc = new jsPDF({ unit:"pt", format:"a4" });
 
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = canvas.height * (imgW / canvas.width);
+    let y = 50;
+    doc.setFontSize(18);
+    doc.text("فاتورة", 300, y, { align:"center" });
 
-    let y = 0;
-    let remaining = imgH;
+    y += 30;
+    doc.setFontSize(12);
+    doc.text("الزبون: " + $("customer").value, 520, y, { align:"right" });
+    y += 20;
 
-    while (remaining > 0) {
-      pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
-      remaining -= pageH;
-      if (remaining > 0) {
-        pdf.addPage();
-        y -= pageH;
-      }
-    }
-    return pdf.output("blob");
-  }
+    rows.forEach(r => {
+      if (y > 760) { doc.addPage(); y = 50; }
+      doc.text(`${r.time} | ${r.text} | ${r.expr} = ${r.result}`, 50, y);
+      y += 16;
+    });
 
-  async function exportPDF(){
-    const inv = closeInvoiceForExport();
-    if(!inv) return;
+    y += 20;
+    doc.setFontSize(14);
+    doc.text("الإجمالي: " + total, 520, y, { align:"right" });
 
-    try{
-      const blob = await buildPdfBlob(inv);
-      const cust = (inv.customer_name||"invoice").trim().replace(/\s+/g,"_");
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `HAYEK_${cust}_${String(inv.id).slice(-6)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 2500);
-    }catch(e){
-      console.log(e);
-      alert("تعذر تصدير PDF.");
-    }
-  }
-
-  $("pdfBtn").onclick = () => { vibrateTiny(); exportPDF(); };
-
-  // start silent upload attempts
-  tryUploadQueue();
-
-  // SW
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  }
+    doc.save("invoice.pdf");
+  };
 })();
 </script>
+
 </body>
 </html>
