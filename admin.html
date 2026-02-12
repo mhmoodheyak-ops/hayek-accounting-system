@@ -1,3 +1,4 @@
+<!-- admin.html -->
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,195 +7,206 @@
   <title>HAYEK SPOT — لوحة الإدارة</title>
 
   <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#071820" />
+  <meta name="theme-color" content="#07131a" />
+  <link rel="stylesheet" href="./style.css?v=999" />
+
+  <!-- PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- PDF -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-
   <!-- Config + Auth -->
-  <script src="./config.js?v=3"></script>
-  <script src="./auth.js?v=3"></script>
+  <script src="./config.js?v=999"></script>
+  <script src="./auth.js?v=999"></script>
 
-  <link rel="stylesheet" href="./style.css?v=3" />
+  <style>
+    /* تثبيت حجم الواجهة مثل قبل (لا تكبير مبالغ) */
+    .wrap{max-width:1100px;margin:18px auto;padding:0 12px}
+    .hdrRight{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .kpiRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:10px}
+    .kpi{border:1px solid var(--stroke);background:#07131a55;border-radius:999px;padding:10px 12px;font-weight:900}
+    .kpi b{color:#fff}
+    .split{display:grid;grid-template-columns: 360px 1fr;gap:12px}
+    @media (max-width: 980px){ .split{grid-template-columns:1fr} }
+    .sideCard{min-height:120px}
+    .sideTitle{font-weight:900;margin:0 0 10px 0}
+    .mini{font-size:12px;color:var(--muted)}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:999px;border:1px solid #ffffff22;background:#07131a33;font-weight:800}
+    .tag.ok{border-color:#27d17f66}
+    .tag.bad{border-color:#ff5a6b66}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    select, input[type="date"], input[type="text"]{
+      border:1px solid var(--stroke);background:#07131a55;color:var(--text);
+      padding:10px 12px;border-radius:12px;outline:none;
+    }
+    .tbl .btnTiny{
+      padding:8px 10px;border-radius:10px;border:1px solid #ffffff22;background:#07131a55;
+      color:#fff;cursor:pointer;font-weight:900
+    }
+    .tbl .btnTiny.primary{background:#1c4fd0aa;border-color:#4d82ff88}
+    .tbl .btnTiny.danger{background:#7a1f2aaa;border-color:#ff5a6b88}
+    .tbl .btnTiny.warn{background:#7a5a1faa;border-color:#ffcc6688}
+    .tbl .btnTiny.ghost{background:transparent}
+    .pillState{display:inline-flex;padding:8px 10px;border-radius:999px;border:1px dashed #ffffff55;font-weight:900}
+    .pillState.ok{border-color:#27d17f66}
+    .pillState.bad{border-color:#ff5a6b66}
+
+    /* مودال العمليات */
+    .modalBack{position:fixed;inset:0;background:#00000088;display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
+    .modal{width:min(980px,100%);background:#0b2230;border:1px solid #ffffff22;border-radius:18px;overflow:hidden}
+    .modalHead{padding:12px 14px;border-bottom:1px solid #ffffff22;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .modalBody{padding:12px 14px}
+    .modalHead .t{font-weight:900}
+    .modalHead .x{cursor:pointer;border:1px solid #ffffff22;background:#07131a55;color:#fff;border-radius:12px;padding:8px 12px;font-weight:900}
+  </style>
 </head>
 
 <body>
+  <!-- Topbar -->
   <div class="topbar">
     <div class="brand">
-      <span class="dot online" id="netDot"></span>
+      <span class="dot" id="netDot"></span>
       <div class="titles">
         <div class="title">HAYEK SPOT</div>
         <div class="subtitle">لوحة الإدارة — الفواتير + المستخدمين</div>
       </div>
     </div>
 
-    <div class="toolsGrid">
-      <button class="btn primary" id="btnRefresh">تحديث</button>
-      <button class="btn" id="btnLogout">خروج</button>
-      <span class="pill" id="adminLabel">admin</span>
+    <div class="hdrRight">
+      <span class="tag" id="whoTag">admin</span>
+      <button class="btn" id="btnRefresh">تحديث</button>
+      <button class="btn primary" id="btnAddUser">+ مستخدم</button>
+      <button class="btn danger" id="btnLogout">خروج</button>
     </div>
   </div>
 
   <div class="wrap">
     <div class="card">
-      <div class="tabs">
-        <button class="tab active" data-tab="invoices">الفواتير</button>
-        <button class="tab" data-tab="users">المستخدمين</button>
-      </div>
+      <div class="row" style="justify-content:space-between">
+        <div class="tabs" style="margin:0">
+          <button class="tab active" data-tab="invoices">الفواتير</button>
+          <button class="tab" data-tab="users">المستخدمين</button>
+        </div>
 
-      <!-- ====== الفواتير ====== -->
-      <div id="tab-invoices" class="tabpane">
-        <div class="grid2">
-          <div class="card" style="margin:0">
-            <div class="field">
-              <label>بحث</label>
-              <input id="qInvoices" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
-              <div class="hint subtle">يفضل البحث برقم الفاتورة (آخر 6 أرقام) أو اسم المستخدم.</div>
-            </div>
-
-            <div class="btnRow">
-              <button class="btn" id="btnLoadInvoices">تحميل الفواتير</button>
-              <button class="btn" id="btnDownloadInvoicesCSV">تحميل الفواتير CSV</button>
-            </div>
-
-            <div class="toast" id="toastInv"></div>
-
-            <div class="tableWrap" style="margin-top:12px">
-              <table class="tbl" id="tblInvoices">
-                <thead>
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>المستخدم</th>
-                    <th>الزبون</th>
-                    <th>الإجمالي</th>
-                    <th>الحالة</th>
-                    <th>رقم</th>
-                    <th>إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="invoicesBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card" style="margin:0">
-            <h3 class="h3">تفاصيل الفاتورة</h3>
-
-            <div class="grid2" style="grid-template-columns:1fr 1fr">
-              <div class="pill">رقم الفاتورة: <span id="dId" style="margin-inline-start:8px">—</span></div>
-              <div class="pill">الحالة: <span id="dStatus" style="margin-inline-start:8px">—</span></div>
-              <div class="pill">المستخدم: <span id="dUser" style="margin-inline-start:8px">—</span></div>
-              <div class="pill">الزبون: <span id="dCust" style="margin-inline-start:8px">—</span></div>
-              <div class="pill">الإجمالي: <span id="dTotal" style="margin-inline-start:8px">—</span></div>
-              <div class="pill">التاريخ: <span id="dDate" style="margin-inline-start:8px">—</span></div>
-            </div>
-
-            <div class="btnRow" style="margin-top:12px">
-              <button class="btn primary" id="btnLoadOps" disabled>العمليات</button>
-              <button class="btn" id="btnMakePDF" disabled>PDF</button>
-            </div>
-
-            <div class="toast" id="toastOps"></div>
-
-            <div class="tableWrap" style="margin-top:12px">
-              <table class="tbl">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>الوقت</th>
-                    <th>البيان</th>
-                    <th>العملية</th>
-                    <th>النتيجة</th>
-                  </tr>
-                </thead>
-                <tbody id="opsBody"></tbody>
-              </table>
-            </div>
-
-            <div class="totalBox" style="margin-top:12px">
-              <span class="totalLabel">إجمالي الكشف:</span>
-              <span class="totalValue num" id="opsTotal">0</span>
-            </div>
-
-            <div class="pdfStage" id="pdfStage"></div>
-
-            <div class="footerNote">
-              تم تطوير النظام من قبل شركة الحايك — 05510217646
-            </div>
-          </div>
+        <div class="kpiRow">
+          <div class="kpi">عدد الفواتير: <b id="kpiInvCount">0</b></div>
+          <div class="kpi">إجمالي مجموع الفواتير: <b id="kpiInvSum">0</b></div>
         </div>
       </div>
 
-      <!-- ====== المستخدمين ====== -->
-      <div id="tab-users" class="tabpane hidden">
-        <div class="grid2">
-          <div class="card" style="margin:0">
-            <div class="field">
-              <label>بحث</label>
-              <input id="qUsers" placeholder="بحث: اسم المستخدم..." />
-            </div>
+      <div class="toast" id="toast"></div>
+    </div>
 
-            <div class="btnRow">
-              <button class="btn" id="btnLoadUsers">تحميل المستخدمين</button>
-              <button class="btn primary" id="btnAddUser">+ مستخدم</button>
-            </div>
-
-            <div class="toast" id="toastUsers"></div>
-
-            <div class="tableWrap" style="margin-top:12px">
-              <table class="tbl">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>اسم المستخدم</th>
-                    <th>الحالة</th>
-                    <th>أدمن</th>
-                    <th>جهاز</th>
-                    <th>آخر ظهور</th>
-                    <th>إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody id="usersBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card" style="margin:0">
-            <h3 class="h3">إضافة/تعديل مستخدم</h3>
-
-            <div class="field">
-              <label>اسم المستخدم</label>
-              <input id="u_name" placeholder="مثال: user1" />
-            </div>
-
-            <div class="field">
-              <label>كلمة السر</label>
-              <input id="u_pass" placeholder="1234" />
-            </div>
-
-            <div class="toggles" style="margin-top:10px">
-              <label class="chk"><input type="checkbox" id="u_is_admin"> أدمن</label>
-              <label class="chk"><input type="checkbox" id="u_blocked"> محظور</label>
-            </div>
-
-            <div class="btnRow" style="margin-top:12px">
-              <button class="btn primary" id="btnSaveUser">حفظ</button>
-              <button class="btn danger" id="btnResetDevice">مسح الجهاز</button>
-              <button class="btn" id="btnClearForm">تفريغ</button>
-            </div>
-
-            <div class="toast" id="toastUserForm"></div>
-          </div>
-        </div>
+    <!-- INVOICES TAB -->
+    <div class="card" id="tab-invoices">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:900;font-size:16px">التقارير / الفلاتر</div>
+        <div class="mini">اختيار مستخدم + تحديد تاريخ (اليوم / 7 أيام / الكل) أو من/إلى</div>
       </div>
 
+      <div class="row" style="margin-top:10px">
+        <select id="fltUser">
+          <option value="">كل المستخدمين</option>
+        </select>
+
+        <button class="btn" id="btnToday">1 يوم</button>
+        <button class="btn" id="btn7d">7 أيام</button>
+        <button class="btn" id="btnAll">الكل</button>
+
+        <input type="date" id="fromDate" />
+        <input type="date" id="toDate" />
+        <button class="btn primary" id="btnApply">عرض الفواتير</button>
+
+        <input type="text" id="searchInv" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم (آخر 6 أرقام)..." style="flex:1;min-width:260px" />
+        <button class="btn" id="btnCSV">تحميل الفواتير CSV</button>
+      </div>
+
+      <div class="tableWrap" style="margin-top:12px">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>المستخدم</th>
+              <th>الزبون</th>
+              <th>الإجمالي</th>
+              <th>الحالة</th>
+              <th>رقم</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="invBody"></tbody>
+        </table>
+      </div>
+      <div class="mini" style="margin-top:10px">نصيحة: اضغط “عرض” ثم “العمليات” ثم “PDF”.</div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="card hidden" id="tab-users">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:900;font-size:16px">جدول المستخدمين</div>
+        <div class="mini">اسم المستخدم + عدّاد الفواتير + حذف/حظر/فك الحظر + الحالة (نشط منذ…)</div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="searchUser" placeholder="بحث باسم المستخدم..." style="flex:1;min-width:260px" />
+      </div>
+
+      <div class="tableWrap" style="margin-top:12px">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>اسم المستخدم</th>
+              <th>الفواتير</th>
+              <th>الحالة</th>
+              <th>آخر ظهور</th>
+              <th>الدور</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <script src="./admin.js?v=3"></script>
+  <!-- ✅ pdfStage لازم يكون قبل scripts كما طلبت -->
+  <div id="pdfStage" class="pdfStage"></div>
+
+  <!-- Modal عمليات الفاتورة -->
+  <div class="modalBack" id="opsBack">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="t" id="opsTitle">عمليات الفاتورة</div>
+        <div class="row">
+          <button class="x" id="btnOpsPDF">PDF</button>
+          <button class="x" id="btnOpsClose">إغلاق</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div class="mini" id="opsMeta">—</div>
+          <div class="kpi">الإجمالي: <b id="opsTotal">0</b></div>
+        </div>
+        <div class="tableWrap" style="margin-top:12px">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الوقت</th>
+                <th>البيان</th>
+                <th>العملية</th>
+                <th>النتيجة</th>
+              </tr>
+            </thead>
+            <tbody id="opsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./admin.js?v=999"></script>
 </body>
 </html>
