@@ -1,10 +1,10 @@
-// auth.js
+// auth.js — إدارة الجلسة + ربط الجهاز (نسخة مستقرة)
 (() => {
   const LS_SESSION = "HAYEK_AUTH_SESSION_V2";
   const LS_DEVICE  = "HAYEK_DEVICE_ID_V1";
 
-  function jparse(s, fallback) { try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
-  function jset(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
+  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
   function nowIso(){ return new Date().toISOString(); }
 
   function uuid(){
@@ -22,7 +22,15 @@
   }
 
   function setSession(sess){
-    jset(LS_SESSION, sess);
+    // توحيد الحقول
+    const fixed = {
+      id: sess?.id ?? null,
+      username: sess?.username ?? null,
+      role: sess?.role ?? "user",
+      deviceId: sess?.deviceId || sess?.device_id || getOrCreateDeviceId(),
+      created_at: sess?.created_at || nowIso()
+    };
+    jset(LS_SESSION, fixed);
   }
 
   function clearSession(){
@@ -42,7 +50,7 @@
     clearSession();
   }
 
-  // Expose
+  // Expose API
   window.HAYEK_AUTH = {
     nowIso,
     uuid,
