@@ -1,8 +1,54 @@
-// admin.js  (واجهة الأدمن كما طلبت + إصلاح جلب العمليات invoiceId)
+/* admin.js — لوحة الإدارة (واجهة مستقرة + إصلاح invoiceId في العمليات) */
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  // ===== Guard =====
+  // ===== Helpers =====
+  const toast = (msg, bad = false) => {
+    const t = $("toast");
+    t.style.display = "block";
+    t.textContent = msg || "";
+    t.style.borderColor = bad ? "rgba(255,107,107,.35)" : "rgba(73,227,154,.35)";
+    setTimeout(() => (t.style.display = "none"), 2200);
+  };
+
+  const esc = (s) => String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  const fmtNum = (n) => {
+    const x = Number(n);
+    if (!isFinite(x)) return "0";
+    return String(Math.round(x * 1000) / 1000);
+  };
+
+  const fmtDT = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${hh}:${mm} ${y}/${m}/${day}`;
+  };
+
+  const sinceText = (iso) => {
+    if (!iso) return "—";
+    const ms = Date.now() - new Date(iso).getTime();
+    if (!isFinite(ms) || ms < 0) return "—";
+    const mins = Math.floor(ms / 60000);
+    if (mins < 1) return "الآن";
+    if (mins < 60) return `منذ ${mins} دق`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `منذ ${hrs} س`;
+    const days = Math.floor(hrs / 24);
+    return `منذ ${days} يوم`;
+  };
+
+  // ===== Auth Guard =====
   if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH.isAuthed()) {
     location.href = "index.html?v=" + Date.now();
     return;
@@ -12,34 +58,26 @@
     location.href = "invoice.html?v=" + Date.now();
     return;
   }
+  $("adminName").textContent = `${session.username || "admin"} : admin`;
 
-  // ===== Net dot =====
+  // ===== Network dot =====
   const netDot = $("netDot");
-  const updateNet = () => {
+  const refreshNet = () => {
     const on = navigator.onLine;
-    netDot.classList.toggle("online", on);
-    netDot.classList.toggle("offline", !on);
+    netDot.className = "dot " + (on ? "on" : "off");
     netDot.title = on ? "متصل" : "غير متصل";
   };
-  window.addEventListener("online", updateNet);
-  window.addEventListener("offline", updateNet);
-  updateNet();
-
-  // ===== Toast =====
-  const toast = (msg, bad = false) => {
-    const t = $("toast");
-    t.style.display = "block";
-    t.textContent = msg;
-    t.style.borderColor = bad ? "#ff5a6b88" : "#27d17f66";
-    t.style.background = bad ? "#7a1f2a66" : "#07131a66";
-    clearTimeout(toast._t);
-    toast._t = setTimeout(() => (t.style.display = "none"), 2400);
-  };
+  window.addEventListener("online", refreshNet);
+  window.addEventListener("offline", refreshNet);
+  refreshNet();
 
   // ===== Supabase =====
   const CFG = window.HAYEK_CONFIG || {};
   const hasDB = !!(window.supabase && CFG.supabaseUrl && CFG.supabaseKey);
-  if (!hasDB) { toast("Supabase غير جاهز (config.js).", true); return; }
+  if (!hasDB) {
+    alert("Supabase غير جاهز (config.js).");
+    return;
+  }
   const sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
 
   const T_USERS = (CFG.tables && CFG.tables.users) || "app_users";
@@ -47,454 +85,517 @@
   const T_OPS   = (CFG.tables && CFG.tables.operations) || "app_operations";
 
   // ===== UI refs =====
-  $("whoTag").textContent = "admin : " + (session.username || "admin");
-
-  const invBody = $("invBody");
   const usersBody = $("usersBody");
-
-  const kpiInvCount = $("kpiInvCount");
-  const kpiInvSum = $("kpiInvSum");
-
-  const fltUser = $("fltUser");
-  const fromDate = $("fromDate");
-  const toDate = $("toDate");
-  const searchInv = $("searchInv");
-  const searchUser = $("searchUser");
-
-  // modal ops
-  const opsBack = $("opsBack");
-  const opsTitle = $("opsTitle");
-  const opsMeta = $("opsMeta");
+  const invBody = $("invBody");
   const opsBody = $("opsBody");
-  const opsTotal = $("opsTotal");
-  const pdfStage = $("pdfStage");
+  const opsBack = $("opsBack");
+  const opsClose = $("opsClose");
+  const opsTitle = $("opsTitle");
 
-  // ===== Helpers =====
-  const escapeHtml = (s) =>
-    String(s ?? "")
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  const statInvCount = $("statInvCount");
+  const statInvSum = $("statInvSum");
+  const metaMini = $("metaMini");
 
-  const fmtNum = (n) => {
-    const x = Number(n);
-    if (!isFinite(x)) return "0";
-    return (Math.round(x * 1000000) / 1000000).toString();
-  };
+  const search = $("search");
+  const userFilter = $("userFilter");
+  const dateFrom = $("dateFrom");
+  const dateTo = $("dateTo");
 
-  const fmtDT = (iso) => {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "—";
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    const hh = String(d.getHours()).padStart(2,"0");
-    const mm = String(d.getMinutes()).padStart(2,"0");
-    return `${hh}:${mm} ${y}/${m}/${day}`;
-  };
+  const paneUsers = $("pane-users");
+  const paneInv = $("pane-inv");
 
-  const since = (iso) => {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "—";
-    const diff = Date.now() - d.getTime();
-    const min = Math.floor(diff / 60000);
-    if (min < 1) return "الآن";
-    if (min < 60) return `منذ ${min} د`;
-    const hr = Math.floor(min / 60);
-    if (hr < 24) return `منذ ${hr} س`;
-    const days = Math.floor(hr / 24);
-    return `منذ ${days} يوم`;
-  };
+  // selected
+  let selectedInvoice = null;
 
-  function setPreset(days){
-    const today = new Date();
-    const end = new Date(today);
-    const start = new Date(today);
-    if (days === null){
-      fromDate.value = "";
-      toDate.value = "";
-      return;
-    }
-    start.setDate(start.getDate() - (days-1));
-    const iso = (d)=> d.toISOString().slice(0,10);
-    fromDate.value = iso(start);
-    toDate.value = iso(end);
+  function setSelected(inv){
+    selectedInvoice = inv || null;
+    $("selInvId").textContent = inv ? String(inv.id).slice(-6) : "—";
+    $("selUser").textContent = inv?.username || "—";
+    $("selCust").textContent = inv?.customer_name || "—";
+    $("selTotal").textContent = inv ? fmtNum(inv.total) : "—";
+    $("selStatus").textContent = inv?.status || "—";
   }
 
   // ===== Tabs =====
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-      btn.classList.add("active");
-      const key = btn.dataset.tab;
-      document.querySelectorAll('[id^="tab-"]').forEach(p => p.classList.add("hidden"));
-      $("tab-" + key).classList.remove("hidden");
-    });
-  });
+  document.querySelectorAll(".tab").forEach((b) => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      const key = b.dataset.tab;
 
-  // ===== Load Users =====
-  let usersCache = [];
-  let invoicesCache = [];
-
-  async function fetchUsers(){
-    const { data, error } = await sb
-      .from(T_USERS)
-      .select("id, username, is_admin, blocked, created_at, device_id, last_seen")
-      .order("username", { ascending:true });
-
-    if (error) { console.error(error); toast("فشل تحميل المستخدمين", true); return; }
-    usersCache = data || [];
-
-    // fill dropdown
-    fltUser.innerHTML = `<option value="">كل المستخدمين</option>` +
-      usersCache.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(u.username)}</option>`).join("");
-
-    renderUsers();
-  }
-
-  // ===== Load Invoices =====
-  async function fetchInvoices(){
-    let q = sb.from(T_INV).select("id, username, customer_name, total, status, created_at, closed_at").order("created_at", {ascending:false});
-
-    const u = (fltUser.value || "").trim();
-    if (u) q = q.eq("username", u);
-
-    const f = fromDate.value;
-    const t = toDate.value;
-    if (f) q = q.gte("created_at", f + "T00:00:00.000Z");
-    if (t) q = q.lte("created_at", t + "T23:59:59.999Z");
-
-    const { data, error } = await q;
-    if (error) { console.error(error); toast("فشل تحميل الفواتير", true); return; }
-    invoicesCache = data || [];
-
-    renderInvoices();
-  }
-
-  function renderUsers(){
-    const q = (searchUser.value || "").trim();
-    const arr = q ? usersCache.filter(u => (u.username||"").includes(q)) : usersCache;
-
-    // عداد فواتير لكل مستخدم (من كاش الفواتير لو موجود)
-    const invCount = new Map();
-    for (const inv of invoicesCache){
-      invCount.set(inv.username, (invCount.get(inv.username)||0)+1);
-    }
-
-    usersBody.innerHTML = arr.map(u => {
-      const blocked = !!u.blocked;
-      const role = u.is_admin ? "admin" : "user";
-      const last = u.last_seen || u.created_at;
-      const stateCls = blocked ? "bad" : "ok";
-      const stateTxt = blocked ? "محظور" : "نشط";
-      const invs = invCount.get(u.username) || 0;
-
-      return `
-        <tr>
-          <td><b>${escapeHtml(u.username)}</b></td>
-          <td class="num">${invs}</td>
-          <td><span class="pillState ${stateCls}">${stateTxt}</span></td>
-          <td>${escapeHtml(since(last))}</td>
-          <td>${escapeHtml(role)}</td>
-          <td>
-            <button class="btnTiny primary" data-act="invoices" data-user="${escapeHtml(u.username)}">الفواتير</button>
-            <button class="btnTiny warn" data-act="toggleBlock" data-id="${u.id}" data-blocked="${blocked ? "1":"0"}">${blocked ? "فك الحظر" : "حظر"}</button>
-            <button class="btnTiny" data-act="clearDevice" data-id="${u.id}">مسح الجهاز</button>
-            <button class="btnTiny danger" data-act="deleteUser" data-id="${u.id}" data-user="${escapeHtml(u.username)}">حذف</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  function renderInvoices(){
-    const q = (searchInv.value || "").trim();
-    const arr = q ? invoicesCache.filter(inv => {
-      const id6 = String(inv.id||"").slice(-6);
-      return (inv.username||"").includes(q) || (inv.customer_name||"").includes(q) || id6.includes(q);
-    }) : invoicesCache;
-
-    const sum = arr.reduce((a,i)=> a + (Number(i.total)||0), 0);
-    kpiInvCount.textContent = String(arr.length);
-    kpiInvSum.textContent = fmtNum(sum);
-
-    invBody.innerHTML = arr.map(inv => {
-      const id6 = String(inv.id||"").slice(-6);
-      const st = String(inv.status||"").toLowerCase();
-      const stCls = st === "closed" ? "ok" : "bad";
-      return `
-        <tr>
-          <td>${escapeHtml(fmtDT(inv.created_at))}</td>
-          <td>${escapeHtml(inv.username||"—")}</td>
-          <td>${escapeHtml(inv.customer_name||"—")}</td>
-          <td class="num">${fmtNum(inv.total)}</td>
-          <td><span class="pillState ${stCls}">${escapeHtml(st || "—")}</span></td>
-          <td class="num">${escapeHtml(id6)}</td>
-          <td>
-            <button class="btnTiny" data-act="viewInv" data-id="${inv.id}">عرض</button>
-            <button class="btnTiny primary" data-act="ops" data-id="${inv.id}">العمليات</button>
-            <button class="btnTiny" data-act="pdf" data-id="${inv.id}">PDF</button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  // ===== Ops Modal =====
-  let currentInvoice = null;
-  let currentOps = [];
-
-  async function openOps(invoiceId){
-    const inv = invoicesCache.find(x => String(x.id) === String(invoiceId));
-    currentInvoice = inv || { id: invoiceId };
-
-    opsTitle.textContent = "عمليات الفاتورة: " + String(invoiceId).slice(-6);
-
-    // ✅ جلب العمليات بالعمود الصحيح invoiceId
-    const { data, error } = await sb
-      .from(T_OPS)
-      .select("*")
-      .eq("invoiceId", invoiceId)
-      .order("created_at", {ascending:true});
-
-    if (error) {
-      console.error(error);
-      toast("فشل تحميل العمليات (تأكد أن العمود اسمه invoiceId)", true);
-      currentOps = [];
-    } else {
-      currentOps = data || [];
-    }
-
-    opsMeta.textContent =
-      `المستخدم: ${currentInvoice.username||"—"} — الزبون: ${currentInvoice.customer_name||"—"} — التاريخ: ${fmtDT(currentInvoice.created_at||new Date().toISOString())}`;
-
-    const tot = currentOps.reduce((a,r)=> a + (Number(r.result)||0), 0);
-    opsTotal.textContent = fmtNum(tot);
-
-    opsBody.innerHTML = currentOps.map((r, i)=> `
-      <tr>
-        <td class="num">${i+1}</td>
-        <td>${escapeHtml(fmtDT(r.created_at || ""))}</td>
-        <td>${escapeHtml(r.text || r.label || "—")}</td>
-        <td>${escapeHtml(r.expr || r.operation || "—")}</td>
-        <td class="num">${escapeHtml(String(r.result ?? ""))}</td>
-      </tr>
-    `).join("") || `<tr><td colspan="5" style="text-align:center;color:#666;padding:16px">لا يوجد عمليات</td></tr>`;
-
-    opsBack.style.display = "flex";
-  }
-
-  $("btnOpsClose").onclick = () => (opsBack.style.display = "none");
-
-  // ===== PDF for invoice (from ops) =====
-  function buildPdfRows(){
-    return currentOps.map((r,i)=> ([
-      String(i+1),
-      fmtDT(r.created_at || ""),
-      String(r.text || r.label || "—"),
-      String(r.expr || r.operation || "—"),
-      String(r.result ?? "")
-    ]));
-  }
-
-  function exportInvoicePDF(){
-    if (!currentInvoice) { toast("اختر فاتورة أولاً", true); return; }
-
-    const { jsPDF } = window.jspdf || {};
-    if (!jsPDF) { toast("PDF غير جاهز", true); return; }
-
-    const doc = new jsPDF({ orientation:"p", unit:"pt", format:"a4" });
-
-    // خط عربي إن توفر
-    try {
-      const base64 =
-        window.AMIRI_TTF_BASE64 ||
-        window.Amiri_TTF_Base64 ||
-        window.amiri_base64 ||
-        null;
-      if (base64) {
-        doc.addFileToVFS("Amiri-Regular.ttf", base64);
-        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-        doc.setFont("Amiri");
+      if (key === "users") {
+        paneUsers.style.display = "block";
+        paneInv.style.display = "none";
+      } else {
+        paneUsers.style.display = "none";
+        paneInv.style.display = "block";
       }
-    } catch {}
-
-    const margin = 40;
-    let y = 50;
-
-    doc.setFontSize(18);
-    doc.text("شركة الحايك", doc.internal.pageSize.getWidth()-margin, y, {align:"right"}); y += 18;
-    doc.setFontSize(12);
-    doc.text("HAYEK SPOT", doc.internal.pageSize.getWidth()-margin, y, {align:"right"}); y += 20;
-
-    doc.setFontSize(11);
-    doc.text(`اسم المستخدم: ${currentInvoice.username || "—"}`, doc.internal.pageSize.getWidth()-margin, y, {align:"right"}); y += 16;
-    doc.text(`اسم الزبون: ${currentInvoice.customer_name || "—"}`, doc.internal.pageSize.getWidth()-margin, y, {align:"right"}); y += 16;
-    doc.text(`رقم الفاتورة: ${String(currentInvoice.id).slice(-6)}`, doc.internal.pageSize.getWidth()-margin, y, {align:"right"}); y += 16;
-    doc.text(`التاريخ: ${fmtDT(currentInvoice.created_at || new Date().toISOString())}`, doc.internal.pageSize.getWidth()-margin, y, {align:"right"}); y += 14;
-
-    const head = [["#", "الوقت", "البيان", "العملية", "النتيجة"]];
-    const body = buildPdfRows();
-
-    doc.autoTable({
-      startY: y + 10,
-      head,
-      body,
-      styles: { halign:"right" },
-      headStyles: { halign:"right" },
-      bodyStyles: { halign:"right" },
-      margin: { left: margin, right: margin }
+      metaMini.textContent = key === "users" ? "عرض جدول المستخدمين" : "عرض جدول الفواتير";
     });
-
-    const tot = currentOps.reduce((a,r)=> a + (Number(r.result)||0), 0);
-    const endY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 18 : y + 40;
-
-    doc.setFontSize(14);
-    doc.text(`إجمالي الكشف: ${fmtNum(tot)}`, doc.internal.pageSize.getWidth()-margin, endY, {align:"right"});
-
-    doc.setFontSize(10);
-    doc.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646",
-      doc.internal.pageSize.getWidth()/2,
-      doc.internal.pageSize.getHeight()-30,
-      {align:"center"}
-    );
-
-    doc.save(`OPS_${String(currentInvoice.id).slice(-6)}.pdf`);
-  }
-
-  $("btnOpsPDF").onclick = exportInvoicePDF;
-
-  // ===== Click handlers =====
-  usersBody.addEventListener("click", async (e) => {
-    const b = e.target.closest("button"); if (!b) return;
-    const act = b.dataset.act;
-
-    if (act === "invoices"){
-      // انتقل تبويب الفواتير + فلتر المستخدم
-      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-      document.querySelector('.tab[data-tab="invoices"]').classList.add("active");
-      $("tab-users").classList.add("hidden");
-      $("tab-invoices").classList.remove("hidden");
-      fltUser.value = b.dataset.user || "";
-      await fetchInvoices();
-      return;
-    }
-
-    if (act === "toggleBlock"){
-      const id = Number(b.dataset.id);
-      const isBlocked = b.dataset.blocked === "1";
-      await sb.from(T_USERS).update({ blocked: !isBlocked }).eq("id", id);
-      toast(isBlocked ? "تم فك الحظر" : "تم الحظر");
-      await fetchUsers();
-      return;
-    }
-
-    if (act === "clearDevice"){
-      const id = Number(b.dataset.id);
-      await sb.from(T_USERS).update({ device_id: null }).eq("id", id);
-      toast("تم مسح الجهاز");
-      await fetchUsers();
-      return;
-    }
-
-    if (act === "deleteUser"){
-      const id = Number(b.dataset.id);
-      const u = b.dataset.user || "";
-      if (!confirm(`حذف المستخدم ${u} ؟`)) return;
-      await sb.from(T_USERS).delete().eq("id", id);
-      toast("تم الحذف");
-      await fetchUsers();
-      return;
-    }
   });
 
-  invBody.addEventListener("click", async (e) => {
-    const b = e.target.closest("button"); if (!b) return;
-    const act = b.dataset.act;
-    const id = b.dataset.id;
-
-    if (act === "ops"){
-      await openOps(id);
-      return;
-    }
-    if (act === "pdf"){
-      // افتح العمليات ثم PDF
-      await openOps(id);
-      exportInvoicePDF();
-      return;
-    }
-    if (act === "viewInv"){
-      toast("تم تحديد الفاتورة. اضغط (العمليات) لعرض التفاصيل.");
-      return;
-    }
-  });
-
-  // ===== Filters / Buttons =====
-  $("btnToday").onclick = async () => { setPreset(1); await fetchInvoices(); };
-  $("btn7d").onclick = async () => { setPreset(7); await fetchInvoices(); };
-  $("btnAll").onclick = async () => { setPreset(null); await fetchInvoices(); };
-
-  $("btnApply").onclick = fetchInvoices;
-  fltUser.onchange = fetchInvoices;
-  searchInv.oninput = renderInvoices;
-  searchUser.oninput = renderUsers;
-
-  $("btnRefresh").onclick = async () => {
-    await fetchUsers();
-    await fetchInvoices();
-    toast("تم التحديث");
-  };
-
-  $("btnLogout").onclick = () => {
+  // ===== Logout =====
+  $("logoutBtn").onclick = () => {
     window.HAYEK_AUTH.logout();
     location.href = "index.html?v=" + Date.now();
   };
 
-  $("btnAddUser").onclick = async () => {
+  // ===== Add user (بسيطة) =====
+  $("addUserBtn").onclick = async () => {
     const username = prompt("اسم المستخدم الجديد:");
     if (!username) return;
+
     const pass = prompt("كلمة السر:");
     if (!pass) return;
 
-    const is_admin = confirm("هل هذا المستخدم أدمن؟ موافق = نعم / إلغاء = مستخدم عادي");
-    const payload = {
-      username: username.trim(),
-      pass: pass.trim(),
-      is_admin,
-      blocked: false,
-      created_at: new Date().toISOString(),
-      device_id: null,
-      last_seen: new Date().toISOString(),
-    };
-
-    const { error } = await sb.from(T_USERS).insert(payload);
-    if (error) { console.error(error); toast("فشل إضافة المستخدم", true); return; }
-    toast("تم إضافة المستخدم");
-    await fetchUsers();
+    try{
+      await sb.from(T_USERS).insert({
+        username: username.trim(),
+        pass: String(pass),
+        is_admin: false,
+        blocked: false,
+        created_at: new Date().toISOString()
+      });
+      toast("تمت إضافة المستخدم.");
+      await refreshAll();
+    }catch{
+      toast("فشل إضافة المستخدم.", true);
+    }
   };
 
-  // CSV export (فواتير)
-  $("btnCSV").onclick = () => {
-    const rows = [
-      ["id","username","customer_name","total","status","created_at","closed_at"],
-      ...invoicesCache.map(i => [
-        i.id, i.username, i.customer_name, i.total, i.status, i.created_at, i.closed_at
-      ])
-    ];
-    const csv = rows.map(r => r.map(x => `"${String(x ?? "").replaceAll('"','""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "invoices.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+  // ===== Data cache =====
+  let USERS = [];
+  let INVOICES = [];
+  let invoiceCountByUser = new Map();
+
+  function applyRangeDays(days){
+    const today = new Date();
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const start = new Date(end);
+    if (days === null){
+      dateFrom.value = "";
+      dateTo.value = "";
+      return;
+    }
+    start.setDate(start.getDate() - (days - 1));
+    const toISO = (d) => d.toISOString().slice(0,10);
+    dateFrom.value = toISO(start);
+    dateTo.value = toISO(new Date()); // اليوم
+  }
+
+  $("rangeAll").onclick = () => applyRangeDays(null);
+  $("range1").onclick = () => applyRangeDays(1);
+  $("range7").onclick = () => applyRangeDays(7);
+
+  $("refreshBtn").onclick = () => refreshAll();
+  $("showBtn").onclick = () => renderInvoices(); // يعيد تطبيق الفلاتر
+
+  // ===== Fetch =====
+  async function fetchUsers(){
+    const { data, error } = await sb
+      .from(T_USERS)
+      .select("id, username, pass, is_admin, blocked, device_id, created_at, last_seen")
+      .order("username", { ascending: true });
+    if (error) throw error;
+    USERS = data || [];
+  }
+
+  async function fetchInvoices(){
+    const { data, error } = await sb
+      .from(T_INV)
+      .select("id, username, customer_name, total, status, created_at, closed_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    INVOICES = data || [];
+  }
+
+  function buildCounts(){
+    invoiceCountByUser = new Map();
+    for (const inv of INVOICES){
+      const u = inv.username || "";
+      invoiceCountByUser.set(u, (invoiceCountByUser.get(u) || 0) + 1);
+    }
+  }
+
+  function fillUserDropdown(){
+    const cur = userFilter.value || "";
+    const opts = ['<option value="">كل المستخدمين</option>'];
+    for (const u of USERS){
+      if (u.is_admin) continue;
+      opts.push(`<option value="${esc(u.username)}">${esc(u.username)}</option>`);
+    }
+    userFilter.innerHTML = opts.join("");
+    userFilter.value = cur;
+  }
+
+  function updateStats(){
+    statInvCount.textContent = String(INVOICES.length);
+    const sum = INVOICES.reduce((a, x) => a + (Number(x.total) || 0), 0);
+    statInvSum.textContent = fmtNum(sum);
+  }
+
+  // ===== Render users =====
+  function renderUsers(){
+    const q = (search.value || "").trim().toLowerCase();
+
+    const rows = [];
+    for (const u of USERS){
+      if (u.is_admin) continue;
+      const name = u.username || "";
+
+      if (q && !name.toLowerCase().includes(q)) continue;
+
+      const invCount = invoiceCountByUser.get(name) || 0;
+      const blocked = !!u.blocked;
+
+      const statusChip = blocked
+        ? `<span class="chip bad">محظور</span>`
+        : `<span class="chip ok">نشط</span>`;
+
+      const seen = sinceText(u.last_seen);
+
+      rows.push(`
+        <tr>
+          <td><b>${esc(name)}</b></td>
+          <td><span class="chip">${invCount}</span></td>
+          <td>${statusChip}</td>
+          <td class="mini">${esc(seen)}</td>
+          <td>
+            <div class="actRow">
+              <button class="aBtn blue" data-act="invoices" data-u="${esc(name)}">الفواتير</button>
+              <button class="aBtn gray" data-act="clearDevice" data-u="${esc(name)}">مسح الجهاز</button>
+              ${blocked
+                ? `<button class="aBtn blue" data-act="unblock" data-u="${esc(name)}">فك</button>`
+                : `<button class="aBtn red" data-act="block" data-u="${esc(name)}">حظر</button>`
+              }
+              <button class="aBtn red" data-act="del" data-u="${esc(name)}">حذف</button>
+              <button class="aBtn gray" data-act="makeAdmin" data-u="${esc(name)}">جعله أدمن</button>
+            </div>
+          </td>
+        </tr>
+      `);
+    }
+
+    usersBody.innerHTML = rows.join("") || `
+      <tr><td colspan="5" class="mini">لا يوجد بيانات.</td></tr>
+    `;
+  }
+
+  usersBody.addEventListener("click", async (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    const act = b.dataset.act;
+    const username = b.dataset.u;
+
+    if (!username) return;
+
+    if (act === "invoices"){
+      // انتقل لتبويب الفواتير + فلتر على المستخدم
+      document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
+      document.querySelector('.tab[data-tab="inv"]').classList.add("active");
+      paneUsers.style.display = "none";
+      paneInv.style.display = "block";
+      userFilter.value = username;
+      renderInvoices();
+      return;
+    }
+
+    if (act === "clearDevice"){
+      if (!confirm(`مسح device_id للمستخدم ${username}؟`)) return;
+      await sb.from(T_USERS).update({ device_id: null }).eq("username", username);
+      toast("تم مسح الجهاز.");
+      await refreshAll();
+      return;
+    }
+
+    if (act === "block"){
+      if (!confirm(`حظر المستخدم ${username}؟`)) return;
+      await sb.from(T_USERS).update({ blocked: true }).eq("username", username);
+      toast("تم الحظر.");
+      await refreshAll();
+      return;
+    }
+
+    if (act === "unblock"){
+      if (!confirm(`فك حظر المستخدم ${username}؟`)) return;
+      await sb.from(T_USERS).update({ blocked: false }).eq("username", username);
+      toast("تم فك الحظر.");
+      await refreshAll();
+      return;
+    }
+
+    if (act === "del"){
+      if (!confirm(`حذف المستخدم ${username}؟`)) return;
+      await sb.from(T_USERS).delete().eq("username", username);
+      toast("تم الحذف.");
+      await refreshAll();
+      return;
+    }
+
+    if (act === "makeAdmin"){
+      if (!confirm(`تحويل ${username} إلى أدمن؟`)) return;
+      await sb.from(T_USERS).update({ is_admin: true }).eq("username", username);
+      toast("تم تحويله لأدمن.");
+      await refreshAll();
+      return;
+    }
+  });
+
+  // ===== Render invoices =====
+  function invoiceMatches(inv, q){
+    if (!q) return true;
+    const id6 = String(inv.id || "").slice(-6).toLowerCase();
+    const u = String(inv.username || "").toLowerCase();
+    const c = String(inv.customer_name || "").toLowerCase();
+    return id6.includes(q) || u.includes(q) || c.includes(q);
+  }
+
+  function inDateRange(inv){
+    const from = dateFrom.value ? new Date(dateFrom.value + "T00:00:00") : null;
+    const to = dateTo.value ? new Date(dateTo.value + "T23:59:59") : null;
+    const d = inv.created_at ? new Date(inv.created_at) : null;
+    if (!d) return true;
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  }
+
+  function renderInvoices(){
+    const q = (search.value || "").trim().toLowerCase();
+    const u = userFilter.value || "";
+
+    const rows = [];
+    for (const inv of INVOICES){
+      if (u && inv.username !== u) continue;
+      if (!inDateRange(inv)) continue;
+      if (!invoiceMatches(inv, q)) continue;
+
+      const statusChip = inv.status === "closed"
+        ? `<span class="chip ok">closed</span>`
+        : `<span class="chip bad">open</span>`;
+
+      rows.push(`
+        <tr data-inv="${esc(inv.id)}">
+          <td>${esc(fmtDT(inv.created_at))}</td>
+          <td><b>${esc(inv.username || "")}</b></td>
+          <td>${esc(inv.customer_name || "—")}</td>
+          <td>${fmtNum(inv.total)}</td>
+          <td>${statusChip}</td>
+          <td><b>${esc(String(inv.id).slice(-6))}</b></td>
+          <td>
+            <div class="actRow">
+              <button class="aBtn gray" data-act="select" data-id="${esc(inv.id)}">عرض</button>
+              <button class="aBtn blue" data-act="ops" data-id="${esc(inv.id)}">العمليات</button>
+              <button class="aBtn gray" data-act="pdf" data-id="${esc(inv.id)}">PDF</button>
+            </div>
+          </td>
+        </tr>
+      `);
+    }
+
+    invBody.innerHTML = rows.join("") || `
+      <tr><td colspan="7" class="mini">لا يوجد فواتير ضمن الفلاتر الحالية.</td></tr>
+    `;
+  }
+
+  invBody.addEventListener("click", async (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    const act = b.dataset.act;
+    const id = b.dataset.id;
+    const inv = INVOICES.find(x => String(x.id) === String(id));
+    if (!inv) return;
+
+    if (act === "select"){
+      setSelected(inv);
+      toast("تم تحديد الفاتورة.");
+      return;
+    }
+    if (act === "ops"){
+      setSelected(inv);
+      await openOps(inv);
+      return;
+    }
+    if (act === "pdf"){
+      setSelected(inv);
+      await exportInvoicePDF(inv);
+      return;
+    }
+  });
+
+  // ===== Selected panel buttons =====
+  $("selOpsBtn").onclick = async () => {
+    if (!selectedInvoice) return toast("حدد فاتورة أولاً.", true);
+    await openOps(selectedInvoice);
   };
+  $("selPdfBtn").onclick = async () => {
+    if (!selectedInvoice) return toast("حدد فاتورة أولاً.", true);
+    await exportInvoicePDF(selectedInvoice);
+  };
+
+  // ===== OPS modal (الأهم: invoiceId) =====
+  opsClose.onclick = () => (opsBack.style.display = "none");
+  opsBack.addEventListener("click", (e) => {
+    if (e.target === opsBack) opsBack.style.display = "none";
+  });
+
+  async function fetchOpsForInvoice(invoiceId){
+    // ✅ هنا الإصلاح: العمود الصحيح هو invoiceId
+    const { data, error } = await sb
+      .from(T_OPS)
+      .select("created_at, text, expr, result, invoiceId")
+      .eq("invoiceId", invoiceId)
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function openOps(inv){
+    opsTitle.textContent = `عمليات الفاتورة: ${String(inv.id).slice(-6)} — ${inv.customer_name || ""}`;
+    opsBody.innerHTML = `<tr><td colspan="4" class="mini">تحميل...</td></tr>`;
+    opsBack.style.display = "flex";
+
+    try{
+      const ops = await fetchOpsForInvoice(inv.id);
+
+      opsBody.innerHTML = ops.map(r => `
+        <tr>
+          <td>${esc(fmtDT(r.created_at))}</td>
+          <td>${esc(r.text || "—")}</td>
+          <td>${esc(r.expr || "")}</td>
+          <td>${esc(String(r.result ?? ""))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="4" class="mini">لا يوجد عمليات لهذه الفاتورة.</td></tr>`;
+    }catch(e){
+      opsBody.innerHTML = `<tr><td colspan="4" class="mini">فشل تحميل العمليات.</td></tr>`;
+      toast("خطأ بتحميل العمليات (تحقق من اسم العمود).", true);
+      console.error(e);
+    }
+  }
+
+  // ===== PDF (يبني نفس جدول العمليات للأدمن) =====
+  function buildInvoiceHtml(inv, ops){
+    const rows = (ops || []).map((r, i) => `
+      <tr>
+        <td style="border:1px solid #111;padding:8px;text-align:center">${i+1}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:center">${esc(fmtDT(r.created_at))}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:right">${esc(r.text || "عملية")}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:center">${esc(r.expr || "")}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:center;font-weight:900">${esc(String(r.result ?? ""))}</td>
+      </tr>
+    `).join("");
+
+    const invNo = String(inv.id || "").slice(-6);
+
+    return `
+      <div style="direction:rtl;font-family:Arial,system-ui;background:#fff;color:#111;padding:18px;">
+        <div style="border:2px solid #111;border-radius:14px;padding:16px;">
+          <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px;">شركة الحايك</div>
+          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
+
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
+            <div>اسم الزبون: <b>${esc(inv.customer_name||"-")}</b></div>
+            <div>اسم المستخدم: <b>${esc(inv.username||"-")}</b></div>
+            <div>رقم الفاتورة: <b>${esc(invNo)}</b></div>
+            <div>التاريخ: <b>${new Date(inv.created_at||Date.now()).toLocaleString("ar")}</b></div>
+          </div>
+
+          <div style="border-top:1px solid #111;margin:10px 0"></div>
+
+          <div style="font-weight:900;margin:6px 0 10px;">تفاصيل العمليات</div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+            <thead>
+              <tr style="background:#f3f3f3">
+                <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="5" style="border:1px solid #111;padding:14px;text-align:center;color:#666">لا يوجد عمليات</td></tr>`}
+            </tbody>
+          </table>
+
+          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
+            <span>إجمالي الكشف:</span>
+            <span>${esc(fmtNum(inv.total || 0))}</span>
+          </div>
+
+          <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
+            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
+            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function exportInvoicePDF(inv){
+    try{
+      const ops = await fetchOpsForInvoice(inv.id);
+
+      const stage = $("pdfStage");
+      stage.innerHTML = buildInvoiceHtml(inv, ops);
+
+      const canvas = await html2canvas(stage, { scale: 2, backgroundColor:"#ffffff" });
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p","pt","a4");
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      const imgW = pageW;
+      const imgH = canvas.height * (imgW / canvas.width);
+
+      let y = 0;
+      let remaining = imgH;
+
+      while (remaining > 0) {
+        pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
+        remaining -= pageH;
+        if (remaining > 0) { pdf.addPage(); y -= pageH; }
+      }
+
+      const cust = (inv.customer_name||"invoice").trim().replace(/\s+/g,"_");
+      const invNo = String(inv.id||"").slice(-6);
+      pdf.save(`HAYEK_${cust}_${invNo}.pdf`);
+
+      toast("تم تصدير PDF.");
+    }catch(e){
+      toast("فشل تصدير PDF.", true);
+      console.error(e);
+    }
+  }
+
+  // ===== Search live =====
+  search.addEventListener("input", () => {
+    renderUsers();
+    renderInvoices();
+  });
+  userFilter.addEventListener("change", () => renderInvoices());
 
   // ===== Boot =====
-  (async () => {
-    // افتراضي: اليوم
-    setPreset(1);
-    await fetchUsers();
-    await fetchInvoices();
-  })();
+  async function refreshAll(){
+    try{
+      await fetchUsers();
+      await fetchInvoices();
+      buildCounts();
+      fillUserDropdown();
+      updateStats();
+      renderUsers();
+      renderInvoices();
+      metaMini.textContent = `آخر تحديث: ${fmtDT(new Date().toISOString())}`;
+    }catch(e){
+      console.error(e);
+      alert("خطأ تحميل البيانات من Supabase.");
+    }
+  }
+
+  refreshAll();
 })();
