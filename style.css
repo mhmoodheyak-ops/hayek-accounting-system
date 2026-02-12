@@ -1,3 +1,4 @@
+
 :root{
   --bg1:#07131a;
   --bg2:#0b2230;
@@ -10,67 +11,49 @@
   --danger:#ff5a6b;
   --primary:#2d7dff;
   --white:#ffffff;
-
-  /* sizing */
-  --radius:18px;
-  --pad:14px;
-  --maxw: 1100px;
 }
 
 *{box-sizing:border-box}
-html,body{height:100%}
 body{
   margin:0;
   font-family: system-ui, -apple-system, "Segoe UI", Arial;
   color:var(--text);
-  background:
-    radial-gradient(1200px 600px at 25% 15%, #17435a 0%, transparent 60%),
-    radial-gradient(1000px 650px at 75% 25%, #123a34 0%, transparent 55%),
-    linear-gradient(180deg, var(--bg2), var(--bg1));
+  background: radial-gradient(1200px 600px at 25% 15%, #17435a 0%, transparent 60%),
+              radial-gradient(1000px 650px at 75% 25%, #123a34 0%, transparent 55%),
+              linear-gradient(180deg, var(--bg2), var(--bg1));
   min-height:100vh;
-  overflow-x:hidden; /* ✅ يمنع تمدد عرض الصفحة */
 }
 
-/* ===== Topbar ===== */
 .topbar{
   position:sticky; top:0; z-index:10;
   display:flex; align-items:center; justify-content:space-between;
-  gap:10px;
-  padding:12px 14px;
+  padding:14px 16px;
   background: linear-gradient(180deg, #0c2330ee, #07131acc);
   border-bottom:1px solid var(--stroke);
   backdrop-filter: blur(10px);
 }
-.brand{display:flex; align-items:center; gap:10px; min-width:0}
-.dot{width:12px; height:12px; border-radius:999px; border:2px solid #ffffff55; flex:0 0 auto}
+.brand{display:flex; align-items:center; gap:10px}
+.dot{width:12px; height:12px; border-radius:999px; border:2px solid #ffffff55}
 .dot.online{background:var(--ok)}
 .dot.offline{background:var(--danger)}
-.titles{min-width:0}
-.titles .title{font-weight:900; font-size:15px; line-height:1.2}
-.titles .subtitle{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:48vw}
+.titles .title{font-weight:800; font-size:16px}
+.titles .subtitle{font-size:12px; color:var(--muted)}
 
-/* ===== Layout ===== */
-.wrap{
-  max-width: var(--maxw);
-  margin: 14px auto;
-  padding: 0 12px 30px;
-}
+.wrap{max-width:1100px; margin:18px auto; padding:0 12px}
 
-/* ===== Card ===== */
 .card{
   background: var(--card);
   border: 1px solid var(--stroke);
-  border-radius: var(--radius);
-  padding: var(--pad);
+  border-radius: 18px;
+  padding: 16px;
   box-shadow: 0 12px 30px #00000033;
   backdrop-filter: blur(10px);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
-/* ===== Tabs / Buttons ===== */
 .tabs{
   display:flex; gap:10px; flex-wrap:wrap;
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 .tab{
   border:1px solid var(--stroke);
@@ -79,33 +62,15 @@ body{
   padding:10px 14px;
   border-radius:999px;
   cursor:pointer;
-  font-weight:800;
-  font-size:13px;
+  font-weight:700;
 }
 .tab.active{
   background:#0e2f44cc;
   border-color:#ffffff44;
 }
 
-.btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+.hidden{display:none}
 
-.btn{
-  border:1px solid var(--stroke);
-  background:#07131a55;
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:900;
-  font-size:13px;
-  line-height:1;
-  white-space:nowrap;
-}
-.btn.primary{background:#1c4fd0aa; border-color:#4d82ff88}
-.btn.danger{background:#7a1f2aaa; border-color:#ff5a6b88}
-.btn.ghost{background:transparent}
-
-/* ===== Fields ===== */
 .grid2{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -120,9 +85,8 @@ body{
   font-size:13px;
   color:var(--muted);
   margin-bottom:6px;
-  font-weight:800;
 }
-.field input, .field select{
+.field input{
   width:100%;
   border:1px solid var(--stroke);
   background:#07131a55;
@@ -141,103 +105,23 @@ body{
   border:1px dashed #ffffff55;
   background:#07131a33;
   color:var(--text);
-  font-weight:900;
-  font-size:13px;
+  font-weight:800;
 }
+.btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
 
-/* ===== Table Wrap ===== */
-.tableWrap{
-  overflow:auto;
-  border-radius:14px;
-  border:1px solid #ffffff22;
-}
-
-/* جدول عام */
-.tbl{
-  width:100%;
-  border-collapse:collapse;
-  min-width: 900px; /* ✅ للكمبيوتر يبقى جدول */
-  background:#ffffff;
-  color:#111;
-}
-.tbl th, .tbl td{
-  padding:10px 10px;
-  border-bottom:1px solid #ddd;
-  text-align:right;
-  white-space:nowrap;
-  font-size:13px;
-}
-.tbl th{background:#f1f1f1; font-weight:900}
-
-/* ===== Actions buttons inside tables ===== */
-.mini{
-  border:1px solid rgba(0,0,0,.12);
-  background:#ffffff;
-  color:#111;
-  padding:7px 10px;
-  border-radius:999px;
+.btn{
+  border:1px solid var(--stroke);
+  background:#07131a55;
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:12px;
   cursor:pointer;
-  font-weight:900;
-  font-size:12px;
-  margin:2px 4px 2px 0;
+  font-weight:800;
 }
-.mini.red{background:#ffebee; border-color:#ffb3ba; color:#b00020}
-.mini.green{background:#eafff3; border-color:#b6f0cf; color:#0a7b4f}
-.mini.blue{background:#eaf1ff; border-color:#b8d0ff; color:#1447c7}
-.mini.ghost{background:#f7f7f7; border-color:#ddd; color:#111}
+.btn.primary{background:#1c4fd0aa; border-color:#4d82ff88}
+.btn.danger{background:#7a1f2aaa; border-color:#ff5a6b88}
+.btn.ghost{background:transparent}
 
-/* ===== Responsive: تحويل جدول الأدمن إلى بطاقات على الهاتف ===== */
-@media (max-width: 760px){
-  .wrap{padding:0 10px 22px}
-  .topbar{flex-wrap:wrap}
-  .titles .subtitle{max-width:72vw}
-
-  .btn{padding:10px 12px; font-size:13px}
-  .tab{padding:9px 12px}
-
-  /* ✅ هنا نخلي الجدول ما يسبب عرض كبير */
-  .tbl{min-width: unset; background: transparent; color: var(--text)}
-  .tbl thead{display:none}
-  .tbl, .tbl tbody, .tbl tr, .tbl td{display:block; width:100%}
-  .tbl tr{
-    background: rgba(0,0,0,.18);
-    border:1px solid rgba(255,255,255,.10);
-    border-radius:16px;
-    padding:10px;
-    margin-bottom:10px;
-  }
-  .tbl td{
-    border-bottom: 1px dashed rgba(255,255,255,.12);
-    padding:9px 6px;
-    white-space:normal;
-    color: var(--text);
-  }
-  .tbl td:last-child{border-bottom:0}
-
-  /* label قبل القيمة */
-  .tbl td::before{
-    content: attr(data-label);
-    display:block;
-    color: rgba(234,244,255,.70);
-    font-size:12px;
-    font-weight:800;
-    margin-bottom:4px;
-  }
-
-  .mini{
-    font-size:12px;
-    padding:8px 10px;
-    background: rgba(255,255,255,.10);
-    color: var(--text);
-    border-color: rgba(255,255,255,.16);
-  }
-  .mini.red{background: rgba(255,90,107,.14); color:#ffd1d1; border-color: rgba(255,90,107,.35)}
-  .mini.green{background: rgba(39,209,127,.14); color:#c9ffe4; border-color: rgba(39,209,127,.35)}
-  .mini.blue{background: rgba(45,125,255,.18); color:#d9e7ff; border-color: rgba(45,125,255,.35)}
-  .mini.ghost{background: rgba(255,255,255,.08); color: var(--text); border-color: rgba(255,255,255,.14)}
-}
-
-/* ===== Toast ===== */
 .toast{
   margin-top:10px;
   display:none;
@@ -246,10 +130,72 @@ body{
   border:1px solid #ffffff22;
   background:#07131a66;
   color:var(--text);
-  font-weight:800;
+  font-weight:700;
 }
 
-/* ===== PDF preview blocks (إن وجدت) ===== */
+.calcTop{display:flex; flex-direction:column; gap:10px}
+.exprBox{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+@media (max-width: 720px){
+  .exprBox{grid-template-columns:1fr}
+}
+.noteInput{font-weight:700}
+.exprInput{font-weight:900; letter-spacing:.5px}
+
+.toggles{display:flex; gap:12px; flex-wrap:wrap}
+.chk{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px}
+.chk input{transform:scale(1.1)}
+
+.bigResult{
+  font-size:54px;
+  font-weight:900;
+  line-height:1;
+  padding:8px 6px;
+}
+
+.pad{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+  margin-top:10px;
+}
+.k{
+  border:1px solid var(--stroke);
+  background:#eaf3ff14;
+  color:var(--text);
+  padding:18px 10px;
+  border-radius:16px;
+  font-size:20px;
+  font-weight:900;
+  cursor:pointer;
+}
+.k.op{background:#eaf3ff10}
+.k.del{background:#ff5a6b1a}
+.k.eq{background:#27d17f22}
+.k.wide{
+  grid-column: 1 / -1;
+  background:#ff5a6b18;
+  padding:16px 10px;
+}
+.actionsRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+
+.h3{margin:0 0 10px 0}
+
+.tableWrap{overflow:auto; border-radius:14px; border:1px solid #ffffff22}
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:620px;
+  background:#ffffff;
+  color:#111;
+}
+.tbl th, .tbl td{
+  padding:10px 10px;
+  border-bottom:1px solid #ddd;
+  text-align:right;
+  white-space:nowrap;
+}
+.tbl th{background:#f1f1f1; font-weight:900}
+
 .invoicePreview{
   background:#ffffff;
   color:#111;
