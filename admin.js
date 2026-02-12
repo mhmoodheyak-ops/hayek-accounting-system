@@ -1,54 +1,52 @@
-/* HAYEK SPOT — Admin (Mobile hide device col + invoice count near username + PDF export) */
+/* HAYEK SPOT — Admin (Users + Invoices + Operations + PDF) */
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // UI elements (safe)
+  // ===== UI =====
   const lock = $("lock");
   const goLogin = $("goLogin");
+
   const onlineDot = $("onlineDot");
-  const adminInfo = $("adminInfo") || $("adminName"); // support both
+  const adminName = $("adminName");
   const logoutBtn = $("logoutBtn");
+  const addUserBtn = $("addUserBtn");
+
   const refreshBtn = $("refreshBtn");
   const rangeSel = $("range");
   const searchUser = $("searchUser");
-  const stInvoices = $("stInvoices");
+
   const stUsers = $("stUsers");
+  const stInvoices = $("stInvoices");
   const stActive = $("stActive");
+
   const usersTbody = $("usersTbody");
 
   // Add user modal
   const addModalBack = $("addModalBack");
-  const closeAddModalBtn = $("closeAddModal");
-  const addUserBtn = $("addUserBtn");
+  const closeAddModal = $("closeAddModal");
   const newUsername = $("newUsername");
   const newPass = $("newPass");
   const newIsAdmin = $("newIsAdmin");
   const saveUserBtn = $("saveUserBtn");
   const addUserMsg = $("addUserMsg");
 
-  // Invoices modal
+  // Invoices list modal
   const invModalBack = $("invModalBack");
-  const closeInvModalBtn = $("closeInvModal");
+  const closeInvModal = $("closeInvModal");
   const invModalTitle = $("invModalTitle");
   const invSearch = $("invSearch");
-  const invTbody = $("invTbody");
   const reloadInvBtn = $("reloadInvBtn");
+  const invTbody = $("invTbody");
 
-  // ---- Inject mobile CSS: hide "device" column (6th) on small screens ----
-  (function injectMobileCss() {
-    const css = `
-      @media (max-width: 820px){
-        table{min-width:0 !important;}
-        th:nth-child(6), td:nth-child(6){display:none !important;} /* الجهاز */
-      }
-    `;
-    const style = document.createElement("style");
-    style.setAttribute("data-hayek-admin-mobile", "1");
-    style.textContent = css;
-    document.head.appendChild(style);
-  })();
+  // Operations modal
+  const opsModalBack = $("opsModalBack");
+  const closeOpsModal = $("closeOpsModal");
+  const opsModalTitle = $("opsModalTitle");
+  const opsMeta = $("opsMeta");
+  const opsTbody = $("opsTbody");
+  const exportPdfBtn = $("exportPdfBtn");
 
-  // Helpers
+  // ===== helpers =====
   function setOnlineDot() {
     if (!onlineDot) return;
     const on = navigator.onLine;
@@ -95,29 +93,23 @@
     return null;
   }
 
-  // Auth guard
   function hardLock() {
     if (lock) lock.style.display = "flex";
     if (goLogin) goLogin.onclick = () => (location.href = "index.html?v=" + Date.now());
   }
 
+  // ===== auth guard =====
   if (!window.HAYEK_AUTH || !window.__HAYEK_AUTH_LOADED__ || !window.HAYEK_AUTH.isAuthed()) {
     hardLock();
     return;
   }
-
   const session = window.HAYEK_AUTH.getUser() || {};
   if (session.role !== "admin") {
     hardLock();
     return;
   }
-
   if (lock) lock.style.display = "none";
-  if (adminInfo) {
-    // adminInfo could be a span in header
-    if (adminInfo.id === "adminName") adminInfo.textContent = session.username || "—";
-    else adminInfo.textContent = `أدمن: ${session.username || "—"} — متصل`;
-  }
+  if (adminName) adminName.textContent = session.username || "admin";
 
   if (logoutBtn) {
     logoutBtn.onclick = () => {
@@ -126,86 +118,81 @@
     };
   }
 
-  // Supabase client
+  // ===== supabase =====
   function getSB() {
-    // supports both configs used in your files
-    const cfgA = window.HAYEK_CONFIG || {};
-    const cfgB = window.APP_CONFIG || {};
+    const cfg = window.HAYEK_CONFIG || {};
+    const supabaseUrl = cfg.supabaseUrl || "";
+    const supabaseKey = cfg.supabaseKey || "";
+    if (!supabaseUrl || !supabaseKey) throw new Error("config.js غير محمّل أو ناقص supabaseUrl/supabaseKey");
 
-    const supabaseUrl =
-      cfgA.supabaseUrl ||
-      cfgB.SUPABASE_URL ||
-      "";
-    const supabaseKey =
-      cfgA.supabaseKey ||
-      cfgB.SUPABASE_ANON_KEY ||
-      "";
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("مكتبة Supabase غير محمّلة");
+    }
 
-    if (!supabaseUrl || !supabaseKey) throw new Error("config.js ناقص: SUPABASE_URL / KEY");
-
-    const sb = supabase.createClient(supabaseUrl, supabaseKey);
-
-    const tables = {
-      users: cfgA.tables?.users || cfgB.TABLE_USERS || "app_users",
-      invoices: cfgA.tables?.invoices || cfgB.TABLE_INVOICES || "app_invoices",
-      operations: cfgA.tables?.operations || cfgB.TABLE_OPERATIONS || "app_operations",
+    const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+    return {
+      sb,
+      tables: {
+        users: cfg.tables?.users || "app_users",
+        invoices: cfg.tables?.invoices || "app_invoices",
+        operations: cfg.tables?.operations || "app_operations",
+      },
     };
-
-    return { sb, tables };
   }
 
   let SB;
   try {
     SB = getSB();
   } catch (e) {
-    console.error("Supabase config error:", e);
+    console.error(e);
     alert("خطأ إعداد Supabase:\n" + e.message);
     return;
   }
 
-  // Data state
+  // ===== state =====
   let users = [];
   let invoiceCounts = new Map();
   let currentUserForInvoices = null;
+
   let invoicesForUser = [];
+  let currentInvoice = null;
+  let currentOps = [];
+
+  // ===== queries =====
+  async function fetchUsers() {
+    const { sb } = SB;
+    const { data, error } = await sb
+      .from(SB.tables.users)
+      .select("id,username,is_admin,blocked,created_at,last_seen")
+      .order("username", { ascending: true });
+
+    if (error) {
+      console.error("fetchUsers:", error);
+      return [];
+    }
+    return data || [];
+  }
 
   async function countInvoicesForUsers(sinceISO) {
     const { sb } = SB;
-    const invoicesTable = SB.tables.invoices;
-
     invoiceCounts = new Map();
-    let q = sb.from(invoicesTable).select("id,created_at,username");
+
+    let q = sb.from(SB.tables.invoices).select("id,username,created_at");
     if (sinceISO) q = q.gte("created_at", sinceISO);
 
     const { data, error } = await q;
     if (error) {
-      console.warn("countInvoices error:", error);
+      console.warn("countInvoices:", error);
       return { totalInvoices: 0 };
     }
 
     let totalInvoices = 0;
     for (const inv of data || []) {
       totalInvoices++;
-      const key = inv.username ?? null;
-      if (key) invoiceCounts.set(String(key), (invoiceCounts.get(String(key)) || 0) + 1);
+      const u = inv.username ? String(inv.username) : "";
+      if (u) invoiceCounts.set(u, (invoiceCounts.get(u) || 0) + 1);
     }
     return { totalInvoices };
-  }
-
-  async function fetchUsers() {
-    const { sb } = SB;
-    const usersTable = SB.tables.users;
-
-    const { data, error } = await sb
-      .from(usersTable)
-      .select("id,username,is_admin,blocked,created_at,device_id,last_seen")
-      .order("username", { ascending: true });
-
-    if (error) {
-      console.error("fetchUsers error:", error);
-      return [];
-    }
-    return data || [];
   }
 
   async function computeActiveUsers24h(usersList) {
@@ -219,60 +206,62 @@
     return n;
   }
 
+  // ===== render users =====
   function badgeRole(u) {
-    return u.is_admin ? `<span class="badge blue">أدمن</span>` : `<span class="badge">مستخدم</span>`;
+    return u.is_admin
+      ? `<span class="badge blue">أدمن</span>`
+      : `<span class="badge">مستخدم</span>`;
   }
   function badgeStatus(u) {
-    return u.blocked ? `<span class="badge red">محظور</span>` : `<span class="badge green">نشط</span>`;
+    return u.blocked
+      ? `<span class="badge red">محظور</span>`
+      : `<span class="badge green">نشط</span>`;
   }
 
   function renderUsers() {
     if (!usersTbody) return;
 
     const term = (searchUser?.value || "").trim().toLowerCase();
-    const list = users
+
+    const html = users
       .filter((u) => (u.username || "").toLowerCase().includes(term))
       .map((u) => {
         const invCount = invoiceCounts.get(String(u.username)) ?? 0;
-        const last = timeAgo(u.last_seen);
-        const dev = u.device_id ? escapeHtml(String(u.device_id)) : "—";
-
-        // ✅ count badge beside username
-        const userCell = `
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <b style="color:#9fd0ff">${escapeHtml(u.username || "")}</b>
-            <span class="badge amber" title="عدد الفواتير">${invCount}</span>
-          </div>
-        `;
 
         return `
           <tr>
-            <td>${userCell}</td>
+            <td>
+              <b style="color:#9fd0ff">${escapeHtml(u.username || "")}</b>
+              <span class="badge amber" style="margin-inline-start:8px">${invCount}</span>
+            </td>
             <td>${badgeRole(u)}</td>
             <td>${badgeStatus(u)}</td>
-            <td><span class="badge amber">${invCount}</span></td>
-            <td>${escapeHtml(last)}</td>
-            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${dev}</td>
+            <td>${escapeHtml(timeAgo(u.last_seen))}</td>
             <td>
               <div class="actions">
                 <button class="mini ghost" data-act="invoices" data-id="${escapeHtml(u.username)}">الفواتير</button>
-                ${u.blocked
-                  ? `<button class="mini green" data-act="unblock" data-id="${escapeHtml(u.username)}">فك حظر</button>`
-                  : `<button class="mini red" data-act="block" data-id="${escapeHtml(u.username)}">حظر</button>`}
-                <button class="mini ghost" data-act="resetDevice" data-id="${escapeHtml(u.username)}">مسح الجهاز</button>
-                ${u.is_admin
-                  ? `<button class="mini ghost" data-act="rmAdmin" data-id="${escapeHtml(u.username)}">إلغاء أدمن</button>`
-                  : `<button class="mini blue" data-act="mkAdmin" data-id="${escapeHtml(u.username)}">جعله أدمن</button>`}
+                ${
+                  u.blocked
+                    ? `<button class="mini green" data-act="unblock" data-id="${escapeHtml(u.username)}">فك حظر</button>`
+                    : `<button class="mini red" data-act="block" data-id="${escapeHtml(u.username)}">حظر</button>`
+                }
+                ${
+                  u.is_admin
+                    ? `<button class="mini ghost" data-act="rmAdmin" data-id="${escapeHtml(u.username)}">إلغاء أدمن</button>`
+                    : `<button class="mini blue" data-act="mkAdmin" data-id="${escapeHtml(u.username)}">جعله أدمن</button>`
+                }
                 <button class="mini red" data-act="delete" data-id="${escapeHtml(u.username)}">حذف</button>
               </div>
             </td>
           </tr>
         `;
-      });
+      })
+      .join("");
 
-    usersTbody.innerHTML = list.join("") || `<tr><td colspan="7" class="mut">لا يوجد نتائج</td></tr>`;
+    usersTbody.innerHTML = html || `<tr><td colspan="5" class="mut">لا يوجد نتائج</td></tr>`;
   }
 
+  // ===== refresh =====
   async function refreshAll() {
     if (refreshBtn) {
       refreshBtn.disabled = true;
@@ -281,14 +270,17 @@
     try {
       const sinceISO = rangeToSince(rangeSel?.value);
       users = await fetchUsers();
-      if (stUsers) stUsers.textContent = String(users.length);
-      const active = await computeActiveUsers24h(users);
-      if (stActive) stActive.textContent = String(active);
+
       const { totalInvoices } = await countInvoicesForUsers(sinceISO);
+      const active = await computeActiveUsers24h(users);
+
+      if (stUsers) stUsers.textContent = String(users.length);
       if (stInvoices) stInvoices.textContent = String(totalInvoices);
+      if (stActive) stActive.textContent = String(active);
+
       renderUsers();
     } catch (e) {
-      console.error("refreshAll error:", e);
+      console.error("refreshAll:", e);
     } finally {
       if (refreshBtn) {
         refreshBtn.disabled = false;
@@ -301,15 +293,15 @@
   if (searchUser) searchUser.oninput = renderUsers;
   if (refreshBtn) refreshBtn.onclick = refreshAll;
 
-  // User actions
+  // ===== users actions =====
   if (usersTbody) {
     usersTbody.addEventListener("click", async (e) => {
-      const btn = e.target.closest("button[data-act]");
+      const btn = e.target.closest("button");
       if (!btn) return;
 
       const act = btn.getAttribute("data-act");
       const username = btn.getAttribute("data-id");
-      const u = users.find((x) => String(x.username) === String(username));
+      const u = users.find((x) => x.username === username);
       if (!u) return;
 
       if (act === "invoices") {
@@ -326,10 +318,6 @@
           if (!confirm(`فك حظر ${u.username}؟`)) return;
           await SB.sb.from(SB.tables.users).update({ blocked: false }).eq("id", u.id);
         }
-        if (act === "resetDevice") {
-          if (!confirm(`مسح جهاز ${u.username}؟`)) return;
-          await SB.sb.from(SB.tables.users).update({ device_id: null }).eq("id", u.id);
-        }
         if (act === "mkAdmin") {
           if (!confirm(`جعل ${u.username} أدمن؟`)) return;
           await SB.sb.from(SB.tables.users).update({ is_admin: true }).eq("id", u.id);
@@ -343,17 +331,17 @@
           await SB.sb.from(SB.tables.users).delete().eq("id", u.id);
         }
       } catch (err) {
-        console.error("Action error:", err);
-        alert("حدث خطأ أثناء التنفيذ.");
+        console.error(err);
+        alert("فشل العملية");
       }
 
       await refreshAll();
     });
   }
 
-  // Add user modal
+  // ===== add user modal =====
   if (addUserBtn) addUserBtn.onclick = () => { if (addModalBack) addModalBack.style.display = "flex"; };
-  if (closeAddModalBtn) closeAddModalBtn.onclick = () => { if (addModalBack) addModalBack.style.display = "none"; };
+  if (closeAddModal) closeAddModal.onclick = () => { if (addModalBack) addModalBack.style.display = "none"; };
   if (addModalBack) addModalBack.onclick = (e) => { if (e.target === addModalBack) addModalBack.style.display = "none"; };
 
   if (saveUserBtn) {
@@ -370,7 +358,8 @@
       try {
         const { error } = await SB.sb.from(SB.tables.users).insert({ username, pass, is_admin, blocked: false });
         if (error) throw error;
-        if (addUserMsg) addUserMsg.textContent = "تم الإضافة!";
+
+        if (addUserMsg) addUserMsg.textContent = "تمت الإضافة ✅";
         setTimeout(() => { if (addModalBack) addModalBack.style.display = "none"; }, 700);
         await refreshAll();
       } catch (e) {
@@ -380,7 +369,15 @@
     };
   }
 
-  // Invoices modal
+  // ===== invoices modal =====
+  function closeInvoicesModal() {
+    if (invModalBack) invModalBack.style.display = "none";
+    currentUserForInvoices = null;
+    invoicesForUser = [];
+  }
+  if (closeInvModal) closeInvModal.onclick = closeInvoicesModal;
+  if (invModalBack) invModalBack.onclick = (e) => { if (e.target === invModalBack) closeInvoicesModal(); };
+
   function openInvoicesModal(user) {
     currentUserForInvoices = user;
     if (invModalTitle) invModalTitle.textContent = `فواتير: ${user.username}`;
@@ -390,30 +387,20 @@
     loadInvoicesForCurrentUser();
   }
 
-  function closeInvModalFunc() {
-    if (invModalBack) invModalBack.style.display = "none";
-    currentUserForInvoices = null;
-    invoicesForUser = [];
-  }
-
-  if (closeInvModalBtn) closeInvModalBtn.onclick = closeInvModalFunc;
-  if (invModalBack) {
-    invModalBack.addEventListener("click", (e) => {
-      if (e.target === invModalBack) closeInvModalFunc();
-    });
-  }
-
   async function loadInvoicesForCurrentUser() {
     if (!currentUserForInvoices) return;
 
-    const { sb } = SB;
-    const invTable = SB.tables.invoices;
     const sinceISO = rangeToSince(rangeSel?.value);
+    let q = SB.sb
+      .from(SB.tables.invoices)
+      .select("id,created_at,customer_name,total,username,status,closed_at")
+      .eq("username", currentUserForInvoices.username)
+      .order("created_at", { ascending: false })
+      .limit(300);
 
-    let q = sb.from(invTable).select("*").order("created_at", { ascending: false }).limit(200);
     if (sinceISO) q = q.gte("created_at", sinceISO);
 
-    const { data, error } = await q.eq("username", currentUserForInvoices.username);
+    const { data, error } = await q;
 
     if (error) {
       console.error(error);
@@ -429,143 +416,190 @@
     if (!invTbody) return;
 
     const term = (invSearch?.value || "").trim().toLowerCase();
-    const filtered = invoicesForUser.filter(inv => {
-      const fields = [inv.customer, inv.customer_name, inv.client, inv.name, inv.invoice_no, inv.code, inv.created_at, inv.id];
-      return fields.some(f => String(f || "").toLowerCase().includes(term));
+    const filtered = invoicesForUser.filter((inv) => {
+      const fields = [inv.customer_name, inv.id, inv.created_at, inv.total];
+      return fields.some((f) => String(f || "").toLowerCase().includes(term));
     });
 
-    invTbody.innerHTML = filtered.map(inv => {
-      const date = inv.created_at ? new Date(inv.created_at).toLocaleString("ar-EG") : "—";
-      const cust = inv.customer || inv.customer_name || inv.client || inv.name || "—";
-      const total = inv.total || inv.grand_total || inv.amount || "—";
-      const code = inv.invoice_no || inv.code || String(inv.id || "").slice(-6) || "—";
+    invTbody.innerHTML =
+      filtered
+        .map((inv) => {
+          const date = inv.created_at ? new Date(inv.created_at).toLocaleString("ar-EG") : "—";
+          const cust = inv.customer_name || "—";
+          const total = (inv.total ?? "—");
+          const code = String(inv.id || "—").slice(-6);
 
-      return `
-        <tr>
-          <td>${escapeHtml(date)}</td>
-          <td>${escapeHtml(cust)}</td>
-          <td><b>${escapeHtml(total)}</b></td>
-          <td>${escapeHtml(code)}</td>
-          <td style="white-space:nowrap">
-            <button class="mini ghost" data-act="viewJson" data-id="${escapeHtml(inv.id)}">عرض</button>
-            <button class="mini blue" data-act="pdf" data-id="${escapeHtml(inv.id)}">تصدير PDF</button>
-          </td>
-        </tr>
-      `;
-    }).join("") || `<tr><td colspan="5" class="mut">لا فواتير</td></tr>`;
+          return `
+            <tr>
+              <td>${escapeHtml(date)}</td>
+              <td>${escapeHtml(cust)}</td>
+              <td><b>${escapeHtml(total)}</b></td>
+              <td>${escapeHtml(code)}</td>
+              <td>
+                <button class="mini ghost" data-act="openInv" data-id="${escapeHtml(inv.id)}">فتح</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("") || `<tr><td colspan="5" class="mut">لا فواتير</td></tr>`;
   }
 
   if (invSearch) invSearch.oninput = renderInvoices;
   if (reloadInvBtn) reloadInvBtn.onclick = loadInvoicesForCurrentUser;
 
-  async function fetchOps(invoiceId) {
-    const { sb } = SB;
-    const opsTable = SB.tables.operations;
-    try {
-      const { data, error } = await sb
-        .from(opsTable)
-        .select("*")
-        .eq("invoice_id", invoiceId)
-        .order("line_no", { ascending: true })
-        .limit(600);
-      if (error) return [];
-      return data || [];
-    } catch {
-      return [];
-    }
+  if (invTbody) {
+    invTbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+
+      const act = btn.getAttribute("data-act");
+      const id = btn.getAttribute("data-id");
+      const inv = invoicesForUser.find((x) => String(x.id) === String(id));
+      if (!inv) return;
+
+      if (act === "openInv") {
+        await openInvoiceOperations(inv);
+      }
+    });
   }
 
-  function buildPdfHtml(inv, ops) {
-    const rowsHtml = (ops && ops.length)
-      ? ops.map((r, i) => `
-          <tr>
-            <td style="border:1px solid #111;padding:8px;text-align:center">${i + 1}</td>
-            <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(r.t || r.time || "")}</td>
-            <td style="border:1px solid #111;padding:8px;text-align:right">${escapeHtml(r.text || r.note || "")}</td>
-            <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(r.expr || r.operation || "")}</td>
-            <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(r.result ?? r.value ?? ""))}</td>
-          </tr>
-        `).join("")
-      : `
-        <tr>
-          <td colspan="5" style="border:1px solid #111;padding:16px;text-align:center;color:#555">
-            لا توجد تفاصيل عمليات محفوظة لهذه الفاتورة
-          </td>
-        </tr>
-      `;
+  // ===== operations modal =====
+  function closeOps() {
+    if (opsModalBack) opsModalBack.style.display = "none";
+    currentInvoice = null;
+    currentOps = [];
+    if (opsTbody) opsTbody.innerHTML = "";
+  }
+  if (closeOpsModal) closeOpsModal.onclick = closeOps;
+  if (opsModalBack) opsModalBack.onclick = (e) => { if (e.target === opsModalBack) closeOps(); };
 
-    const cust = inv.customer || inv.customer_name || "—";
-    const total = inv.total || inv.grand_total || inv.amount || "—";
-    const code = inv.invoice_no || inv.code || String(inv.id || "").slice(-6) || "—";
-    const date = inv.created_at ? new Date(inv.created_at).toLocaleString("ar-EG") : "—";
+  async function openInvoiceOperations(inv) {
+    currentInvoice = inv;
+    if (opsModalTitle) opsModalTitle.textContent = `عمليات الفاتورة: ${String(inv.id).slice(-6)}`;
+    if (opsMeta) {
+      opsMeta.innerHTML = `
+        <span class="badge">${escapeHtml(inv.username || "")}</span>
+        <span class="badge">${escapeHtml(inv.customer_name || "")}</span>
+        <span class="badge amber">الإجمالي: ${escapeHtml(inv.total)}</span>
+      `;
+    }
+
+    if (opsTbody) opsTbody.innerHTML = `<tr><td colspan="5" class="mut">تحميل...</td></tr>`;
+    if (opsModalBack) opsModalBack.style.display = "flex";
+
+    const { data, error } = await SB.sb
+      .from(SB.tables.operations)
+      .select("id,invoice_id,line_no,t,text,expr,result,created_at")
+      .eq("invoice_id", inv.id)
+      .order("line_no", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      if (opsTbody) opsTbody.innerHTML = `<tr><td colspan="5">خطأ: ${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    currentOps = data || [];
+    renderOps();
+  }
+
+  function renderOps() {
+    if (!opsTbody) return;
+
+    if (!currentOps.length) {
+      opsTbody.innerHTML = `<tr><td colspan="5" class="mut">لا توجد عمليات محفوظة لهذه الفاتورة</td></tr>`;
+      return;
+    }
+
+    opsTbody.innerHTML = currentOps.map((r, i) => `
+      <tr>
+        <td>${escapeHtml(String(r.line_no || (i + 1)))}</td>
+        <td>${escapeHtml(r.t || "")}</td>
+        <td>${escapeHtml(r.text || "")}</td>
+        <td>${escapeHtml(r.expr || "")}</td>
+        <td><b>${escapeHtml(String(r.result ?? ""))}</b></td>
+      </tr>
+    `).join("");
+  }
+
+  // ===== PDF export =====
+  function buildPdfHtml(inv, ops) {
+    const rowsHtml = (ops || []).map((r, idx) => `
+      <tr>
+        <td style="border:1px solid #111;padding:8px;text-align:center;width:8%">${idx + 1}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:center;width:14%">${escapeHtml(r.t || "")}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:right;width:38%">${escapeHtml(r.text || "")}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(r.expr || "")}</td>
+        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(String(r.result ?? ""))}</td>
+      </tr>
+    `).join("");
 
     return `
       <div style="direction:rtl;font-family:Arial,system-ui;background:#fff;color:#111;padding:18px;">
-        <div style="border:2px solid #0a7c3a;border-radius:14px;padding:16px;">
-          <div style="text-align:center;font-weight:900;font-size:26px;margin-bottom:4px;">شركة الحايك</div>
-          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:14px;">HAYEK SPOT</div>
+        <div style="border:2px solid #111;border-radius:14px;padding:16px;">
+          <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px;">شركة الحايك</div>
+          <div style="text-align:center;font-weight:900;font-size:18px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
 
-          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;line-height:1.7;margin-bottom:10px;">
-            <div><b>اسم المستخدم:</b> ${escapeHtml(currentUserForInvoices?.username || inv.username || "—")}</div>
-            <div><b>رقم الفاتورة:</b> ${escapeHtml(code)}</div>
-            <div><b>اسم الزبون:</b> ${escapeHtml(cust)}</div>
-            <div><b>التاريخ:</b> ${escapeHtml(date)}</div>
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:10px;">
+            <div>المستخدم: <b>${escapeHtml(inv.username || "-")}</b></div>
+            <div>الزبون: <b>${escapeHtml(inv.customer_name || "-")}</b></div>
+            <div>رقم: <b>${escapeHtml(String(inv.id).slice(-6))}</b></div>
+            <div>التاريخ: <b>${escapeHtml(new Date(inv.created_at || Date.now()).toLocaleString("ar-EG"))}</b></div>
           </div>
 
-          <hr style="border:1px solid #0a7c3a;margin:12px 0;">
+          <div style="border-top:1px solid #111;margin:10px 0;"></div>
 
-          <div style="font-weight:900;margin:6px 0 10px;">سجل العمليات</div>
+          <div style="font-weight:900;margin:6px 0 10px;">جدول العمليات</div>
 
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
             <thead>
-              <tr style="background:#f5f6f7">
-                <th style="border:1px solid #111;padding:8px;text-align:center">#</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">الوقت</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">البيان</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">العملية</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">النتيجة</th>
+              <tr>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
+                <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
               </tr>
             </thead>
-            <tbody>${rowsHtml}</tbody>
+            <tbody>
+              ${rowsHtml || `<tr><td colspan="5" style="border:1px solid #111;padding:14px;text-align:center;color:#666">لا توجد عمليات</td></tr>`}
+            </tbody>
           </table>
 
-          <div style="margin-top:12px;border:2px dashed #0a7c3a;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
+          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900;">
             <span>إجمالي الكشف:</span>
-            <span style="color:#0a7c3a">${escapeHtml(total)}</span>
+            <span>${escapeHtml(String(inv.total ?? "0"))}</span>
           </div>
 
-          <div style="margin-top:12px;text-align:center;font-size:12px;line-height:1.8;color:#333">
+          <div style="margin-top:12px;text-align:center;font-size:11px;line-height:1.8">
             تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-            تجارة عامة - توزيع جملة - دعاية وإعلان - طباعة - حلول رقمية<br/>
-            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
+            <b>05510217646</b>
           </div>
         </div>
       </div>
     `;
   }
 
-  async function exportInvoicePdf(inv) {
-    // Ensure libs exist
-    if (!window.html2canvas) { alert("html2canvas غير محمل"); return; }
-    const jsPDF = window.jspdf?.jsPDF;
-    if (!jsPDF) { alert("jsPDF غير محمل"); return; }
+  async function exportPdfCurrentInvoice() {
+    if (!currentInvoice) return;
+    if (!window.html2canvas) { alert("html2canvas غير محمّلة"); return; }
+    if (!window.jspdf || !window.jspdf.jsPDF) { alert("jsPDF غير محمّلة"); return; }
 
-    const ops = await fetchOps(inv.id);
-
-    const html = buildPdfHtml(inv, ops);
+    const html = buildPdfHtml(currentInvoice, currentOps);
 
     const tmp = document.createElement("div");
-    tmp.innerHTML = html;
     tmp.style.position = "fixed";
     tmp.style.left = "-99999px";
     tmp.style.top = "0";
     tmp.style.width = "794px"; // A4-ish
+    tmp.innerHTML = html;
     document.body.appendChild(tmp);
 
     try {
-      const canvas = await html2canvas(tmp, { scale: 2, backgroundColor: "#ffffff" });
+      const canvas = await window.html2canvas(tmp, { scale: 2, backgroundColor: "#ffffff" });
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
 
+      const { jsPDF } = window.jspdf;
       const pdf = new jsPDF("p", "pt", "a4");
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
@@ -585,31 +619,18 @@
         }
       }
 
-      const code = (inv.invoice_no || inv.code || String(inv.id || "").slice(-6) || "INV");
-      pdf.save(`فاتورة_${currentUserForInvoices?.username || inv.username || "user"}_${code}.pdf`);
+      const name = `فاتورة_${escapeHtml(currentInvoice.username || "user")}_${String(currentInvoice.id).slice(-6)}.pdf`;
+      pdf.save(name);
     } catch (e) {
-      console.error("PDF export error:", e);
-      alert("فشل إنشاء PDF");
+      console.error(e);
+      alert("فشل تصدير PDF");
     } finally {
       tmp.remove();
     }
   }
 
-  if (invTbody) {
-    invTbody.addEventListener("click", async (e) => {
-      const btn = e.target.closest("button[data-act]");
-      if (!btn) return;
+  if (exportPdfBtn) exportPdfBtn.onclick = exportPdfCurrentInvoice;
 
-      const act = btn.getAttribute("data-act");
-      const id = btn.getAttribute("data-id");
-      const inv = invoicesForUser.find(i => String(i.id) === String(id));
-      if (!inv) return;
-
-      if (act === "viewJson") alert(JSON.stringify(inv, null, 2));
-      if (act === "pdf") await exportInvoicePdf(inv);
-    });
-  }
-
-  // Init
+  // ===== init =====
   refreshAll();
 })();
