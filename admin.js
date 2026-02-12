@@ -33,13 +33,19 @@
   const invTbody = $("invTbody");
   const reloadInvBtn = $("reloadInvBtn");
 
-  // Operations modal (Table of operations)
+  // Operations modal
   const opsModalBack = $("opsModalBack");
   const closeOpsModalBtn = $("closeOpsModal");
   const opsModalTitle = $("opsModalTitle");
   const opsMeta = $("opsMeta");
   const opsTbody = $("opsTbody");
   const exportPdfBtn = $("exportPdfBtn");
+
+  // PDF Stage (from admin.html)
+  const pdfStage = $("pdfStage");
+  const pdfMetaLine = $("pdfMetaLine");
+  const pdfOpsBody = $("pdfOpsBody");
+  const pdfTotalVal = $("pdfTotalVal");
 
   // ===== Helpers =====
   function escapeHtml(s) {
@@ -88,6 +94,18 @@
     return null;
   }
 
+  function safeFilename(name) {
+    return String(name || "file")
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, "_")
+      .slice(0, 120);
+  }
+
+  function parseNumberMaybe(v) {
+    const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }
+
   // ===== Auth guard =====
   function hardLock() {
     if (lock) lock.style.display = "flex";
@@ -116,16 +134,12 @@
 
   // ===== Supabase client + table names =====
   function getConfig() {
-    // Support both styles
     const A = window.HAYEK_CONFIG || {};
     const B = window.APP_CONFIG || {};
 
-    const supabaseUrl =
-      A.supabaseUrl || A.SUPABASE_URL || B.SUPABASE_URL || "";
-    const supabaseKey =
-      A.supabaseKey || A.SUPABASE_ANON_KEY || B.SUPABASE_ANON_KEY || "";
+    const supabaseUrl = A.supabaseUrl || A.SUPABASE_URL || B.SUPABASE_URL || "";
+    const supabaseKey = A.supabaseKey || A.SUPABASE_ANON_KEY || B.SUPABASE_ANON_KEY || "";
 
-    // Tables fallback (your defaults)
     const tables = {
       users: (A.tables && A.tables.users) || B.TABLE_USERS || "app_users",
       invoices: (A.tables && A.tables.invoices) || B.TABLE_INVOICES || "app_invoices",
@@ -159,6 +173,7 @@
   let invoicesForUser = [];
   let currentInvoiceForOps = null;
   let operationsForInvoice = [];
+  let opsLoading = false;
 
   // ===== Data functions =====
   async function fetchUsers() {
@@ -470,6 +485,13 @@
   function openOperationsModal(inv) {
     currentInvoiceForOps = inv;
     operationsForInvoice = [];
+    opsLoading = true;
+
+    if (exportPdfBtn) {
+      exportPdfBtn.disabled = true;
+      exportPdfBtn.textContent = "…";
+    }
+
     if (opsModalTitle) opsModalTitle.textContent = `عمليات الفاتورة: ${String(inv.id).slice(-6)}`;
     if (opsMeta) {
       const cust = inv.customer_name || inv.customer || "—";
@@ -493,6 +515,12 @@
     if (opsModalBack) opsModalBack.style.display = "none";
     currentInvoiceForOps = null;
     operationsForInvoice = [];
+    opsLoading = false;
+
+    if (exportPdfBtn) {
+      exportPdfBtn.disabled = false;
+      exportPdfBtn.textContent = "تصدير PDF";
+    }
   }
 
   if (closeOpsModalBtn) closeOpsModalBtn.onclick = closeOpsModal;
@@ -502,23 +530,34 @@
     const { sb } = SB;
     const T = SB.tables.operations;
 
-    // محاولة جلب العمليات حسب invoice_id أولاً
-    let { data, error } = await sb
+    let data = null;
+    let error = null;
+
+    // invoice_id
+    ({ data, error } = await sb
       .from(T)
       .select("*")
       .eq("invoice_id", inv.id)
-      .order("line_no", { ascending: true });
+      .order("line_no", { ascending: true }));
 
-    // fallback: بعض الجداول تستخدم invoiceId أو inv_id
+    // fallback invoiceId
     if (error) {
       console.warn("ops eq invoice_id failed:", error);
       const r1 = await sb.from(T).select("*").eq("invoiceId", inv.id).order("line_no", { ascending: true });
       data = r1.data; error = r1.error;
     }
+    // fallback inv_id
     if (error) {
       console.warn("ops eq invoiceId failed:", error);
       const r2 = await sb.from(T).select("*").eq("inv_id", inv.id).order("line_no", { ascending: true });
       data = r2.data; error = r2.error;
+    }
+
+    opsLoading = false;
+
+    if (exportPdfBtn) {
+      exportPdfBtn.disabled = false;
+      exportPdfBtn.textContent = "تصدير PDF";
     }
 
     if (error) {
@@ -540,7 +579,7 @@
     }
 
     opsTbody.innerHTML = operationsForInvoice.map((r, idx) => {
-      const t = r.t || r.time || r.created_time || "";
+      const t = r.t || r.time || r.created_time || r.created_at || "";
       const text = r.text || r.line_text || r.note || "";
       const expr = r.expr || r.operation || "";
       const result = r.result ?? r.value ?? "";
@@ -556,119 +595,129 @@
     }).join("");
   }
 
-  // ===== PDF export (Arabic OK via html2canvas) =====
-  function buildOpsHtml(inv, ops) {
+  // ===== PDF export (Guaranteed full ops table) =====
+  function fillPdfStage() {
+    if (!pdfStage || !pdfOpsBody || !pdfMetaLine || !pdfTotalVal) {
+      throw new Error("pdfStage غير موجود في admin.html (أضفه قبل Scripts)");
+    }
+    if (!currentInvoiceForOps) throw new Error("لا توجد فاتورة محددة");
+
+    const inv = currentInvoiceForOps;
     const cust = inv.customer_name || inv.customer || "—";
-    const total = inv.total ?? "—";
+    const total = inv.total ?? inv.grand_total ?? inv.amount ?? "—";
     const date = inv.created_at ? new Date(inv.created_at).toLocaleString("ar-EG") : "—";
     const uname = inv.username || currentUserForInvoices?.username || "—";
     const invNo = inv.invoice_no || inv.code || String(inv.id).slice(-6);
 
-    const rows = (ops || []).map((r, i) => {
-      const t = r.t || r.time || "";
+    pdfMetaLine.textContent = `المستخدم: ${uname} — الزبون: ${cust} — الفاتورة: ${invNo} — التاريخ: ${date}`;
+
+    // rows
+    pdfOpsBody.innerHTML = "";
+    let sum = 0;
+
+    if (!operationsForInvoice.length) {
+      pdfOpsBody.innerHTML = `<tr><td colspan="5" style="padding:14px;text-align:center;color:#6b7280">لا يوجد عمليات</td></tr>`;
+      pdfTotalVal.textContent = String(total);
+      return;
+    }
+
+    operationsForInvoice.forEach((r, idx) => {
+      const t = r.t || r.time || r.created_time || r.created_at || "";
       const text = r.text || r.line_text || r.note || "";
       const expr = r.expr || r.operation || "";
       const result = r.result ?? r.value ?? "";
-      return `
-        <tr>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${i + 1}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(t))}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:right">${escapeHtml(String(text || "—"))}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center">${escapeHtml(String(expr || "—"))}</td>
-          <td style="border:1px solid #111;padding:8px;text-align:center;font-weight:900">${escapeHtml(String(result))}</td>
-        </tr>
+
+      const n = parseNumberMaybe(result);
+      if (n !== null) sum += n;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(String(t))}</td>
+        <td>${escapeHtml(String(text || "—"))}</td>
+        <td>${escapeHtml(String(expr || "—"))}</td>
+        <td class="num"><b>${escapeHtml(String(result))}</b></td>
       `;
-    }).join("");
+      pdfOpsBody.appendChild(tr);
+    });
 
-    return `
-      <div style="direction:rtl;font-family:Arial,system-ui;background:#fff;color:#111;padding:18px">
-        <div style="border:2px solid #111;border-radius:14px;padding:14px">
-          <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px">شركة الحايك</div>
-          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px">HAYEK SPOT</div>
-
-          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;line-height:1.8;margin-bottom:8px">
-            <div>اسم المستخدم: <b>${escapeHtml(uname)}</b></div>
-            <div>رقم الفاتورة: <b>${escapeHtml(String(invNo))}</b></div>
-            <div>اسم الزبون: <b>${escapeHtml(cust)}</b></div>
-            <div>التاريخ: <b>${escapeHtml(date)}</b></div>
-          </div>
-
-          <div style="border-top:1px solid #111;margin:10px 0"></div>
-
-          <div style="font-weight:900;margin:6px 0 10px">جدول العمليات</div>
-
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead>
-              <tr style="background:#f3f3f3">
-                <th style="border:1px solid #111;padding:8px;text-align:center">#</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">الوقت</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">البيان</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">العملية</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="5" style="border:1px solid #111;padding:14px;text-align:center;color:#666">لا يوجد عمليات</td></tr>`}
-            </tbody>
-          </table>
-
-          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
-            <span>إجمالي الكشف:</span>
-            <span>${escapeHtml(String(total))}</span>
-          </div>
-
-          <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
-          </div>
-        </div>
-      </div>
-    `;
+    // إذا مجموع العمليات مفيد نستعمله، وإلا نستعمل إجمالي الفاتورة
+    pdfTotalVal.textContent =
+      (operationsForInvoice.length && Number.isFinite(sum) && sum !== 0)
+        ? (Math.round(sum * 100) / 100).toLocaleString("en-US")
+        : String(total);
   }
 
   async function exportOpsPdf() {
-    if (!currentInvoiceForOps) return;
     try {
-      const tmp = document.createElement("div");
-      tmp.style.position = "fixed";
-      tmp.style.left = "-99999px";
-      tmp.style.top = "0";
-      tmp.style.width = "794px"; // A4
-      tmp.innerHTML = buildOpsHtml(currentInvoiceForOps, operationsForInvoice);
-      document.body.appendChild(tmp);
+      if (opsLoading) {
+        alert("انتظر… جاري تحميل العمليات");
+        return;
+      }
+      if (!currentInvoiceForOps) return;
 
-      const canvas = await html2canvas(tmp, { scale: 2, backgroundColor: "#ffffff" });
-      tmp.remove();
+      if (exportPdfBtn) {
+        exportPdfBtn.disabled = true;
+        exportPdfBtn.textContent = "…";
+      }
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      fillPdfStage();
+
+      // لازم يكون ظاهر للرندر (مو display:none)
+      pdfStage.style.display = "block";
+
+      // انتظر رسم الـ DOM فريمين
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(pdfStage, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false
+      });
+
+      // اخفاء بعد الالتقاط
+      pdfStage.style.display = "none";
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
       const { jsPDF } = window.jspdf || {};
       if (!jsPDF) throw new Error("jsPDF not loaded");
 
-      const pdf = new jsPDF("p", "pt", "a4");
+      // mm أسهل وأدق
+      const pdf = new jsPDF("p", "mm", "a4");
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
 
       const imgW = pageW;
-      const imgH = canvas.height * (imgW / canvas.width);
+      const imgH = (canvas.height * imgW) / canvas.width;
 
       let y = 0;
       let remaining = imgH;
 
+      pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
+      remaining -= pageH;
+
       while (remaining > 0) {
+        pdf.addPage();
+        y = -(imgH - remaining);
         pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
         remaining -= pageH;
-        if (remaining > 0) {
-          pdf.addPage();
-          y -= pageH;
-        }
       }
 
       const uname = currentInvoiceForOps.username || currentUserForInvoices?.username || "user";
       const id6 = String(currentInvoiceForOps.id || "").slice(-6);
-      pdf.save(`OPS_${uname}_${id6}_${Date.now()}.pdf`);
+      const filename = safeFilename(`OPS_${uname}_${id6}_${Date.now()}.pdf`);
+      pdf.save(filename);
     } catch (e) {
       console.error("PDF export error:", e);
-      alert("فشل تصدير PDF");
+      alert("فشل تصدير PDF:\n" + (e?.message || e));
+      try { if (pdfStage) pdfStage.style.display = "none"; } catch {}
+    } finally {
+      if (exportPdfBtn) {
+        exportPdfBtn.disabled = false;
+        exportPdfBtn.textContent = "تصدير PDF";
+      }
     }
   }
 
