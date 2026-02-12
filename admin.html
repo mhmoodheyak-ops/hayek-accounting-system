@@ -1,4 +1,3 @@
-<!-- admin.html -->
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,194 +5,348 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — لوحة الإدارة</title>
 
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#07131a" />
-  <link rel="stylesheet" href="./style.css?v=999" />
-
-  <!-- PDF -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
-
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PDF (للأدمن عند الضغط PDF) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <!-- Config + Auth -->
   <script src="./config.js?v=999"></script>
   <script src="./auth.js?v=999"></script>
 
   <style>
-    /* تثبيت حجم الواجهة مثل قبل (لا تكبير مبالغ) */
-    .wrap{max-width:1100px;margin:18px auto;padding:0 12px}
-    .hdrRight{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .kpiRow{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:10px}
-    .kpi{border:1px solid var(--stroke);background:#07131a55;border-radius:999px;padding:10px 12px;font-weight:900}
-    .kpi b{color:#fff}
-    .split{display:grid;grid-template-columns: 360px 1fr;gap:12px}
-    @media (max-width: 980px){ .split{grid-template-columns:1fr} }
-    .sideCard{min-height:120px}
-    .sideTitle{font-weight:900;margin:0 0 10px 0}
-    .mini{font-size:12px;color:var(--muted)}
-    .tag{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:999px;border:1px solid #ffffff22;background:#07131a33;font-weight:800}
-    .tag.ok{border-color:#27d17f66}
-    .tag.bad{border-color:#ff5a6b66}
+    :root{
+      --bg:#071820;
+      --panel:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.12);
+      --txt:#eaf4ff;
+      --mut:#a7bdd0;
+      --blue:#1f62ff;
+      --ok:#49e39a;
+      --red:#ff6b6b;
+      --chip:rgba(255,255,255,.08);
+      --shadow:0 20px 70px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
+    body{
+      margin:0; min-height:100vh; color:var(--txt);
+      background: radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);
+    }
+    .wrap{max-width:1280px;margin:14px auto;padding:14px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 16px;background:var(--panel);
+      border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+      backdrop-filter:blur(10px)
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .dot{width:12px;height:12px;border-radius:50%}
+    .dot.on{background:var(--ok);box-shadow:0 0 0 6px rgba(73,227,154,.12)}
+    .dot.off{background:var(--red);box-shadow:0 0 0 6px rgba(255,107,107,.12)}
+    .brand h1{margin:0;font-size:18px;font-weight:900}
+    .brand p{margin:2px 0 0;color:var(--mut);font-size:12px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      border:none;border-radius:999px;padding:10px 14px;cursor:pointer;
+      background:var(--chip);color:#fff;font-weight:900
+    }
+    .btn.blue{background:rgba(31,98,255,.28);border:1px solid rgba(31,98,255,.5)}
+    .btn.red{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
+    .btn.ghost{background:transparent;border:1px solid var(--line)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:999px;
+      border:1px solid var(--line);background:rgba(0,0,0,.18);color:#fff;font-weight:900
+    }
+
+    .grid{
+      margin-top:12px;
+      display:grid;grid-template-columns: 420px 1fr;gap:12px;
+    }
+    @media (max-width: 1060px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background:var(--panel);border:1px solid var(--line);
+      border-radius:18px;box-shadow:var(--shadow);
+      backdrop-filter:blur(10px);overflow:hidden
+    }
+    .cardHead{
+      padding:14px 16px;border-bottom:1px solid var(--line);
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between
+    }
+    .tabs{display:flex;gap:10px;flex-wrap:wrap}
+    .tab{
+      border:none;border-radius:999px;padding:10px 14px;background:var(--chip);color:#fff;
+      cursor:pointer;font-weight:900
+    }
+    .tab.active{background:rgba(31,98,255,.28);border:1px solid rgba(31,98,255,.5)}
+    .cardBody{padding:14px 16px}
+
+    .stats{display:flex;gap:10px;flex-wrap:wrap}
+    .stat{
+      flex:1;min-width:200px;
+      border:1px solid var(--line);background:rgba(0,0,0,.16);
+      border-radius:16px;padding:12px 14px
+    }
+    .stat .k{color:var(--mut);font-size:12px}
+    .stat .v{font-weight:900;font-size:22px;margin-top:6px}
+
+    .hint{color:var(--mut);font-size:12px;line-height:1.7}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    select, input[type="date"], input[type="text"]{
-      border:1px solid var(--stroke);background:#07131a55;color:var(--text);
-      padding:10px 12px;border-radius:12px;outline:none;
+    .field{flex:1;min-width:220px}
+    label{display:block;color:var(--mut);font-size:12px;margin:0 0 6px}
+    input,select{
+      width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.18);color:var(--txt);outline:none
     }
-    .tbl .btnTiny{
-      padding:8px 10px;border-radius:10px;border:1px solid #ffffff22;background:#07131a55;
-      color:#fff;cursor:pointer;font-weight:900
+    .btnWide{
+      border:none;border-radius:14px;padding:12px 14px;font-weight:900;cursor:pointer;
+      background:rgba(31,98,255,.28);border:1px solid rgba(31,98,255,.5);color:#fff;
+      min-width:140px
     }
-    .tbl .btnTiny.primary{background:#1c4fd0aa;border-color:#4d82ff88}
-    .tbl .btnTiny.danger{background:#7a1f2aaa;border-color:#ff5a6b88}
-    .tbl .btnTiny.warn{background:#7a5a1faa;border-color:#ffcc6688}
-    .tbl .btnTiny.ghost{background:transparent}
-    .pillState{display:inline-flex;padding:8px 10px;border-radius:999px;border:1px dashed #ffffff55;font-weight:900}
-    .pillState.ok{border-color:#27d17f66}
-    .pillState.bad{border-color:#ff5a6b66}
+    .btnWide.gray{
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)
+    }
+
+    table{width:100%;border-collapse:collapse}
+    th,td{
+      padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:right;font-size:14px;white-space:nowrap
+    }
+    th{color:#fff;background:rgba(255,255,255,.06);font-weight:900}
+    td{color:rgba(255,255,255,.92)}
+    .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.14)}
+    .mini{font-size:12px;color:var(--mut)}
+    .chip{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(0,0,0,.16);font-weight:900;min-width:44px
+    }
+    .chip.ok{border-color:rgba(73,227,154,.5);background:rgba(73,227,154,.12)}
+    .chip.bad{border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.10)}
+    .actRow{display:flex;gap:8px;flex-wrap:wrap}
+    .aBtn{
+      border:none;border-radius:12px;padding:10px 12px;cursor:pointer;
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+      color:#fff;font-weight:900;font-size:12px
+    }
+    .aBtn.blue{background:rgba(31,98,255,.25);border-color:rgba(31,98,255,.45)}
+    .aBtn.red{background:rgba(255,107,107,.16);border-color:rgba(255,107,107,.32)}
+    .aBtn.gray{background:rgba(255,255,255,.07)}
+    .split{
+      display:grid;grid-template-columns: 1fr;gap:12px
+    }
+    .selectedBox{
+      border:1px dashed rgba(255,255,255,.18);
+      background:rgba(0,0,0,.12);
+      border-radius:16px;padding:14px
+    }
+    .selectedBox h3{margin:0 0 10px;font-size:16px}
+    .kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.14)}
+    .kv:last-child{border-bottom:none}
+    .kv span{color:var(--mut)}
+    .kv b{color:#fff}
 
     /* مودال العمليات */
-    .modalBack{position:fixed;inset:0;background:#00000088;display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
-    .modal{width:min(980px,100%);background:#0b2230;border:1px solid #ffffff22;border-radius:18px;overflow:hidden}
-    .modalHead{padding:12px 14px;border-bottom:1px solid #ffffff22;display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .modalBody{padding:12px 14px}
-    .modalHead .t{font-weight:900}
-    .modalHead .x{cursor:pointer;border:1px solid #ffffff22;background:#07131a55;color:#fff;border-radius:12px;padding:8px 12px;font-weight:900}
+    .modalBack{
+      position:fixed;inset:0;background:rgba(0,0,0,.78);
+      display:none;align-items:center;justify-content:center;padding:14px;z-index:9999
+    }
+    .modal{
+      width:min(920px,100%);
+      background:#0b1820;border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;box-shadow:var(--shadow);overflow:hidden
+    }
+    .modalHead{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .modalHead h3{margin:0;font-size:16px}
+    .modalBody{padding:14px 16px}
+    .closeX{border:none;border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-weight:900}
+    .toast{
+      margin-top:10px;display:none;
+      padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.22);color:#fff;font-weight:900
+    }
+
+    /* PDF stage */
+    .pdfStage{
+      position:fixed;left:-99999px;top:0;width:794px;background:#fff;color:#111;padding:18px;direction:rtl
+    }
   </style>
 </head>
 
 <body>
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="brand">
-      <span class="dot" id="netDot"></span>
-      <div class="titles">
-        <div class="title">HAYEK SPOT</div>
-        <div class="subtitle">لوحة الإدارة — الفواتير + المستخدمين</div>
-      </div>
-    </div>
-
-    <div class="hdrRight">
-      <span class="tag" id="whoTag">admin</span>
-      <button class="btn" id="btnRefresh">تحديث</button>
-      <button class="btn primary" id="btnAddUser">+ مستخدم</button>
-      <button class="btn danger" id="btnLogout">خروج</button>
-    </div>
-  </div>
-
   <div class="wrap">
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div class="tabs" style="margin:0">
-          <button class="tab active" data-tab="invoices">الفواتير</button>
-          <button class="tab" data-tab="users">المستخدمين</button>
-        </div>
-
-        <div class="kpiRow">
-          <div class="kpi">عدد الفواتير: <b id="kpiInvCount">0</b></div>
-          <div class="kpi">إجمالي مجموع الفواتير: <b id="kpiInvSum">0</b></div>
+    <div class="topbar">
+      <div class="brand">
+        <span class="dot" id="netDot"></span>
+        <div>
+          <h1>HAYEK SPOT</h1>
+          <p>لوحة الإدارة — الفواتير + المستخدمين</p>
         </div>
       </div>
 
-      <div class="toast" id="toast"></div>
-    </div>
-
-    <!-- INVOICES TAB -->
-    <div class="card" id="tab-invoices">
-      <div class="row" style="justify-content:space-between">
-        <div style="font-weight:900;font-size:16px">التقارير / الفلاتر</div>
-        <div class="mini">اختيار مستخدم + تحديد تاريخ (اليوم / 7 أيام / الكل) أو من/إلى</div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <select id="fltUser">
-          <option value="">كل المستخدمين</option>
-        </select>
-
-        <button class="btn" id="btnToday">1 يوم</button>
-        <button class="btn" id="btn7d">7 أيام</button>
-        <button class="btn" id="btnAll">الكل</button>
-
-        <input type="date" id="fromDate" />
-        <input type="date" id="toDate" />
-        <button class="btn primary" id="btnApply">عرض الفواتير</button>
-
-        <input type="text" id="searchInv" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم (آخر 6 أرقام)..." style="flex:1;min-width:260px" />
-        <button class="btn" id="btnCSV">تحميل الفواتير CSV</button>
-      </div>
-
-      <div class="tableWrap" style="margin-top:12px">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>التاريخ</th>
-              <th>المستخدم</th>
-              <th>الزبون</th>
-              <th>الإجمالي</th>
-              <th>الحالة</th>
-              <th>رقم</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="invBody"></tbody>
-        </table>
-      </div>
-      <div class="mini" style="margin-top:10px">نصيحة: اضغط “عرض” ثم “العمليات” ثم “PDF”.</div>
-    </div>
-
-    <!-- USERS TAB -->
-    <div class="card hidden" id="tab-users">
-      <div class="row" style="justify-content:space-between">
-        <div style="font-weight:900;font-size:16px">جدول المستخدمين</div>
-        <div class="mini">اسم المستخدم + عدّاد الفواتير + حذف/حظر/فك الحظر + الحالة (نشط منذ…)</div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <input type="text" id="searchUser" placeholder="بحث باسم المستخدم..." style="flex:1;min-width:260px" />
-      </div>
-
-      <div class="tableWrap" style="margin-top:12px">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>اسم المستخدم</th>
-              <th>الفواتير</th>
-              <th>الحالة</th>
-              <th>آخر ظهور</th>
-              <th>الدور</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="usersBody"></tbody>
-        </table>
+      <div class="actions">
+        <span class="pill" id="adminName">admin : admin</span>
+        <button class="btn ghost" id="refreshBtn">تحديث</button>
+        <button class="btn blue" id="addUserBtn">+ مستخدم</button>
+        <button class="btn red" id="logoutBtn">خروج</button>
       </div>
     </div>
+
+    <div class="grid">
+      <!-- يسار: تفاصيل -->
+      <div class="card">
+        <div class="cardHead">
+          <div class="tabs">
+            <button class="tab active" data-tab="users">المستخدمين</button>
+            <button class="tab" data-tab="inv">الفواتير</button>
+          </div>
+          <div class="mini" id="metaMini">—</div>
+        </div>
+
+        <div class="cardBody split">
+          <div class="stats">
+            <div class="stat">
+              <div class="k">عدد الفواتير</div>
+              <div class="v" id="statInvCount">0</div>
+            </div>
+            <div class="stat">
+              <div class="k">إجمالي مجموع الفواتير</div>
+              <div class="v" id="statInvSum">0</div>
+            </div>
+          </div>
+
+          <div class="selectedBox" id="selectedBox">
+            <h3>تفاصيل التحديد</h3>
+            <div class="kv"><span>رقم الفاتورة:</span><b id="selInvId">—</b></div>
+            <div class="kv"><span>المستخدم:</span><b id="selUser">—</b></div>
+            <div class="kv"><span>الزبون:</span><b id="selCust">—</b></div>
+            <div class="kv"><span>الإجمالي:</span><b id="selTotal">—</b></div>
+            <div class="kv"><span>الحالة:</span><b id="selStatus">—</b></div>
+
+            <div style="margin-top:12px" class="actRow">
+              <button class="aBtn blue" id="selOpsBtn">العمليات</button>
+              <button class="aBtn gray" id="selPdfBtn">PDF</button>
+            </div>
+
+            <div class="toast" id="toast"></div>
+            <div class="hint" style="margin-top:10px">
+              ملاحظة: عرض العمليات يعتمد على العمود الصحيح داخل <b>app_operations</b> وهو <b>invoiceId</b>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- يمين: جداول -->
+      <div class="card">
+        <div class="cardHead">
+          <div class="row" style="width:100%">
+            <div class="field" style="flex:2">
+              <label>بحث</label>
+              <input id="search" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
+              <div class="hint">يفضل البحث برقم الفاتورة (آخر 6 أرقام) أو اسم المستخدم.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <!-- Filters -->
+          <div class="card" style="box-shadow:none;margin-bottom:12px">
+            <div class="cardBody">
+              <div class="row">
+                <div class="field">
+                  <label>اختيار المستخدم</label>
+                  <select id="userFilter">
+                    <option value="">كل المستخدمين</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>المدّة</label>
+                  <div class="row" style="gap:8px">
+                    <button class="btnWide gray" id="rangeAll">الكل</button>
+                    <button class="btnWide gray" id="range1">1 يوم</button>
+                    <button class="btnWide gray" id="range7">7 أيام</button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>من</label>
+                  <input type="date" id="dateFrom" />
+                </div>
+                <div class="field">
+                  <label>إلى</label>
+                  <input type="date" id="dateTo" />
+                </div>
+
+                <div class="field" style="flex:0;min-width:160px">
+                  <label>&nbsp;</label>
+                  <button class="btnWide" id="showBtn">عرض الفواتير</button>
+                </div>
+              </div>
+
+              <div class="hint">التقارير/الفلاتر موجودة مثل ما طلبت: اختيار مستخدم + 1 يوم + 7 أيام + الكل + تاريخ من/إلى.</div>
+            </div>
+          </div>
+
+          <!-- Users table -->
+          <div id="pane-users">
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>اسم المستخدم</th>
+                    <th>عدد الفواتير</th>
+                    <th>الحالة</th>
+                    <th>نشط منذ</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Invoices table -->
+          <div id="pane-inv" style="display:none">
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>المستخدم</th>
+                    <th>الزبون</th>
+                    <th>الإجمالي</th>
+                    <th>الحالة</th>
+                    <th>رقم</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="invBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- ✅ pdfStage لازم يكون قبل scripts كما طلبت -->
-  <div id="pdfStage" class="pdfStage"></div>
-
-  <!-- Modal عمليات الفاتورة -->
+  <!-- Modal العمليات -->
   <div class="modalBack" id="opsBack">
     <div class="modal">
       <div class="modalHead">
-        <div class="t" id="opsTitle">عمليات الفاتورة</div>
-        <div class="row">
-          <button class="x" id="btnOpsPDF">PDF</button>
-          <button class="x" id="btnOpsClose">إغلاق</button>
-        </div>
+        <h3 id="opsTitle">عمليات الفاتورة</h3>
+        <button class="closeX" id="opsClose">إغلاق</button>
       </div>
       <div class="modalBody">
-        <div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div class="mini" id="opsMeta">—</div>
-          <div class="kpi">الإجمالي: <b id="opsTotal">0</b></div>
-        </div>
-        <div class="tableWrap" style="margin-top:12px">
-          <table class="tbl">
+        <div class="tableWrap" style="background:rgba(0,0,0,.08)">
+          <table>
             <thead>
               <tr>
-                <th>#</th>
                 <th>الوقت</th>
                 <th>البيان</th>
                 <th>العملية</th>
@@ -206,6 +359,8 @@
       </div>
     </div>
   </div>
+
+  <div class="pdfStage" id="pdfStage"></div>
 
   <script src="./admin.js?v=999"></script>
 </body>
