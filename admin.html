@@ -1,232 +1,237 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — لوحة الأدمن</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>HAYEK SPOT — لوحة الأدمن</title>
 
-  <link rel="stylesheet" href="./style.css?v=3" />
-  <meta name="theme-color" content="#071820" />
+<link rel="stylesheet" href="./style.css?v=3"/>
 
-  <style>
-    :root{
-      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66;
-    }
-    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    body{
-      margin:0;min-height:100vh;
-      background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);
-      color:var(--txt)
-    }
-    .wrap{max-width:1200px;margin:14px auto;padding:12px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-    .brand{display:flex;align-items:center;gap:10px}
-    .dot{width:12px;height:12px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
-    .btn{border:none;border-radius:14px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-weight:800}
-    .btn.primary{background:rgba(31,98,255,.85)}
-    .btn.danger{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
-    .card{
-      background:var(--panel);border:1px solid var(--line);border-radius:22px;
-      box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);
-      overflow:hidden;margin-bottom:16px;
-    }
-    .stat-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;padding:14px}
-    .stat{padding:14px;border-radius:18px;background:rgba(0,0,0,.16);border:1px solid var(--line);text-align:center}
-    .stat .v{font-weight:900;font-size:28px;margin-top:6px; color:var(--blue)}
-    .stat .k{color:var(--mut);font-size:13px}
-    .head{padding:14px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .input, .select{
-      background:rgba(0,0,0,.18);color:var(--txt);border:1px solid var(--line);
-      border-radius:14px;padding:10px 12px;outline:none
-    }
-    .tableWrap{overflow:auto;border-radius:16px;border:1px solid var(--line)}
-    table{width:100%;border-collapse:collapse;min-width:1100px;background:rgba(0,0,0,.12)}
-    th,td{padding:12px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;text-align:right;vertical-align:middle}
-    th{background:rgba(255,255,255,.06)}
-    .badge{border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid rgba(255,255,255,.12)}
-    .badge.green{color:var(--green); border-color:var(--green)}
-    .badge.red{color:var(--red); border-color:var(--red)}
-    .badge.blue{color:#9fd0ff; border-color:rgba(159,208,255,.55)}
-    .badge.amber{color:var(--amber); border-color:rgba(255,204,102,.55)}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .mini{
-      padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);color:#fff;cursor:pointer;
-      font-size:12px;font-weight:800;white-space:nowrap;
-    }
-    .mini.ghost{background:rgba(255,255,255,.06)}
-    .mini.blue{background:rgba(31,98,255,.45);border-color:rgba(31,98,255,.55)}
-    .mini.green{background:rgba(73,227,154,.18);border-color:rgba(73,227,154,.35)}
-    .mini.red{background:rgba(255,107,107,.18);border-color:rgba(255,107,107,.35)}
-    .mini:active{transform:scale(.99)}
-    .mut{color:var(--mut);font-size:13px}
+<style>
+/* ====== أساسيات ====== */
+body{
+  margin:0;
+  background:#071820;
+  color:#eaf4ff;
+  font-family:system-ui,Segoe UI,Tahoma,Arial;
+}
+.wrap{max-width:1200px;margin:14px auto;padding:12px}
 
-    /* ✅ Responsive */
-    @media (max-width: 920px){
-      .wrap{padding:10px}
-      table{min-width:920px}
-      .stat-row{grid-template-columns:repeat(auto-fit, minmax(160px, 1fr))}
-    }
-    @media (max-width: 820px){
-      table{min-width:0 !important;}
-      th:nth-child(6), td:nth-child(6){display:none !important;} /* الجهاز للجوال */
-      th,td{padding:10px;font-size:13px}
-    }
+/* ====== Topbar ====== */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:nowrap;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:#49e39a;
+  box-shadow:0 0 0 4px rgba(73,227,154,.25)
+}
+.userLine{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  font-weight:800;
+}
+.userLine span{opacity:.85;font-size:13px}
 
-    /* Modals */
-    .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9999;padding:14px; backdrop-filter:blur(10px)}
-    .modal{width:min(980px,100%);max-height:85vh;overflow:auto;background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px}
-    .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width:720px){ .formGrid{grid-template-columns:1fr} }
-  </style>
+/* ====== أزرار ====== */
+.btn{
+  border:0;
+  border-radius:12px;
+  padding:8px 14px;
+  cursor:pointer;
+  font-weight:800;
+}
+.btn.primary{background:#1f62ff;color:#fff}
+.btn.danger{background:#ff6b6b22;color:#fff;border:1px solid #ff6b6b55}
+
+/* ====== Cards ====== */
+.card{
+  margin-top:14px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  overflow:hidden;
+}
+.statRow{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:10px;
+  padding:14px;
+}
+.stat{
+  background:rgba(0,0,0,.2);
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+}
+.stat b{font-size:22px;color:#1f62ff}
+
+/* ====== Table ====== */
+.tableWrap{
+  overflow:auto;
+  border-top:1px solid rgba(255,255,255,.12);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:900px;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px dashed rgba(255,255,255,.12);
+  font-size:13px;
+  text-align:right;
+  vertical-align:middle;
+}
+th{background:rgba(255,255,255,.06)}
+.actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.mini{
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:12px;
+  cursor:pointer;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+}
+.mini.blue{background:#1f62ff55}
+.mini.red{background:#ff6b6b33}
+.mini.green{background:#49e39a33}
+
+/* ====== مودال ====== */
+.modalBack{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.modal{
+  background:#0b1820;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:18px;
+  width:min(980px,95vw);
+  max-height:85vh;
+  overflow:auto;
+}
+.modal .head{
+  padding:12px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* ====== جدول العمليات (بدون خلفية) ====== */
+.opsTable th,
+.opsTable td{
+  background:none !important;
+}
+</style>
 </head>
 
 <body>
-  <!-- قفل -->
-  <div id="lock" class="modalBack" style="display:flex">
-    <div class="modal" style="max-width:420px; padding:26px; text-align:center">
-      <h2 style="color:var(--red); margin:0 0 12px">دخول الإدارة</h2>
-      <div class="mut" style="margin-bottom:14px">هذه الصفحة للأدمن فقط</div>
-      <button class="btn primary" id="goLogin">الذهاب لتسجيل الدخول</button>
+
+<div class="wrap">
+
+  <!-- ====== Header ====== -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div class="userLine">
+        <b id="adminName">admin</b>
+        <span>| لوحة الإدارة</span>
+        <span>| فواتير: <b id="stInvoices">0</b></span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" id="addUserBtn">➕ مستخدم</button>
+      <button class="btn danger" id="logoutBtn">خروج</button>
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">
-        <div class="dot" id="onlineDot"></div>
-        <div>
-          <div style="font-weight:900">admin: <span id="adminName">—</span></div>
-          <div class="mut">إدارة المستخدمين والفواتير</div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn primary" id="addUserBtn">➕ إضافة مستخدم</button>
-        <button class="btn danger" id="logoutBtn">خروج</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="stat-row">
-        <div class="stat"><div class="k">المستخدمين</div><div class="v" id="stUsers">0</div></div>
-        <div class="stat"><div class="k">الفواتير</div><div class="v" id="stInvoices">0</div></div>
-        <div class="stat"><div class="k">نشط خلال 24 ساعة</div><div class="v" id="stActive">0</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="head">
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input id="searchUser" class="input" placeholder="بحث باسم المستخدم...">
-          <select id="range" class="select">
-            <option value="all">كل الأوقات</option>
-            <option value="today">اليوم</option>
-            <option value="7d">آخر 7 أيام</option>
-            <option value="30d">آخر 30 يوم</option>
-          </select>
-        </div>
-        <button class="btn primary" id="refreshBtn">تحديث</button>
-      </div>
-
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>المستخدم</th>
-              <th>الدور</th>
-              <th>الحالة</th>
-              <th>الفواتير</th>
-              <th>آخر ظهور</th>
-              <th>الجهاز</th>
-              <th>إجراءات التحكم</th>
-            </tr>
-          </thead>
-          <tbody id="usersTbody"></tbody>
-        </table>
-      </div>
+  <!-- ====== Stats ====== -->
+  <div class="card">
+    <div class="statRow">
+      <div class="stat">المستخدمين<br><b id="stUsers">0</b></div>
+      <div class="stat">الفواتير<br><b id="stInvoices2">0</b></div>
+      <div class="stat">نشط 24س<br><b id="stActive">0</b></div>
     </div>
   </div>
 
-  <!-- مودال إضافة مستخدم -->
-  <div id="addModalBack" class="modalBack">
-    <div class="modal" style="max-width:620px">
-      <div class="head">
-        <h3 style="margin:0">إضافة مستخدم</h3>
-        <button class="btn" id="closeAddModal">إغلاق</button>
-      </div>
-      <div style="padding:16px">
-        <div class="formGrid">
-          <div>
-            <div class="mut" style="margin-bottom:6px">اسم المستخدم</div>
-            <input id="newUsername" class="input" placeholder="مثال: user1" />
-          </div>
-          <div>
-            <div class="mut" style="margin-bottom:6px">كلمة السر</div>
-            <input id="newPass" class="input" type="password" placeholder="••••••" />
-          </div>
-        </div>
-
-        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <label class="mut" style="display:flex;gap:8px;align-items:center;cursor:pointer">
-            <input id="newIsAdmin" type="checkbox" />
-            جعله أدمن
-          </label>
-        </div>
-
-        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn primary" id="saveUserBtn">حفظ المستخدم</button>
-          <div id="addUserMsg" class="mut" style="align-self:center"></div>
-        </div>
-      </div>
+  <!-- ====== Users Table ====== -->
+  <div class="card">
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المستخدم</th>
+            <th>الدور</th>
+            <th>الحالة</th>
+            <th>عدد الفواتير</th>
+            <th>آخر ظهور</th>
+            <th>تحكم</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- مودال فواتير المستخدم -->
-  <div id="invModalBack" class="modalBack">
-    <div class="modal">
-      <div class="head">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <h3 id="invModalTitle" style="margin:0">الفواتير</h3>
-          <input id="invSearch" class="input" placeholder="بحث داخل الفواتير..." style="min-width:260px" />
-          <button class="btn" id="reloadInvBtn">إعادة تحميل</button>
-        </div>
-        <button class="btn" id="closeInvModal">إغلاق</button>
-      </div>
-      <div style="padding:15px">
-        <div class="tableWrap">
-          <table>
-            <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>الزبون</th>
-                <th>الإجمالي</th>
-                <th>رقم الفاتورة</th>
-                <th>إجراء</th>
-              </tr>
-            </thead>
-            <tbody id="invTbody"></tbody>
-          </table>
-        </div>
-      </div>
+</div>
+
+<!-- ====== مودال الفواتير ====== -->
+<div id="invModalBack" class="modalBack">
+  <div class="modal">
+    <div class="head">
+      <b id="invModalTitle">فواتير المستخدم</b>
+      <button class="btn" id="closeInvModal">إغلاق</button>
+    </div>
+    <div style="padding:12px">
+      <table class="opsTable">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>الزبون</th>
+            <th>الإجمالي</th>
+            <th>رقم</th>
+            <th>إجراء</th>
+          </tr>
+        </thead>
+        <tbody id="invTbody"></tbody>
+      </table>
     </div>
   </div>
+</div>
 
-  <!-- Scripts -->
-  <script src="./config.js?v=3"></script>
-  <script src="./auth.js?v=3"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="./admin.js?v=3"></script>
+<script src="./config.js"></script>
+<script src="./auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./admin.js"></script>
 
-  <script>
-    // اسم الأدمن في الهيدر (تجميل فقط)
-    try{
-      const s = window.HAYEK_AUTH?.getUser?.() || {};
-      document.getElementById("adminName").textContent = s.username || "—";
-    }catch{}
-  </script>
+<script>
+try{
+  const s = window.HAYEK_AUTH.getUser()||{};
+  document.getElementById("adminName").textContent = s.username||"admin";
+}catch{}
+</script>
+
 </body>
 </html>
