@@ -41,7 +41,7 @@
   const opsTbody = $("opsTbody");
   const exportPdfBtn = $("exportPdfBtn");
 
-  // PDF Stage (from admin.html)
+  // PDF Stage
   const pdfStage = $("pdfStage");
   const pdfMetaLine = $("pdfMetaLine");
   const pdfOpsBody = $("pdfOpsBody");
@@ -55,6 +55,18 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function safeFilename(name) {
+    return String(name || "file")
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, "_")
+      .slice(0, 120);
+  }
+
+  function parseNumberMaybe(v) {
+    const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
+    return Number.isFinite(n) ? n : null;
   }
 
   function setOnlineDot() {
@@ -94,18 +106,6 @@
     return null;
   }
 
-  function safeFilename(name) {
-    return String(name || "file")
-      .replace(/[\\/:*?"<>|]/g, "-")
-      .replace(/\s+/g, "_")
-      .slice(0, 120);
-  }
-
-  function parseNumberMaybe(v) {
-    const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
-    return Number.isFinite(n) ? n : null;
-  }
-
   // ===== Auth guard =====
   function hardLock() {
     if (lock) lock.style.display = "flex";
@@ -132,7 +132,7 @@
     };
   }
 
-  // ===== Supabase client + table names =====
+  // ===== Supabase =====
   function getConfig() {
     const A = window.HAYEK_CONFIG || {};
     const B = window.APP_CONFIG || {};
@@ -153,7 +153,7 @@
   try {
     const cfg = getConfig();
     if (!cfg.supabaseUrl || !cfg.supabaseKey) {
-      throw new Error("config.js ناقص: supabaseUrl/supabaseKey أو SUPABASE_URL/SUPABASE_ANON_KEY");
+      throw new Error("config.js ناقص: SUPABASE_URL / SUPABASE_ANON_KEY");
     }
     if (!window.supabase || !window.supabase.createClient) {
       throw new Error("مكتبة supabase-js غير محملة");
@@ -493,6 +493,7 @@
     }
 
     if (opsModalTitle) opsModalTitle.textContent = `عمليات الفاتورة: ${String(inv.id).slice(-6)}`;
+
     if (opsMeta) {
       const cust = inv.customer_name || inv.customer || "—";
       const total = inv.total ?? "—";
@@ -506,8 +507,10 @@
         </div>
       `;
     }
+
     if (opsTbody) opsTbody.innerHTML = `<tr><td colspan="5" style="color:#a7bdd0">... جاري التحميل</td></tr>`;
     if (opsModalBack) opsModalBack.style.display = "flex";
+
     loadOperationsForInvoice(inv);
   }
 
@@ -530,27 +533,21 @@
     const { sb } = SB;
     const T = SB.tables.operations;
 
-    let data = null;
-    let error = null;
-
-    // invoice_id
-    ({ data, error } = await sb
+    // ✅ عندك invoice_id موجود (حسب تلميح Supabase)
+    // ❌ line_no غير موجود عندك (سبب 400)
+    // لذلك: نجرب مع line_no، وإذا فشل بسبب العمود، نعيد بدون order
+    let res = await sb
       .from(T)
       .select("*")
       .eq("invoice_id", inv.id)
-      .order("line_no", { ascending: true }));
+      .order("line_no", { ascending: true });
 
-    // fallback invoiceId
-    if (error) {
-      console.warn("ops eq invoice_id failed:", error);
-      const r1 = await sb.from(T).select("*").eq("invoiceId", inv.id).order("line_no", { ascending: true });
-      data = r1.data; error = r1.error;
-    }
-    // fallback inv_id
-    if (error) {
-      console.warn("ops eq invoiceId failed:", error);
-      const r2 = await sb.from(T).select("*").eq("inv_id", inv.id).order("line_no", { ascending: true });
-      data = r2.data; error = r2.error;
+    if (res.error && String(res.error.message || "").includes("line_no")) {
+      // إعادة الاستعلام بدون line_no
+      res = await sb
+        .from(T)
+        .select("*")
+        .eq("invoice_id", inv.id);
     }
 
     opsLoading = false;
@@ -560,13 +557,21 @@
       exportPdfBtn.textContent = "تصدير PDF";
     }
 
-    if (error) {
-      console.error("loadOperations error:", error);
-      if (opsTbody) opsTbody.innerHTML = `<tr><td colspan="5">خطأ: ${escapeHtml(error.message)}</td></tr>`;
+    if (res.error) {
+      console.error("loadOperations error:", res.error);
+      if (opsTbody) opsTbody.innerHTML = `<tr><td colspan="5">خطأ: ${escapeHtml(res.error.message)}</td></tr>`;
       return;
     }
 
-    operationsForInvoice = data || [];
+    operationsForInvoice = res.data || [];
+
+    // ترتيب محلي لو توفر created_at أو time
+    operationsForInvoice.sort((a, b) => {
+      const ta = new Date(a.created_at || a.time || a.t || 0).getTime() || 0;
+      const tb = new Date(b.created_at || b.time || b.t || 0).getTime() || 0;
+      return ta - tb;
+    });
+
     renderOperations();
   }
 
@@ -595,10 +600,10 @@
     }).join("");
   }
 
-  // ===== PDF export (Guaranteed full ops table) =====
+  // ===== PDF export (from pdfStage) =====
   function fillPdfStage() {
     if (!pdfStage || !pdfOpsBody || !pdfMetaLine || !pdfTotalVal) {
-      throw new Error("pdfStage غير موجود في admin.html (أضفه قبل Scripts)");
+      throw new Error("pdfStage غير موجود في admin.html");
     }
     if (!currentInvoiceForOps) throw new Error("لا توجد فاتورة محددة");
 
@@ -611,7 +616,6 @@
 
     pdfMetaLine.textContent = `المستخدم: ${uname} — الزبون: ${cust} — الفاتورة: ${invNo} — التاريخ: ${date}`;
 
-    // rows
     pdfOpsBody.innerHTML = "";
     let sum = 0;
 
@@ -641,7 +645,6 @@
       pdfOpsBody.appendChild(tr);
     });
 
-    // إذا مجموع العمليات مفيد نستعمله، وإلا نستعمل إجمالي الفاتورة
     pdfTotalVal.textContent =
       (operationsForInvoice.length && Number.isFinite(sum) && sum !== 0)
         ? (Math.round(sum * 100) / 100).toLocaleString("en-US")
@@ -662,11 +665,7 @@
       }
 
       fillPdfStage();
-
-      // لازم يكون ظاهر للرندر (مو display:none)
       pdfStage.style.display = "block";
-
-      // انتظر رسم الـ DOM فريمين
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
       const canvas = await html2canvas(pdfStage, {
@@ -676,15 +675,12 @@
         logging: false
       });
 
-      // اخفاء بعد الالتقاط
       pdfStage.style.display = "none";
 
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
-
       const { jsPDF } = window.jspdf || {};
       if (!jsPDF) throw new Error("jsPDF not loaded");
 
-      // mm أسهل وأدق
       const pdf = new jsPDF("p", "mm", "a4");
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
@@ -707,8 +703,7 @@
 
       const uname = currentInvoiceForOps.username || currentUserForInvoices?.username || "user";
       const id6 = String(currentInvoiceForOps.id || "").slice(-6);
-      const filename = safeFilename(`OPS_${uname}_${id6}_${Date.now()}.pdf`);
-      pdf.save(filename);
+      pdf.save(safeFilename(`OPS_${uname}_${id6}_${Date.now()}.pdf`));
     } catch (e) {
       console.error("PDF export error:", e);
       alert("فشل تصدير PDF:\n" + (e?.message || e));
