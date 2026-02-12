@@ -1,12 +1,14 @@
-
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — تسجيل الدخول</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./auth.js"></script>
+  <script src="./config.js?v=2"></script>
+  <script src="./auth.js?v=2"></script>
+
   <style>
     :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; }
     body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt);display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui}
@@ -15,89 +17,102 @@
     .btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-weight:bold;font-size:16px}
     .blue{background:var(--blue);color:#fff}
     .err{color:var(--danger);font-size:13px;text-align:center;margin-top:15px;min-height:1.2em}
+    .hint{color:var(--mut);font-size:12px;margin-top:10px;line-height:1.7}
   </style>
 </head>
+
 <body>
   <div class="card">
-    <h2 style="margin:0 0 20px">HAYEK SPOT</h2>
-    <input id="u" placeholder="اسم المستخدم" spellcheck="false">
-    <input id="p" type="password" placeholder="كلمة السر">
+    <h2 style="margin:0 0 14px">HAYEK SPOT</h2>
+
+    <input id="u" placeholder="اسم المستخدم" spellcheck="false" autocomplete="username">
+    <input id="p" type="password" placeholder="كلمة السر" autocomplete="current-password">
     <button class="btn blue" id="loginBtn">دخول للنظام</button>
+
+    <div class="hint">
+      ملاحظة: الحساب مرتبط بجهاز واحد. إذا تغيّر الجهاز يجب أن يقوم الأدمن بمسح الجهاز من لوحة الإدارة.
+    </div>
+
     <div class="err" id="err"></div>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
 
-    // إعدادات Supabase
-    const SB_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SB_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
-    const sb = supabase.createClient(SB_URL, SB_KEY);
+    function showErr(msg){ $("err").textContent = msg || ""; }
+    function getSB(){
+      const cfg = window.HAYEK_CONFIG;
+      if(!cfg?.supabaseUrl || !cfg?.supabaseKey) throw new Error("config.js غير محمّل أو ناقص");
+      return supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+    }
+
+    const sb = getSB();
 
     $("loginBtn").onclick = async () => {
-      $("err").textContent = "";
+      showErr("");
       const userVal = $("u").value.trim();
       const passVal = $("p").value.trim();
 
       if (!userVal || !passVal) {
-        $("err").textContent = "يرجى ملء كافة الحقول";
+        showErr("يرجى ملء كافة الحقول");
         return;
       }
 
       try {
-        // البحث عن المستخدم
+        const T_USERS = window.HAYEK_CONFIG.tables.users;
+
         const { data, error } = await sb
-          .from('app_users')
-          .select('id, username, pass, is_admin, blocked, device_id')
-          .eq('username', userVal)
+          .from(T_USERS)
+          .select("id, username, pass, is_admin, blocked, device_id, last_seen")
+          .eq("username", userVal)
           .single();
 
-        if (error || !data) {
-          $("err").textContent = "اسم المستخدم غير موجود";
+        if (error || !data) { showErr("اسم المستخدم غير موجود"); return; }
+        if (String(data.pass) !== passVal) { showErr("كلمة السر غير صحيحة"); return; }
+        if (data.blocked) { showErr("هذا الحساب محظور"); return; }
+
+        // ✅ ربط الجهاز
+        const myDeviceId = window.HAYEK_AUTH.getOrCreateDeviceId();
+
+        // إذا كان الحساب مرتبط بجهاز آخر => منع الدخول
+        if (data.device_id && String(data.device_id) !== String(myDeviceId)) {
+          showErr("هذا الحساب مرتبط بجهاز آخر. تواصل مع الأدمن لمسح الجهاز.");
           return;
         }
 
-        // مقارنة كلمة السر
-        if (String(data.pass) !== passVal) {
-          $("err").textContent = "كلمة السر غير صحيحة";
-          return;
+        // إذا ما في device_id => اربطه بهذا الجهاز (أول دخول)
+        if (!data.device_id) {
+          try {
+            await sb.from(T_USERS).update({ device_id: myDeviceId }).eq("id", data.id);
+          } catch(e) {
+            console.warn("فشل ربط الجهاز:", e?.message || e);
+          }
         }
 
-        if (data.blocked) {
-          $("err").textContent = "هذا الحساب محظور";
-          return;
-        }
-
-        // إنشاء الجلسة
+        // ✅ إنشاء الجلسة (موحدة مع auth.js)
         const session = {
           id: data.id,
           username: data.username,
           role: data.is_admin ? "admin" : "user",
-          device_id: data.device_id || (window.HAYEK_AUTH?.getOrCreateDeviceId?.() || "unknown")
+          deviceId: myDeviceId
         };
-
         window.HAYEK_AUTH.setSession(session);
 
-        // تحديث last_seen (منفصل حتى لو فشل ما يوقف الدخول)
+        // تحديث last_seen
         try {
-          await sb
-            .from('app_users')
-            .update({ last_seen: new Date().toISOString() })
-            .eq('id', data.id);
-        } catch (updateErr) {
-          console.warn("فشل تحديث last_seen:", updateErr.message);
+          await sb.from(T_USERS).update({ last_seen: new Date().toISOString() }).eq("id", data.id);
+        } catch (e) {
+          console.warn("فشل تحديث last_seen:", e?.message || e);
         }
 
         // توجيه
         const ts = Date.now();
-        if (data.is_admin) {
-          window.location.replace("admin.html?v=" + ts);
-        } else {
-          window.location.replace("invoice.html?v=" + ts);
-        }
+        if (data.is_admin) window.location.replace("admin.html?v=" + ts);
+        else window.location.replace("invoice.html?v=" + ts);
+
       } catch (e) {
         console.error("خطأ في تسجيل الدخول:", e);
-        $("err").textContent = "خطأ في الاتصال: " + (e.message || "غير معروف");
+        showErr("خطأ في الاتصال: " + (e.message || "غير معروف"));
       }
     };
   </script>
