@@ -1,449 +1,375 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Hayek - Calculator + Invoice PDF</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>HAYEK SPOT — لوحة الأدمن</title>
 
-  <!-- html2pdf -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="./style.css?v=3"/>
 
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#121a2b;
-      --card2:#0f1727;
-      --txt:#eaf0ff;
-      --muted:#9fb0d6;
-      --line:#223154;
-      --btn:#1b2a4a;
-      --btn2:#2a3f72;
-      --accent:#22c55e;
-      --danger:#ef4444;
-      --shadow: 0 14px 35px rgba(0,0,0,.35);
-      --radius:18px;
+      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --green:#49e39a; --red:#ff6b6b; --amber:#ffcc66;
     }
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
     body{
-      margin:0; padding:18px;
-      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% 0%, #16244a 0%, var(--bg) 60%);
-      color:var(--txt);
-      display:flex; justify-content:center;
+      margin:0;
+      min-height:100vh;
+      background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);
+      color:var(--txt)
     }
-    .app{width:100%; max-width:520px; display:grid; gap:14px;}
-    .card{
-      background: linear-gradient(180deg, var(--card) 0%, var(--card2) 100%);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .header{
-      padding:16px 16px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .title{font-size:18px; font-weight:800; margin:0 0 6px}
-    .sub{margin:0; color:var(--muted); font-size:13px}
-    .content{padding:14px 16px 16px;}
-    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
-    input, textarea{
-      width:100%;
-      background:#0c1426;
-      border:1px solid rgba(255,255,255,.09);
-      color:var(--txt);
-      border-radius:12px;
-      padding:12px 12px;
-      outline:none;
-      font-size:14px;
-    }
-    textarea{min-height:56px; resize:vertical}
-    .row{display:grid; gap:10px}
-    .row2{display:grid; grid-template-columns: 1fr 140px; gap:10px}
-    @media (max-width:420px){
-      .row2{grid-template-columns:1fr}
-    }
-    .btns{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px}
-    button{
-      border:0; cursor:pointer;
-      padding:12px 12px;
-      border-radius:14px;
-      font-weight:800;
-      color:var(--txt);
-      background: var(--btn);
-      border:1px solid rgba(255,255,255,.10);
-      transition:.12s transform ease, .12s opacity ease;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    button:active{transform: scale(.985); opacity:.92}
-    .primary{background: linear-gradient(180deg, var(--btn2) 0%, #20345f 100%)}
-    .success{background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%); color:#05210f}
-    .danger{background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%)}
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono";
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:12px;
-      color:var(--muted);
-    }
+    .wrap{max-width:1200px;margin:14px auto;padding:12px}
 
-    /* جدول العمليات داخل واجهة التطبيق */
-    .opsWrap{margin-top:12px; border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden}
-    table{width:100%; border-collapse:collapse}
-    th, td{padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13px; vertical-align:top}
-    th{color:var(--muted); font-weight:800; text-align:right; background:rgba(255,255,255,.03)}
-    .num{white-space:nowrap; text-align:left; direction:ltr; font-variant-numeric: tabular-nums;}
-    .muted{color:var(--muted)}
-    .totalBar{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:12px 10px;
-      background: rgba(34,197,94,.10);
-      border-top:1px solid rgba(34,197,94,.30);
-      font-weight:900;
-    }
-    .toast{
-      margin-top:10px;
-      font-size:12px; color:var(--muted)
-    }
-
-    /* ====== منطقة PDF (لا تعمل display:none) ======
-       نخليها "خارج الشاشة" لكن مرئية للـ html2pdf */
-    .pdf-stage{
-      position: fixed;
-      left: -9999px;
-      top: 0;
-      width: 794px; /* تقريب A4 على 96dpi */
-      background: #fff;
-      color:#111;
-      direction: rtl;
-      padding: 18px;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    .pdf-title{margin:0 0 6px; font-size:18px; font-weight:900}
-    .pdf-meta{margin:0 0 10px; font-size:12px; color:#444}
-    .pdf-box{
-      border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin-bottom:12px;
-    }
-    .pdf-table th{
-      background:#f3f4f6; color:#111;
-      border-bottom:1px solid #e5e7eb;
-    }
-    .pdf-table td{
-      border-bottom:1px solid #e5e7eb;
-      color:#111;
-    }
-    .pdf-total{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:10px 12px;
-      background:#ecfdf5;
-      border:1px solid #a7f3d0;
-      border-radius:12px;
-      font-weight:900;
+    /* ===== TOPBAR (سطر واحد دائمًا) ===== */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+      flex-wrap:nowrap;
     }
     .brand{
-      margin-top:10px;
-      font-size:11px;
-      color:#6b7280;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .brandInfo{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:#49e39a;
+      box-shadow:0 0 0 5px rgba(73,227,154,.15)
+    }
+
+    .btn{
+      border:none;border-radius:12px;
+      padding:8px 12px;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn.primary{background:rgba(31,98,255,.85)}
+    .btn.danger{background:rgba(255,107,107,.18);border:1px solid rgba(255,107,107,.35)}
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 12px 40px rgba(0,0,0,.45);
+      backdrop-filter:blur(10px);
+      margin-bottom:14px;
+      overflow:hidden;
+    }
+
+    .stat-row{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:12px;
+      padding:14px;
+    }
+    .stat{
+      padding:12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.16);
+      border:1px solid var(--line);
       text-align:center;
+    }
+    .stat .v{font-weight:900;font-size:26px;color:var(--blue)}
+    .stat .k{color:var(--mut);font-size:13px}
+
+    .head{
+      padding:12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .input,.select{
+      background:rgba(0,0,0,.18);
+      color:var(--txt);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:8px 10px;
+      outline:none;
+    }
+
+    .tableWrap{
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid var(--line);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+      background:transparent;
+    }
+    th,td{
+      padding:10px;
+      border-bottom:1px dashed rgba(255,255,255,.12);
+      font-size:13px;
+      text-align:right;
+      vertical-align:middle;
+    }
+    th{background:rgba(255,255,255,.05)}
+
+    .badge{
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:12px;
+      border:1px solid rgba(255,255,255,.12)
+    }
+    .badge.green{color:var(--green);border-color:var(--green)}
+    .badge.red{color:var(--red);border-color:var(--red)}
+    .badge.blue{color:#9fd0ff;border-color:rgba(159,208,255,.55)}
+    .badge.amber{color:var(--amber);border-color:rgba(255,204,102,.55)}
+
+    .actions{display:flex;gap:6px;flex-wrap:wrap}
+    .mini{
+      padding:6px 9px;
+      border-radius:9px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .mini.blue{background:rgba(31,98,255,.45)}
+    .mini.green{background:rgba(73,227,154,.18)}
+    .mini.red{background:rgba(255,107,107,.18)}
+
+    /* ===== MODALS ===== */
+    .modalBack{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.85);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:12px;
+      backdrop-filter:blur(10px)
+    }
+    .modal{
+      width:min(100%,980px);
+      max-height:90vh;
+      overflow:auto;
+      background:#0b1820;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+    }
+
+    /* إزالة الخلفية الفضية من جدول العمليات */
+    .opsTable{
+      background:transparent !important;
     }
   </style>
 </head>
+
 <body>
-  <div class="app">
 
-    <div class="card">
-      <div class="header">
-        <p class="title">حاسبة الفواتير + جدول العمليات</p>
-        <p class="sub">كل عملية تنضاف كصف في الجدول، والتصدير يسحب نفس الجدول داخل PDF.</p>
-      </div>
+<!-- قفل -->
+<div id="lock" class="modalBack" style="display:flex">
+  <div class="modal" style="max-width:420px;padding:24px;text-align:center">
+    <h2 style="color:var(--red);margin:0 0 10px">دخول الإدارة</h2>
+    <div style="color:var(--mut);margin-bottom:12px">هذه الصفحة للأدمن فقط</div>
+    <button class="btn primary" id="goLogin">الذهاب لتسجيل الدخول</button>
+  </div>
+</div>
 
-      <div class="content">
-        <div class="row">
-          <div class="row2">
-            <div>
-              <label>اسم الزبون</label>
-              <input id="customerName" placeholder="مثال: أحمد محمد" />
-            </div>
-            <div>
-              <label>التاريخ</label>
-              <input id="invDate" />
-            </div>
-          </div>
+<div class="wrap">
 
-          <div class="row2">
-            <div>
-              <label>وصف العملية (اختياري)</label>
-              <input id="opDesc" placeholder="مثال: أجرة تركيب / بيع قطعة..." />
-            </div>
-            <div>
-              <label>المبلغ</label>
-              <input id="opAmount" inputmode="decimal" placeholder="0" />
-            </div>
-          </div>
-
-          <div class="btns">
-            <button class="primary" id="addBtn">إضافة العملية</button>
-            <button class="danger" id="clearBtn">مسح كل العمليات</button>
-          </div>
-
-          <div class="opsWrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:44px">#</th>
-                  <th>العملية</th>
-                  <th style="width:140px">المبلغ</th>
-                </tr>
-              </thead>
-              <tbody id="opsBody">
-                <tr><td colspan="3" class="muted" style="text-align:center; padding:14px">لا توجد عمليات بعد</td></tr>
-              </tbody>
-            </table>
-            <div class="totalBar">
-              <span>الإجمالي</span>
-              <span class="num" id="totalTxt">0</span>
-            </div>
-          </div>
-
-          <div class="btns" style="margin-top:12px">
-            <button class="success" id="pdfBtn">تصدير PDF</button>
-            <button id="demoBtn">إضافة مثال سريع</button>
-          </div>
-
-          <div class="toast">
-            تلميح: إذا كتبت مبلغ فقط واضغط <span class="kbd">إضافة</span> رح ينضاف سطر.  
-            *التصدير يقرأ من منطقة PDF المخفية (ليست display:none) لضمان ظهور الجدول دائمًا.
-          </div>
-        </div>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="dot" id="onlineDot"></div>
+      <div class="brandInfo">
+        admin: <span id="adminName">—</span>
       </div>
     </div>
 
-    <!-- ====== Printable Area for PDF (must be visible to renderer) ====== -->
-    <div id="printable-area" class="pdf-stage" aria-hidden="true">
-      <h2 class="pdf-title">فاتورة / كشف حساب</h2>
-      <p class="pdf-meta" id="pdfMeta">—</p>
-
-      <div class="pdf-box">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px">
-          <div><strong>اسم الزبون:</strong> <span id="pdfCustomer">—</span></div>
-          <div><strong>التاريخ:</strong> <span id="pdfDate">—</span></div>
-        </div>
-      </div>
-
-      <div class="pdf-box">
-        <table class="pdf-table" style="width:100%; border-collapse:collapse">
-          <thead>
-            <tr>
-              <th style="text-align:right; padding:10px; width:44px">#</th>
-              <th style="text-align:right; padding:10px">العملية</th>
-              <th style="text-align:right; padding:10px; width:140px">المبلغ</th>
-            </tr>
-          </thead>
-          <tbody id="pdfOpsBody"></tbody>
-        </table>
-      </div>
-
-      <div class="pdf-total">
-        <span>الإجمالي</span>
-        <span class="num" id="pdfTotal">0</span>
-      </div>
-
-      <div class="brand">تم تطوير النظام بواسطة الحايك للحلول الرقمية</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" id="addUserBtn">➕ مستخدم</button>
+      <button class="btn danger" id="logoutBtn">خروج</button>
     </div>
-
   </div>
 
+  <!-- STATS -->
+  <div class="card">
+    <div class="stat-row">
+      <div class="stat"><div class="k">المستخدمين</div><div class="v" id="stUsers">0</div></div>
+      <div class="stat"><div class="k">الفواتير</div><div class="v" id="stInvoices">0</div></div>
+      <div class="stat"><div class="k">نشط 24 ساعة</div><div class="v" id="stActive">0</div></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="card">
+    <div class="head">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="searchUser" class="input" placeholder="بحث باسم المستخدم">
+        <select id="range" class="select">
+          <option value="all">كل الأوقات</option>
+          <option value="today">اليوم</option>
+          <option value="7d">7 أيام</option>
+          <option value="30d">30 يوم</option>
+        </select>
+      </div>
+      <button class="btn primary" id="refreshBtn">تحديث</button>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المستخدم</th>
+            <th>الدور</th>
+            <th>الحالة</th>
+            <th>آخر ظهور</th>
+            <th>تحكم</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODALS REQUIRED BY admin.js ===== -->
+
+<!-- إضافة مستخدم -->
+<div id="addModalBack" class="modalBack">
+  <div class="modal" style="max-width:560px">
+    <div class="head">
+      <b>إضافة مستخدم</b>
+      <button class="btn" id="closeAddModal">إغلاق</button>
+    </div>
+    <div style="padding:14px">
+      <input id="newUsername" class="input" placeholder="اسم المستخدم"><br><br>
+      <input id="newPass" type="password" class="input" placeholder="كلمة السر"><br><br>
+      <label style="font-size:13px">
+        <input type="checkbox" id="newIsAdmin"> جعله أدمن
+      </label><br><br>
+      <button class="btn primary" id="saveUserBtn">حفظ</button>
+      <div id="addUserMsg" style="font-size:12px;color:var(--mut)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- فواتير المستخدم -->
+<div id="invModalBack" class="modalBack">
+  <div class="modal">
+    <div class="head">
+      <b id="invModalTitle">الفواتير</b>
+      <button class="btn" id="closeInvModal">إغلاق</button>
+    </div>
+    <div style="padding:12px">
+      <input id="invSearch" class="input" placeholder="بحث">
+      <button class="btn" id="reloadInvBtn">تحديث</button>
+      <div class="tableWrap" style="margin-top:10px">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>الزبون</th>
+              <th>الإجمالي</th>
+              <th>الرقم</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="invTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- عمليات الفاتورة -->
+<div id="opsModalBack" class="modalBack">
+  <div class="modal">
+    <div class="head">
+      <b id="opsModalTitle">العمليات</b>
+      <button class="btn primary" id="exportPdfBtn">تصدير PDF</button>
+      <button class="btn" id="closeOpsModal">إغلاق</button>
+    </div>
+    <div style="padding:12px">
+      <div id="opsMeta" style="margin-bottom:8px"></div>
+      <div class="tableWrap">
+        <table class="opsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الوقت</th>
+              <th>البيان</th>
+              <th>العملية</th>
+              <th>النتيجة</th>
+            </tr>
+          </thead>
+          <tbody id="opsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PDF STAGE (خارج المودال لضمان ظهور الجدول كامل) ===== -->
+<div id="pdfStage" class="pdfStage" aria-hidden="true" style="display:none">
+  <h2 style="margin:0 0 6px;font-size:18px;font-weight:900">تفاصيل العمليات</h2>
+  <div id="pdfMetaLine" style="color:#444;font-size:12px;margin-bottom:10px">—</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:44px">#</th>
+        <th style="width:130px">الوقت</th>
+        <th>البيان</th>
+        <th style="width:120px">العملية</th>
+        <th style="width:120px">النتيجة</th>
+      </tr>
+    </thead>
+    <tbody id="pdfOpsBody"></tbody>
+  </table>
+
+  <div class="pdfTotal">
+    <span>الإجمالي</span>
+    <span class="num" id="pdfTotalVal">0</span>
+  </div>
+
+  <div style="margin-top:10px;color:#6b7280;font-size:11px;text-align:center">
+    تم تطوير النظام بواسطة الحايك للحلول الرقمية
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="./config.js?v=3"></script>
+<script src="./auth.js?v=3"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="./admin.js?v=3"></script>
+
 <script>
-  // ===== Utilities =====
-  const $ = (id) => document.getElementById(id);
-
-  function todayISO(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${day}`;
-  }
-
-  function safeVibrate(ms=20){
-    try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){}
-  }
-
-  function parseAmount(v){
-    if(!v) return 0;
-    const cleaned = String(v).replace(/[^\d.,-]/g,'').replace(',', '.');
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function formatMoney(n){
-    // عرض بسيط بدون عملة (تقدر تضيف ₺ إذا بدك)
-    return (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  }
-
-  // ===== State =====
-  let ops = [];
-
-  function render(){
-    // App table
-    const body = $('opsBody');
-    body.innerHTML = '';
-
-    if(ops.length === 0){
-      body.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center; padding:14px">لا توجد عمليات بعد</td></tr>`;
-      $('totalTxt').textContent = '0';
-      return;
-    }
-
-    let total = 0;
-    ops.forEach((op, idx) => {
-      total += op.amount;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="muted">${idx+1}</td>
-        <td>${escapeHtml(op.desc || '—')}</td>
-        <td class="num">${formatMoney(op.amount)}</td>
-      `;
-      body.appendChild(tr);
-    });
-
-    $('totalTxt').textContent = formatMoney(total);
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, (c) => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    }[c]));
-  }
-
-  function addOperation(desc, amount){
-    const a = parseAmount(amount);
-    if(a === 0){
-      alert('أدخل مبلغ صحيح (غير صفر).');
-      return;
-    }
-    ops.push({
-      desc: (desc || '').trim(),
-      amount: a
-    });
-    $('opDesc').value = '';
-    $('opAmount').value = '';
-    safeVibrate(15);
-    render();
-  }
-
-  function clearAll(){
-    if(!confirm('هل تريد مسح كل العمليات؟')) return;
-    ops = [];
-    safeVibrate(30);
-    render();
-  }
-
-  // ===== PDF Sync =====
-  function syncPdfArea(){
-    const name = ($('customerName').value || '').trim() || '—';
-    const date = ($('invDate').value || '').trim() || '—';
-
-    $('pdfCustomer').textContent = name;
-    $('pdfDate').textContent = date;
-
-    const meta = `عدد العمليات: ${ops.length} — تم الإنشاء: ${new Date().toLocaleString('ar')}`;
-    $('pdfMeta').textContent = meta;
-
-    const pdfBody = $('pdfOpsBody');
-    pdfBody.innerHTML = '';
-
-    let total = 0;
-
-    if(ops.length === 0){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="3" style="padding:10px; color:#6b7280; text-align:center">لا توجد عمليات</td>`;
-      pdfBody.appendChild(tr);
-      $('pdfTotal').textContent = '0';
-      return;
-    }
-
-    ops.forEach((op, idx) => {
-      total += op.amount;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="padding:10px; color:#374151">${idx+1}</td>
-        <td style="padding:10px; color:#111827">${escapeHtml(op.desc || '—')}</td>
-        <td style="padding:10px; color:#111827" class="num">${formatMoney(op.amount)}</td>
-      `;
-      pdfBody.appendChild(tr);
-    });
-
-    $('pdfTotal').textContent = formatMoney(total);
-  }
-
-  async function exportPdf(){
-    // أهم نقطة لحل اختفاء الجدول:
-    // 1) نبني جدول الـ PDF داخل printable-area
-    // 2) ننتظر فريمين (render) قبل الحفظ
-    syncPdfArea();
-
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-    const customer = ($('customerName').value || '').trim() || 'بدون-اسم';
-    const date = ($('invDate').value || todayISO());
-    const filename = `Invoice-${customer}-${date}.pdf`.replace(/[\\/:*?"<>|]/g,'-');
-
-    const element = $('printable-area');
-
-    const opt = {
-      margin:       8,
-      filename:     filename,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        windowWidth: element.scrollWidth
-      },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    try{
-      safeVibrate(25);
-      await html2pdf().set(opt).from(element).save();
-    }catch(err){
-      console.error(err);
-      alert('حصل خطأ أثناء تصدير PDF. افتح Console وشوف الخطأ.');
-    }
-  }
-
-  // ===== Wire up =====
-  $('invDate').value = todayISO();
-
-  $('addBtn').addEventListener('click', () => {
-    addOperation($('opDesc').value, $('opAmount').value);
-  });
-
-  $('opAmount').addEventListener('keydown', (e) => {
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      addOperation($('opDesc').value, $('opAmount').value);
-    }
-  });
-
-  $('clearBtn').addEventListener('click', clearAll);
-  $('pdfBtn').addEventListener('click', exportPdf);
-
-  $('demoBtn').addEventListener('click', () => {
-    addOperation('بيع قطعة', '150');
-    addOperation('أجرة تركيب', '75');
-    addOperation('خصم', '-20');
-  });
-
-  // init
-  render();
+  try{
+    const s = window.HAYEK_AUTH?.getUser?.() || {};
+    document.getElementById("adminName").textContent = s.username || "admin";
+  }catch{}
 </script>
+
 </body>
 </html>
