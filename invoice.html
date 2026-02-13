@@ -1,9 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <!-- منع طلب favicon / icon.svg -->
   <link rel="icon" href="data:," />
-
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — الحاسبة</title>
@@ -46,23 +44,17 @@
     .k.eq{background:rgba(31,98,255,.85)}
     .k.wide{grid-column:span 2}
     .tableWrap{margin-top:12px;overflow:auto;border-radius:16px;border:1px solid var(--line)}
-
-    /* ✅ إزالة خلفية الجدول */
     table{width:100%;border-collapse:collapse;min-width:700px;background:transparent}
     th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;background:transparent}
     th{color:rgba(255,255,255,.85);text-align:right;background:transparent}
     td{text-align:right;color:rgba(255,255,255,.95)}
-
     .total{margin-top:12px;border:2px dashed rgba(255,255,255,.18);border-radius:16px;padding:12px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
     .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
     .a{flex:1;border:none;border-radius:16px;padding:14px;font-size:16px;cursor:pointer;min-width:180px}
     .a.pdf{background:var(--blue);color:#fff}
     .a.new{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.14)}
     .a.danger{background:rgba(255,90,107,.18);color:#fff;border:1px solid rgba(255,90,107,.35)}
-
     .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;line-height:1.7}
-
-    /* شاشة قفل */
     #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
     #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
   </style>
@@ -71,8 +63,8 @@
 <body>
   <div id="lock">
     <div class="box">
-      <h3>تسجيل الدخول مطلوب</h3>
-      <p style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
+      <h3 id="lockTitle">تسجيل الدخول مطلوب</h3>
+      <p id="lockMsg" style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
       <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
     </div>
   </div>
@@ -208,6 +200,7 @@
   </div>
 
 <script type="module">
+  // ✅ المصدر الوحيد لعميل Supabase (Singleton)
   import { supabase } from "./config.js";
 
   const $ = (id)=>document.getElementById(id);
@@ -227,14 +220,18 @@
     return v;
   }
 
-  // ===== AUTH Gate (Supabase Official) =====
+  // ===== AUTH Gate (بدون Redirect Loop) =====
   const lock = $("lock");
+  const lockTitle = $("lockTitle");
+  const lockMsg = $("lockMsg");
   $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
 
   const { data: userRes } = await supabase.auth.getUser();
   const user = userRes?.user;
 
   if(!user){
+    lockTitle.textContent = "تسجيل الدخول مطلوب";
+    lockMsg.textContent = "غير مسموح تصفح الصفحة بدون تسجيل دخول.";
     lock.style.display = "flex";
     throw new Error("Not authed");
   }
@@ -246,18 +243,19 @@
     deviceId: getOrCreateDeviceId()
   };
 
-  // admin يروح لوحة الإدارة
+  // إذا الأدمن فتح invoice بالغلط: رجّعه للأدمن (مرة واحدة)
   if(session.role === "admin"){
-    location.replace("admin.html?v=" + Date.now());
+    location.href = "admin.html?v=" + Date.now();
+    throw new Error("Admin -> admin");
   }
 
   // Logout
   $("logoutBtn").onclick = async () => {
     await supabase.auth.signOut();
-    location.replace("index.html?v=" + Date.now());
+    location.href = "index.html?v=" + Date.now();
   };
 
-  // ===== Supabase Tables =====
+  // ===== Tables =====
   const sb = supabase;
   const T_USERS = "app_users";
   const T_INV   = "app_invoices";
@@ -321,19 +319,17 @@
   }
   loadCurrent();
 
-  // ===== touch user =====
+  // ===== touch user (خلف الكواليس) =====
   async function touchUser(){
     if(!navigator.onLine) return;
     try{
-      await sb.from(T_USERS).update({
-        last_seen: nowIso(),
-        device_id: session.deviceId
-      }).eq("username", session.username);
+      await sb.from(T_USERS).update({ last_seen: nowIso(), device_id: session.deviceId })
+        .eq("username", session.username);
     }catch{}
   }
   touchUser();
 
-  // ===== إنشاء فاتورة على السيرفر عند توفر إنترنت =====
+  // ===== إنشاء فاتورة على السيرفر =====
   async function ensureRemoteInvoice(inv){
     if(!navigator.onLine) return inv;
     if(inv.remote_id) return inv;
@@ -351,7 +347,7 @@
       const { data, error } = await sb.from(T_INV).insert(payload).select("id, created_at").single();
       if(!error && data?.id){
         inv.remote_id = data.id;
-        inv.id = data.id; // رقم الأدمن
+        inv.id = data.id;
         jset(LS_CURRENT, inv);
       }
     }catch{}
@@ -436,7 +432,6 @@
   }
   render();
 
-  // ===== مزامنة سطر عملية (خلف الكواليس) =====
   async function syncOp(inv, row){
     if(!navigator.onLine) return;
 
@@ -456,7 +451,6 @@
     try{ await sb.from(T_OPS).insert(payload); }catch{}
   }
 
-  // ===== إضافة عملية =====
   async function commitLine(){
     let inv = ensureInvoiceLocal();
     if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
@@ -489,7 +483,6 @@
     syncOp(inv, row);
   }
 
-  // ===== فاتورة جديدة / حذف العمليات =====
   function clearOnlyOps(){
     const inv = ensureInvoiceLocal();
     if(!inv) { alert("أدخل اسم الزبون"); customerName.focus(); return; }
@@ -520,7 +513,6 @@
   $("newInvoiceBtn").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
   $("newInvoiceTop").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
 
-  // ===== فتح تلقائي عند إدخال اسم الزبون =====
   let custTm = null;
   customerName.addEventListener("input", ()=>{
     clearTimeout(custTm);
@@ -534,7 +526,6 @@
     }, 350);
   });
 
-  // ===== إغلاق الفاتورة (تلقائي عند PDF) =====
   async function closeInvoice(inv){
     if(!inv) return;
     if(inv.status === "closed") return;
@@ -557,7 +548,6 @@
     }
   }
 
-  // ===== PDF export (HTML -> canvas) =====
   function buildInvoiceHtml(inv){
     const rowsHtml = (inv.rows||[]).map((r, i)=>`
       <tr>
@@ -656,11 +646,6 @@
   }
 
   $("pdfBtn").onclick = () => { vibrateTiny(); exportPDF(); };
-
-  // Service Worker (Offline)
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-  }
 </script>
 </body>
 </html>
