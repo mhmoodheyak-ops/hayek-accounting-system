@@ -3,317 +3,612 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK — الفاتورة</title>
+  <title>HAYEK — نظام الفاتورة</title>
 
+  <!-- PDF -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
     :root{
-      --bg:#0b0f14; --card:#121823; --txt:#e8eefc; --muted:#9aa7bd;
-      --line:#243041; --btn:#1a2432; --btn2:#233044; --danger:#ff4d4d; --ok:#22c55e;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --bg:#071018;
+      --panel:#0e1b26;
+      --panel2:#0b1620;
+      --line:rgba(255,255,255,.08);
+      --txt:#e9f1ff;
+      --muted:#98a8c2;
+      --key:#2a3641;
+      --key2:#313f4b;
+      --blue:#1f5bd8;
+      --blue2:#2967ee;
+      --shadow: 0 12px 35px rgba(0,0,0,.35);
+      --radius:22px;
     }
     *{box-sizing:border-box}
     body{
-      margin:0; background:linear-gradient(180deg,#070a0f 0%, #0b0f14 40%, #0b0f14 100%);
-      color:var(--txt); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      min-height:100vh; display:flex; justify-content:center; padding:16px;
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(31,91,216,.18), transparent 55%),
+                  radial-gradient(900px 600px at 10% 20%, rgba(34,197,94,.10), transparent 55%),
+                  linear-gradient(180deg,#061018 0%, #071018 50%, #061018 100%);
+      color:var(--txt);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:14px;
     }
-    .wrap{width:100%; max-width:900px;}
-    .topbar{display:flex; justify-content:space-between; align-items:center; margin:8px 0 16px; gap:12px}
+    .wrap{width:100%; max-width:420px}
+    .top{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 10px 14px;
+    }
     .brand{display:flex; align-items:center; gap:10px}
-    .dot{width:12px;height:12px;border-radius:50%; background:var(--ok); box-shadow:0 0 0 6px rgba(34,197,94,.15)}
-    .title{font-weight:800}
-    .sub{color:var(--muted); font-size:13px}
+    .dot{
+      width:12px;height:12px;border-radius:999px;
+      background:#22c55e;
+      box-shadow: 0 0 0 6px rgba(34,197,94,.12);
+    }
+    .ttl{font-weight:900; letter-spacing:.3px}
+    .sub{font-size:12px; color:var(--muted); margin-top:2px}
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(36,48,65,.85);
-      color:var(--muted); font-size:12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
       white-space:nowrap;
     }
 
     .card{
-      background:rgba(18,24,35,.92);
-      border:1px solid rgba(36,48,65,.7);
-      border-radius:18px;
-      box-shadow:var(--shadow);
+      background: linear-gradient(180deg, rgba(14,27,38,.95) 0%, rgba(10,20,30,.92) 100%);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding:14px;
-      backdrop-filter: blur(8px);
-      margin-bottom:14px;
+      overflow:hidden;
     }
-    h2{margin:0 0 10px; font-size:16px}
-    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px}
-    input, select, textarea{
-      width:100%; padding:12px 12px;
-      border-radius:12px; border:1px solid rgba(36,48,65,.85);
-      background:#0e141e; color:var(--txt);
+
+    /* Login */
+    .hint{color:var(--muted); font-size:12px; line-height:1.6}
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color:var(--txt);
       outline:none;
     }
-    textarea{min-height:44px; resize:vertical}
-    .row{display:flex; gap:10px; align-items:center}
+    input:focus{
+      border-color: rgba(31,91,216,.55);
+      box-shadow: 0 0 0 4px rgba(31,91,216,.18);
+    }
+    .row{display:flex; gap:10px}
     .row > *{flex:1}
     .btn{
-      border:1px solid rgba(36,48,65,.85);
-      background:var(--btn);
+      width:100%;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
       color:var(--txt);
-      padding:11px 12px;
-      border-radius:12px;
+      font-weight:900;
       cursor:pointer;
-      font-weight:800;
       transition:.15s;
       user-select:none;
     }
-    .btn:hover{transform:translateY(-1px); background:var(--btn2)}
-    .btn.primary{background:#1d4ed8; border-color:#1d4ed8}
-    .btn.primary:hover{background:#2563eb}
-    .btn.danger{background:#3a1414; border-color:#5a1f1f; color:#ffd4d4}
-    .btn.danger:hover{background:#4a1818}
-    .btn.big{width:100%; padding:14px 12px; border-radius:14px}
-    .sep{height:1px; background:rgba(36,48,65,.7); margin:12px 0}
-    .hint{color:var(--muted); font-size:12px; line-height:1.6}
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.08);}
+    .btn.blue{
+      background: var(--blue);
+      border-color: rgba(31,91,216,.2);
+    }
+    .btn.blue:hover{background: var(--blue2);}
+    .btn.small{
+      width:auto;
+      padding:9px 12px;
+      border-radius:14px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .btn.out{
+      background: rgba(255,255,255,.05);
+    }
+    .btn.red{background: rgba(255,77,77,.12); border-color: rgba(255,77,77,.25);}
+
+    .sep{height:1px; background: var(--line); margin:12px 0}
+
     .error{
-      color:#ffd0d0; background:rgba(255,77,77,.08);
+      margin-top:10px;
+      display:none;
+      padding:10px;
+      border-radius:14px;
       border:1px solid rgba(255,77,77,.25);
-      padding:10px; border-radius:12px; margin-top:10px; display:none;
+      background: rgba(255,77,77,.10);
+      color:#ffd6d6;
       white-space:pre-wrap;
+      font-size:12px;
     }
-    .okbox{
-      color:#c9ffe0; background:rgba(34,197,94,.08);
-      border:1px solid rgba(34,197,94,.25);
-      padding:10px; border-radius:12px; margin-top:10px; display:none;
-      white-space:pre-wrap;
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 16px;
+      background: rgba(0,0,0,.75);
+      border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px;
+      border-radius:999px;
+      color:#eaf2ff;
+      font-size:12px;
+      display:none;
+      z-index:9999;
+      max-width: 92vw;
+      text-align:center;
     }
 
-    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:14px}
-    th,td{border-bottom:1px solid rgba(36,48,65,.7); padding:10px; text-align:right; font-size:13px}
-    th{color:var(--muted); background:rgba(10,14,20,.55)}
-    tr:last-child td{border-bottom:0}
-    .kpi{display:flex; justify-content:space-between; align-items:center; gap:10px}
-    .kpi b{font-size:18px}
-    .hide{display:none !important;}
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:10px;
+      margin-top:8px;
+      margin-bottom:10px;
+    }
+    .tab{
+      flex:1;
+      padding:10px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color:var(--txt);
+      font-weight:900;
+      cursor:pointer;
+    }
+    .tab.active{
+      background: rgba(31,91,216,.22);
+      border-color: rgba(31,91,216,.25);
+    }
 
-    #printArea{
-      background:#ffffff;
-      color:#111827;
+    /* Calculator UI like video */
+    .calcBox{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+      border-radius:18px;
+      padding:12px;
+    }
+    .exprTitle{font-size:12px; color:var(--muted); margin-bottom:8px}
+    .expr{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
       border-radius:16px;
-      padding:16px;
+      padding:12px;
+      text-align:right;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      overflow:auto;
+      white-space:nowrap;
+      font-weight:800;
     }
-    #printArea h3{margin:0 0 8px; font-size:18px}
-    #printArea .pmuted{color:#6b7280; font-size:12px}
-    #printArea table th{background:#f3f4f6; color:#111827}
-    #printArea table td, #printArea table th{border-bottom:1px solid #e5e7eb}
+    .resLine{
+      margin-top:10px;
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      color:var(--muted);
+      font-size:12px;
+      align-items:baseline;
+    }
+    .resLine b{font-size:14px; color:var(--txt)}
+
+    .keys{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap:10px;
+    }
+    .key{
+      border:0;
+      border-radius:14px;
+      background: rgba(255,255,255,.10);
+      color:var(--txt);
+      padding:14px 0;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.12s;
+    }
+    .key:hover{transform: translateY(-1px); background: rgba(255,255,255,.12);}
+    .key.op{background: rgba(255,255,255,.12);}
+    .key.eq{
+      grid-column: 1 / span 2;
+      background: var(--blue);
+    }
+    .key.eq:hover{background: var(--blue2);}
+    .key.back{
+      grid-column: 3 / span 2;
+      background: rgba(255,255,255,.10);
+    }
+
+    .actions2{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .footerNote{
+      margin-top:10px;
+      text-align:center;
+      font-size:11px;
+      color: var(--muted);
+      line-height:1.6;
+    }
+
+    /* Log */
+    .logTable{
+      margin-top:10px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      background: rgba(0,0,0,.10);
+    }
+    table{width:100%; border-collapse:collapse}
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      font-size:12px;
+      text-align:right;
+      vertical-align:top;
+    }
+    th{color:var(--muted); background: rgba(255,255,255,.05)}
+    tr:last-child td{border-bottom:0}
+    .muted{color:var(--muted)}
+
+    /* Hide */
+    .hide{display:none !important}
+
+    /* Print area (for PDF) */
+    #printArea{
+      position: fixed;
+      left:-9999px;
+      top:0;
+      width: 794px; /* ~A4 at 96dpi */
+      background:#fff;
+      color:#111827;
+      padding:22px;
+      border-radius:0;
+    }
+    #printArea h1{
+      margin:0;
+      font-size:20px;
+      letter-spacing:.2px;
+    }
+    #printArea .pTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    #printArea .pMuted{color:#6b7280; font-size:12px}
+    #printArea .pLine{height:1px; background:#e5e7eb; margin:12px 0}
+    #printArea table th{
+      background:#f3f4f6;
+      color:#111827;
+      border-bottom:1px solid #e5e7eb;
+      font-size:12px;
+    }
+    #printArea table td{
+      border-bottom:1px solid #e5e7eb;
+      font-size:12px;
+    }
+    #printArea .pFooter{
+      margin-top:14px;
+      border:1px dashed #cbd5e1;
+      padding:12px;
+      border-radius:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    #printArea .pTotal{
+      font-size:16px;
+      font-weight:900;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <div class="topbar">
+    <div class="top">
       <div class="brand">
         <div class="dot"></div>
         <div>
-          <div class="title">HAYEK — نظام الفاتورة</div>
-          <div class="sub" id="subTitle">تسجيل دخول المستخدم</div>
+          <div class="ttl">HAYEK — نظام الفاتورة</div>
+          <div class="sub" id="subtitle">تسجيل دخول المستخدم</div>
         </div>
       </div>
-      <div class="pill" id="sessionPill"><b>غير مسجل</b></div>
+      <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
+    <!-- Login -->
     <div class="card" id="loginCard">
-      <h2>تسجيل دخول</h2>
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
+
       <label>اسم المستخدم</label>
       <input id="loginUser" autocomplete="username" />
+
       <label>كلمة السر</label>
       <input id="loginPass" type="password" autocomplete="current-password" />
+
       <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="btnLogin">دخول</button>
+        <button class="btn blue" id="btnLogin">دخول</button>
         <button class="btn" id="btnClear">تفريغ</button>
       </div>
+
       <div class="error" id="loginErr"></div>
     </div>
 
+    <!-- App -->
     <div class="card hide" id="appCard">
-      <div class="row" style="align-items:flex-start">
-        <div style="flex:1">
-          <h2 style="margin-bottom:6px">إنشاء فاتورة</h2>
-          <div class="hint">أضف عمليات، ثم أغلق الفاتورة أو صدّر PDF.</div>
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end">
-          <button class="btn danger" id="btnLogout">خروج</button>
-        </div>
+
+      <div class="row" style="align-items:center">
+        <button class="btn small out" id="btnLogout">خروج</button>
+        <button class="btn small" id="btnNew" title="فاتورة جديدة">فاتورة جديدة</button>
       </div>
 
       <div class="sep"></div>
 
-      <label>اسم الزبون</label>
-      <input id="customerName" placeholder="مثال: أبو أحمد" />
+      <label>اسم الزبون (إجباري)</label>
+      <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" />
+      <datalist id="custList"></datalist>
 
-      <div class="row">
-        <div>
-          <label>نص العملية</label>
-          <input id="lineText" placeholder="مثال: أجرة تركيب" />
+      <label>اسم المنتج / البيان (اختياري)</label>
+      <input id="itemName" placeholder="مثال: قداحة" list="itemList" />
+      <datalist id="itemList"></datalist>
+
+      <div class="tabs">
+        <button class="tab active" id="tabCalc">الحاسبة</button>
+        <button class="tab" id="tabLog">سجل العمليات</button>
+      </div>
+
+      <!-- Calculator -->
+      <div id="viewCalc">
+        <div class="calcBox">
+          <div class="exprTitle">العملية الحسابية (من أزرار الشاشة)</div>
+          <div class="expr" id="exprView"></div>
+          <div class="resLine"><span>النتيجة:</span> <b id="resView">0</b></div>
+
+          <div class="keys" id="keys">
+            <!-- row 1 -->
+            <button class="key op" data-k="÷">÷</button>
+            <button class="key" data-k="9">9</button>
+            <button class="key" data-k="8">8</button>
+            <button class="key" data-k="7">7</button>
+            <!-- row 2 -->
+            <button class="key op" data-k="×">×</button>
+            <button class="key" data-k="6">6</button>
+            <button class="key" data-k="5">5</button>
+            <button class="key" data-k="4">4</button>
+            <!-- row 3 -->
+            <button class="key op" data-k="-">-</button>
+            <button class="key" data-k="3">3</button>
+            <button class="key" data-k="2">2</button>
+            <button class="key" data-k="1">1</button>
+            <!-- row 4 -->
+            <button class="key op" data-k="+">+</button>
+            <button class="key" data-k="(">(</button>
+            <button class="key" data-k="0">0</button>
+            <button class="key" data-k=")">)</button>
+
+            <button class="key eq" id="btnEq">=</button>
+            <button class="key back" id="btnBack">⌫</button>
+          </div>
+
+          <div class="actions2">
+            <button class="btn blue" id="btnPDF">تصدير PDF</button>
+          </div>
+
+          <div class="footerNote">
+            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية
+          </div>
         </div>
-        <div>
-          <label>العملية</label>
-          <select id="op">
-            <option value="+">جمع +</option>
-            <option value="-">طرح -</option>
-            <option value="*">ضرب ×</option>
-            <option value="/">قسمة ÷</option>
-          </select>
+      </div>
+
+      <!-- Log -->
+      <div id="viewLog" class="hide">
+        <div class="logTable">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:52%">البيان</th>
+                <th style="width:26%">العملية</th>
+                <th style="width:22%">الوقت</th>
+              </tr>
+            </thead>
+            <tbody id="logBody">
+              <tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div>
-          <label>الرقم</label>
-          <input id="amount" type="number" inputmode="decimal" placeholder="0" />
-        </div>
       </div>
-
-      <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="btnAddLine">إضافة للسجل</button>
-        <button class="btn" id="btnNewInvoice">فاتورة جديدة</button>
-      </div>
-
-      <div class="sep"></div>
-
-      <div class="kpi">
-        <div class="hint">عدد العمليات: <b id="linesCount">0</b></div>
-        <div>المجموع: <b id="total">0</b></div>
-      </div>
-
-      <div style="margin-top:12px; overflow:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>النص</th>
-              <th>العملية</th>
-              <th>الرقم</th>
-              <th>النتيجة</th>
-              <th>حذف</th>
-            </tr>
-          </thead>
-          <tbody id="linesTbody"></tbody>
-        </table>
-      </div>
-
-      <div class="sep"></div>
-
-      <button class="btn big primary" id="btnExport">تصدير PDF</button>
-      <button class="btn big" id="btnClose" style="margin-top:10px">إغلاق الفاتورة (حفظ نهائي)</button>
 
       <div class="error" id="appErr"></div>
-      <div class="okbox" id="appOk"></div>
     </div>
 
-    <div class="hide" id="printArea"></div>
+    <div id="printArea"></div>
+    <div class="toast" id="toast"></div>
   </div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ مفاتيحك الصحيحة
+    // ✅ مفاتيحك (Legacy anon) — صحيحة
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const el = (id)=>document.getElementById(id);
+    const $ = (id)=>document.getElementById(id);
 
-    const loginCard = el("loginCard");
-    const appCard   = el("appCard");
-    const loginErr  = el("loginErr");
-    const appErr    = el("appErr");
-    const appOk     = el("appOk");
-    const sessionPill = el("sessionPill");
-    const subTitle  = el("subTitle");
+    const loginCard = $("loginCard");
+    const appCard   = $("appCard");
+    const loginErr  = $("loginErr");
+    const appErr    = $("appErr");
 
-    let USER = null;
-    let invoiceId = null;
-    let lines = [];
-    let running = 0;
+    const subtitle  = $("subtitle");
+    const pill      = $("pill");
 
-    function showErr(box, msg){ box.style.display="block"; box.textContent=msg; }
-    function clearErr(box){ box.style.display="none"; box.textContent=""; }
-    function showOk(msg){ appOk.style.display="block"; appOk.textContent=msg; setTimeout(()=>appOk.style.display="none", 1800); }
+    const tabCalc   = $("tabCalc");
+    const tabLog    = $("tabLog");
+    const viewCalc  = $("viewCalc");
+    const viewLog   = $("viewLog");
 
-    function setSessionPill(){
-      if(!USER){ sessionPill.innerHTML="<b>غير مسجل</b>"; return; }
-      sessionPill.innerHTML = `<b>${USER.username}</b>`;
+    const custInput = $("customerName");
+    const itemInput = $("itemName");
+    const custList  = $("custList");
+    const itemList  = $("itemList");
+
+    const exprView  = $("exprView");
+    const resView   = $("resView");
+    const logBody   = $("logBody");
+    const toastEl   = $("toast");
+
+    // ---------- UX helpers ----------
+    function showErr(box, msg){
+      box.style.display = "block";
+      box.textContent = msg;
+    }
+    function clearErr(box){
+      box.style.display = "none";
+      box.textContent = "";
+    }
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.style.display = "block";
+      setTimeout(()=> toastEl.style.display="none", 1600);
+    }
+    function nowTime(){
+      return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"});
+    }
+    function todayStr(){
+      return new Date().toLocaleDateString("ar");
     }
 
-    function fmtOp(op){
-      if(op==="+") return "+";
-      if(op==="-") return "-";
-      if(op==="*") return "×";
-      if(op==="/") return "÷";
-      return op;
+    // ---------- Memory (typeahead) ----------
+    const MEM_CUST_KEY = "HAYEK_MEM_CUSTOMERS";
+    const MEM_ITEM_KEY = "HAYEK_MEM_ITEMS";
+    function loadMem(key){
+      try{ return JSON.parse(localStorage.getItem(key)||"[]") }catch{ return [] }
+    }
+    function saveMem(key, arr){
+      localStorage.setItem(key, JSON.stringify(arr.slice(0,120)));
+    }
+    function addMem(key, val){
+      const v = (val||"").trim();
+      if(!v) return;
+      let arr = loadMem(key);
+      arr = arr.filter(x => x !== v);
+      arr.unshift(v);
+      saveMem(key, arr);
+    }
+    function renderDatalist(listEl, arr){
+      listEl.innerHTML = "";
+      arr.slice(0,25).forEach(v=>{
+        const o = document.createElement("option");
+        o.value = v;
+        listEl.appendChild(o);
+      });
+    }
+    function refreshDatalists(){
+      renderDatalist(custList, loadMem(MEM_CUST_KEY));
+      renderDatalist(itemList, loadMem(MEM_ITEM_KEY));
     }
 
-    function recalc(){
-      running = 0;
-      for(const l of lines){
-        const n = Number(l.amount||0);
-        if(l.op==="+") running = running + n;
-        else if(l.op==="-") running = running - n;
-        else if(l.op==="*") running = running * n;
-        else if(l.op==="/") running = n===0 ? running : (running / n);
-        l.result = running;
+    // ---------- Offline queue ----------
+    const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V1";
+    function qLoad(){ try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]")}catch{return []} }
+    function qSave(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
+    function qPush(job){
+      const q = qLoad();
+      q.push(job);
+      qSave(q);
+    }
+    async function flushQueue(){
+      if(!navigator.onLine) return;
+      let q = qLoad();
+      if(!q.length) return;
+
+      const still = [];
+      for(const job of q){
+        try{
+          if(job.type==="insert_invoice"){
+            const { table, payload, localId } = job;
+            const { data, error } = await supabase.from(table).insert(payload).select("*").limit(1);
+            if(error) throw error;
+            // map local id to server id
+            if(localId && data?.[0]?.id){
+              const map = loadLocalInvoiceMap();
+              map[localId] = data[0].id;
+              saveLocalInvoiceMap(map);
+            }
+          }else if(job.type==="update_invoice"){
+            const { table, id, payload } = job;
+            const { error } = await supabase.from(table).update(payload).eq("id", id);
+            if(error) throw error;
+          }
+        }catch(e){
+          still.push(job);
+        }
       }
-      el("total").textContent = Number.isFinite(running) ? (Math.round(running*100)/100) : "0";
-      el("linesCount").textContent = String(lines.length);
+      qSave(still);
     }
+    window.addEventListener("online", flushQueue);
 
-    function renderLines(){
-      const tb = el("linesTbody");
-      tb.innerHTML = "";
-      lines.forEach((l, idx)=>{
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${idx+1}</td>
-          <td>${l.text||""}</td>
-          <td>${fmtOp(l.op)}</td>
-          <td>${l.amount}</td>
-          <td>${(Math.round((l.result||0)*100)/100)}</td>
-          <td><button class="btn danger" data-i="${idx}" style="padding:6px 10px;border-radius:10px;font-size:12px">حذف</button></td>
-        `;
-        tb.appendChild(tr);
-      });
-      tb.querySelectorAll("button[data-i]").forEach(b=>{
-        b.addEventListener("click", ()=>{
-          const i = Number(b.dataset.i);
-          lines.splice(i,1);
-          recalc();
-          renderLines();
-          autoSave();
-        });
-      });
-    }
+    // ---------- Local invoice mapping ----------
+    const MAP_KEY="HAYEK_LOCAL_TO_SERVER_MAP_V1";
+    function loadLocalInvoiceMap(){ try{return JSON.parse(localStorage.getItem(MAP_KEY)||"{}")}catch{return {}} }
+    function saveLocalInvoiceMap(map){ localStorage.setItem(MAP_KEY, JSON.stringify(map)); }
 
+    // ---------- App state ----------
+    let USER = null;
+
+    // invoice state hidden from user:
+    let invoiceId = null;     // can be server id OR local id (local-xxx)
+    let invoiceOpen = false;  // open/closed hidden
+    let ops = [];             // operations list
+    let expr = "";            // calculator expression
+    let lastResult = 0;
+
+    const INVOICE_TABLE = "app_invoices";
+    const USERS_TABLE   = "app_users";
+
+    // we will try these column names automatically:
+    const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"];
+
+    // ---------- Auth ----------
     async function login(){
       clearErr(loginErr);
-      const username = el("loginUser").value.trim();
-      const password = el("loginPass").value.trim();
+      const username = $("loginUser").value.trim();
+      const password = $("loginPass").value.trim();
+
       if(!username || !password){
         showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
         return;
       }
 
-      const { data, error } = await supabase
-        .from("app_users")
-        .select("*")
-        .eq("username", username)
-        .limit(1);
-
+      const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
       if(error){
-        showErr(loginErr, "خطأ Supabase:\n" + (error.message || JSON.stringify(error)));
+        showErr(loginErr, "خطأ اتصال:\n" + (error.message||""));
         return;
       }
       if(!data?.length){
         showErr(loginErr, "المستخدم غير موجود.");
         return;
       }
-
       const u = data[0];
       if(u.password !== password){
         showErr(loginErr, "كلمة السر غير صحيحة.");
@@ -325,207 +620,485 @@
       }
 
       USER = u;
-      localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, username:u.username }));
+      localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id }));
       loginCard.classList.add("hide");
       appCard.classList.remove("hide");
-      subTitle.textContent = "فاتورة المستخدم";
-      setSessionPill();
-      await newInvoice();
+      subtitle.textContent = "فاتورة المستخدم";
+      pill.innerHTML = `<b>${u.username}</b>`;
+      refreshDatalists();
+      await newInvoice(true);
+      toast("جاهز ✅");
+      flushQueue();
+    }
+
+    async function restoreSession(){
+      try{
+        const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
+        if(!s?.id) return;
+        const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
+        if(data?.length && !data[0].is_blocked){
+          USER = data[0];
+          loginCard.classList.add("hide");
+          appCard.classList.remove("hide");
+          subtitle.textContent = "فاتورة المستخدم";
+          pill.innerHTML = `<b>${USER.username}</b>`;
+          refreshDatalists();
+          await newInvoice(true);
+          flushQueue();
+        }
+      }catch{}
     }
 
     function logout(){
       USER = null;
       localStorage.removeItem("HAYEK_USER_SESSION");
-      appCard.classList.add("hide");
       loginCard.classList.remove("hide");
-      subTitle.textContent = "تسجيل دخول المستخدم";
-      setSessionPill();
+      appCard.classList.add("hide");
+      subtitle.textContent = "تسجيل دخول المستخدم";
+      pill.innerHTML = "<b>غير مسجل</b>";
     }
 
-    async function restoreSession(){
-      try{
-        const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION") || "null");
-        if(!s?.id) return;
-        const { data } = await supabase.from("app_users").select("*").eq("id", s.id).limit(1);
-        if(data?.length && !data[0].is_blocked){
-          USER = data[0];
-          loginCard.classList.add("hide");
-          appCard.classList.remove("hide");
-          subTitle.textContent = "فاتورة المستخدم";
-          setSessionPill();
-          await newInvoice();
-        }
-      }catch{}
+    // ---------- Tabs ----------
+    function setTab(which){
+      if(which==="calc"){
+        tabCalc.classList.add("active");
+        tabLog.classList.remove("active");
+        viewCalc.classList.remove("hide");
+        viewLog.classList.add("hide");
+      }else{
+        tabLog.classList.add("active");
+        tabCalc.classList.remove("active");
+        viewLog.classList.remove("hide");
+        viewCalc.classList.add("hide");
+      }
     }
 
-    async function newInvoice(){
+    // ---------- Invoice behavior (hidden) ----------
+    async function newInvoice(silent=false){
       clearErr(appErr);
-      lines = [];
-      running = 0;
       invoiceId = null;
-      el("customerName").value = "";
-      el("lineText").value = "";
-      el("amount").value = "";
-      el("op").value = "+";
-      recalc();
-      renderLines();
-      showOk("فاتورة جديدة ✅");
+      invoiceOpen = false;
+      ops = [];
+      expr = "";
+      lastResult = 0;
+      exprView.textContent = "";
+      resView.textContent = "0";
+      renderLog();
+
+      // keep customer/item as user typed (don't wipe customer unless user wants)
+      if(!silent){
+        custInput.value = "";
+        itemInput.value = "";
+      }
     }
 
-    async function ensureInvoice(){
-      const customer = el("customerName").value.trim();
-      if(!customer){
-        showErr(appErr, "اكتب اسم الزبون أولاً.");
-        return false;
+    function requireCustomer(){
+      const c = custInput.value.trim();
+      if(!c){
+        showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
+        custInput.focus();
+        return null;
+      }
+      clearErr(appErr);
+      return c;
+    }
+
+    function localInvoiceId(){
+      return "local-" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    // try to update ops with any available column name
+    async function tryUpdateOps(invoiceServerId, payloadBase){
+      // payloadBase should include customer_name/total/status etc.
+      for(const col of OPS_COL_CANDIDATES){
+        try{
+          const payload = { ...payloadBase };
+          payload[col] = ops;
+          const { error } = await supabase.from(INVOICE_TABLE).update(payload).eq("id", invoiceServerId);
+          if(!error) return true;
+
+          // if it's "column not found" try next
+          const msg = (error.message||"").toLowerCase();
+          if(msg.includes("could not find") || msg.includes("column") || msg.includes("schema cache")){
+            continue;
+          }
+          return false;
+        }catch{
+          continue;
+        }
+      }
+      return false;
+    }
+
+    async function ensureInvoiceOpened(){
+      const customer = requireCustomer();
+      if(!customer) return false;
+
+      // memory
+      addMem(MEM_CUST_KEY, customer);
+      refreshDatalists();
+
+      if(invoiceOpen) return true;
+
+      // If offline: create local invoice + queue insert later
+      if(!navigator.onLine){
+        const lid = localInvoiceId();
+        invoiceId = lid;
+        invoiceOpen = true;
+
+        qPush({
+          type: "insert_invoice",
+          table: INVOICE_TABLE,
+          localId: lid,
+          payload: {
+            user_id: USER.id,
+            customer_name: customer,
+            total: 0,
+            status: "open"
+          }
+        });
+
+        return true;
       }
 
-      if(invoiceId) return true;
-
-      const payload = {
-        user_id: USER.id,
-        customer_name: customer,
-        lines: [],
-        total: 0,
-        status: "open"
-      };
-
+      // Online: insert server invoice
       const { data, error } = await supabase
-        .from("app_invoices")
-        .insert(payload)
+        .from(INVOICE_TABLE)
+        .insert({
+          user_id: USER.id,
+          customer_name: customer,
+          total: 0,
+          status: "open"
+        })
         .select("*")
         .limit(1);
 
       if(error){
-        showErr(appErr, "فشل إنشاء الفاتورة:\n" + (error.message || JSON.stringify(error)));
+        showErr(appErr, "تعذر فتح الفاتورة حالياً. حاول لاحقاً.");
         return false;
       }
 
       invoiceId = data[0].id;
+      invoiceOpen = true;
       return true;
     }
 
-    async function autoSave(){
-      if(!invoiceId) return;
-      const customer = el("customerName").value.trim();
-      const total = Number(el("total").textContent) || 0;
+    function calcTotal(){
+      // Here total = sum of results (or last results) - you can adjust.
+      // We'll use sum of numeric results per operation if exists:
+      let t = 0;
+      for(const o of ops){
+        const n = Number(o.result);
+        if(Number.isFinite(n)) t += n;
+      }
+      // If user did one calc and didn't log many, total equals lastResult:
+      if(!ops.length && Number.isFinite(lastResult)) t = lastResult;
+      // round
+      return Math.round(t*100)/100;
+    }
 
-      const { error } = await supabase
-        .from("app_invoices")
-        .update({ customer_name: customer, lines: lines, total: total })
-        .eq("id", invoiceId);
+    async function autosaveBackground(){
+      if(!invoiceOpen) return;
 
-      if(error){
-        showErr(appErr, "حصل خطأ بالحفظ:\n" + (error.message || JSON.stringify(error)));
+      const customer = custInput.value.trim();
+      const total = calcTotal();
+      const base = { customer_name: customer, total, status: "open" };
+
+      // If local invoice, try map to server if already synced
+      if(String(invoiceId).startsWith("local-")){
+        const map = loadLocalInvoiceMap();
+        const serverId = map[invoiceId];
+        if(serverId){
+          await tryUpdateOps(serverId, base);
+        }else{
+          // queue update after insert becomes known
+          qPush({ type:"update_local_wait", localId: invoiceId, payload: { base, ops: ops }});
+        }
+        return;
+      }
+
+      // server invoice
+      if(navigator.onLine){
+        // update with best available column
+        const ok = await tryUpdateOps(invoiceId, base);
+        if(!ok){
+          // if cannot update ops column, at least update basics
+          await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
+        }
       }else{
-        clearErr(appErr);
+        qPush({ type:"update_invoice", table: INVOICE_TABLE, id: invoiceId, payload: base });
       }
     }
 
-    async function addLine(){
-      clearErr(appErr);
+    // After insert mapping happens, apply pending update_local_wait
+    async function flushLocalWaitUpdates(){
+      if(!navigator.onLine) return;
+      let q = qLoad();
+      if(!q.length) return;
 
-      const ok = await ensureInvoice();
+      const map = loadLocalInvoiceMap();
+      const still = [];
+      for(const job of q){
+        if(job.type !== "update_local_wait"){ still.push(job); continue; }
+        const sid = map[job.localId];
+        if(!sid){ still.push(job); continue; }
+        // apply update with ops
+        ops = job.payload.ops || [];
+        const base = job.payload.base || {};
+        const ok = await tryUpdateOps(sid, base);
+        if(!ok){
+          await supabase.from(INVOICE_TABLE).update(base).eq("id", sid);
+        }
+      }
+      qSave(still);
+    }
+    window.addEventListener("online", ()=>{ flushLocalWaitUpdates(); });
+
+    // Auto open invoice when customer typed (hidden)
+    let custTimer=null;
+    custInput.addEventListener("input", ()=>{
+      clearErr(appErr);
+      if(custTimer) clearTimeout(custTimer);
+      custTimer = setTimeout(async ()=>{
+        const c = custInput.value.trim();
+        if(!c) return;
+        // open invoice silently if not open
+        if(!invoiceOpen) await ensureInvoiceOpened();
+      }, 450);
+    });
+
+    itemInput.addEventListener("input", ()=>{
+      const v = itemInput.value.trim();
+      if(v) addMem(MEM_ITEM_KEY, v);
+      refreshDatalists();
+    });
+
+    // ---------- Calculator logic ----------
+    function setExpr(v){
+      expr = v;
+      exprView.textContent = expr || "";
+      updatePreview();
+    }
+
+    function sanitizeForEval(s){
+      // allow digits, operators, parentheses, dot, spaces
+      // convert × ÷ to * /
+      return s
+        .replaceAll("×","*")
+        .replaceAll("÷","/")
+        .replaceAll("٫",".")
+        .replaceAll(",",".");
+    }
+
+    function safeEval(s){
+      // Very simple safe eval: only numbers/operators/paren/dot/spaces
+      const cleaned = sanitizeForEval(s).trim();
+      if(!cleaned) return 0;
+      if(!/^[0-9+\-*/().\s]+$/.test(cleaned)) throw new Error("bad");
+      // eslint-disable-next-line no-new-func
+      const fn = new Function("return ("+cleaned+");");
+      const val = fn();
+      if(!Number.isFinite(val)) return 0;
+      return Math.round(val*100)/100;
+    }
+
+    function updatePreview(){
+      try{
+        const v = safeEval(expr);
+        resView.textContent = String(v);
+      }catch{
+        resView.textContent = "0";
+      }
+    }
+
+    function press(k){
+      if(k==="÷" || k==="×" || k==="+" || k==="-" || k==="(" || k===")"){
+        // simple spacing
+        setExpr(expr + k);
+        return;
+      }
+      // digits
+      setExpr(expr + String(k));
+      if(navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function backspace(){
+      if(!expr) return;
+      setExpr(expr.slice(0,-1));
+      if(navigator.vibrate) navigator.vibrate(10);
+    }
+
+    async function equalsAndLog(){
+      clearErr(appErr);
+      const customer = requireCustomer();
+      if(!customer) return;
+
+      const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      const text = el("lineText").value.trim();
-      const op = el("op").value;
-      const amount = Number(el("amount").value);
-
-      if(!text){
-        showErr(appErr, "اكتب نص العملية.");
-        return;
-      }
-      if(!Number.isFinite(amount)){
-        showErr(appErr, "اكتب رقم صحيح.");
+      let result = 0;
+      try{
+        result = safeEval(expr);
+      }catch{
+        showErr(appErr, "صيغة العملية غير صحيحة.");
         return;
       }
 
-      lines.push({ text, op, amount, result: 0, at: new Date().toISOString() });
-      recalc();
-      renderLines();
+      lastResult = result;
 
-      el("lineText").value = "";
-      el("amount").value = "";
-      el("op").value = "+";
+      const item = itemInput.value.trim(); // optional
+      if(item) addMem(MEM_ITEM_KEY, item);
 
-      await autoSave();
+      const label = item || "عملية";
+      const record = {
+        label,
+        expr: expr || "",
+        result,
+        at: new Date().toISOString(),
+        time: nowTime()
+      };
+      ops.unshift(record); // newest first
+      renderLog();
+      setExpr(""); // clear expression after logging
+      toast("تمت إضافة العملية ✅");
+
+      // autosave silently
+      await autosaveBackground();
       if(navigator.vibrate) navigator.vibrate(20);
     }
 
-    async function closeInvoice(){
-      clearErr(appErr);
-      const ok = await ensureInvoice();
-      if(!ok) return;
-
-      await autoSave();
-      const { error } = await supabase.from("app_invoices").update({ status:"closed" }).eq("id", invoiceId);
-      if(error){
-        showErr(appErr, "فشل إغلاق الفاتورة:\n" + (error.message || JSON.stringify(error)));
+    // ---------- Render log ----------
+    function renderLog(){
+      if(!ops.length){
+        logBody.innerHTML = `<tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>`;
         return;
       }
-      showOk("تم إغلاق الفاتورة ✅");
+      logBody.innerHTML = ops.map(o=>{
+        const t = o.time || nowTime();
+        const exp = (o.expr ? `${o.expr} = ${o.result}` : `${o.result}`);
+        return `
+          <tr>
+            <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
+            <td>${escapeHtml(exp)}</td>
+            <td>${escapeHtml(t)}</td>
+          </tr>
+        `;
+      }).join("");
     }
 
-    function buildPrintArea(){
-      const customer = el("customerName").value.trim() || "بدون اسم";
-      const total = el("total").textContent;
+    function escapeHtml(s){
+      return String(s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
-      const pa = el("printArea");
-      const rows = lines.map((l,i)=>`
+    // ---------- PDF + auto close invoice ----------
+    function buildPrintArea(){
+      const pa = $("printArea");
+      const customer = custInput.value.trim() || "بدون اسم";
+      const user = USER?.username || "";
+      const total = calcTotal();
+
+      const rows = ops.slice().reverse().map((o,i)=>`
         <tr>
           <td>${i+1}</td>
-          <td>${l.text||""}</td>
-          <td>${fmtOp(l.op)}</td>
-          <td>${l.amount}</td>
-          <td>${Math.round((l.result||0)*100)/100}</td>
+          <td>${escapeHtml(o.label||"")}</td>
+          <td>${escapeHtml(o.expr||"")}</td>
+          <td>${escapeHtml(o.result)}</td>
+          <td>${escapeHtml(o.time || "")}</td>
         </tr>
       `).join("");
 
       pa.innerHTML = `
-        <h3>فاتورة — HAYEK</h3>
-        <div class="pmuted">الزبون: <b>${customer}</b></div>
-        <div class="pmuted">التاريخ: ${new Date().toLocaleString()}</div>
-        <div style="height:10px"></div>
+        <div class="pTop">
+          <div>
+            <div class="pMuted">شركة الحايك</div>
+            <h1>HAYEK SPOT</h1>
+          </div>
+          <div style="text-align:right">
+            <div class="pMuted">اسم الزبون: <b>${escapeHtml(customer)}</b></div>
+            <div class="pMuted">اسم المستخدم: <b>${escapeHtml(user)}</b></div>
+            <div class="pMuted">التاريخ: ${escapeHtml(todayStr())}</div>
+          </div>
+        </div>
 
-        <table style="width:100%; border-collapse:collapse">
+        <div class="pLine"></div>
+
+        <div class="pMuted" style="font-weight:800; margin-bottom:6px">سجل العمليات</div>
+        <table>
           <thead>
             <tr>
-              <th style="padding:8px; text-align:right">#</th>
-              <th style="padding:8px; text-align:right">العملية</th>
-              <th style="padding:8px; text-align:right">الرمز</th>
-              <th style="padding:8px; text-align:right">الرقم</th>
-              <th style="padding:8px; text-align:right">النتيجة</th>
+              <th style="width:6%">#</th>
+              <th style="width:34%">البيان</th>
+              <th style="width:28%">العملية</th>
+              <th style="width:12%">النتيجة</th>
+              <th style="width:20%">الوقت</th>
             </tr>
           </thead>
-          <tbody>${rows || `<tr><td colspan="5" style="padding:10px; color:#6b7280">لا يوجد عمليات</td></tr>`}</tbody>
+          <tbody>
+            ${rows || `<tr><td colspan="5" class="pMuted" style="padding:10px">لا يوجد عمليات</td></tr>`}
+          </tbody>
         </table>
 
-        <div style="height:12px"></div>
-        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center">
-          <div class="pmuted">عدد العمليات: <b>${lines.length}</b></div>
-          <div style="font-size:18px">المجموع: <b>${total}</b></div>
-        </div>
-        <div style="margin-top:10px; font-size:11px; color:#6b7280">
-          تم تطوير الحاسبة من قبل الحايك للحلول الرقمية
+        <div class="pFooter">
+          <div class="pMuted">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
+          <div class="pTotal">إجمالي الكشف: ${escapeHtml(total)}</div>
         </div>
       `;
-      pa.classList.remove("hide");
       return pa;
+    }
+
+    async function closeInvoiceHidden(){
+      if(!invoiceOpen) return;
+
+      const customer = custInput.value.trim();
+      const total = calcTotal();
+      const base = { customer_name: customer, total, status: "closed" };
+
+      // if local id, queue close and try mapping later
+      if(String(invoiceId).startsWith("local-")){
+        qPush({ type:"insert_invoice", table: INVOICE_TABLE, localId: invoiceId, payload:{
+          user_id: USER.id, customer_name: customer, total, status:"closed"
+        }});
+        invoiceOpen = false;
+        return;
+      }
+
+      if(navigator.onLine){
+        const ok = await tryUpdateOps(invoiceId, base);
+        if(!ok){
+          await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
+        }
+      }else{
+        qPush({ type:"update_invoice", table: INVOICE_TABLE, id: invoiceId, payload: base });
+      }
+
+      invoiceOpen = false;
     }
 
     async function exportPDF(){
       clearErr(appErr);
-      const ok = await ensureInvoice();
-      if(!ok) return;
 
-      await autoSave();
+      const customer = requireCustomer();
+      if(!customer) return;
 
+      // ensure opened (even if no ops, we still allow)
+      await ensureInvoiceOpened();
+
+      // close invoice behind the scenes when exporting
+      await closeInvoiceHidden();
+
+      // build PDF
       const pa = buildPrintArea();
-      const canvas = await html2canvas(pa, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const canvas = await html2canvas(pa, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
       const imgData = canvas.toDataURL("image/png");
 
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF("p", "mm", "a4");
+
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
 
@@ -547,27 +1120,45 @@
         }
       }
 
-      pa.classList.add("hide");
-      const name = (el("customerName").value.trim() || "invoice") + ".pdf";
-      pdf.save(name);
-      showOk("تم تنزيل PDF ✅");
+      const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
+      pdf.save(`HAYEK_${safeName}.pdf`);
+
+      toast("تم تنزيل PDF ✅");
+      // start a new invoice silently for same customer (optional)
+      await newInvoice(true);
+
+      // try sync pending jobs
+      flushQueue();
+      flushLocalWaitUpdates();
     }
 
-    el("btnLogin").addEventListener("click", login);
-    el("btnClear").addEventListener("click", ()=>{ el("loginUser").value=""; el("loginPass").value=""; clearErr(loginErr); });
-    el("btnLogout").addEventListener("click", logout);
+    // ---------- Bind events ----------
+    $("btnLogin").addEventListener("click", login);
+    $("btnClear").addEventListener("click", ()=>{ $("loginUser").value=""; $("loginPass").value=""; clearErr(loginErr); });
+    $("btnLogout").addEventListener("click", logout);
+    $("btnNew").addEventListener("click", ()=>{ newInvoice(false); toast("فاتورة جديدة"); });
 
-    el("btnAddLine").addEventListener("click", addLine);
-    el("btnNewInvoice").addEventListener("click", newInvoice);
-    el("btnClose").addEventListener("click", closeInvoice);
-    el("btnExport").addEventListener("click", exportPDF);
+    tabCalc.addEventListener("click", ()=>setTab("calc"));
+    tabLog.addEventListener("click", ()=>setTab("log"));
 
-    el("customerName").addEventListener("input", ()=>{
-      if(invoiceId) autoSave();
+    // keypad
+    $("keys").addEventListener("click", (e)=>{
+      const b = e.target.closest("button");
+      if(!b) return;
+      const k = b.dataset.k;
+      if(!k) return;
+      press(k);
     });
+    $("btnBack").addEventListener("click", backspace);
+    $("btnEq").addEventListener("click", equalsAndLog);
+    $("btnPDF").addEventListener("click", exportPDF);
 
+    // Initial
+    setTab("calc");
+    exprView.textContent = "";
+    resView.textContent = "0";
+    refreshDatalists();
     restoreSession();
-    setSessionPill();
   </script>
 </body>
 </html>
