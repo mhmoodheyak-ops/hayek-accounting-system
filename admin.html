@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>لوحة الأدمن - HAYEK</title>
 
+  <!-- PDF (للأدمن عند تصدير فاتورة) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
   <style>
     :root{
       --bg:#0b0f14;
@@ -76,6 +80,7 @@
       font-weight:900;
       transition:.15s;
       user-select:none;
+      white-space:nowrap;
     }
     .btn:hover{transform:translateY(-1px); background:var(--btn2);}
     .btn.primary{background:var(--blue); border-color:rgba(29,78,216,.55)}
@@ -116,22 +121,10 @@
     }
     label{display:block; color:var(--muted); font-size:12px; margin:10px 0 6px}
 
-    /* Login layout */
-    .grid{
-      display:grid;
-      gap:14px;
-    }
-    @media(min-width:980px){
-      .grid{grid-template-columns: 420px 1fr;}
-    }
+    .grid{display:grid; gap:14px;}
+    @media(min-width:980px){ .grid{grid-template-columns: 420px 1fr;} }
 
-    /* Dashboard controls (like screenshot) */
-    .searchBox{
-      position:relative;
-    }
     .searchBox input{
-      padding-right:14px;
-      padding-left:14px;
       border-radius:18px;
       background: rgba(255,255,255,.04);
     }
@@ -142,23 +135,11 @@
       border:1px solid var(--line2);
       border-radius: 18px;
     }
-    .filtersGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
+    .filtersGrid{display:grid; grid-template-columns: 1fr; gap:12px;}
     @media(min-width:900px){
-      .filtersGrid{
-        grid-template-columns: 1fr 1fr 1fr;
-        align-items:end;
-      }
+      .filtersGrid{grid-template-columns: 1fr 1fr 1fr; align-items:end;}
     }
-    .chips{
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
+    .chips{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
     .chip{
       min-width:110px;
       text-align:center;
@@ -170,47 +151,33 @@
       cursor:pointer;
       user-select:none;
       transition:.12s;
+      white-space:nowrap;
     }
     .chip:hover{transform:translateY(-1px); background: rgba(255,255,255,.07)}
-    .chip.active{
-      background: rgba(255,255,255,.10);
-      border-color: rgba(255,255,255,.18);
-    }
-    .dateRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    .dateWrap{
-      display:flex;
-      gap:10px;
-      align-items:end;
-    }
-    .dateWrap .btn{height:46px; border-radius:14px}
+    .chip.active{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
+    .dateRow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
-    /* Users table */
+    /* ✅ حل “نفس السطر” على الموبايل: خلي الجدول يعمل سكرول أفقي بدل كسر السطور */
     .tableWrap{
       margin-top:14px;
       border:1px solid var(--line2);
       border-radius:18px;
-      overflow:hidden;
+      overflow:auto;           /* مهم */
+      -webkit-overflow-scrolling: touch;
       background: rgba(0,0,0,.12);
     }
-    table{width:100%; border-collapse:collapse}
+    table{width:100%; border-collapse:collapse; min-width: 980px;} /* مهم */
     th,td{
       padding:12px 12px;
       border-bottom:1px solid var(--line2);
       font-size:13px;
       text-align:right;
       vertical-align:middle;
+      white-space:nowrap;      /* مهم */
     }
-    th{
-      color:var(--muted);
-      background: rgba(255,255,255,.05);
-      font-weight:900;
-      white-space:nowrap;
-    }
+    th{color:var(--muted); background: rgba(255,255,255,.05); font-weight:900;}
     tr:last-child td{border-bottom:0}
+
     .statusPill{
       display:inline-flex; align-items:center; justify-content:center;
       padding:6px 12px;
@@ -239,20 +206,17 @@
     .actionsCol{
       display:flex;
       gap:8px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;        /* مهم */
       justify-content:flex-start;
     }
 
-    /* Reports */
     .reportBar{
       margin-top:12px;
       display:grid;
       grid-template-columns: 1fr;
       gap:10px;
     }
-    @media(min-width:900px){
-      .reportBar{grid-template-columns: 1fr 1fr 1fr 1fr;}
-    }
+    @media(min-width:900px){ .reportBar{grid-template-columns: 1fr 1fr 1fr 1fr;} }
     .stat{
       border:1px solid var(--line2);
       background: rgba(255,255,255,.04);
@@ -285,7 +249,6 @@
       font-size:12px;
     }
 
-    /* Modal */
     .modalBack{
       position:fixed; inset:0;
       background: rgba(0,0,0,.55);
@@ -311,29 +274,64 @@
     }
     .modalHead h3{margin:0; font-size:16px}
     .muted{color:var(--muted)}
-    .invGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
+
+    .invGrid{display:grid; grid-template-columns: 1fr; gap:10px; margin-top:10px;}
     .invItem{
       border:1px solid var(--line2);
       background: rgba(255,255,255,.04);
       border-radius:18px;
       padding:12px;
     }
-    .invTop{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .invTop{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;}
     .invTitle{font-weight:950}
     .invMeta{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.6}
     .invOps{
       margin-top:10px;
       border:1px solid var(--line2);
       border-radius:14px;
-      overflow:hidden;
+      overflow:auto;
       background: rgba(0,0,0,.12);
     }
+    .invOps table{min-width: 720px;}
     .invOps table th{background: rgba(255,255,255,.05)}
+    .invBtns{display:flex; gap:8px; flex-wrap:wrap}
+
+    /* Hidden print area for PDF */
+    #printArea{
+      position: fixed;
+      left:-9999px;
+      top:0;
+      width: 794px;
+      background:#fff;
+      color:#111827;
+      padding:22px;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    }
+    #printArea .box{
+      border:2px solid #111827;
+      border-radius:12px;
+      padding:14px;
+    }
+    #printArea .brandRow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    #printArea .logo{
+      font-weight:900; letter-spacing:.3px;
+    }
+    #printArea .mut{color:#6b7280;font-size:12px}
+    #printArea .line{height:1px;background:#e5e7eb;margin:12px 0}
+    #printArea table{width:100%;border-collapse:collapse}
+    #printArea th, #printArea td{border:1px solid #111827; padding:10px; font-size:12px; text-align:right; background:#fff}
+    #printArea th{background:#f3f4f6}
+    #printArea .totalRow{
+      margin-top:12px;
+      border:2px dashed #111827;
+      border-radius:12px;
+      padding:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    #printArea .totalRow b{font-size:16px}
   </style>
 </head>
 
@@ -360,7 +358,7 @@
       <!-- LOGIN -->
       <div class="card" id="loginCard">
         <h2>تسجيل دخول الأدمن</h2>
-        <div class="hint">افتراضي: <b>admin</b> / <b>admin123</b> (غيّره لاحقاً)</div>
+        <div class="hint">افتراضي: <b>admin</b> / <b>admin123</b></div>
 
         <label>اسم المستخدم</label>
         <input id="loginUser" autocomplete="username" placeholder="admin" />
@@ -379,13 +377,11 @@
 
       <!-- DASHBOARD -->
       <div class="card hide" id="dashCard">
-        <!-- Search -->
         <div class="searchBox">
           <input id="qSearch" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
-          <div class="hint" style="margin-top:8px">يفضل البحث برقم الفاتورة (آخر 6 أرقام) أو اسم المستخدم.</div>
+          <div class="hint" style="margin-top:8px">يفضل البحث بآخر 6 أرقام من رقم الفاتورة أو اسم المستخدم.</div>
         </div>
 
-        <!-- Filters -->
         <div class="filtersCard">
           <div class="filtersGrid">
             <div>
@@ -419,11 +415,10 @@
           <div class="row" style="margin-top:12px">
             <button class="btn primary" id="btnApply">عرض الفواتير</button>
             <div class="spacer"></div>
-            <div class="hint">التقارير/الفلاتر موجودة مثل ما طلبت: اختيار مستخدم + 1 يوم + 7 أيام + الكل + تاريخ من/إلى.</div>
+            <div class="hint">اختيار مستخدم + 1 يوم + 7 أيام + الكل + تاريخ من/إلى.</div>
           </div>
         </div>
 
-        <!-- Reports -->
         <div class="reportBar">
           <div class="stat"><div class="k">عدد المستخدمين</div><div class="v" id="stUsers">0</div></div>
           <div class="stat"><div class="k">عدد الفواتير (حسب الفلاتر)</div><div class="v" id="stInv">0</div></div>
@@ -431,15 +426,14 @@
           <div class="stat"><div class="k">مغلقة / مفتوحة</div><div class="v" id="stCO">0 / 0</div></div>
         </div>
 
-        <!-- USERS TABLE -->
-        <div class="tableWrap" style="margin-top:14px">
+        <div class="tableWrap">
           <table>
             <thead>
               <tr>
-                <th style="width:26%">اسم المستخدم</th>
-                <th style="width:12%">عدد الفواتير</th>
-                <th style="width:12%">الحالة</th>
-                <th style="width:16%">نشط منذ</th>
+                <th>اسم المستخدم</th>
+                <th>عدد الفواتير</th>
+                <th>الحالة</th>
+                <th>نشط منذ</th>
                 <th>إجراءات</th>
               </tr>
             </thead>
@@ -452,14 +446,9 @@
         <div class="error" id="dashErr"></div>
         <div class="okbox" id="dashOk"></div>
 
-        <!-- Last invoices quick view -->
         <div class="sep"></div>
-        <div class="row" style="align-items:flex-start">
-          <div style="flex:1">
-            <h2 style="margin-bottom:6px">آخر الفواتير (حسب الفلاتر)</h2>
-            <div class="hint">هنا تظهر أحدث الفواتير بعد الضغط على "عرض الفواتير".</div>
-          </div>
-        </div>
+        <h2 style="margin-bottom:6px">آخر الفواتير (حسب الفلاتر)</h2>
+        <div class="hint">هنا تظهر أحدث الفواتير بعد الضغط على "عرض الفواتير".</div>
 
         <div class="invGrid" id="lastInvGrid">
           <div class="hint">اضغط "عرض الفواتير".</div>
@@ -475,7 +464,6 @@
         <h3>إضافة مستخدم</h3>
         <button class="btn small" id="btnCloseAdd">إغلاق</button>
       </div>
-      <div class="hint">زر إضافة المستخدم موجود (حتى لو بالصورة مو ظاهر) — من هون مباشرة.</div>
 
       <div class="sep"></div>
 
@@ -527,7 +515,7 @@
         <button class="btn small" id="btnCloseInv">إغلاق</button>
       </div>
       <div class="row">
-        <input id="invSearch" placeholder="بحث داخل فواتير هذا المستخدم (اسم الزبون / آخر 6 أرقام من رقم الفاتورة)..." />
+        <input id="invSearch" placeholder="بحث داخل فواتير هذا المستخدم (اسم الزبون / آخر 6 أرقام)..." />
         <button class="btn small primary" id="btnInvRefresh">تحديث</button>
       </div>
       <div class="hint" id="invHint" style="margin-top:8px"></div>
@@ -536,30 +524,27 @@
     </div>
   </div>
 
+  <div id="printArea"></div>
+
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ مفاتيحك الصحيحة (Legacy anon)
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
+    const SUPABASE_ANON_KEY = "REPLACE_WITH_YOUR_KEY_IF_NEEDED";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
 
-    // Cards
     const loginCard = $("loginCard");
     const dashCard  = $("dashCard");
 
-    // Top buttons
     const btnOpenAdd = $("btnOpenAdd");
     const btnRefresh = $("btnRefresh");
     const btnLogoutTop = $("btnLogoutTop");
 
-    // Login
     const loginErr = $("loginErr");
     const loginOk  = $("loginOk");
 
-    // Dashboard
     const dashErr = $("dashErr");
     const dashOk  = $("dashOk");
     const sessionPill = $("sessionPill");
@@ -573,19 +558,16 @@
     const usersTbody = $("usersTbody");
     const lastInvGrid = $("lastInvGrid");
 
-    // Stats
     const stUsers = $("stUsers");
     const stInv   = $("stInv");
     const stSum   = $("stSum");
     const stCO    = $("stCO");
 
-    // Add modal
     const addBack = $("addBack");
     const btnCloseAdd = $("btnCloseAdd");
     const addErr = $("addErr");
     const addOk = $("addOk");
 
-    // Invoice modal
     const invBack = $("invBack");
     const btnCloseInv = $("btnCloseInv");
     const invTitle = $("invTitle");
@@ -594,35 +576,25 @@
     const invHint = $("invHint");
     const invBody = $("invBody");
 
-    // Chips
     const rangeChips = $("rangeChips");
     let RANGE_DAYS = "all";
 
-    // Tables
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
-    const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"]; // نفس منطق صفحة المستخدم
+    const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"];
 
     let ADMIN = null;
 
-    function showErr(box, msg){
-      box.style.display = "block";
-      box.textContent = msg;
-    }
-    function showOk(box, msg){
-      box.style.display = "block";
-      box.textContent = msg;
-      setTimeout(()=> box.style.display="none", 2200);
-    }
+    function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
+    function showOk(box, msg){ box.style.display="block"; box.textContent = msg; setTimeout(()=>box.style.display="none", 2200); }
     function clearBox(box){ box.style.display="none"; box.textContent=""; }
 
     function setSessionPill(){
-      if(!ADMIN){
-        sessionPill.innerHTML = "<b>غير مسجل</b>";
-        return;
-      }
-      sessionPill.innerHTML = `<b>${ADMIN.username}</b> — أدمن`;
+      sessionPill.innerHTML = ADMIN ? `<b>${ADMIN.username}</b> — أدمن` : "<b>غير مسجل</b>";
     }
+
+    function safeText(v){ return (v===null || v===undefined) ? "" : String(v); }
+    function last6(id){ const s = safeText(id); return s.length<=6 ? s : s.slice(-6); }
 
     function fmtRelTime(dateIso){
       if(!dateIso) return "—";
@@ -634,15 +606,6 @@
       if(hrs < 24) return `منذ ${hrs} س`;
       const days = Math.floor(hrs/24);
       return `منذ ${days} يوم`;
-    }
-
-    function safeText(v){
-      return (v === null || v === undefined) ? "" : String(v);
-    }
-
-    function last6(id){
-      const s = safeText(id);
-      return s.length <= 6 ? s : s.slice(-6);
     }
 
     function isoDayStart(d){
@@ -657,17 +620,11 @@
     }
 
     function currentFilterRange(){
-      // Priority:
-      // 1) From/To if filled
-      // 2) RANGE_DAYS if not "all"
-      // 3) else null
       const f = fromDate.value;
       const t = toDate.value;
 
       if(f || t){
-        const fromIso = f ? isoDayStart(f) : null;
-        const toIso   = t ? isoDayEnd(t) : null;
-        return { fromIso, toIso };
+        return { fromIso: f ? isoDayStart(f) : null, toIso: t ? isoDayEnd(t) : null };
       }
 
       if(RANGE_DAYS !== "all"){
@@ -679,136 +636,6 @@
       return { fromIso:null, toIso:null };
     }
 
-    async function adminLogin(){
-      clearBox(loginErr); clearBox(loginOk);
-
-      const username = $("loginUser").value.trim();
-      const password = $("loginPass").value.trim();
-      if(!username || !password){
-        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from(USERS_TABLE)
-        .select("*")
-        .eq("username", username)
-        .limit(1);
-
-      if(error){
-        showErr(loginErr, "خطأ Supabase:\n" + (error.message || JSON.stringify(error)));
-        return;
-      }
-      if(!data?.length){
-        showErr(loginErr, "المستخدم غير موجود.");
-        return;
-      }
-
-      const u = data[0];
-      if(u.password !== password){
-        showErr(loginErr, "كلمة السر غير صحيحة.");
-        return;
-      }
-      if(!u.is_admin){
-        showErr(loginErr, "هذا الحساب ليس أدمن.");
-        return;
-      }
-      if(u.is_blocked){
-        showErr(loginErr, "هذا الأدمن محظور.");
-        return;
-      }
-
-      ADMIN = u;
-      localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id }));
-      loginCard.classList.add("hide");
-      dashCard.classList.remove("hide");
-      subTitle.textContent = "لوحة الإدارة";
-      btnOpenAdd.classList.remove("hide");
-      btnRefresh.classList.remove("hide");
-      btnLogoutTop.classList.remove("hide");
-      setSessionPill();
-      showOk(loginOk, "تم تسجيل الدخول ✅");
-
-      await warmLoad();
-    }
-
-    function logout(){
-      ADMIN = null;
-      localStorage.removeItem("HAYEK_ADMIN_SESSION");
-      dashCard.classList.add("hide");
-      loginCard.classList.remove("hide");
-      subTitle.textContent = "تسجيل دخول الأدمن";
-      btnOpenAdd.classList.add("hide");
-      btnRefresh.classList.add("hide");
-      btnLogoutTop.classList.add("hide");
-      setSessionPill();
-      usersTbody.innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`;
-      lastInvGrid.innerHTML = `<div class="hint">—</div>`;
-    }
-
-    async function restoreSession(){
-      try{
-        const s = JSON.parse(localStorage.getItem("HAYEK_ADMIN_SESSION") || "null");
-        if(!s?.id) return;
-        const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
-        if(data?.length && data[0].is_admin && !data[0].is_blocked){
-          ADMIN = data[0];
-          loginCard.classList.add("hide");
-          dashCard.classList.remove("hide");
-          subTitle.textContent = "لوحة الإدارة";
-          btnOpenAdd.classList.remove("hide");
-          btnRefresh.classList.remove("hide");
-          btnLogoutTop.classList.remove("hide");
-          setSessionPill();
-          await warmLoad();
-        }
-      }catch{}
-    }
-
-    function openAdd(){ addBack.style.display="flex"; clearBox(addErr); clearBox(addOk); }
-    function closeAdd(){ addBack.style.display="none"; }
-
-    function openInv(){ invBack.style.display="flex"; }
-    function closeInv(){ invBack.style.display="none"; invBody.innerHTML=""; invSearch.value=""; }
-
-    async function addUser(){
-      clearBox(addErr); clearBox(addOk);
-
-      const username = $("newUsername").value.trim();
-      const password = $("newPassword").value.trim();
-      const full_name = $("newFullName").value.trim();
-      const phone = $("newPhone").value.trim();
-      const role = $("newRole").value;
-
-      if(!username || !password){
-        showErr(addErr, "اكتب اسم المستخدم وكلمة السر للمستخدم الجديد.");
-        return;
-      }
-
-      const payload = {
-        username, password,
-        full_name: full_name || null,
-        phone: phone || null,
-        is_admin: role === "admin",
-        is_blocked: false
-      };
-
-      const { error } = await supabase.from(USERS_TABLE).insert(payload);
-      if(error){
-        showErr(addErr, "فشل إضافة المستخدم:\n" + (error.message || JSON.stringify(error)));
-        return;
-      }
-
-      $("newUsername").value="";
-      $("newPassword").value="";
-      $("newFullName").value="";
-      $("newPhone").value="";
-      $("newRole").value="user";
-
-      showOk(addOk, "تمت الإضافة ✅");
-      await warmLoad();
-    }
-
     function pickOps(inv){
       for(const c of OPS_COL_CANDIDATES){
         if(Array.isArray(inv?.[c])) return inv[c];
@@ -817,25 +644,35 @@
     }
 
     function matchesInvoice(inv, query){
-      const q = (query||"").trim();
+      const q = (query||"").trim().toLowerCase();
       if(!q) return true;
-      const low = q.toLowerCase();
 
-      const cid = safeText(inv.id);
-      const c6 = last6(cid);
+      const cid = safeText(inv.id).toLowerCase();
+      const c6  = last6(inv.id).toLowerCase();
       const cust = safeText(inv.customer_name).toLowerCase();
       const user = safeText(inv._userName).toLowerCase();
 
-      if(cust.includes(low)) return true;
-      if(user.includes(low)) return true;
-      if(c6.includes(low.replace(/\s+/g,""))) return true;
-      if(cid.toLowerCase().includes(low)) return true;
+      return cust.includes(q) || user.includes(q) || c6.includes(q.replace(/\s+/g,"")) || cid.includes(q);
+    }
 
-      return false;
+    // ✅ حل جذري لخطأ 400: جرّب order(created_at) وإذا فشل ارجع لـ id
+    async function safeOrderQuery(baseQuery){
+      let { data, error } = await baseQuery.order("created_at", { ascending:false });
+      if(!error) return { data, error:null };
+
+      const msg = (error.message||"").toLowerCase();
+      if(msg.includes("created_at") || msg.includes("column") || msg.includes("order")){
+        ({ data, error } = await baseQuery.order("id", { ascending:false }));
+        if(!error) return { data, error:null };
+        ({ data, error } = await baseQuery); // آخر محاولة بدون order
+        return { data: data||[], error: error||null };
+      }
+      return { data: data||[], error };
     }
 
     async function fetchUsers(){
-      const { data, error } = await supabase.from(USERS_TABLE).select("*").order("created_at",{ascending:false});
+      const base = supabase.from(USERS_TABLE).select("*");
+      const { data, error } = await safeOrderQuery(base);
       if(error) throw error;
       return data || [];
     }
@@ -844,14 +681,13 @@
       const { fromIso, toIso } = currentFilterRange();
       const uFilter = userFilter.value;
 
-      let q = supabase.from(INVOICE_TABLE).select("*").order("created_at", {ascending:false}).limit(300);
-      if(uFilter && uFilter !== "all"){
-        q = q.eq("user_id", uFilter);
-      }
-      if(fromIso) q = q.gte("created_at", fromIso);
-      if(toIso)   q = q.lte("created_at", toIso);
+      let base = supabase.from(INVOICE_TABLE).select("*").limit(500);
 
-      const { data, error } = await q;
+      if(uFilter && uFilter !== "all") base = base.eq("user_id", uFilter);
+      if(fromIso) base = base.gte("created_at", fromIso);
+      if(toIso)   base = base.lte("created_at", toIso);
+
+      const { data, error } = await safeOrderQuery(base);
       if(error) throw error;
       return data || [];
     }
@@ -865,40 +701,51 @@
         opt.textContent = u.username;
         userFilter.appendChild(opt);
       });
-      userFilter.value = prev && [...userFilter.options].some(o=>o.value===prev) ? prev : "all";
+      userFilter.value = ([...userFilter.options].some(o=>o.value===prev)) ? prev : "all";
+    }
+
+    function calcStats(users, invoices){
+      const query = qSearch.value.trim();
+      const filtered = invoices.filter(inv=> matchesInvoice(inv, query));
+
+      let sum = 0, closed = 0, open = 0;
+      for(const inv of filtered){
+        const t = Number(inv.total);
+        if(Number.isFinite(t)) sum += t;
+        if(inv.status === "closed") closed++; else open++;
+      }
+
+      stUsers.textContent = String(users.length);
+      stInv.textContent = String(filtered.length);
+      stSum.textContent = String(Math.round(sum*100)/100);
+      stCO.textContent  = `${closed} / ${open}`;
     }
 
     function buildUsersTable(users, invoices){
-      // attach username for invoice searching & stats
       const userMap = {};
-      users.forEach(u=> userMap[u.id] = u);
+      users.forEach(u=> userMap[u.id]=u);
 
-      invoices.forEach(inv=>{
-        inv._userName = userMap[inv.user_id]?.username || "";
-      });
+      invoices.forEach(inv=> inv._userName = userMap[inv.user_id]?.username || "");
 
-      // Search query
       const query = qSearch.value.trim();
 
-      // Per-user invoice counts (filtered + search)
       const counts = {};
-      const lastActive = {}; // by user_id: max created_at
+      const lastActive = {};
       invoices.forEach(inv=>{
         if(!matchesInvoice(inv, query)) return;
         const uid = inv.user_id;
         counts[uid] = (counts[uid]||0) + 1;
-        const ca = inv.created_at;
-        if(!lastActive[uid] || (new Date(ca) > new Date(lastActive[uid]))) lastActive[uid] = ca;
+        const ca = inv.created_at || inv.updated_at || null;
+        if(ca && (!lastActive[uid] || (new Date(ca) > new Date(lastActive[uid])))) lastActive[uid]=ca;
       });
 
-      // Render rows
-      const rows = users.map(u=>{
+      usersTbody.innerHTML = users.map(u=>{
         const c = counts[u.id] || 0;
         const blocked = !!u.is_blocked;
         const statusHtml = blocked
           ? `<span class="statusPill blocked">محظور</span>`
           : `<span class="statusPill">نشط</span>`;
-        const activeText = fmtRelTime(lastActive[u.id] || u.created_at);
+        const activeText = fmtRelTime(lastActive[u.id] || u.created_at || u.updated_at);
 
         return `
           <tr>
@@ -925,14 +772,12 @@
             </td>
           </tr>
         `;
-      }).join("");
-
-      usersTbody.innerHTML = rows || `<tr><td colspan="5" class="muted">لا يوجد بيانات.</td></tr>`;
+      }).join("") || `<tr><td colspan="5" class="muted">لا يوجد بيانات.</td></tr>`;
     }
 
     function buildLastInvoices(invoices, users){
       const userMap = {};
-      users.forEach(u=> userMap[u.id] = u);
+      users.forEach(u=> userMap[u.id]=u);
 
       const query = qSearch.value.trim();
       const filtered = invoices.filter(inv=> matchesInvoice(inv, query)).slice(0, 12);
@@ -946,7 +791,7 @@
         const u = userMap[inv.user_id];
         const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
-        const created = new Date(inv.created_at).toLocaleString("ar");
+        const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
         const id6 = last6(inv.id);
 
         return `
@@ -968,135 +813,149 @@
       }).join("");
     }
 
-    function calcStats(users, invoices){
-      const query = qSearch.value.trim();
-      const filtered = invoices.filter(inv=> matchesInvoice(inv, query));
-
-      let sum = 0;
-      let closed = 0;
-      let open = 0;
-      for(const inv of filtered){
-        const t = Number(inv.total);
-        if(Number.isFinite(t)) sum += t;
-        if(inv.status === "closed") closed++;
-        else open++;
-      }
-
-      stUsers.textContent = String(users.length);
-      stInv.textContent = String(filtered.length);
-      stSum.textContent = String(Math.round(sum*100)/100);
-      stCO.textContent = `${closed} / ${open}`;
-    }
-
     async function applyAndRender(){
       clearBox(dashErr); clearBox(dashOk);
-
       try{
-        // 1) Fetch users
         const users = await fetchUsers();
-
-        // 2) Fill user dropdown
         renderUserFilter(users);
 
-        // 3) Fetch invoices by filters
         const invoices = await fetchInvoicesFiltered();
 
-        // 4) Render
         calcStats(users, invoices);
         buildUsersTable(users, invoices);
         buildLastInvoices(invoices, users);
-
       }catch(e){
         showErr(dashErr, "خطأ Supabase:\n" + (e?.message || JSON.stringify(e)));
       }
     }
 
-    async function warmLoad(){
-      await applyAndRender();
+    // ---------- PDF Export (Admin) ----------
+    function escHtml(s){
+      return String(s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
 
-    // Actions handlers
-    usersTbody.addEventListener("click", async (e)=>{
-      const b = e.target.closest("button");
-      if(!b) return;
+    function buildInvoicePrint(inv, username){
+      const pa = $("printArea");
+      const ops = pickOps(inv);
+      const customer = safeText(inv.customer_name || "بدون اسم");
+      const user = safeText(username || "");
+      const total = safeText(inv.total ?? 0);
+      const id = safeText(inv.id);
+      const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
 
-      const act = b.dataset.act;
-      const id  = b.dataset.id;
-      const name = b.dataset.name || "";
+      const rows = ops.map((o,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td>${escHtml(o.label||"")}</td>
+          <td>${escHtml(o.expr||"")}</td>
+          <td>${escHtml(o.result||"")}</td>
+          <td>${escHtml(o.time||"")}</td>
+        </tr>
+      `).join("");
 
-      clearBox(dashErr); clearBox(dashOk);
+      pa.innerHTML = `
+        <div class="box">
+          <div class="brandRow">
+            <div>
+              <div class="mut">شركة الحايك</div>
+              <div class="logo">HAYEK SPOT</div>
+            </div>
+            <div style="text-align:right">
+              <div class="mut">PDF / طباعة</div>
+              <div class="mut">رقم الفاتورة: <b>${escHtml(last6(id))}</b></div>
+            </div>
+          </div>
 
-      try{
-        if(act === "del"){
-          if(!confirm(`تأكيد حذف المستخدم: ${name} ؟`)) return;
-          const { error } = await supabase.from(USERS_TABLE).delete().eq("id", id);
-          if(error) throw error;
-          showOk(dashOk, "تم الحذف ✅");
-          await applyAndRender();
-          return;
+          <div class="line"></div>
+
+          <div class="mut" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div>اسم المستخدم: <b style="color:#111827">${escHtml(user)}</b></div>
+            <div>اسم العميل: <b style="color:#111827">${escHtml(customer)}</b></div>
+            <div>التاريخ: <b style="color:#111827">${escHtml(created)}</b></div>
+          </div>
+
+          <div class="line"></div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:6%">#</th>
+                <th style="width:34%">البيان</th>
+                <th style="width:28%">العملية</th>
+                <th style="width:12%">النتيجة</th>
+                <th style="width:20%">الوقت</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="5" class="mut" style="text-align:center">لا يوجد عمليات</td></tr>`}
+            </tbody>
+          </table>
+
+          <div class="totalRow">
+            <div class="mut">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
+            <div><b>إجمالي الكشف: ${escHtml(total)}</b></div>
+          </div>
+
+          <div class="line"></div>
+          <div class="mut" style="text-align:center">
+            شركة الحايك: تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية
+          </div>
+        </div>
+      `;
+      return pa;
+    }
+
+    async function exportInvoicePDF(inv, username){
+      const pa = buildInvoicePrint(inv, username);
+      const canvas = await html2canvas(pa, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      const imgW = pageW;
+      const imgH = canvas.height * (imgW / canvas.width);
+
+      if(imgH <= pageH){
+        pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
+      }else{
+        let remaining = imgH;
+        let position = 0;
+        while(remaining > 0){
+          pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+          remaining -= pageH;
+          if(remaining > 0){
+            pdf.addPage();
+            position -= pageH;
+          }
         }
-
-        if(act === "block"){
-          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:true }).eq("id", id);
-          if(error) throw error;
-          showOk(dashOk, "تم الحظر ✅");
-          await applyAndRender();
-          return;
-        }
-
-        if(act === "unblock"){
-          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:false }).eq("id", id);
-          if(error) throw error;
-          showOk(dashOk, "تم فك الحظر ✅");
-          await applyAndRender();
-          return;
-        }
-
-        // اختياري: "مسح الجهاز" (حسب جدولك/منطقك)
-        if(act === "wipeDevice"){
-          // إذا عندك عمود device_id أو device_token عدّله هنا:
-          // مثال:
-          // await supabase.from(USERS_TABLE).update({ device_id:null }).eq("id", id);
-          showOk(dashOk, "تم (مسح الجهاز) ✅");
-          return;
-        }
-
-        if(act === "makeAdmin"){
-          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:true }).eq("id", id);
-          if(error) throw error;
-          showOk(dashOk, "تم تحويله لأدمن ✅");
-          await applyAndRender();
-          return;
-        }
-
-        if(act === "makeUser"){
-          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:false }).eq("id", id);
-          if(error) throw error;
-          showOk(dashOk, "تم تحويله لمستخدم ✅");
-          await applyAndRender();
-          return;
-        }
-
-        if(act === "invoices"){
-          // open modal & load invoices for this user with current filters
-          await openUserInvoices(id, name);
-          return;
-        }
-      }catch(err){
-        showErr(dashErr, "خطأ:\n" + (err?.message || JSON.stringify(err)));
       }
-    });
 
-    // Invoice modal logic
+      const safeName = (safeText(inv.customer_name||"invoice")).replace(/[\\/:*?"<>|]/g,"-");
+      pdf.save(`HAYEK_${safeName}_${last6(inv.id)}.pdf`);
+    }
+
+    // ---------- Invoices Modal ----------
     let CURRENT_INV_USER_ID = null;
     let CURRENT_INV_USER_NAME = "";
     let CURRENT_INV_CACHE = [];
+
+    function openInv(){ invBack.style.display="flex"; }
+    function closeInv(){ invBack.style.display="none"; invBody.innerHTML=""; invSearch.value=""; }
 
     async function openUserInvoices(userId, username){
       CURRENT_INV_USER_ID = userId;
       CURRENT_INV_USER_NAME = username || "";
       invTitle.textContent = `فواتير المستخدم — ${CURRENT_INV_USER_NAME}`;
-      invHint.textContent = `الفلاتر الحالية مطبّقة. (بحث عام: ${qSearch.value.trim() || "بدون"})`;
+      invHint.textContent = `الفلاتر الحالية مطبّقة.`;
       invBody.innerHTML = `<div class="hint">جاري التحميل...</div>`;
       openInv();
       await loadUserInvoices();
@@ -1105,12 +964,11 @@
     async function loadUserInvoices(){
       try{
         const { fromIso, toIso } = currentFilterRange();
+        let base = supabase.from(INVOICE_TABLE).select("*").eq("user_id", CURRENT_INV_USER_ID).limit(400);
+        if(fromIso) base = base.gte("created_at", fromIso);
+        if(toIso)   base = base.lte("created_at", toIso);
 
-        let q = supabase.from(INVOICE_TABLE).select("*").eq("user_id", CURRENT_INV_USER_ID).order("created_at",{ascending:false}).limit(200);
-        if(fromIso) q = q.gte("created_at", fromIso);
-        if(toIso)   q = q.lte("created_at", toIso);
-
-        const { data, error } = await q;
+        const { data, error } = await safeOrderQuery(base);
         if(error) throw error;
 
         CURRENT_INV_CACHE = data || [];
@@ -1137,33 +995,28 @@
       invBody.innerHTML = rows.map(inv=>{
         const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
-        const created = new Date(inv.created_at).toLocaleString("ar");
+        const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
         const id6 = last6(inv.id);
 
-        const opsRows = ops.slice(0, 50).map((o,i)=>`
-          <tr>
-            <td>${i+1}</td>
-            <td>${safeText(o.label||"")}</td>
-            <td>${safeText(o.expr||"")}</td>
-            <td>${safeText(o.result||"")}</td>
-            <td>${safeText(o.time||"")}</td>
-          </tr>
-        `).join("");
-
         return `
-          <div class="invItem">
+          <div class="invItem" data-inv-id="${escHtml(inv.id)}">
             <div class="invTop">
               <div>
-                <div class="invTitle">${safeText(inv.customer_name)} — <span class="muted">${status}</span></div>
+                <div class="invTitle">${escHtml(inv.customer_name || "")} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  رقم الفاتورة: <b>${safeText(id6)}</b> — الإجمالي: <b>${safeText(inv.total||0)}</b><br/>
-                  التاريخ: ${created}
+                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(inv.total||0)}</b><br/>
+                  التاريخ: ${escHtml(created)}
                 </div>
               </div>
-              <div class="pill"><b>${ops.length}</b> عمليات</div>
+
+              <div class="invBtns">
+                <button class="btn small soft" data-act="toggle">عرض الفاتورة</button>
+                <button class="btn small primary" data-act="pdf">تصدير الفاتورة PDF</button>
+                <div class="pill"><b>${ops.length}</b> عمليات</div>
+              </div>
             </div>
 
-            <div class="invOps">
+            <div class="invOps hide">
               <table>
                 <thead>
                   <tr>
@@ -1175,7 +1028,17 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${opsRows || `<tr><td colspan="5" class="muted">لا يوجد عمليات</td></tr>`}
+                  ${
+                    ops.slice(0, 200).map((o,i)=>`
+                      <tr>
+                        <td>${i+1}</td>
+                        <td>${escHtml(o.label||"")}</td>
+                        <td>${escHtml(o.expr||"")}</td>
+                        <td>${escHtml(o.result||"")}</td>
+                        <td>${escHtml(o.time||"")}</td>
+                      </tr>
+                    `).join("") || `<tr><td colspan="5" class="muted">لا يوجد عمليات</td></tr>`
+                  }
                 </tbody>
               </table>
             </div>
@@ -1184,51 +1047,225 @@
       }).join("");
     }
 
-    // Range chips
+    invBody.addEventListener("click", async (e)=>{
+      const b = e.target.closest("button");
+      if(!b) return;
+
+      const wrap = b.closest(".invItem");
+      if(!wrap) return;
+
+      const invId = wrap.getAttribute("data-inv-id");
+      const inv = (CURRENT_INV_CACHE||[]).find(x => String(x.id) === String(invId));
+      if(!inv) return;
+
+      const act = b.dataset.act;
+      if(act === "toggle"){
+        const box = wrap.querySelector(".invOps");
+        box.classList.toggle("hide");
+        return;
+      }
+      if(act === "pdf"){
+        await exportInvoicePDF(inv, CURRENT_INV_USER_NAME);
+        return;
+      }
+    });
+
+    // ---------- Admin auth ----------
+    async function adminLogin(){
+      clearBox(loginErr); clearBox(loginOk);
+
+      const username = $("loginUser").value.trim();
+      const password = $("loginPass").value.trim();
+      if(!username || !password){
+        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
+        return;
+      }
+
+      const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
+      if(error){ showErr(loginErr, "خطأ Supabase:\n" + (error.message || JSON.stringify(error))); return; }
+      if(!data?.length){ showErr(loginErr, "المستخدم غير موجود."); return; }
+
+      const u = data[0];
+      if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
+      if(!u.is_admin){ showErr(loginErr, "هذا الحساب ليس أدمن."); return; }
+      if(u.is_blocked){ showErr(loginErr, "هذا الأدمن محظور."); return; }
+
+      ADMIN = u;
+      localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id }));
+      loginCard.classList.add("hide");
+      dashCard.classList.remove("hide");
+      subTitle.textContent = "لوحة الإدارة";
+      btnOpenAdd.classList.remove("hide");
+      btnRefresh.classList.remove("hide");
+      btnLogoutTop.classList.remove("hide");
+      setSessionPill();
+      showOk(loginOk, "تم تسجيل الدخول ✅");
+      await applyAndRender();
+    }
+
+    function logout(){
+      ADMIN = null;
+      localStorage.removeItem("HAYEK_ADMIN_SESSION");
+      dashCard.classList.add("hide");
+      loginCard.classList.remove("hide");
+      subTitle.textContent = "تسجيل دخول الأدمن";
+      btnOpenAdd.classList.add("hide");
+      btnRefresh.classList.add("hide");
+      btnLogoutTop.classList.add("hide");
+      setSessionPill();
+    }
+
+    async function restoreSession(){
+      try{
+        const s = JSON.parse(localStorage.getItem("HAYEK_ADMIN_SESSION") || "null");
+        if(!s?.id) return;
+        const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
+        if(data?.length && data[0].is_admin && !data[0].is_blocked){
+          ADMIN = data[0];
+          loginCard.classList.add("hide");
+          dashCard.classList.remove("hide");
+          subTitle.textContent = "لوحة الإدارة";
+          btnOpenAdd.classList.remove("hide");
+          btnRefresh.classList.remove("hide");
+          btnLogoutTop.classList.remove("hide");
+          setSessionPill();
+          await applyAndRender();
+        }
+      }catch{}
+    }
+
+    // ---------- Add user modal ----------
+    function openAdd(){ addBack.style.display="flex"; clearBox(addErr); clearBox(addOk); }
+    function closeAdd(){ addBack.style.display="none"; }
+
+    async function addUser(){
+      clearBox(addErr); clearBox(addOk);
+
+      const username = $("newUsername").value.trim();
+      const password = $("newPassword").value.trim();
+      const full_name = $("newFullName").value.trim();
+      const phone = $("newPhone").value.trim();
+      const role = $("newRole").value;
+
+      if(!username || !password){
+        showErr(addErr, "اكتب اسم المستخدم وكلمة السر للمستخدم الجديد.");
+        return;
+      }
+
+      const payload = {
+        username, password,
+        full_name: full_name || null,
+        phone: phone || null,
+        is_admin: role === "admin",
+        is_blocked: false
+      };
+
+      const { error } = await supabase.from(USERS_TABLE).insert(payload);
+      if(error){ showErr(addErr, "فشل إضافة المستخدم:\n" + (error.message || JSON.stringify(error))); return; }
+
+      $("newUsername").value="";
+      $("newPassword").value="";
+      $("newFullName").value="";
+      $("newPhone").value="";
+      $("newRole").value="user";
+
+      showOk(addOk, "تمت الإضافة ✅");
+      await applyAndRender();
+    }
+
+    // ---------- Actions on users ----------
+    usersTbody.addEventListener("click", async (e)=>{
+      const b = e.target.closest("button");
+      if(!b) return;
+
+      const act = b.dataset.act;
+      const id  = b.dataset.id;
+      const name = b.dataset.name || "";
+
+      clearBox(dashErr); clearBox(dashOk);
+
+      try{
+        if(act === "del"){
+          if(!confirm(`تأكيد حذف المستخدم: ${name} ؟`)) return;
+          const { error } = await supabase.from(USERS_TABLE).delete().eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم الحذف ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "block"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:true }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم الحظر ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "unblock"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:false }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم فك الحظر ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "wipeDevice"){
+          // إذا عندك عمود device_id لاحقاً: supabase.from(USERS_TABLE).update({ device_id:null }).eq("id", id)
+          showOk(dashOk, "تم (مسح الجهاز) ✅");
+          return;
+        }
+        if(act === "makeAdmin"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:true }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم تحويله لأدمن ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "makeUser"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:false }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم تحويله لمستخدم ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "invoices"){
+          await openUserInvoices(id, name);
+          return;
+        }
+      }catch(err){
+        showErr(dashErr, "خطأ:\n" + (err?.message || JSON.stringify(err)));
+      }
+    });
+
+    // ---------- UI binds ----------
     rangeChips.addEventListener("click", (e)=>{
       const c = e.target.closest(".chip");
       if(!c) return;
       [...rangeChips.querySelectorAll(".chip")].forEach(x=>x.classList.remove("active"));
       c.classList.add("active");
       RANGE_DAYS = c.dataset.range;
-      // clear dates when using chips
-      fromDate.value = "";
-      toDate.value = "";
+      fromDate.value=""; toDate.value="";
     });
 
-    // Apply filters
     btnApply.addEventListener("click", applyAndRender);
-
-    // Refresh
     btnRefresh.addEventListener("click", applyAndRender);
 
-    // Search live
     let searchTimer=null;
     qSearch.addEventListener("input", ()=>{
       clearTimeout(searchTimer);
       searchTimer = setTimeout(()=> applyAndRender(), 250);
     });
 
-    // Top add user
     btnOpenAdd.addEventListener("click", openAdd);
     btnCloseAdd.addEventListener("click", closeAdd);
     addBack.addEventListener("click", (e)=>{ if(e.target === addBack) closeAdd(); });
-
-    // Add user button
     $("btnAddUser").addEventListener("click", addUser);
 
-    // Invoice modal
     btnCloseInv.addEventListener("click", closeInv);
     invBack.addEventListener("click", (e)=>{ if(e.target === invBack) closeInv(); });
     btnInvRefresh.addEventListener("click", loadUserInvoices);
-    invSearch.addEventListener("input", ()=>{
-      renderUserInvoices();
-    });
+    invSearch.addEventListener("input", renderUserInvoices);
 
-    // Logout
     btnLogoutTop.addEventListener("click", logout);
 
-    // Login binds
     $("btnLogin").addEventListener("click", adminLogin);
     $("btnClear").addEventListener("click", ()=>{
       $("loginUser").value=""; $("loginPass").value="";
@@ -1238,13 +1275,6 @@
     // Init
     setSessionPill();
     restoreSession();
-
-    /*
-      ✅ ملاحظة مهمة بخصوص “الفواتير ما عم تظهر بـ Supabase/الأدمن”:
-      - إذا RLS/Policies ما بتسمح insert/update على app_invoices للمفتاح anon، راح تنحفظ محلي فقط ضمن Queue بالموبايل.
-      - هون بالأدمن أنا عرضت الفواتير حسب الفلاتر + قرأت العمليات من (lines/ops/items/details) حتى ما يصير خطأ schema cache.
-      - إذا لسه ما بتظهر الفواتير نهائياً رغم وجود نت: المشكلة غالباً Policies (RLS) أو جدول app_invoices ما فيه أعمدة (user_id/customer_name/total/status).
-    */
   </script>
 </body>
 </html>
