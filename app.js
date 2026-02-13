@@ -1,5 +1,6 @@
-// app.js (FINAL - no DB role lookup)
-// يعتمد فقط على Supabase Auth + تحويل حسب اسم المستخدم
+// app.js (FINAL - No auto redirect)
+// ✅ لا يوجد تحويل تلقائي عند فتح صفحة الدخول (يمنع loop)
+// ✅ التحويل يتم فقط بعد نجاح تسجيل الدخول من زر "دخول"
 
 import { supabase } from "./config.js";
 import { login } from "./auth.js";
@@ -21,37 +22,30 @@ function normalizeUsername(u) {
 
 function usernameFromEmail(email) {
   const s = String(email || "");
-  if (!s.includes("@")) return s;
-  return s.split("@")[0];
+  return s.includes("@") ? s.split("@")[0] : s;
 }
 
-// قاعدة بسيطة ونهائية الآن: admin فقط هو الأدمن
-function routeByUsername(username) {
-  const u = String(username || "").toLowerCase();
-  if (u === "admin") return "admin.html";
-  return "invoice.html";
-}
-
-async function redirectNow() {
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+// ✅ قرار التوجيه حسب الدور — لكن يُستدعى فقط بعد نجاح login
+async function redirectByRole() {
+  const { data: userRes } = await supabase.auth.getUser();
+  const user = userRes?.user;
   if (!user) return;
 
-  const username = usernameFromEmail(user.email);
-  const target = routeByUsername(username);
-
-  // يمنع الرجوع/التقليب
-  location.replace(target);
+  const uname = usernameFromEmail(user.email).toLowerCase();
+  if (uname === "admin") location.href = "admin.html?v=" + Date.now();
+  else location.href = "invoice.html?v=" + Date.now();
 }
 
 async function boot() {
+  // ✅ ممنوع redirect تلقائي (حتى لو في جلسة)
   try {
     const { data } = await supabase.auth.getSession();
     if (data?.session?.user) {
-      await redirectNow();
+      const uname = usernameFromEmail(data.session.user.email);
+      setMsg(`جلسة موجودة للحساب: ${uname} — اضغط "دخول" للمتابعة.`, true);
     }
-  } catch (e) {
-    console.error(e);
+  } catch (_) {
+    // تجاهل
   }
 }
 
@@ -68,20 +62,17 @@ $("loginBtn").addEventListener("click", async () => {
       return;
     }
 
-    await login(username, pin);
+    await login(username, pin); // ✅ Supabase Auth signIn
     setMsg("تم تسجيل الدخول ✅", true);
 
-    await redirectNow();
+    // ✅ تحويل واحد فقط بعد نجاح الدخول
+    await redirectByRole();
   } catch (e) {
     console.error(e);
     const m = String(e?.message || e);
 
-    // رسائل واضحة
-    if (m.includes("Invalid login credentials") || m.includes("بيانات")) {
-      setMsg("بيانات الدخول غير صحيحة", false);
-    } else {
-      setMsg("فشل الدخول: " + m, false);
-    }
+    if (m.includes("Invalid login credentials")) setMsg("بيانات الدخول غير صحيحة", false);
+    else setMsg("فشل الدخول: " + m, false);
   } finally {
     $("loginBtn").disabled = false;
   }
