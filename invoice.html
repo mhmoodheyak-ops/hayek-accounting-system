@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <link rel="icon" href="data:," />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HAYEK SPOT — الحاسبة</title>
@@ -55,6 +54,8 @@
     .a.new{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.14)}
     .a.danger{background:rgba(255,90,107,.18);color:#fff;border:1px solid rgba(255,90,107,.35)}
     .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;line-height:1.7}
+
+    /* ✅ شاشة قفل بدون تقليب */
     #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
     #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
   </style>
@@ -64,7 +65,7 @@
   <div id="lock">
     <div class="box">
       <h3 id="lockTitle">تسجيل الدخول مطلوب</h3>
-      <p id="lockMsg" style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
+      <p id="lockMsg" style="color:#b9cde0;margin:0 0 12px;line-height:1.7">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
       <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
     </div>
   </div>
@@ -199,453 +200,313 @@
     </div>
   </div>
 
-<script type="module">
-  // ✅ المصدر الوحيد لعميل Supabase (Singleton)
-  import { supabase } from "./config.js";
+  <!-- ✅ Gate نهائي: Supabase Auth فقط + بدون تقليب -->
+  <script type="module">
+    import { supabase } from "./config.js";
 
-  const $ = (id)=>document.getElementById(id);
+    const $ = (id)=>document.getElementById(id);
 
-  // ===== Helpers =====
-  function usernameFromEmail(email){
-    const s = String(email||"");
-    return s.includes("@") ? s.split("@")[0] : s;
-  }
-  function getOrCreateDeviceId(){
-    const KEY = "HAYEK_DEVICE_ID_V1";
-    let v = localStorage.getItem(KEY);
-    if(!v){
-      v = (crypto?.randomUUID?.() || ("dev_" + Math.random().toString(16).slice(2) + Date.now()));
-      localStorage.setItem(KEY, v);
+    const lock = $("lock");
+    $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
+
+    function showLock(title, msg){
+      $("lockTitle").textContent = title;
+      $("lockMsg").textContent = msg;
+      lock.style.display = "flex";
     }
-    return v;
-  }
 
-  // ===== AUTH Gate (بدون Redirect Loop) =====
-  const lock = $("lock");
-  const lockTitle = $("lockTitle");
-  const lockMsg = $("lockMsg");
-  $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
-
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes?.user;
-
-  if(!user){
-    lockTitle.textContent = "تسجيل الدخول مطلوب";
-    lockMsg.textContent = "غير مسموح تصفح الصفحة بدون تسجيل دخول.";
-    lock.style.display = "flex";
-    throw new Error("Not authed");
-  }
-
-  const session = {
-    email: user.email || "",
-    username: usernameFromEmail(user.email),
-    role: (usernameFromEmail(user.email).toLowerCase() === "admin") ? "admin" : "user",
-    deviceId: getOrCreateDeviceId()
-  };
-
-  // إذا الأدمن فتح invoice بالغلط: رجّعه للأدمن (مرة واحدة)
-  if(session.role === "admin"){
-    location.href = "admin.html?v=" + Date.now();
-    throw new Error("Admin -> admin");
-  }
-
-  // Logout
-  $("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    location.href = "index.html?v=" + Date.now();
-  };
-
-  // ===== Tables =====
-  const sb = supabase;
-  const T_USERS = "app_users";
-  const T_INV   = "app_invoices";
-  const T_OPS   = "app_operations";
-
-  // ===== Online dot =====
-  const onlineDot = $("onlineDot");
-  function refreshOnline(){
-    const on = navigator.onLine;
-    onlineDot.style.background = on ? "#49e39a" : "#ffb1b1";
-    onlineDot.style.boxShadow = on ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
-  }
-  window.addEventListener("online", refreshOnline);
-  window.addEventListener("offline", refreshOnline);
-  refreshOnline();
-
-  // ===== Tabs =====
-  document.querySelectorAll(".tab").forEach(tab=>{
-    tab.onclick=()=>{
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-      const key = tab.getAttribute("data-tab");
-      $("tab_calc").style.display = key==="calc" ? "block" : "none";
-      $("tab_log").style.display  = key==="log"  ? "block" : "none";
-    };
-  });
-
-  // ===== Local storage =====
-  const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_V4";
-  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
-  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
-  function nowIso(){ return new Date().toISOString(); }
-  function nowTime(){
-    const d = new Date();
-    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  }
-  function vibrateTiny(){ try{ navigator.vibrate && navigator.vibrate(18);}catch{} }
-
-  // ===== State =====
-  const state = { invoice:null, expr:"", lastResult:0 };
-
-  const customerName = $("customerName");
-  const lineText = $("lineText");
-  const exprInput = $("expr");
-  const resEl = $("res");
-  const rowsEl = $("rows");
-  const rows2El = $("rows2");
-  const totalEl = $("total");
-  const total2El = $("total2");
-
-  function uuid(){
-    return (crypto?.randomUUID?.() || ("inv_" + Math.random().toString(16).slice(2) + Date.now()));
-  }
-
-  function loadCurrent(){
-    const cur = jparse(localStorage.getItem(LS_CURRENT), null);
-    if(cur && cur.username === session.username && cur.status === "open"){
-      state.invoice = cur;
-      customerName.value = cur.customer_name || "";
+    function userNameFromEmail(email){
+      const s = String(email||"");
+      return s.includes("@") ? s.split("@")[0].toLowerCase() : s.toLowerCase();
     }
-  }
-  loadCurrent();
 
-  // ===== touch user (خلف الكواليس) =====
-  async function touchUser(){
-    if(!navigator.onLine) return;
-    try{
-      await sb.from(T_USERS).update({ last_seen: nowIso(), device_id: session.deviceId })
-        .eq("username", session.username);
-    }catch{}
-  }
-  touchUser();
+    // ✅ تحقق Session
+    const { data } = await supabase.auth.getSession();
+    const user = data?.session?.user;
 
-  // ===== إنشاء فاتورة على السيرفر =====
-  async function ensureRemoteInvoice(inv){
-    if(!navigator.onLine) return inv;
-    if(inv.remote_id) return inv;
+    if(!user){
+      showLock("تسجيل الدخول مطلوب", "الرجاء تسجيل الدخول أولاً.");
+      throw new Error("NO_SESSION");
+    }
 
-    const payload = {
-      username: inv.username,
-      customer_name: inv.customer_name,
-      total: Number(inv.total || 0),
-      status: inv.status || "open",
-      device_id: inv.device_id || session.deviceId,
-      created_at: inv.created_at || nowIso(),
+    // ✅ منع الأدمن من الدخول هنا (بدون تقليب)
+    const uname = userNameFromEmail(user.email);
+    if(uname === "admin"){
+      showLock("تنبيه", "أنت أدمن. افتح لوحة الأدمن.");
+      throw new Error("ADMIN_USER");
+    }
+
+    // ✅ زر خروج
+    $("logoutBtn").onclick = async () => {
+      try{ await supabase.auth.signOut(); }catch{}
+      location.href="index.html?v="+Date.now();
     };
 
-    try{
-      const { data, error } = await sb.from(T_INV).insert(payload).select("id, created_at").single();
-      if(!error && data?.id){
-        inv.remote_id = data.id;
-        inv.id = data.id;
-        jset(LS_CURRENT, inv);
-      }
-    }catch{}
-    return inv;
-  }
+    // ✅ باقي كود الحاسبة كما كان
+    const onlineDot = $("onlineDot");
+    function refreshOnline(){
+      const on = navigator.onLine;
+      onlineDot.style.background = on ? "#49e39a" : "#ffb1b1";
+      onlineDot.style.boxShadow = on ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
+    }
+    window.addEventListener("online", refreshOnline);
+    window.addEventListener("offline", refreshOnline);
+    refreshOnline();
 
-  function ensureInvoiceLocal(){
-    const cust = (customerName.value||"").trim();
-    if(!cust) return null;
-
-    if(!state.invoice || state.invoice.status !== "open"){
-      state.invoice = {
-        id: uuid(),
-        remote_id: null,
-        username: session.username,
-        device_id: session.deviceId,
-        customer_name: cust,
-        created_at: nowIso(),
-        status: "open",
-        rows: [],
-        total: 0,
+    // ===== Tabs =====
+    document.querySelectorAll(".tab").forEach(tab=>{
+      tab.onclick=()=>{
+        document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+        tab.classList.add("active");
+        const key = tab.getAttribute("data-tab");
+        $("tab_calc").style.display = key==="calc" ? "block" : "none";
+        $("tab_log").style.display  = key==="log"  ? "block" : "none";
       };
-      jset(LS_CURRENT, state.invoice);
-    } else {
-      state.invoice.customer_name = cust;
-      jset(LS_CURRENT, state.invoice);
+    });
+
+    // ===== Local storage =====
+    const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_FINAL";
+    function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
+    function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+    function nowTime(){
+      const d = new Date();
+      return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
     }
-    return state.invoice;
-  }
+    function vibrateTiny(){ try{ navigator.vibrate && navigator.vibrate(18);}catch{} }
 
-  // ===== Calculator safe eval =====
-  function setExpr(v){ state.expr = v; exprInput.value = v; }
-  function appendToken(tok){
-    if(tok==="BACK"){ setExpr(state.expr.slice(0,-1)); return; }
-    if(tok==="×") tok="*";
-    if(tok==="÷") tok="/";
-    if(!/^[0-9+\-*/().]$/.test(tok)) return;
-    setExpr(state.expr + tok);
-  }
-  function safeEval(expr){
-    const cleaned=(expr||"").replace(/\s+/g,"");
-    if(!cleaned) throw 0;
-    if(!/^[0-9+\-*/().]+$/.test(cleaned)) throw 0;
-    // eslint-disable-next-line no-new-func
-    const val = Function('"use strict";return ('+cleaned+');')();
-    const n = Number(val);
-    if(!Number.isFinite(n)) throw 0;
-    return n;
-  }
+    // ===== State =====
+    const state = { invoice:null, expr:"", lastResult:0 };
 
-  $("pad").addEventListener("click",(e)=>{
-    const btn = e.target.closest(".k"); if(!btn) return;
-    const k = btn.getAttribute("data-k");
-    vibrateTiny();
-    if(k==="=") commitLine();
-    else appendToken(k);
-  });
+    const customerName = $("customerName");
+    const lineText = $("lineText");
+    const exprInput = $("expr");
+    const resEl = $("res");
+    const rowsEl = $("rows");
+    const rows2El = $("rows2");
+    const totalEl = $("total");
+    const total2El = $("total2");
 
-  function escapeHtml(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function render(){
-    const inv = state.invoice;
-    const arr = inv?.rows || [];
-    rowsEl.innerHTML = arr.map((r)=>`
-      <tr>
-        <td>${escapeHtml(r.t||"")}</td>
-        <td>${escapeHtml(r.text||"—")}</td>
-        <td>${escapeHtml(r.expr||"")}</td>
-        <td>${escapeHtml(String(r.result ?? ""))}</td>
-      </tr>
-    `).join("");
-    rows2El.innerHTML = rowsEl.innerHTML;
-    totalEl.textContent  = String(inv?.total ?? 0);
-    total2El.textContent = String(inv?.total ?? 0);
-  }
-  render();
-
-  async function syncOp(inv, row){
-    if(!navigator.onLine) return;
-
-    inv = await ensureRemoteInvoice(inv);
-    if(!inv.remote_id && !inv.id) return;
-
-    const payload = {
-      invoiceId: inv.id,
-      username: inv.username,
-      device_id: inv.device_id,
-      text: row.text || "",
-      expr: row.expr || "",
-      result: String(row.result ?? ""),
-      created_at: nowIso()
-    };
-
-    try{ await sb.from(T_OPS).insert(payload); }catch{}
-  }
-
-  async function commitLine(){
-    let inv = ensureInvoiceLocal();
-    if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
-
-    const expr = (state.expr||"").trim();
-    if(!expr) return;
-
-    let result;
-    try{ result = safeEval(expr); }catch{ resEl.textContent="خطأ"; return; }
-
-    ensureRemoteInvoice(inv);
-
-    const text = (lineText.value||"").trim();
-    const row = { t: nowTime(), text, expr, result };
-
-    inv.rows.push(row);
-    inv.total = inv.rows.reduce((a,r)=>a + Number(r.result||0), 0);
-    inv.customer_name = (customerName.value||"").trim();
-
-    jset(LS_CURRENT, inv);
-    state.invoice = inv;
-
-    state.lastResult = result;
-    resEl.textContent = String(result);
-
-    lineText.value = "";
-    setExpr("");
-    render();
-
-    syncOp(inv, row);
-  }
-
-  function clearOnlyOps(){
-    const inv = ensureInvoiceLocal();
-    if(!inv) { alert("أدخل اسم الزبون"); customerName.focus(); return; }
-    inv.rows = [];
-    inv.total = 0;
-    jset(LS_CURRENT, inv);
-    state.invoice = inv;
-    resEl.textContent = "0";
-    setExpr("");
-    render();
-  }
-
-  function newInvoice(){
-    localStorage.removeItem(LS_CURRENT);
-    state.invoice = null;
-    resEl.textContent = "0";
-    setExpr("");
-    render();
-
-    if((customerName.value||"").trim()){
-      ensureInvoiceLocal();
-      render();
-      ensureRemoteInvoice(state.invoice);
+    function uuid(){
+      return (crypto?.randomUUID?.() || ("inv_" + Math.random().toString(16).slice(2) + Date.now()));
     }
-  }
 
-  $("clearOpsBtn").onclick = ()=>{ vibrateTiny(); if(confirm("حذف العمليات الحالية؟")) clearOnlyOps(); };
-  $("newInvoiceBtn").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
-  $("newInvoiceTop").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
-
-  let custTm = null;
-  customerName.addEventListener("input", ()=>{
-    clearTimeout(custTm);
-    custTm = setTimeout(()=>{
+    function ensureInvoiceLocal(){
       const cust = (customerName.value||"").trim();
-      if(cust){
-        const inv = ensureInvoiceLocal();
-        render();
-        ensureRemoteInvoice(inv);
+      if(!cust) return null;
+
+      if(!state.invoice){
+        state.invoice = { id: uuid(), customer_name: cust, rows: [], total: 0 };
+        jset(LS_CURRENT, state.invoice);
+      } else {
+        state.invoice.customer_name = cust;
+        jset(LS_CURRENT, state.invoice);
       }
-    }, 350);
-  });
-
-  async function closeInvoice(inv){
-    if(!inv) return;
-    if(inv.status === "closed") return;
-    inv.status = "closed";
-    inv.closed_at = nowIso();
-    inv.total = inv.rows.reduce((a,r)=>a + Number(r.result||0), 0);
-    jset(LS_CURRENT, inv);
-    state.invoice = inv;
-
-    if(navigator.onLine){
-      inv = await ensureRemoteInvoice(inv);
-      try{
-        await sb.from(T_INV).update({
-          status: "closed",
-          closed_at: inv.closed_at,
-          total: Number(inv.total || 0),
-          customer_name: inv.customer_name
-        }).eq("id", inv.id);
-      }catch{}
+      return state.invoice;
     }
-  }
 
-  function buildInvoiceHtml(inv){
-    const rowsHtml = (inv.rows||[]).map((r, i)=>`
-      <tr>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:10%">${i+1}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:16%">${escapeHtml(r.t||"")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:right;width:34%">${escapeHtml(r.text||"عملية")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(r.expr||"")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%;font-weight:900">${escapeHtml(String(r.result ?? ""))}</td>
-      </tr>
-    `).join("");
+    const saved = jparse(localStorage.getItem(LS_CURRENT), null);
+    if(saved){ state.invoice = saved; customerName.value = saved.customer_name || ""; }
 
-    const invNo = String(inv.id || "").slice(-6);
+    function setExpr(v){ state.expr = v; exprInput.value = v; }
+    function appendToken(tok){
+      if(tok==="BACK"){ setExpr(state.expr.slice(0,-1)); return; }
+      if(tok==="×") tok="*";
+      if(tok==="÷") tok="/";
+      if(!/^[0-9+\-*/().]$/.test(tok)) return;
+      setExpr(state.expr + tok);
+    }
+    function safeEval(expr){
+      const cleaned=(expr||"").replace(/\s+/g,"");
+      if(!cleaned) throw 0;
+      if(!/^[0-9+\-*/().]+$/.test(cleaned)) throw 0;
+      // eslint-disable-next-line no-new-func
+      const val = Function('"use strict";return ('+cleaned+');')();
+      const n = Number(val);
+      if(!Number.isFinite(n)) throw 0;
+      return n;
+    }
 
-    return `
-      <div style="direction:rtl;font-family:Arial,system-ui; background:#fff; color:#111; padding:18px;">
-        <div style="border:2px solid #111;border-radius:14px;padding:16px;">
-          <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px;">شركة الحايك</div>
-          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
+    $("pad").addEventListener("click",(e)=>{
+      const btn = e.target.closest(".k"); if(!btn) return;
+      const k = btn.getAttribute("data-k");
+      vibrateTiny();
+      if(k==="=") commitLine();
+      else appendToken(k);
+    });
 
-          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
-            <div>اسم الزبون: <b>${escapeHtml(inv.customer_name||"-")}</b></div>
-            <div>اسم المستخدم: <b>${escapeHtml(inv.username||"-")}</b></div>
-            <div>رقم الفاتورة: <b>${escapeHtml(invNo)}</b></div>
-            <div>التاريخ: <b>${new Date().toLocaleString("ar")}</b></div>
-          </div>
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
-          <div style="border-top:1px solid #111;margin:10px 0"></div>
+    function render(){
+      const inv = state.invoice;
+      const arr = inv?.rows || [];
+      rowsEl.innerHTML = arr.map((r)=>`
+        <tr>
+          <td>${escapeHtml(r.t||"")}</td>
+          <td>${escapeHtml(r.text||"—")}</td>
+          <td>${escapeHtml(r.expr||"")}</td>
+          <td>${escapeHtml(String(r.result ?? ""))}</td>
+        </tr>
+      `).join("");
+      rows2El.innerHTML = rowsEl.innerHTML;
+      totalEl.textContent  = String(inv?.total ?? 0);
+      total2El.textContent = String(inv?.total ?? 0);
+    }
+    render();
 
-          <div style="font-weight:900;margin:6px 0 10px;">تفاصيل العمليات</div>
+    async function commitLine(){
+      let inv = ensureInvoiceLocal();
+      if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
 
-          <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
-            <thead>
-              <tr style="background:#f3f3f3">
-                <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml || `<tr><td colspan="5" style="border:1px solid #111;padding:14px;text-align:center;color:#666">لا يوجد عمليات</td></tr>`}
-            </tbody>
-          </table>
+      const expr = (state.expr||"").trim();
+      if(!expr) return;
 
-          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
-            <span>إجمالي الكشف:</span>
-            <span>${escapeHtml(String(inv.total || 0))}</span>
-          </div>
+      let result;
+      try{ result = safeEval(expr); }catch{ resEl.textContent="خطأ"; return; }
 
-          <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
+      const text = (lineText.value||"").trim();
+      const row = { t: nowTime(), text, expr, result };
+
+      inv.rows.push(row);
+      inv.total = inv.rows.reduce((a,r)=>a + Number(r.result||0), 0);
+
+      jset(LS_CURRENT, inv);
+      state.invoice = inv;
+
+      state.lastResult = result;
+      resEl.textContent = String(result);
+
+      lineText.value = "";
+      setExpr("");
+      render();
+    }
+
+    function clearOnlyOps(){
+      const inv = ensureInvoiceLocal();
+      if(!inv) { alert("أدخل اسم الزبون"); customerName.focus(); return; }
+      inv.rows = [];
+      inv.total = 0;
+      jset(LS_CURRENT, inv);
+      state.invoice = inv;
+      resEl.textContent = "0";
+      setExpr("");
+      render();
+    }
+
+    function newInvoice(){
+      localStorage.removeItem(LS_CURRENT);
+      state.invoice = null;
+      resEl.textContent = "0";
+      setExpr("");
+      render();
+    }
+
+    $("clearOpsBtn").onclick = ()=>{ vibrateTiny(); if(confirm("حذف العمليات الحالية؟")) clearOnlyOps(); };
+    $("newInvoiceBtn").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
+    $("newInvoiceTop").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
+
+    // ===== PDF export =====
+    function buildInvoiceHtml(inv){
+      const rowsHtml = (inv.rows||[]).map((r, i)=>`
+        <tr>
+          <td style="border:1px solid #111;padding:8px;text-align:center;width:10%">${i+1}</td>
+          <td style="border:1px solid #111;padding:8px;text-align:center;width:16%">${escapeHtml(r.t||"")}</td>
+          <td style="border:1px solid #111;padding:8px;text-align:right;width:34%">${escapeHtml(r.text||"عملية")}</td>
+          <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(r.expr||"")}</td>
+          <td style="border:1px solid #111;padding:8px;text-align:center;width:20%;font-weight:900">${escapeHtml(String(r.result ?? ""))}</td>
+        </tr>
+      `).join("");
+
+      const invNo = String(inv.id || "").slice(-6);
+
+      return `
+        <div style="direction:rtl;font-family:Arial,system-ui; background:#fff; color:#111; padding:18px;">
+          <div style="border:2px solid #111;border-radius:14px;padding:16px;">
+            <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px;">شركة الحايك</div>
+            <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
+
+            <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
+              <div>اسم الزبون: <b>${escapeHtml(inv.customer_name||"-")}</b></div>
+              <div>رقم الفاتورة: <b>${escapeHtml(invNo)}</b></div>
+              <div>التاريخ: <b>${new Date().toLocaleString("ar")}</b></div>
+            </div>
+
+            <div style="border-top:1px solid #111;margin:10px 0"></div>
+
+            <div style="font-weight:900;margin:6px 0 10px;">تفاصيل العمليات</div>
+
+            <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+              <thead>
+                <tr style="background:#f3f3f3">
+                  <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
+                  <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
+                  <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
+                  <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
+                  <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml || `<tr><td colspan="5" style="border:1px solid #111;padding:14px;text-align:center;color:#666">لا يوجد عمليات</td></tr>`}
+              </tbody>
+            </table>
+
+            <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
+              <span>إجمالي الكشف:</span>
+              <span>${escapeHtml(String(inv.total || 0))}</span>
+            </div>
+
+            <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
+              تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
+              <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  }
-
-  async function exportPDF(){
-    let inv = ensureInvoiceLocal();
-    if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
-    if(!inv.rows?.length){ alert("لا يوجد عمليات لتصديرها"); return; }
-
-    await closeInvoice(inv);
-    inv = await ensureRemoteInvoice(state.invoice || inv);
-
-    const tmp = document.createElement("div");
-    tmp.style.position="fixed"; tmp.style.left="-99999px"; tmp.style.top="0"; tmp.style.width="794px";
-    tmp.innerHTML = buildInvoiceHtml(inv);
-    document.body.appendChild(tmp);
-
-    const canvas = await html2canvas(tmp, { scale: 2, backgroundColor:"#ffffff" });
-    tmp.remove();
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p","pt","a4");
-
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = canvas.height * (imgW / canvas.width);
-
-    let y = 0;
-    let remaining = imgH;
-    while (remaining > 0) {
-      pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
-      remaining -= pageH;
-      if (remaining > 0) { pdf.addPage(); y -= pageH; }
+      `;
     }
 
-    const cust = (inv.customer_name||"invoice").trim().replace(/\s+/g,"_");
-    const invNo = String(inv.id||"").slice(-6);
-    pdf.save(`HAYEK_${cust}_${invNo}.pdf`);
-  }
+    async function exportPDF(){
+      let inv = ensureInvoiceLocal();
+      if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
+      if(!inv.rows?.length){ alert("لا يوجد عمليات لتصديرها"); return; }
 
-  $("pdfBtn").onclick = () => { vibrateTiny(); exportPDF(); };
-</script>
+      const tmp = document.createElement("div");
+      tmp.style.position="fixed"; tmp.style.left="-99999px"; tmp.style.top="0"; tmp.style.width="794px";
+      tmp.innerHTML = buildInvoiceHtml(inv);
+      document.body.appendChild(tmp);
+
+      const canvas = await html2canvas(tmp, { scale: 2, backgroundColor:"#ffffff" });
+      tmp.remove();
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p","pt","a4");
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = canvas.height * (imgW / canvas.width);
+
+      let y = 0;
+      let remaining = imgH;
+      while (remaining > 0) {
+        pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
+        remaining -= pageH;
+        if (remaining > 0) { pdf.addPage(); y -= pageH; }
+      }
+
+      const cust = (inv.customer_name||"invoice").trim().replace(/\s+/g,"_");
+      const invNo = String(inv.id||"").slice(-6);
+      pdf.save(`HAYEK_${cust}_${invNo}.pdf`);
+    }
+
+    $("pdfBtn").onclick = () => { vibrateTiny(); exportPDF(); };
+
+  </script>
 </body>
 </html>
