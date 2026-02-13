@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>لوحة الأدمن - HAYEK</title>
-  <link rel="icon" href="data:," />
 
   <style>
     :root{
@@ -28,6 +27,7 @@
     .brand{ display:flex; flex-direction:column; gap:2px; }
     .brand b{ font-size:16px; }
     .brand span{ font-size:12px; color:var(--muted); }
+
     .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     button{
       border:1px solid var(--line); background:var(--btn); color:var(--txt);
@@ -68,7 +68,7 @@
     }
     .w-60{ flex: 1 1 420px; }
     .w-20{ flex: 1 1 160px; }
-    .hint{ font-size:12px; color:var(--muted); margin-top:8px; }
+    .hint{ font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; }
 
     .status{ font-size:12px; color:var(--muted); margin-top:10px; }
 
@@ -95,47 +95,33 @@
       border:1px solid rgba(154,167,189,.25);
       font-size:12px; color:var(--muted);
     }
-    .pill.ok{ border-color: rgba(53,208,127,.35); color: rgba(53,208,127,.95); }
-    .pill.bad{ border-color: rgba(255,77,77,.35); color: rgba(255,77,77,.95); }
 
-    .pager{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-top:12px;
-    }
-    .pager .left, .pager .right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .small{ font-size:12px; color:var(--muted); }
-
-    /* Lock */
+    /* ✅ شاشة قفل بدون تقليب */
     #lock{
-      position:fixed; inset:0; background:rgba(0,0,0,.82);
-      z-index:9999; display:none; align-items:center; justify-content:center; padding:16px;
+      position:fixed; inset:0; z-index:9999;
+      background:rgba(0,0,0,.82);
+      display:none; align-items:center; justify-content:center;
+      padding:16px;
     }
     #lock .box{
-      width:min(560px,100%); background:#0b1820; border:1px solid rgba(255,255,255,.12);
-      border-radius:20px; padding:18px; text-align:center;
+      width:min(520px,100%);
+      background:#0b1820;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:20px;
+      padding:18px;
+      text-align:center;
     }
     #lock h3{ margin:0 0 8px; }
     #lock p{ margin:0 0 12px; color:#b9cde0; line-height:1.7; }
-    #lock .rowBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
-    #lock .btnSmall{
-      border:none;border-radius:999px;padding:10px 14px;
-      background:rgba(255,255,255,.08);color:#fff;cursor:pointer;
-    }
-    #lock .btnSmall.danger{
-      background:rgba(255,77,77,.16);border:1px solid rgba(255,77,77,.35);
-    }
   </style>
 </head>
-
 <body>
+
   <div id="lock">
     <div class="box">
       <h3 id="lockTitle">تسجيل الدخول مطلوب</h3>
-      <p id="lockMsg">غير مسموح دخول لوحة الأدمن بدون تسجيل دخول.</p>
-      <div class="rowBtns">
-        <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
-        <button class="btnSmall danger" id="doLogout" style="display:none;">تسجيل خروج</button>
-      </div>
+      <p id="lockMsg">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
+      <button class="primary" id="goLogin">الذهاب لتسجيل الدخول</button>
     </div>
   </div>
 
@@ -143,7 +129,7 @@
     <div class="topbar">
       <div class="brand">
         <b>لوحة الأدمن — HAYEK</b>
-        <span id="sessionInfo">غير مسجّل</span>
+        <span id="sessionInfo">جاري التحقق…</span>
       </div>
       <div class="actions">
         <button class="primary" id="btnRefresh">تحديث</button>
@@ -192,20 +178,20 @@
             </table>
           </div>
 
-          <div class="pager">
-            <div class="left">
+          <div class="pager" style="display:flex;justify-content:space-between;gap:10px;margin-top:12px;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <button id="prevUsers">السابق</button>
               <button id="nextUsers">التالي</button>
-              <span class="small" id="usersPageInfo">صفحة 1</span>
+              <span style="font-size:12px;color:var(--muted);" id="usersPageInfo">صفحة 1</span>
             </div>
-            <div class="right">
-              <span class="small" id="usersCountInfo">—</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--muted);" id="usersCountInfo">—</span>
             </div>
           </div>
         </div>
 
         <div id="invoicesPanel" style="display:none;">
-          <div class="hint">سيتم تفعيل هذا التبويب بعد ما تكتب "تم التنفيذ".</div>
+          <div class="hint">سيتم تفعيل هذا التبويب بعد ما تكتب "تم".</div>
         </div>
 
         <div id="reportsPanel" style="display:none;">
@@ -225,67 +211,53 @@
     </div>
   </div>
 
+  <!-- ✅ Gate نهائي: Supabase Auth فقط + بدون تقليب -->
   <script type="module">
-    // ✅ المصدر الوحيد لعميل Supabase (Singleton)
     import { supabase } from "./config.js";
 
     const $ = (id)=>document.getElementById(id);
-
     const lock = $("lock");
-    const lockTitle = $("lockTitle");
-    const lockMsg = $("lockMsg");
-    const goLogin = $("goLogin");
-    const doLogout = $("doLogout");
-    const sessionInfo = $("sessionInfo");
 
-    function usernameFromEmail(email){
-      const s = String(email||"");
-      return s.includes("@") ? s.split("@")[0] : s;
-    }
-    function isAdminUsername(u){
-      return String(u||"").toLowerCase() === "admin";
-    }
-    function showLock(title, msg, showLogout=false){
-      lockTitle.textContent = title;
-      lockMsg.textContent = msg;
-      doLogout.style.display = showLogout ? "inline-block" : "none";
+    function showLock(title, msg){
+      $("lockTitle").textContent = title;
+      $("lockMsg").textContent = msg;
       lock.style.display = "flex";
     }
 
-    goLogin.onclick = ()=> location.href = "index.html?v=" + Date.now();
-    doLogout.onclick = async ()=> {
-      await supabase.auth.signOut();
+    function emailUserName(email){
+      const s = String(email||"");
+      return s.includes("@") ? s.split("@")[0].toLowerCase() : s.toLowerCase();
+    }
+
+    $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
+
+    $("btnRefresh").onclick = () => location.reload();
+    $("btnLogout").onclick = async () => {
+      try{ await supabase.auth.signOut(); }catch{}
       location.href = "index.html?v=" + Date.now();
     };
 
-    const { data } = await supabase.auth.getUser();
-    const user = data?.user;
+    // ✅ تحقق جلسة
+    const { data } = await supabase.auth.getSession();
+    const user = data?.session?.user;
 
     if(!user){
-      sessionInfo.textContent = "غير مسجّل";
-      showLock("تسجيل الدخول مطلوب", "غير مسموح دخول لوحة الأدمن بدون تسجيل دخول.");
-      throw new Error("Not authed");
+      $("sessionInfo").textContent = "غير مسجّل";
+      showLock("تسجيل الدخول مطلوب", "الرجاء تسجيل الدخول أولاً.");
+      throw new Error("NO_SESSION");
     }
 
-    const username = usernameFromEmail(user.email);
-    sessionInfo.textContent = `${username}`;
+    const uname = emailUserName(user.email);
+    $("sessionInfo").textContent = "مسجّل: " + uname;
 
-    if(!isAdminUsername(username)){
-      showLock("لا تملك صلاحية الأدمن", "هذا الحساب ليس أدمن. سجّل دخول بحساب الأدمن للمتابعة.", true);
-      throw new Error("Not admin");
+    // ✅ شرط الأدمن الجذري (حالياً): admin@hayek.local فقط
+    if(uname !== "admin"){
+      showLock("غير مصرح", "هذه الصفحة للأدمن فقط. افتح صفحة المستخدم (invoice).");
+      throw new Error("NOT_ADMIN");
     }
 
-    // ✅ أدمن: حمّل admin.js
-    const s = document.createElement("script");
-    s.type = "module";
-    s.src = "./admin.js?v=" + Date.now();
-    document.body.appendChild(s);
-
-    // Logout buttons
-    $("btnLogout").onclick = async ()=> {
-      await supabase.auth.signOut();
-      location.href = "index.html?v=" + Date.now();
-    };
+    // ✅ حمّل admin.js فقط بعد نجاح التحقق (حتى لا يسبب loop)
+    await import("./admin.js");
   </script>
 </body>
 </html>
