@@ -4,215 +4,473 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>لوحة الأدمن - HAYEK</title>
-
   <style>
     :root{
       --bg:#0b0f14; --card:#121823; --txt:#e8eefc; --muted:#9aa7bd;
-      --line:#243044; --accent:#4da3ff; --danger:#ff4d4d; --ok:#35d07f;
-      --btn:#1a2433; --btn2:#223149; --radius:16px;
+      --line:#243041; --btn:#1a2432; --btn2:#233044; --danger:#ff4d4d; --ok:#22c55e;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
     }
-    *{ box-sizing:border-box; }
+    *{box-sizing:border-box}
     body{
-      margin:0; font-family:system-ui, -apple-system, "Segoe UI", Tahoma, Arial;
-      background:linear-gradient(180deg,#070a10,#0b0f14 40%);
-      color:var(--txt); min-height:100vh; padding:14px;
+      margin:0; background:linear-gradient(180deg,#070a0f 0%, #0b0f14 40%, #0b0f14 100%);
+      color:var(--txt); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      min-height:100vh; display:flex; justify-content:center; padding:16px;
     }
-    .wrap{ max-width:1100px; margin:0 auto; }
+    .wrap{width:100%; max-width:1050px;}
     .topbar{
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      padding:14px 16px; border:1px solid var(--line); border-radius:var(--radius);
-      background: rgba(18,24,35,.75); backdrop-filter: blur(8px);
-      position: sticky; top: 10px; z-index: 50;
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      margin:8px 0 16px;
     }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand b{ font-size:16px; }
-    .brand span{ font-size:12px; color:var(--muted); }
+    .brand{display:flex; align-items:center; gap:10px}
+    .dot{width:12px;height:12px;border-radius:50%; background:var(--ok); box-shadow:0 0 0 6px rgba(34,197,94,.15)}
+    .title{font-weight:800; letter-spacing:.3px}
+    .sub{color:var(--muted); font-size:13px}
+    .grid{display:grid; gap:14px}
+    @media(min-width:900px){ .grid{grid-template-columns: 420px 1fr;} }
 
-    .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    button{
-      border:1px solid var(--line); background:var(--btn); color:var(--txt);
-      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
-    }
-    button:hover{ background:var(--btn2); }
-    button.danger{ border-color: rgba(255,77,77,.4); }
-    button.danger:hover{ background: rgba(255,77,77,.12); }
-    button.primary{ border-color: rgba(77,163,255,.45); }
-    button.primary:hover{ background: rgba(77,163,255,.12); }
-
-    .grid{
-      display:grid; gap:12px;
-      grid-template-columns: 1fr;
-      margin-top:12px;
-    }
-    @media(min-width: 900px){
-      .grid{ grid-template-columns: 1.1fr .9fr; }
-    }
     .card{
-      border:1px solid var(--line); background:rgba(18,24,35,.65);
-      border-radius:var(--radius); padding:14px;
+      background:rgba(18,24,35,.92);
+      border:1px solid rgba(36,48,65,.7);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
       backdrop-filter: blur(8px);
     }
-
-    .tabs{ display:flex; gap:8px; flex-wrap:wrap; }
-    .tab{
-      padding:10px 12px; border-radius:12px; border:1px solid var(--line);
-      background:transparent; cursor:pointer; font-weight:800; color:var(--muted);
-    }
-    .tab.active{ color:var(--txt); border-color: rgba(77,163,255,.45); background: rgba(77,163,255,.10); }
-
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+    h2{margin:0 0 10px; font-size:16px}
+    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px}
     input, select{
-      width:100%;
-      border:1px solid var(--line); background:#0f1622; color:var(--txt);
-      padding:12px 12px; border-radius:12px; outline:none;
+      width:100%; padding:12px 12px;
+      border-radius:12px; border:1px solid rgba(36,48,65,.85);
+      background:#0e141e; color:var(--txt);
+      outline:none;
     }
-    .w-60{ flex: 1 1 420px; }
-    .w-20{ flex: 1 1 160px; }
-    .hint{ font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; }
-
-    .status{ font-size:12px; color:var(--muted); margin-top:10px; }
-
-    .tableWrap{
-      width:100%; overflow:auto;
-      border:1px solid var(--line);
-      border-radius:14px;
-      margin-top:12px;
+    input:focus{border-color:#3b82f6; box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+    .row{display:flex; gap:10px; align-items:center}
+    .row > *{flex:1}
+    .btn{
+      border:1px solid rgba(36,48,65,.85);
+      background:var(--btn);
+      color:var(--txt);
+      padding:11px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.15s;
+      user-select:none;
     }
-    table{ width:100%; border-collapse:collapse; min-width: 900px; }
-    th, td{
-      padding:12px 10px;
-      border-bottom:1px solid rgba(36,48,68,.65);
-      text-align:right;
-      font-size:14px;
-      white-space:nowrap;
-    }
-    th{ color:var(--muted); font-size:12px; letter-spacing:.3px; }
-    tr:hover td{ background: rgba(77,163,255,.06); }
-
+    .btn:hover{transform:translateY(-1px); background:var(--btn2)}
+    .btn.primary{background:#1d4ed8; border-color:#1d4ed8}
+    .btn.primary:hover{background:#2563eb}
+    .btn.danger{background:#3a1414; border-color:#5a1f1f; color:#ffd4d4}
+    .btn.danger:hover{background:#4a1818}
+    .btn.ghost{background:transparent}
     .pill{
       display:inline-flex; align-items:center; gap:8px;
       padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(154,167,189,.25);
-      font-size:12px; color:var(--muted);
+      border:1px solid rgba(36,48,65,.85);
+      color:var(--muted); font-size:12px;
     }
-    .pill.ok{ border-color: rgba(53,208,127,.35); color: rgba(53,208,127,.95); }
-    .pill.bad{ border-color: rgba(255,77,77,.35); color: rgba(255,77,77,.95); }
-
-    /* ✅ شاشة قفل بدون تقليب */
-    #lock{
-      position:fixed; inset:0; z-index:9999;
-      background:rgba(0,0,0,.82);
-      display:none; align-items:center; justify-content:center;
-      padding:16px;
+    .pill b{color:var(--txt)}
+    .sep{height:1px; background:rgba(36,48,65,.7); margin:12px 0}
+    .list{display:flex; flex-direction:column; gap:10px}
+    .item{
+      border:1px solid rgba(36,48,65,.75);
+      border-radius:14px;
+      padding:10px;
+      background:rgba(10,14,20,.55);
     }
-    #lock .box{
-      width:min(520px,100%);
-      background:#0b1820;
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:20px;
-      padding:18px;
-      text-align:center;
+    .itemHead{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .itemTitle{font-weight:800}
+    .meta{color:var(--muted); font-size:12px; margin-top:6px}
+    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-start}
+    .small{padding:8px 10px; border-radius:10px; font-size:12px}
+    .hint{color:var(--muted); font-size:12px; line-height:1.6}
+    .error{
+      color:#ffd0d0; background:rgba(255,77,77,.08);
+      border:1px solid rgba(255,77,77,.25);
+      padding:10px; border-radius:12px; margin-top:10px; display:none;
+      white-space:pre-wrap;
     }
-    #lock h3{ margin:0 0 8px; }
-    #lock p{ margin:0 0 12px; color:#b9cde0; line-height:1.7; }
+    .okbox{
+      color:#c9ffe0; background:rgba(34,197,94,.08);
+      border:1px solid rgba(34,197,94,.25);
+      padding:10px; border-radius:12px; margin-top:10px; display:none;
+      white-space:pre-wrap;
+    }
+    .hide{display:none !important;}
   </style>
 </head>
-
 <body>
-  <div id="lock">
-    <div class="box">
-      <h3 id="lockTitle">تسجيل الدخول مطلوب</h3>
-      <p id="lockMsg">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
-      <button class="primary" id="goLogin">الذهاب لتسجيل الدخول</button>
-    </div>
-  </div>
-
   <div class="wrap">
     <div class="topbar">
       <div class="brand">
-        <b>لوحة الأدمن — HAYEK</b>
-        <span id="sessionInfo">جاري التحقق…</span>
+        <div class="dot"></div>
+        <div>
+          <div class="title">HAYEK — لوحة الأدمن</div>
+          <div class="sub" id="subTitle">تسجيل دخول الأدمن</div>
+        </div>
       </div>
-      <div class="actions">
-        <button class="primary" id="btnRefresh">تحديث</button>
-        <button class="danger" id="btnLogout">تسجيل خروج</button>
-      </div>
+      <div class="pill" id="sessionPill"><b>غير مسجل</b></div>
     </div>
 
     <div class="grid">
-      <div class="card">
-        <div class="tabs">
-          <button class="tab active" data-tab="users">المستخدمين</button>
-          <button class="tab" data-tab="invoices">الفواتير</button>
-          <button class="tab" data-tab="reports">التقارير</button>
+      <!-- LOGIN -->
+      <div class="card" id="loginCard">
+        <h2>تسجيل دخول الأدمن</h2>
+        <div class="hint">افتراضي: <b>admin</b> / <b>admin123</b> (غيّره لاحقاً)</div>
+        <label>اسم المستخدم</label>
+        <input id="loginUser" autocomplete="username" placeholder="admin" />
+        <label>كلمة السر</label>
+        <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="btnLogin">دخول</button>
+          <button class="btn ghost" id="btnClear">تفريغ</button>
         </div>
-
-        <div id="usersPanel">
-          <div class="row">
-            <div class="w-60">
-              <input id="qUsers" placeholder="بحث: username أو device_id" />
-              <div class="hint">يتم جلب 25 فقط، والباقي بالصفحات لسرعة أعلى.</div>
-            </div>
-            <div class="w-20">
-              <select id="pageSizeUsers">
-                <option value="25" selected>25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="status" id="usersStatus">جاهز</div>
-
-          <div class="tableWrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Device ID</th>
-                  <th>Admin</th>
-                  <th>الحالة</th>
-                  <th>آخر ظهور</th>
-                  <th>إجراء</th>
-                </tr>
-              </thead>
-              <tbody id="usersTbody"></tbody>
-            </table>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;gap:10px;margin-top:12px;">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <button id="prevUsers">السابق</button>
-              <button id="nextUsers">التالي</button>
-              <span style="font-size:12px;color:var(--muted);" id="usersPageInfo">صفحة 1</span>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <span style="font-size:12px;color:var(--muted);" id="usersCountInfo">—</span>
-            </div>
-          </div>
-        </div>
-
-        <div id="invoicesPanel" style="display:none;">
-          <div class="hint">سيتم تفعيل هذا التبويب لاحقاً.</div>
-        </div>
-
-        <div id="reportsPanel" style="display:none;">
-          <div class="hint">التقارير خطوة لاحقة.</div>
-        </div>
+        <div class="error" id="loginErr"></div>
+        <div class="okbox" id="loginOk"></div>
       </div>
 
-      <div class="card">
-        <b>ملخص سريع</b>
-        <div class="hint">استعلامات خفيفة فقط لتسريع الأدمن.</div>
-        <div class="row" style="margin-top:10px;">
-          <span class="pill" id="pillUsers">Users: —</span>
-          <span class="pill" id="pillInvoices">Invoices: —</span>
+      <!-- DASHBOARD -->
+      <div class="card hide" id="dashCard">
+        <div class="row" style="align-items:flex-start">
+          <div style="flex:1">
+            <h2 style="margin-bottom:6px">المستخدمين</h2>
+            <div class="hint">إضافة/حظر/فك/حذف — كل شيء من هنا.</div>
+          </div>
+          <div style="display:flex; gap:10px; justify-content:flex-end">
+            <button class="btn" id="btnRefresh">تحديث</button>
+            <button class="btn danger" id="btnLogout">خروج</button>
+          </div>
         </div>
-        <div class="hint" id="sysMsg" style="margin-top:12px;">—</div>
+
+        <div class="sep"></div>
+
+        <h2>إضافة مستخدم</h2>
+        <div class="row">
+          <div>
+            <label>اسم المستخدم</label>
+            <input id="newUsername" placeholder="مثال: user1" />
+          </div>
+          <div>
+            <label>كلمة السر</label>
+            <input id="newPassword" placeholder="مثال: 1234" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>اسم كامل</label>
+            <input id="newFullName" placeholder="اسم الزبون/المستخدم" />
+          </div>
+          <div>
+            <label>هاتف</label>
+            <input id="newPhone" placeholder="اختياري" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>صلاحية</label>
+            <select id="newRole">
+              <option value="user">مستخدم</option>
+              <option value="admin">أدمن</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:flex-end">
+            <button class="btn primary" id="btnAddUser" style="width:100%">إضافة مستخدم</button>
+          </div>
+        </div>
+
+        <div class="error" id="dashErr"></div>
+        <div class="okbox" id="dashOk"></div>
+
+        <div class="sep"></div>
+
+        <h2>قائمة المستخدمين</h2>
+        <div class="list" id="usersList"></div>
+
+        <div class="sep"></div>
+
+        <h2>آخر الفواتير</h2>
+        <div class="list" id="invList"></div>
       </div>
     </div>
   </div>
 
-  <script type="module" src="./admin.js?v=1"></script>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // ✅ ضع رابط مشروعك
+    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    // ✅ ضع المفتاح كاملاً sb_publishable_... من Project Settings > API
+    const SUPABASE_ANON_KEY = "PASTE_FULL_SB_PUBLISHABLE_KEY_HERE";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const el = (id)=>document.getElementById(id);
+
+    const loginCard = el("loginCard");
+    const dashCard  = el("dashCard");
+    const loginErr  = el("loginErr");
+    const loginOk   = el("loginOk");
+    const dashErr   = el("dashErr");
+    const dashOk    = el("dashOk");
+    const usersList = el("usersList");
+    const invList   = el("invList");
+    const subTitle  = el("subTitle");
+    const sessionPill = el("sessionPill");
+
+    let ADMIN = null;
+
+    function showErr(box, msg){
+      box.style.display = "block";
+      box.textContent = msg;
+    }
+    function showOk(box, msg){
+      box.style.display = "block";
+      box.textContent = msg;
+      setTimeout(()=> box.style.display="none", 2200);
+    }
+    function clearBox(box){ box.style.display="none"; box.textContent=""; }
+
+    function setSessionPill(){
+      if(!ADMIN){
+        sessionPill.innerHTML = "<b>غير مسجل</b>";
+        return;
+      }
+      sessionPill.innerHTML = `<b>${ADMIN.username}</b> — أدمن`;
+    }
+
+    async function adminLogin(){
+      clearBox(loginErr); clearBox(loginOk);
+
+      const username = el("loginUser").value.trim();
+      const password = el("loginPass").value.trim();
+      if(!username || !password){
+        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("app_users")
+        .select("*")
+        .eq("username", username)
+        .limit(1);
+
+      if(error){
+        showErr(loginErr, "خطأ Supabase:\n" + (error.message || JSON.stringify(error)));
+        return;
+      }
+      if(!data || !data.length){
+        showErr(loginErr, "المستخدم غير موجود.");
+        return;
+      }
+
+      const u = data[0];
+      if(u.password !== password){
+        showErr(loginErr, "كلمة السر غير صحيحة.");
+        return;
+      }
+      if(!u.is_admin){
+        showErr(loginErr, "هذا الحساب ليس أدمن.");
+        return;
+      }
+      if(u.is_blocked){
+        showErr(loginErr, "هذا الأدمن محظور.");
+        return;
+      }
+
+      ADMIN = u;
+      localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id, username:u.username }));
+      loginCard.classList.add("hide");
+      dashCard.classList.remove("hide");
+      subTitle.textContent = "لوحة الإدارة";
+      setSessionPill();
+      showOk(loginOk, "تم تسجيل الدخول ✅");
+      await refreshAll();
+    }
+
+    function logout(){
+      ADMIN = null;
+      localStorage.removeItem("HAYEK_ADMIN_SESSION");
+      dashCard.classList.add("hide");
+      loginCard.classList.remove("hide");
+      subTitle.textContent = "تسجيل دخول الأدمن";
+      setSessionPill();
+    }
+
+    async function restoreSession(){
+      try{
+        const s = JSON.parse(localStorage.getItem("HAYEK_ADMIN_SESSION") || "null");
+        if(!s?.id) return;
+        const { data } = await supabase.from("app_users").select("*").eq("id", s.id).limit(1);
+        if(data?.length && data[0].is_admin && !data[0].is_blocked){
+          ADMIN = data[0];
+          loginCard.classList.add("hide");
+          dashCard.classList.remove("hide");
+          subTitle.textContent = "لوحة الإدارة";
+          setSessionPill();
+          await refreshAll();
+        }
+      }catch{}
+    }
+
+    function userCard(u){
+      const role = u.is_admin ? "أدمن" : "مستخدم";
+      const blocked = u.is_blocked ? "محظور" : "فعّال";
+      const badge = u.is_blocked ? "style='color:#ffd0d0'" : "style='color:#c9ffe0'";
+      const created = new Date(u.created_at).toLocaleString();
+
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="itemHead">
+          <div>
+            <div class="itemTitle">${u.username} — <span ${badge}>${blocked}</span></div>
+            <div class="meta">
+              ${u.full_name ? ("الاسم: " + u.full_name + " — ") : ""}
+              ${u.phone ? ("هاتف: " + u.phone + " — ") : ""}
+              الصلاحية: ${role} — بتاريخ: ${created}
+            </div>
+          </div>
+          <div class="actions">
+            ${u.is_blocked
+              ? `<button class="btn small" data-act="unblock" data-id="${u.id}">فك الحظر</button>`
+              : `<button class="btn small" data-act="block" data-id="${u.id}">حظر</button>`
+            }
+            <button class="btn danger small" data-act="del" data-id="${u.id}">حذف</button>
+          </div>
+        </div>
+      `;
+      div.addEventListener("click", async (e)=>{
+        const b = e.target.closest("button");
+        if(!b) return;
+        const act = b.dataset.act;
+        const id  = b.dataset.id;
+        if(act==="del"){
+          if(!confirm("تأكيد حذف المستخدم؟")) return;
+          await supabase.from("app_users").delete().eq("id", id);
+          await refreshUsers();
+          return;
+        }
+        if(act==="block"){
+          await supabase.from("app_users").update({ is_blocked:true }).eq("id", id);
+          await refreshUsers();
+          return;
+        }
+        if(act==="unblock"){
+          await supabase.from("app_users").update({ is_blocked:false }).eq("id", id);
+          await refreshUsers();
+          return;
+        }
+      });
+      return div;
+    }
+
+    function invoiceCard(inv){
+      const created = new Date(inv.created_at).toLocaleString();
+      const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="itemHead">
+          <div>
+            <div class="itemTitle">${inv.customer_name} — ${status}</div>
+            <div class="meta">المجموع: <b>${inv.total}</b> — بتاريخ: ${created}</div>
+          </div>
+          <div class="pill"><b>${(inv.lines||[]).length}</b> عمليات</div>
+        </div>
+      `;
+      return div;
+    }
+
+    async function refreshUsers(){
+      clearBox(dashErr);
+      usersList.innerHTML = "";
+      const { data, error } = await supabase
+        .from("app_users")
+        .select("*")
+        .order("created_at",{ascending:false});
+
+      if(error){
+        showErr(dashErr, "خطأ Supabase (Users):\n" + (error.message || JSON.stringify(error)));
+        return;
+      }
+      (data||[]).forEach(u=> usersList.appendChild(userCard(u)));
+      if(!data?.length){
+        usersList.innerHTML = `<div class="hint">لا يوجد مستخدمين.</div>`;
+      }
+    }
+
+    async function refreshInvoices(){
+      invList.innerHTML = "";
+      const { data, error } = await supabase
+        .from("app_invoices")
+        .select("*")
+        .order("created_at",{ascending:false})
+        .limit(30);
+
+      if(error){
+        showErr(dashErr, "خطأ Supabase (Invoices):\n" + (error.message || JSON.stringify(error)));
+        return;
+      }
+      (data||[]).forEach(i=> invList.appendChild(invoiceCard(i)));
+      if(!data?.length){
+        invList.innerHTML = `<div class="hint">لا يوجد فواتير بعد.</div>`;
+      }
+    }
+
+    async function refreshAll(){
+      await refreshUsers();
+      await refreshInvoices();
+    }
+
+    async function addUser(){
+      clearBox(dashErr); clearBox(dashOk);
+      const username = el("newUsername").value.trim();
+      const password = el("newPassword").value.trim();
+      const full_name = el("newFullName").value.trim();
+      const phone = el("newPhone").value.trim();
+      const role = el("newRole").value;
+
+      if(!username || !password){
+        showErr(dashErr, "اكتب اسم المستخدم وكلمة السر للمستخدم الجديد.");
+        return;
+      }
+
+      const payload = {
+        username, password,
+        full_name: full_name || null,
+        phone: phone || null,
+        is_admin: role === "admin",
+        is_blocked: false
+      };
+
+      const { error } = await supabase.from("app_users").insert(payload);
+      if(error){
+        showErr(dashErr, "فشل إضافة المستخدم:\n" + (error.message || JSON.stringify(error)));
+        return;
+      }
+
+      el("newUsername").value = "";
+      el("newPassword").value = "";
+      el("newFullName").value = "";
+      el("newPhone").value = "";
+      el("newRole").value = "user";
+      showOk(dashOk, "تمت الإضافة ✅");
+      await refreshUsers();
+    }
+
+    el("btnLogin").addEventListener("click", adminLogin);
+    el("btnClear").addEventListener("click", ()=>{
+      el("loginUser").value=""; el("loginPass").value="";
+      clearBox(loginErr); clearBox(loginOk);
+    });
+    el("btnLogout").addEventListener("click", logout);
+    el("btnRefresh").addEventListener("click", refreshAll);
+    el("btnAddUser").addEventListener("click", addUser);
+
+    // start
+    restoreSession();
+    setSessionPill();
+  </script>
 </body>
 </html>
