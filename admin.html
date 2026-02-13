@@ -68,8 +68,7 @@
     }
     .w-60{ flex: 1 1 420px; }
     .w-20{ flex: 1 1 160px; }
-    .hint{ font-size:12px; color:var(--muted); margin-top:8px; }
-
+    .hint{ font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; }
     .status{ font-size:12px; color:var(--muted); margin-top:10px; }
 
     .tableWrap{
@@ -105,21 +104,27 @@
     .pager .left, .pager .right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .small{ font-size:12px; color:var(--muted); }
 
-    /* ✅ شاشة قفل */
+    /* ✅ شاشة قفل بدون تقليب */
     #lock{
-      position:fixed; inset:0; background:rgba(0,0,0,.82);
-      z-index:9999; display:none; align-items:center; justify-content:center; padding:16px
+      position:fixed; inset:0; z-index:9999;
+      background:rgba(0,0,0,.82);
+      display:none; align-items:center; justify-content:center;
+      padding:16px;
     }
     #lock .box{
-      width:min(520px,100%); background:#0b1820; border:1px solid rgba(255,255,255,.12);
-      border-radius:20px; padding:18px; text-align:center
+      width:min(520px,100%);
+      background:#0b1820;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:20px;
+      padding:18px;
+      text-align:center;
     }
-    #lock .box h3{margin:0 0 8px}
-    #lock .box p{color:#b9cde0;margin:0 0 12px;line-height:1.7}
+    #lock h3{ margin:0 0 8px; }
+    #lock p{ margin:0 0 12px; color:#b9cde0; line-height:1.7; }
   </style>
 </head>
-<body>
 
+<body>
   <div id="lock">
     <div class="box">
       <h3 id="lockTitle">تسجيل الدخول مطلوب</h3>
@@ -214,51 +219,6 @@
     </div>
   </div>
 
-  <!-- ✅ Gate Supabase Auth + تحميل admin.js مرة واحدة + حل Unexpected token -->
-  <script type="module">
-    import { supabase } from "./config.js";
-
-    const $ = (id)=>document.getElementById(id);
-    const lock = $("lock");
-
-    function showLock(title, msg){
-      $("lockTitle").textContent = title;
-      $("lockMsg").textContent = msg;
-      lock.style.display = "flex";
-    }
-    function unameFromEmail(email){
-      const s = String(email||"");
-      return s.includes("@") ? s.split("@")[0].toLowerCase() : s.toLowerCase();
-    }
-
-    $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
-    $("btnRefresh").onclick = () => location.reload();
-    $("btnLogout").onclick = async () => {
-      try{ await supabase.auth.signOut(); }catch{}
-      location.href = "index.html?v=" + Date.now();
-    };
-
-    // ✅ تحقق Session
-    const { data } = await supabase.auth.getSession();
-    const user = data?.session?.user;
-
-    if(!user){
-      $("sessionInfo").textContent = "غير مسجّل";
-      showLock("تسجيل الدخول مطلوب", "الرجاء تسجيل الدخول أولاً.");
-      throw new Error("NO_SESSION");
-    }
-
-    const uname = unameFromEmail(user.email);
-    $("sessionInfo").textContent = "مسجّل: " + uname;
-
-    // ✅ شرط الأدمن حالياً: admin فقط (حل جذري يمنع أي Loop)
-    if(uname !== "admin"){
-      showLock("غير مصرح", "هذه الصفحة للأدمن فقط.");
-      throw new Error("NOT_ADMIN");
-    }
-
-    // ✅ حمّل admin.js بعد التأكد فقط + cache bust (يحل token '<' بسبب كاش/404 قديم)
-    await import("./admin.js?v=" + Date.now());
-  </script>
+  <script type="module" src="./admin.js"></script>
 </body>
 </html>
