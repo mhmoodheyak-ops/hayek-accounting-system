@@ -1,7 +1,7 @@
-// config.js
+// config.js (FINAL - Singleton Hard Lock)
 // ==================================================
-// Supabase FINAL configuration
-// يُستخدم في كامل المشروع (Front-end)
+// Supabase configuration (Front-end)
+// يمنع إنشاء أكثر من Client في نفس المتصفح حتى لو تم استيراد الملف أكثر من مرة
 // ==================================================
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -9,36 +9,40 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // 🔐 Project URL (ثابت – نهائي)
 export const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
 
-// 🔐 Publishable (Anon) Key فقط — ممنوع secret
+// 🔐 Publishable Key فقط — ممنوع secret
 export const SUPABASE_ANON_KEY =
   "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_"; // ضع المفتاح كاملاً كما هو عندك
 
 // ==================================================
-// إنشاء عميل Supabase واحد فقط (Singleton)
+// Singleton (على مستوى المتصفح) — حتى مع تعدد الاستيراد أو اختلاف ?v=
 // ==================================================
-export const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false
-    }
-  }
-);
+const GLOBAL_KEY = "__HAYEK_SUPABASE_SINGLETON__";
 
-// ==================================================
-// فحص أمان (اختياري – أثناء التطوير فقط)
-// ==================================================
-(function checkConfig() {
+function assertConfig() {
   if (!SUPABASE_URL || !SUPABASE_URL.includes(".supabase.co")) {
     throw new Error("❌ SUPABASE_URL غير صحيح");
   }
-  if (
-    !SUPABASE_ANON_KEY ||
-    !SUPABASE_ANON_KEY.startsWith("sb_publishable_")
-  ) {
+  if (!SUPABASE_ANON_KEY || !SUPABASE_ANON_KEY.startsWith("sb_publishable_")) {
     throw new Error("❌ يجب استخدام publishable key فقط");
   }
-})();
+}
+
+assertConfig();
+
+const g = globalThis;
+
+if (!g[GLOBAL_KEY]) {
+  g[GLOBAL_KEY] = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+
+      // ✅ مفتاح تخزين ثابت لتجنب تضارب بين نسخ متعددة
+      storageKey: "HAYEK_SPOT_AUTH"
+    }
+  });
+}
+
+// ✅ هذا هو العميل الوحيد الذي يجب استخدامه بكل الصفحات
+export const supabase = g[GLOBAL_KEY];
