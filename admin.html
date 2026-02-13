@@ -1,104 +1,199 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>تسجيل دخول الأدمن</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>لوحة الأدمن - HAYEK</title>
+
   <style>
-    body{margin:0;font-family:system-ui;background:#0b0f14;color:#e8eefc;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px}
-    .card{width:min(420px,100%);border:1px solid #243044;border-radius:16px;background:#121823;padding:16px}
-    h2{margin:0 0 10px 0}
-    input{width:100%;padding:12px;border-radius:12px;border:1px solid #243044;background:#0f1622;color:#e8eefc;outline:none;margin-top:10px}
-    button{width:100%;padding:12px;border-radius:12px;border:1px solid #243044;background:#1a2433;color:#e8eefc;font-weight:700;margin-top:12px;cursor:pointer}
-    .msg{margin-top:10px;color:#9aa7bd;font-size:13px}
-    .err{color:#ff4d4d}
+    :root{
+      --bg:#0b0f14; --card:#121823; --txt:#e8eefc; --muted:#9aa7bd;
+      --line:#243044; --accent:#4da3ff; --danger:#ff4d4d; --ok:#35d07f;
+      --btn:#1a2433; --btn2:#223149; --radius:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family:system-ui, -apple-system, "Segoe UI", Tahoma, Arial;
+      background:linear-gradient(180deg,#070a10,#0b0f14 40%);
+      color:var(--txt); min-height:100vh; padding:14px;
+    }
+    .wrap{ max-width:1100px; margin:0 auto; }
+    .topbar{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      padding:14px 16px; border:1px solid var(--line); border-radius:var(--radius);
+      background: rgba(18,24,35,.75); backdrop-filter: blur(8px);
+      position: sticky; top: 10px; z-index: 50;
+    }
+    .brand{ display:flex; flex-direction:column; gap:2px; }
+    .brand b{ font-size:16px; }
+    .brand span{ font-size:12px; color:var(--muted); }
+
+    .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    button{
+      border:1px solid var(--line); background:var(--btn); color:var(--txt);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
+    }
+    button:hover{ background:var(--btn2); }
+    button.danger{ border-color: rgba(255,77,77,.4); }
+    button.danger:hover{ background: rgba(255,77,77,.12); }
+    button.primary{ border-color: rgba(77,163,255,.45); }
+    button.primary:hover{ background: rgba(77,163,255,.12); }
+
+    .grid{
+      display:grid; gap:12px;
+      grid-template-columns: 1fr;
+      margin-top:12px;
+    }
+    @media(min-width: 900px){
+      .grid{ grid-template-columns: 1.1fr .9fr; }
+    }
+    .card{
+      border:1px solid var(--line); background:rgba(18,24,35,.65);
+      border-radius:var(--radius); padding:14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; }
+    .tab{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+      background:transparent; cursor:pointer; font-weight:800; color:var(--muted);
+    }
+    .tab.active{ color:var(--txt); border-color: rgba(77,163,255,.45); background: rgba(77,163,255,.10); }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+    input, select{
+      width:100%;
+      border:1px solid var(--line); background:#0f1622; color:var(--txt);
+      padding:12px 12px; border-radius:12px; outline:none;
+    }
+    .w-60{ flex: 1 1 420px; }
+    .w-20{ flex: 1 1 160px; }
+    .hint{ font-size:12px; color:var(--muted); margin-top:8px; }
+
+    .status{ font-size:12px; color:var(--muted); margin-top:10px; }
+
+    .tableWrap{
+      width:100%; overflow:auto;
+      border:1px solid var(--line);
+      border-radius:14px;
+      margin-top:12px;
+    }
+    table{ width:100%; border-collapse:collapse; min-width: 900px; }
+    th, td{
+      padding:12px 10px;
+      border-bottom:1px solid rgba(36,48,68,.65);
+      text-align:right;
+      font-size:14px;
+      white-space:nowrap;
+    }
+    th{ color:var(--muted); font-size:12px; letter-spacing:.3px; }
+    tr:hover td{ background: rgba(77,163,255,.06); }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(154,167,189,.25);
+      font-size:12px; color:var(--muted);
+    }
+    .pill.ok{ border-color: rgba(53,208,127,.35); color: rgba(53,208,127,.95); }
+    .pill.bad{ border-color: rgba(255,77,77,.35); color: rgba(255,77,77,.95); }
+
+    .pager{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-top:12px;
+    }
+    .pager .left, .pager .right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .small{ font-size:12px; color:var(--muted); }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>تسجيل دخول الأدمن</h2>
-    <input id="u" placeholder="اسم المستخدم" autocomplete="username" />
-    <input id="p" placeholder="كلمة السر" type="password" autocomplete="current-password" />
-    <button id="login">دخول</button>
-    <div class="msg" id="msg">—</div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <b>لوحة الأدمن — HAYEK</b>
+        <span id="sessionInfo">غير مسجّل</span>
+      </div>
+      <div class="actions">
+        <button class="primary" id="btnRefresh">تحديث</button>
+        <button class="danger" id="btnLogout">تسجيل خروج</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="tabs">
+          <button class="tab active" data-tab="users">المستخدمين</button>
+          <button class="tab" data-tab="invoices">الفواتير</button>
+          <button class="tab" data-tab="reports">التقارير</button>
+        </div>
+
+        <div id="usersPanel">
+          <div class="row">
+            <div class="w-60">
+              <input id="qUsers" placeholder="بحث: username أو device_id" />
+              <div class="hint">يتم جلب 25 فقط، والباقي بالصفحات لسرعة أعلى.</div>
+            </div>
+            <div class="w-20">
+              <select id="pageSizeUsers">
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="status" id="usersStatus">جاهز</div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Device ID</th>
+                  <th>Admin</th>
+                  <th>الحالة</th>
+                  <th>آخر ظهور</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="pager">
+            <div class="left">
+              <button id="prevUsers">السابق</button>
+              <button id="nextUsers">التالي</button>
+              <span class="small" id="usersPageInfo">صفحة 1</span>
+            </div>
+            <div class="right">
+              <span class="small" id="usersCountInfo">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="invoicesPanel" style="display:none;">
+          <div class="hint">سيتم تفعيل هذا التبويب بعد ما تكتب "تم التنفيذ".</div>
+        </div>
+
+        <div id="reportsPanel" style="display:none;">
+          <div class="hint">التقارير خطوة لاحقة.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>ملخص سريع</b>
+        <div class="hint">استعلامات خفيفة فقط لتسريع الأدمن.</div>
+        <div class="row" style="margin-top:10px;">
+          <span class="pill" id="pillUsers">Users: —</span>
+          <span class="pill" id="pillInvoices">Invoices: —</span>
+        </div>
+        <div class="hint" id="sysMsg" style="margin-top:12px;">—</div>
+      </div>
+    </div>
   </div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-    const SUPABASE_URL = "PASTE_SUPABASE_URL_HERE";
-    const SUPABASE_ANON_KEY = "PASTE_SUPABASE_ANON_KEY_HERE";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const msg = (t, isErr=false)=> {
-      const el=document.getElementById("msg");
-      el.textContent=t;
-      el.className="msg"+(isErr?" err":"");
-    };
-
-    function getOrCreateDeviceId(){
-      const key="HAYEK_DEVICE_ID";
-      let id=localStorage.getItem(key);
-      if(!id){
-        id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+"-"+Math.random());
-        localStorage.setItem(key,id);
-      }
-      return id;
-    }
-
-    document.getElementById("login").addEventListener("click", async ()=>{
-      const username = document.getElementById("u").value.trim();
-      const pass = document.getElementById("p").value.trim();
-      if(!username || !pass){ msg("أدخل الاسم وكلمة السر", true); return; }
-
-      msg("جارٍ التحقق...");
-
-      try{
-        const device_id = getOrCreateDeviceId();
-
-        // 1) تحقق من الحساب
-        const { data: user, error } = await supabase
-          .from("app_users")
-          .select("id,username,pass,is_admin,blocked,device_id")
-          .eq("username", username)
-          .eq("pass", pass)
-          .maybeSingle();
-
-        if(error) throw error;
-        if(!user) { msg("بيانات الدخول غير صحيحة", true); return; }
-        if(user.blocked) { msg("هذا الحساب محظور", true); return; }
-        if(!user.is_admin) { msg("هذا الحساب ليس أدمن", true); return; }
-
-        // 2) ربط بجهاز واحد (device_id)
-        const existing = (user.device_id || "").trim();
-        if(existing && existing !== device_id){
-          msg("هذا الأدمن مربوط بجهاز آخر", true);
-          return;
-        }
-
-        // إذا ما كان مربوط، اربطه الآن
-        if(!existing){
-          const { error: e2 } = await supabase
-            .from("app_users")
-            .update({ device_id })
-            .eq("id", user.id);
-          if(e2) throw e2;
-        }
-
-        // 3) حفظ جلسة أدمن محلية
-        localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({
-          id: user.id,
-          username: user.username,
-          device_id
-        }));
-
-        msg("تم تسجيل الدخول ✅");
-        location.href = "./admin.html";
-      }catch(e){
-        console.error(e);
-        msg("فشل الدخول: " + (e.message || e), true);
-      }
-    });
-  </script>
+  <script type="module" src="./admin.js"></script>
 </body>
 </html>
