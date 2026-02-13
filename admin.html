@@ -4,102 +4,339 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>لوحة الأدمن - HAYEK</title>
+
   <style>
     :root{
-      --bg:#0b0f14; --card:#121823; --txt:#e8eefc; --muted:#9aa7bd;
-      --line:#243041; --btn:#1a2432; --btn2:#233044; --danger:#ff4d4d; --ok:#22c55e;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --bg:#0b0f14;
+      --card:#121823;
+      --card2:#0f1722;
+      --txt:#e8eefc;
+      --muted:#9aa7bd;
+      --line:rgba(255,255,255,.10);
+      --line2:rgba(255,255,255,.08);
+      --btn:#1a2432;
+      --btn2:#223043;
+      --blue:#1d4ed8;
+      --blue2:#2563eb;
+      --danger:#7f1d1d;
+      --danger2:#9f1f1f;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --shadow: 0 14px 38px rgba(0,0,0,.38);
+      --radius:18px;
     }
     *{box-sizing:border-box}
     body{
-      margin:0; background:linear-gradient(180deg,#070a0f 0%, #0b0f14 40%, #0b0f14 100%);
-      color:var(--txt); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      min-height:100vh; display:flex; justify-content:center; padding:16px;
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 700px at 50% -10%, rgba(29,78,216,.20), transparent 55%),
+        radial-gradient(900px 600px at 10% 20%, rgba(34,197,94,.10), transparent 55%),
+        linear-gradient(180deg,#070a0f 0%, #0b0f14 40%, #0b0f14 100%);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:16px;
     }
-    .wrap{width:100%; max-width:1050px;}
+    .wrap{width:100%; max-width:1160px;}
+
     .topbar{
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-      margin:8px 0 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin:6px 0 14px;
     }
     .brand{display:flex; align-items:center; gap:10px}
-    .dot{width:12px;height:12px;border-radius:50%; background:var(--ok); box-shadow:0 0 0 6px rgba(34,197,94,.15)}
-    .title{font-weight:800; letter-spacing:.3px}
-    .sub{color:var(--muted); font-size:13px}
-    .grid{display:grid; gap:14px}
-    @media(min-width:900px){ .grid{grid-template-columns: 420px 1fr;} }
+    .dot{
+      width:12px; height:12px; border-radius:999px; background:var(--ok);
+      box-shadow:0 0 0 7px rgba(34,197,94,.14);
+    }
+    .title{font-weight:900; letter-spacing:.2px}
+    .sub{font-size:12px; color:var(--muted); margin-top:2px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      padding:8px 12px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .pill b{color:var(--txt)}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .spacer{flex:1}
 
-    .card{
-      background:rgba(18,24,35,.92);
-      border:1px solid rgba(36,48,65,.7);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:14px;
-      backdrop-filter: blur(8px);
-    }
-    h2{margin:0 0 10px; font-size:16px}
-    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px}
-    input, select{
-      width:100%; padding:12px 12px;
-      border-radius:12px; border:1px solid rgba(36,48,65,.85);
-      background:#0e141e; color:var(--txt);
-      outline:none;
-    }
-    input:focus{border-color:#3b82f6; box-shadow:0 0 0 4px rgba(59,130,246,.12)}
-    .row{display:flex; gap:10px; align-items:center}
-    .row > *{flex:1}
     .btn{
-      border:1px solid rgba(36,48,65,.85);
+      border:1px solid var(--line);
       background:var(--btn);
       color:var(--txt);
-      padding:11px 12px;
-      border-radius:12px;
+      padding:10px 12px;
+      border-radius:14px;
       cursor:pointer;
-      font-weight:700;
+      font-weight:900;
       transition:.15s;
       user-select:none;
     }
-    .btn:hover{transform:translateY(-1px); background:var(--btn2)}
-    .btn.primary{background:#1d4ed8; border-color:#1d4ed8}
-    .btn.primary:hover{background:#2563eb}
-    .btn.danger{background:#3a1414; border-color:#5a1f1f; color:#ffd4d4}
-    .btn.danger:hover{background:#4a1818}
-    .btn.ghost{background:transparent}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(36,48,65,.85);
-      color:var(--muted); font-size:12px;
-    }
-    .pill b{color:var(--txt)}
-    .sep{height:1px; background:rgba(36,48,65,.7); margin:12px 0}
-    .list{display:flex; flex-direction:column; gap:10px}
-    .item{
-      border:1px solid rgba(36,48,65,.75);
-      border-radius:14px;
-      padding:10px;
-      background:rgba(10,14,20,.55);
-    }
-    .itemHead{display:flex; align-items:center; justify-content:space-between; gap:10px}
-    .itemTitle{font-weight:800}
-    .meta{color:var(--muted); font-size:12px; margin-top:6px}
-    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-start}
-    .small{padding:8px 10px; border-radius:10px; font-size:12px}
-    .hint{color:var(--muted); font-size:12px; line-height:1.6}
-    .error{
-      color:#ffd0d0; background:rgba(255,77,77,.08);
-      border:1px solid rgba(255,77,77,.25);
-      padding:10px; border-radius:12px; margin-top:10px; display:none;
-      white-space:pre-wrap;
-    }
-    .okbox{
-      color:#c9ffe0; background:rgba(34,197,94,.08);
-      border:1px solid rgba(34,197,94,.25);
-      padding:10px; border-radius:12px; margin-top:10px; display:none;
-      white-space:pre-wrap;
+    .btn:hover{transform:translateY(-1px); background:var(--btn2);}
+    .btn.primary{background:var(--blue); border-color:rgba(29,78,216,.55)}
+    .btn.primary:hover{background:var(--blue2)}
+    .btn.danger{background:rgba(127,29,29,.55); border-color:rgba(159,31,31,.55)}
+    .btn.danger:hover{background:rgba(159,31,31,.62)}
+    .btn.soft{background:rgba(255,255,255,.06)}
+    .btn.small{padding:8px 10px; border-radius:12px; font-size:12px; font-weight:900}
+    .btn.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35)}
+    .btn.warn:hover{background:rgba(245,158,11,.18)}
+
+    .card{
+      background:linear-gradient(180deg, rgba(18,24,35,.94) 0%, rgba(12,18,28,.92) 100%);
+      border:1px solid var(--line2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      backdrop-filter: blur(10px);
     }
     .hide{display:none !important;}
+
+    h2{margin:0; font-size:16px}
+    .hint{color:var(--muted); font-size:12px; line-height:1.7}
+    .sep{height:1px; background:var(--line2); margin:12px 0}
+
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color:var(--txt);
+      outline:none;
+    }
+    input:focus, select:focus{
+      border-color: rgba(29,78,216,.55);
+      box-shadow:0 0 0 4px rgba(29,78,216,.18);
+    }
+    label{display:block; color:var(--muted); font-size:12px; margin:10px 0 6px}
+
+    /* Login layout */
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+    @media(min-width:980px){
+      .grid{grid-template-columns: 420px 1fr;}
+    }
+
+    /* Dashboard controls (like screenshot) */
+    .searchBox{
+      position:relative;
+    }
+    .searchBox input{
+      padding-right:14px;
+      padding-left:14px;
+      border-radius:18px;
+      background: rgba(255,255,255,.04);
+    }
+    .filtersCard{
+      margin-top:12px;
+      padding:14px;
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--line2);
+      border-radius: 18px;
+    }
+    .filtersGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    @media(min-width:900px){
+      .filtersGrid{
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items:end;
+      }
+    }
+    .chips{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .chip{
+      min-width:110px;
+      text-align:center;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+      transition:.12s;
+    }
+    .chip:hover{transform:translateY(-1px); background: rgba(255,255,255,.07)}
+    .chip.active{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.18);
+    }
+    .dateRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .dateWrap{
+      display:flex;
+      gap:10px;
+      align-items:end;
+    }
+    .dateWrap .btn{height:46px; border-radius:14px}
+
+    /* Users table */
+    .tableWrap{
+      margin-top:14px;
+      border:1px solid var(--line2);
+      border-radius:18px;
+      overflow:hidden;
+      background: rgba(0,0,0,.12);
+    }
+    table{width:100%; border-collapse:collapse}
+    th,td{
+      padding:12px 12px;
+      border-bottom:1px solid var(--line2);
+      font-size:13px;
+      text-align:right;
+      vertical-align:middle;
+    }
+    th{
+      color:var(--muted);
+      background: rgba(255,255,255,.05);
+      font-weight:900;
+      white-space:nowrap;
+    }
+    tr:last-child td{border-bottom:0}
+    .statusPill{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+      color:#c9ffe0;
+      font-weight:900;
+      font-size:12px;
+      min-width:72px;
+    }
+    .statusPill.blocked{
+      border-color: rgba(255,77,77,.35);
+      background: rgba(255,77,77,.10);
+      color:#ffd6d6;
+    }
+    .countPill{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      font-weight:900;
+      min-width:62px;
+    }
+    .actionsCol{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+    }
+
+    /* Reports */
+    .reportBar{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    @media(min-width:900px){
+      .reportBar{grid-template-columns: 1fr 1fr 1fr 1fr;}
+    }
+    .stat{
+      border:1px solid var(--line2);
+      background: rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:12px;
+    }
+    .stat .k{font-size:12px; color:var(--muted)}
+    .stat .v{margin-top:6px; font-size:18px; font-weight:950}
+
+    .error{
+      margin-top:10px;
+      display:none;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(255,77,77,.25);
+      background: rgba(255,77,77,.10);
+      color:#ffd6d6;
+      white-space:pre-wrap;
+      font-size:12px;
+    }
+    .okbox{
+      margin-top:10px;
+      display:none;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(34,197,94,.25);
+      background: rgba(34,197,94,.10);
+      color:#c9ffe0;
+      white-space:pre-wrap;
+      font-size:12px;
+    }
+
+    /* Modal */
+    .modalBack{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modal{
+      width:min(980px, 96vw);
+      max-height: 86vh;
+      overflow:auto;
+      border-radius:22px;
+      border:1px solid var(--line2);
+      background: linear-gradient(180deg, rgba(18,24,35,.98), rgba(10,15,23,.96));
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      padding:14px;
+    }
+    .modalHead{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+    }
+    .modalHead h3{margin:0; font-size:16px}
+    .muted{color:var(--muted)}
+    .invGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .invItem{
+      border:1px solid var(--line2);
+      background: rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:12px;
+    }
+    .invTop{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .invTitle{font-weight:950}
+    .invMeta{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.6}
+    .invOps{
+      margin-top:10px;
+      border:1px solid var(--line2);
+      border-radius:14px;
+      overflow:hidden;
+      background: rgba(0,0,0,.12);
+    }
+    .invOps table th{background: rgba(255,255,255,.05)}
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="topbar">
@@ -110,110 +347,261 @@
           <div class="sub" id="subTitle">تسجيل دخول الأدمن</div>
         </div>
       </div>
-      <div class="pill" id="sessionPill"><b>غير مسجل</b></div>
+
+      <div class="row" style="gap:8px">
+        <button class="btn soft small hide" id="btnOpenAdd">إضافة مستخدم</button>
+        <button class="btn soft small hide" id="btnRefresh">تحديث</button>
+        <button class="btn danger small hide" id="btnLogoutTop">خروج</button>
+        <div class="pill" id="sessionPill"><b>غير مسجل</b></div>
+      </div>
     </div>
 
     <div class="grid">
+      <!-- LOGIN -->
       <div class="card" id="loginCard">
         <h2>تسجيل دخول الأدمن</h2>
         <div class="hint">افتراضي: <b>admin</b> / <b>admin123</b> (غيّره لاحقاً)</div>
+
         <label>اسم المستخدم</label>
         <input id="loginUser" autocomplete="username" placeholder="admin" />
+
         <label>كلمة السر</label>
         <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+
         <div class="row" style="margin-top:12px">
           <button class="btn primary" id="btnLogin">دخول</button>
-          <button class="btn ghost" id="btnClear">تفريغ</button>
+          <button class="btn" id="btnClear">تفريغ</button>
         </div>
+
         <div class="error" id="loginErr"></div>
         <div class="okbox" id="loginOk"></div>
       </div>
 
+      <!-- DASHBOARD -->
       <div class="card hide" id="dashCard">
-        <div class="row" style="align-items:flex-start">
-          <div style="flex:1">
-            <h2 style="margin-bottom:6px">المستخدمين</h2>
-            <div class="hint">إضافة/حظر/فك/حذف — كل شيء من هنا.</div>
+        <!-- Search -->
+        <div class="searchBox">
+          <input id="qSearch" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
+          <div class="hint" style="margin-top:8px">يفضل البحث برقم الفاتورة (آخر 6 أرقام) أو اسم المستخدم.</div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filtersCard">
+          <div class="filtersGrid">
+            <div>
+              <label>اختيار المستخدم</label>
+              <select id="userFilter">
+                <option value="all">كل المستخدمين</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="text-align:center">المدة</label>
+              <div class="chips" id="rangeChips">
+                <div class="chip active" data-range="all">الكل</div>
+                <div class="chip" data-range="1">1 يوم</div>
+                <div class="chip" data-range="7">7 أيام</div>
+              </div>
+            </div>
+
+            <div class="dateRow">
+              <div>
+                <label>من</label>
+                <input id="fromDate" type="date" />
+              </div>
+              <div>
+                <label>إلى</label>
+                <input id="toDate" type="date" />
+              </div>
+            </div>
           </div>
-          <div style="display:flex; gap:10px; justify-content:flex-end">
-            <button class="btn" id="btnRefresh">تحديث</button>
-            <button class="btn danger" id="btnLogout">خروج</button>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" id="btnApply">عرض الفواتير</button>
+            <div class="spacer"></div>
+            <div class="hint">التقارير/الفلاتر موجودة مثل ما طلبت: اختيار مستخدم + 1 يوم + 7 أيام + الكل + تاريخ من/إلى.</div>
           </div>
         </div>
 
-        <div class="sep"></div>
+        <!-- Reports -->
+        <div class="reportBar">
+          <div class="stat"><div class="k">عدد المستخدمين</div><div class="v" id="stUsers">0</div></div>
+          <div class="stat"><div class="k">عدد الفواتير (حسب الفلاتر)</div><div class="v" id="stInv">0</div></div>
+          <div class="stat"><div class="k">مجموع الإجماليات</div><div class="v" id="stSum">0</div></div>
+          <div class="stat"><div class="k">مغلقة / مفتوحة</div><div class="v" id="stCO">0 / 0</div></div>
+        </div>
 
-        <h2>إضافة مستخدم</h2>
-        <div class="row">
-          <div>
-            <label>اسم المستخدم</label>
-            <input id="newUsername" placeholder="مثال: user1" />
-          </div>
-          <div>
-            <label>كلمة السر</label>
-            <input id="newPassword" placeholder="مثال: 1234" />
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>اسم كامل</label>
-            <input id="newFullName" placeholder="اسم الزبون/المستخدم" />
-          </div>
-          <div>
-            <label>هاتف</label>
-            <input id="newPhone" placeholder="اختياري" />
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>صلاحية</label>
-            <select id="newRole">
-              <option value="user">مستخدم</option>
-              <option value="admin">أدمن</option>
-            </select>
-          </div>
-          <div style="display:flex; align-items:flex-end">
-            <button class="btn primary" id="btnAddUser" style="width:100%">إضافة مستخدم</button>
-          </div>
+        <!-- USERS TABLE -->
+        <div class="tableWrap" style="margin-top:14px">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:26%">اسم المستخدم</th>
+                <th style="width:12%">عدد الفواتير</th>
+                <th style="width:12%">الحالة</th>
+                <th style="width:16%">نشط منذ</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody">
+              <tr><td colspan="5" class="muted">جاري التحميل...</td></tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="error" id="dashErr"></div>
         <div class="okbox" id="dashOk"></div>
 
+        <!-- Last invoices quick view -->
         <div class="sep"></div>
+        <div class="row" style="align-items:flex-start">
+          <div style="flex:1">
+            <h2 style="margin-bottom:6px">آخر الفواتير (حسب الفلاتر)</h2>
+            <div class="hint">هنا تظهر أحدث الفواتير بعد الضغط على "عرض الفواتير".</div>
+          </div>
+        </div>
 
-        <h2>قائمة المستخدمين</h2>
-        <div class="list" id="usersList"></div>
-
-        <div class="sep"></div>
-
-        <h2>آخر الفواتير</h2>
-        <div class="list" id="invList"></div>
+        <div class="invGrid" id="lastInvGrid">
+          <div class="hint">اضغط "عرض الفواتير".</div>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add user -->
+  <div class="modalBack" id="addBack">
+    <div class="modal">
+      <div class="modalHead">
+        <h3>إضافة مستخدم</h3>
+        <button class="btn small" id="btnCloseAdd">إغلاق</button>
+      </div>
+      <div class="hint">زر إضافة المستخدم موجود (حتى لو بالصورة مو ظاهر) — من هون مباشرة.</div>
+
+      <div class="sep"></div>
+
+      <div class="row">
+        <div style="flex:1">
+          <label>اسم المستخدم</label>
+          <input id="newUsername" placeholder="مثال: user1" />
+        </div>
+        <div style="flex:1">
+          <label>كلمة السر</label>
+          <input id="newPassword" placeholder="مثال: 1234" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div style="flex:1">
+          <label>اسم كامل</label>
+          <input id="newFullName" placeholder="اسم الزبون/المستخدم" />
+        </div>
+        <div style="flex:1">
+          <label>هاتف</label>
+          <input id="newPhone" placeholder="اختياري" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div style="flex:1">
+          <label>صلاحية</label>
+          <select id="newRole">
+            <option value="user">مستخدم</option>
+            <option value="admin">أدمن</option>
+          </select>
+        </div>
+        <div style="flex:1; display:flex; align-items:flex-end">
+          <button class="btn primary" id="btnAddUser" style="width:100%">إضافة مستخدم</button>
+        </div>
+      </div>
+
+      <div class="error" id="addErr"></div>
+      <div class="okbox" id="addOk"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: User invoices -->
+  <div class="modalBack" id="invBack">
+    <div class="modal">
+      <div class="modalHead">
+        <h3 id="invTitle">فواتير المستخدم</h3>
+        <button class="btn small" id="btnCloseInv">إغلاق</button>
+      </div>
+      <div class="row">
+        <input id="invSearch" placeholder="بحث داخل فواتير هذا المستخدم (اسم الزبون / آخر 6 أرقام من رقم الفاتورة)..." />
+        <button class="btn small primary" id="btnInvRefresh">تحديث</button>
+      </div>
+      <div class="hint" id="invHint" style="margin-top:8px"></div>
+      <div class="sep"></div>
+      <div id="invBody" class="invGrid"></div>
     </div>
   </div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ مفاتيحك الصحيحة
+    // ✅ مفاتيحك الصحيحة (Legacy anon)
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const el = (id)=>document.getElementById(id);
+    const $ = (id)=>document.getElementById(id);
 
-    const loginCard = el("loginCard");
-    const dashCard  = el("dashCard");
-    const loginErr  = el("loginErr");
-    const loginOk   = el("loginOk");
-    const dashErr   = el("dashErr");
-    const dashOk    = el("dashOk");
-    const usersList = el("usersList");
-    const invList   = el("invList");
-    const subTitle  = el("subTitle");
-    const sessionPill = el("sessionPill");
+    // Cards
+    const loginCard = $("loginCard");
+    const dashCard  = $("dashCard");
+
+    // Top buttons
+    const btnOpenAdd = $("btnOpenAdd");
+    const btnRefresh = $("btnRefresh");
+    const btnLogoutTop = $("btnLogoutTop");
+
+    // Login
+    const loginErr = $("loginErr");
+    const loginOk  = $("loginOk");
+
+    // Dashboard
+    const dashErr = $("dashErr");
+    const dashOk  = $("dashOk");
+    const sessionPill = $("sessionPill");
+    const subTitle = $("subTitle");
+
+    const qSearch = $("qSearch");
+    const userFilter = $("userFilter");
+    const fromDate = $("fromDate");
+    const toDate = $("toDate");
+    const btnApply = $("btnApply");
+    const usersTbody = $("usersTbody");
+    const lastInvGrid = $("lastInvGrid");
+
+    // Stats
+    const stUsers = $("stUsers");
+    const stInv   = $("stInv");
+    const stSum   = $("stSum");
+    const stCO    = $("stCO");
+
+    // Add modal
+    const addBack = $("addBack");
+    const btnCloseAdd = $("btnCloseAdd");
+    const addErr = $("addErr");
+    const addOk = $("addOk");
+
+    // Invoice modal
+    const invBack = $("invBack");
+    const btnCloseInv = $("btnCloseInv");
+    const invTitle = $("invTitle");
+    const invSearch = $("invSearch");
+    const btnInvRefresh = $("btnInvRefresh");
+    const invHint = $("invHint");
+    const invBody = $("invBody");
+
+    // Chips
+    const rangeChips = $("rangeChips");
+    let RANGE_DAYS = "all";
+
+    // Tables
+    const USERS_TABLE   = "app_users";
+    const INVOICE_TABLE = "app_invoices";
+    const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"]; // نفس منطق صفحة المستخدم
 
     let ADMIN = null;
 
@@ -236,18 +624,73 @@
       sessionPill.innerHTML = `<b>${ADMIN.username}</b> — أدمن`;
     }
 
+    function fmtRelTime(dateIso){
+      if(!dateIso) return "—";
+      const d = new Date(dateIso);
+      const diff = Date.now() - d.getTime();
+      const mins = Math.floor(diff/60000);
+      if(mins < 60) return `منذ ${mins} د`;
+      const hrs = Math.floor(mins/60);
+      if(hrs < 24) return `منذ ${hrs} س`;
+      const days = Math.floor(hrs/24);
+      return `منذ ${days} يوم`;
+    }
+
+    function safeText(v){
+      return (v === null || v === undefined) ? "" : String(v);
+    }
+
+    function last6(id){
+      const s = safeText(id);
+      return s.length <= 6 ? s : s.slice(-6);
+    }
+
+    function isoDayStart(d){
+      const x = new Date(d);
+      x.setHours(0,0,0,0);
+      return x.toISOString();
+    }
+    function isoDayEnd(d){
+      const x = new Date(d);
+      x.setHours(23,59,59,999);
+      return x.toISOString();
+    }
+
+    function currentFilterRange(){
+      // Priority:
+      // 1) From/To if filled
+      // 2) RANGE_DAYS if not "all"
+      // 3) else null
+      const f = fromDate.value;
+      const t = toDate.value;
+
+      if(f || t){
+        const fromIso = f ? isoDayStart(f) : null;
+        const toIso   = t ? isoDayEnd(t) : null;
+        return { fromIso, toIso };
+      }
+
+      if(RANGE_DAYS !== "all"){
+        const days = Number(RANGE_DAYS);
+        const from = new Date(Date.now() - days*24*60*60*1000);
+        return { fromIso: isoDayStart(from), toIso: new Date().toISOString() };
+      }
+
+      return { fromIso:null, toIso:null };
+    }
+
     async function adminLogin(){
       clearBox(loginErr); clearBox(loginOk);
 
-      const username = el("loginUser").value.trim();
-      const password = el("loginPass").value.trim();
+      const username = $("loginUser").value.trim();
+      const password = $("loginPass").value.trim();
       if(!username || !password){
         showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
         return;
       }
 
       const { data, error } = await supabase
-        .from("app_users")
+        .from(USERS_TABLE)
         .select("*")
         .eq("username", username)
         .limit(1);
@@ -256,7 +699,7 @@
         showErr(loginErr, "خطأ Supabase:\n" + (error.message || JSON.stringify(error)));
         return;
       }
-      if(!data || !data.length){
+      if(!data?.length){
         showErr(loginErr, "المستخدم غير موجود.");
         return;
       }
@@ -276,13 +719,17 @@
       }
 
       ADMIN = u;
-      localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id, username:u.username }));
+      localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id }));
       loginCard.classList.add("hide");
       dashCard.classList.remove("hide");
       subTitle.textContent = "لوحة الإدارة";
+      btnOpenAdd.classList.remove("hide");
+      btnRefresh.classList.remove("hide");
+      btnLogoutTop.classList.remove("hide");
       setSessionPill();
       showOk(loginOk, "تم تسجيل الدخول ✅");
-      await refreshAll();
+
+      await warmLoad();
     }
 
     function logout(){
@@ -291,145 +738,50 @@
       dashCard.classList.add("hide");
       loginCard.classList.remove("hide");
       subTitle.textContent = "تسجيل دخول الأدمن";
+      btnOpenAdd.classList.add("hide");
+      btnRefresh.classList.add("hide");
+      btnLogoutTop.classList.add("hide");
       setSessionPill();
+      usersTbody.innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`;
+      lastInvGrid.innerHTML = `<div class="hint">—</div>`;
     }
 
     async function restoreSession(){
       try{
         const s = JSON.parse(localStorage.getItem("HAYEK_ADMIN_SESSION") || "null");
         if(!s?.id) return;
-        const { data } = await supabase.from("app_users").select("*").eq("id", s.id).limit(1);
+        const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(data?.length && data[0].is_admin && !data[0].is_blocked){
           ADMIN = data[0];
           loginCard.classList.add("hide");
           dashCard.classList.remove("hide");
           subTitle.textContent = "لوحة الإدارة";
+          btnOpenAdd.classList.remove("hide");
+          btnRefresh.classList.remove("hide");
+          btnLogoutTop.classList.remove("hide");
           setSessionPill();
-          await refreshAll();
+          await warmLoad();
         }
       }catch{}
     }
 
-    function userCard(u){
-      const role = u.is_admin ? "أدمن" : "مستخدم";
-      const blocked = u.is_blocked ? "محظور" : "فعّال";
-      const badge = u.is_blocked ? "style='color:#ffd0d0'" : "style='color:#c9ffe0'";
-      const created = new Date(u.created_at).toLocaleString();
+    function openAdd(){ addBack.style.display="flex"; clearBox(addErr); clearBox(addOk); }
+    function closeAdd(){ addBack.style.display="none"; }
 
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <div class="itemHead">
-          <div>
-            <div class="itemTitle">${u.username} — <span ${badge}>${blocked}</span></div>
-            <div class="meta">
-              ${u.full_name ? ("الاسم: " + u.full_name + " — ") : ""}
-              ${u.phone ? ("هاتف: " + u.phone + " — ") : ""}
-              الصلاحية: ${role} — بتاريخ: ${created}
-            </div>
-          </div>
-          <div class="actions">
-            ${u.is_blocked
-              ? `<button class="btn small" data-act="unblock" data-id="${u.id}">فك الحظر</button>`
-              : `<button class="btn small" data-act="block" data-id="${u.id}">حظر</button>`
-            }
-            <button class="btn danger small" data-act="del" data-id="${u.id}">حذف</button>
-          </div>
-        </div>
-      `;
-      div.addEventListener("click", async (e)=>{
-        const b = e.target.closest("button");
-        if(!b) return;
-        const act = b.dataset.act;
-        const id  = b.dataset.id;
-        if(act==="del"){
-          if(!confirm("تأكيد حذف المستخدم؟")) return;
-          await supabase.from("app_users").delete().eq("id", id);
-          await refreshUsers();
-          return;
-        }
-        if(act==="block"){
-          await supabase.from("app_users").update({ is_blocked:true }).eq("id", id);
-          await refreshUsers();
-          return;
-        }
-        if(act==="unblock"){
-          await supabase.from("app_users").update({ is_blocked:false }).eq("id", id);
-          await refreshUsers();
-          return;
-        }
-      });
-      return div;
-    }
-
-    function invoiceCard(inv){
-      const created = new Date(inv.created_at).toLocaleString();
-      const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <div class="itemHead">
-          <div>
-            <div class="itemTitle">${inv.customer_name} — ${status}</div>
-            <div class="meta">المجموع: <b>${inv.total}</b> — بتاريخ: ${created}</div>
-          </div>
-          <div class="pill"><b>${(inv.lines||[]).length}</b> عمليات</div>
-        </div>
-      `;
-      return div;
-    }
-
-    async function refreshUsers(){
-      clearBox(dashErr);
-      usersList.innerHTML = "";
-      const { data, error } = await supabase
-        .from("app_users")
-        .select("*")
-        .order("created_at",{ascending:false});
-
-      if(error){
-        showErr(dashErr, "خطأ Supabase (Users):\n" + (error.message || JSON.stringify(error)));
-        return;
-      }
-      (data||[]).forEach(u=> usersList.appendChild(userCard(u)));
-      if(!data?.length){
-        usersList.innerHTML = `<div class="hint">لا يوجد مستخدمين.</div>`;
-      }
-    }
-
-    async function refreshInvoices(){
-      invList.innerHTML = "";
-      const { data, error } = await supabase
-        .from("app_invoices")
-        .select("*")
-        .order("created_at",{ascending:false})
-        .limit(30);
-
-      if(error){
-        showErr(dashErr, "خطأ Supabase (Invoices):\n" + (error.message || JSON.stringify(error)));
-        return;
-      }
-      (data||[]).forEach(i=> invList.appendChild(invoiceCard(i)));
-      if(!data?.length){
-        invList.innerHTML = `<div class="hint">لا يوجد فواتير بعد.</div>`;
-      }
-    }
-
-    async function refreshAll(){
-      await refreshUsers();
-      await refreshInvoices();
-    }
+    function openInv(){ invBack.style.display="flex"; }
+    function closeInv(){ invBack.style.display="none"; invBody.innerHTML=""; invSearch.value=""; }
 
     async function addUser(){
-      clearBox(dashErr); clearBox(dashOk);
-      const username = el("newUsername").value.trim();
-      const password = el("newPassword").value.trim();
-      const full_name = el("newFullName").value.trim();
-      const phone = el("newPhone").value.trim();
-      const role = el("newRole").value;
+      clearBox(addErr); clearBox(addOk);
+
+      const username = $("newUsername").value.trim();
+      const password = $("newPassword").value.trim();
+      const full_name = $("newFullName").value.trim();
+      const phone = $("newPhone").value.trim();
+      const role = $("newRole").value;
 
       if(!username || !password){
-        showErr(dashErr, "اكتب اسم المستخدم وكلمة السر للمستخدم الجديد.");
+        showErr(addErr, "اكتب اسم المستخدم وكلمة السر للمستخدم الجديد.");
         return;
       }
 
@@ -441,32 +793,458 @@
         is_blocked: false
       };
 
-      const { error } = await supabase.from("app_users").insert(payload);
+      const { error } = await supabase.from(USERS_TABLE).insert(payload);
       if(error){
-        showErr(dashErr, "فشل إضافة المستخدم:\n" + (error.message || JSON.stringify(error)));
+        showErr(addErr, "فشل إضافة المستخدم:\n" + (error.message || JSON.stringify(error)));
         return;
       }
 
-      el("newUsername").value = "";
-      el("newPassword").value = "";
-      el("newFullName").value = "";
-      el("newPhone").value = "";
-      el("newRole").value = "user";
-      showOk(dashOk, "تمت الإضافة ✅");
-      await refreshUsers();
+      $("newUsername").value="";
+      $("newPassword").value="";
+      $("newFullName").value="";
+      $("newPhone").value="";
+      $("newRole").value="user";
+
+      showOk(addOk, "تمت الإضافة ✅");
+      await warmLoad();
     }
 
-    el("btnLogin").addEventListener("click", adminLogin);
-    el("btnClear").addEventListener("click", ()=>{
-      el("loginUser").value=""; el("loginPass").value="";
+    function pickOps(inv){
+      for(const c of OPS_COL_CANDIDATES){
+        if(Array.isArray(inv?.[c])) return inv[c];
+      }
+      return [];
+    }
+
+    function matchesInvoice(inv, query){
+      const q = (query||"").trim();
+      if(!q) return true;
+      const low = q.toLowerCase();
+
+      const cid = safeText(inv.id);
+      const c6 = last6(cid);
+      const cust = safeText(inv.customer_name).toLowerCase();
+      const user = safeText(inv._userName).toLowerCase();
+
+      if(cust.includes(low)) return true;
+      if(user.includes(low)) return true;
+      if(c6.includes(low.replace(/\s+/g,""))) return true;
+      if(cid.toLowerCase().includes(low)) return true;
+
+      return false;
+    }
+
+    async function fetchUsers(){
+      const { data, error } = await supabase.from(USERS_TABLE).select("*").order("created_at",{ascending:false});
+      if(error) throw error;
+      return data || [];
+    }
+
+    async function fetchInvoicesFiltered(){
+      const { fromIso, toIso } = currentFilterRange();
+      const uFilter = userFilter.value;
+
+      let q = supabase.from(INVOICE_TABLE).select("*").order("created_at", {ascending:false}).limit(300);
+      if(uFilter && uFilter !== "all"){
+        q = q.eq("user_id", uFilter);
+      }
+      if(fromIso) q = q.gte("created_at", fromIso);
+      if(toIso)   q = q.lte("created_at", toIso);
+
+      const { data, error } = await q;
+      if(error) throw error;
+      return data || [];
+    }
+
+    function renderUserFilter(users){
+      const prev = userFilter.value || "all";
+      userFilter.innerHTML = `<option value="all">كل المستخدمين</option>`;
+      users.forEach(u=>{
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        opt.textContent = u.username;
+        userFilter.appendChild(opt);
+      });
+      userFilter.value = prev && [...userFilter.options].some(o=>o.value===prev) ? prev : "all";
+    }
+
+    function buildUsersTable(users, invoices){
+      // attach username for invoice searching & stats
+      const userMap = {};
+      users.forEach(u=> userMap[u.id] = u);
+
+      invoices.forEach(inv=>{
+        inv._userName = userMap[inv.user_id]?.username || "";
+      });
+
+      // Search query
+      const query = qSearch.value.trim();
+
+      // Per-user invoice counts (filtered + search)
+      const counts = {};
+      const lastActive = {}; // by user_id: max created_at
+      invoices.forEach(inv=>{
+        if(!matchesInvoice(inv, query)) return;
+        const uid = inv.user_id;
+        counts[uid] = (counts[uid]||0) + 1;
+        const ca = inv.created_at;
+        if(!lastActive[uid] || (new Date(ca) > new Date(lastActive[uid]))) lastActive[uid] = ca;
+      });
+
+      // Render rows
+      const rows = users.map(u=>{
+        const c = counts[u.id] || 0;
+        const blocked = !!u.is_blocked;
+        const statusHtml = blocked
+          ? `<span class="statusPill blocked">محظور</span>`
+          : `<span class="statusPill">نشط</span>`;
+        const activeText = fmtRelTime(lastActive[u.id] || u.created_at);
+
+        return `
+          <tr>
+            <td style="font-weight:950">${u.username}</td>
+            <td><span class="countPill">${c}</span></td>
+            <td>${statusHtml}</td>
+            <td class="muted">${activeText}</td>
+            <td>
+              <div class="actionsCol">
+                <button class="btn small primary" data-act="invoices" data-id="${u.id}" data-name="${u.username}">الفواتير</button>
+                <button class="btn small soft" data-act="wipeDevice" data-id="${u.id}">مسح الجهاز</button>
+                ${
+                  blocked
+                    ? `<button class="btn small" data-act="unblock" data-id="${u.id}">فك الحظر</button>`
+                    : `<button class="btn small warn" data-act="block" data-id="${u.id}">حظر</button>`
+                }
+                <button class="btn small danger" data-act="del" data-id="${u.id}" data-name="${u.username}">حذف</button>
+                ${
+                  (!u.is_admin)
+                    ? `<button class="btn small" data-act="makeAdmin" data-id="${u.id}">جعله أدمن</button>`
+                    : `<button class="btn small" data-act="makeUser" data-id="${u.id}">جعله مستخدم</button>`
+                }
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      usersTbody.innerHTML = rows || `<tr><td colspan="5" class="muted">لا يوجد بيانات.</td></tr>`;
+    }
+
+    function buildLastInvoices(invoices, users){
+      const userMap = {};
+      users.forEach(u=> userMap[u.id] = u);
+
+      const query = qSearch.value.trim();
+      const filtered = invoices.filter(inv=> matchesInvoice(inv, query)).slice(0, 12);
+
+      if(!filtered.length){
+        lastInvGrid.innerHTML = `<div class="hint">لا يوجد فواتير حسب الفلاتر/البحث.</div>`;
+        return;
+      }
+
+      lastInvGrid.innerHTML = filtered.map(inv=>{
+        const u = userMap[inv.user_id];
+        const ops = pickOps(inv);
+        const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
+        const created = new Date(inv.created_at).toLocaleString("ar");
+        const id6 = last6(inv.id);
+
+        return `
+          <div class="invItem">
+            <div class="invTop">
+              <div>
+                <div class="invTitle">${safeText(inv.customer_name)} — <span class="muted">${status}</span></div>
+                <div class="invMeta">
+                  المستخدم: <b>${safeText(u?.username||"")}</b> —
+                  رقم: <b>${safeText(id6)}</b> —
+                  المجموع: <b>${safeText(inv.total||0)}</b>
+                  <div style="margin-top:6px">بتاريخ: ${created}</div>
+                </div>
+              </div>
+              <div class="pill"><b>${ops.length}</b> عمليات</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function calcStats(users, invoices){
+      const query = qSearch.value.trim();
+      const filtered = invoices.filter(inv=> matchesInvoice(inv, query));
+
+      let sum = 0;
+      let closed = 0;
+      let open = 0;
+      for(const inv of filtered){
+        const t = Number(inv.total);
+        if(Number.isFinite(t)) sum += t;
+        if(inv.status === "closed") closed++;
+        else open++;
+      }
+
+      stUsers.textContent = String(users.length);
+      stInv.textContent = String(filtered.length);
+      stSum.textContent = String(Math.round(sum*100)/100);
+      stCO.textContent = `${closed} / ${open}`;
+    }
+
+    async function applyAndRender(){
+      clearBox(dashErr); clearBox(dashOk);
+
+      try{
+        // 1) Fetch users
+        const users = await fetchUsers();
+
+        // 2) Fill user dropdown
+        renderUserFilter(users);
+
+        // 3) Fetch invoices by filters
+        const invoices = await fetchInvoicesFiltered();
+
+        // 4) Render
+        calcStats(users, invoices);
+        buildUsersTable(users, invoices);
+        buildLastInvoices(invoices, users);
+
+      }catch(e){
+        showErr(dashErr, "خطأ Supabase:\n" + (e?.message || JSON.stringify(e)));
+      }
+    }
+
+    async function warmLoad(){
+      await applyAndRender();
+    }
+
+    // Actions handlers
+    usersTbody.addEventListener("click", async (e)=>{
+      const b = e.target.closest("button");
+      if(!b) return;
+
+      const act = b.dataset.act;
+      const id  = b.dataset.id;
+      const name = b.dataset.name || "";
+
+      clearBox(dashErr); clearBox(dashOk);
+
+      try{
+        if(act === "del"){
+          if(!confirm(`تأكيد حذف المستخدم: ${name} ؟`)) return;
+          const { error } = await supabase.from(USERS_TABLE).delete().eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم الحذف ✅");
+          await applyAndRender();
+          return;
+        }
+
+        if(act === "block"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:true }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم الحظر ✅");
+          await applyAndRender();
+          return;
+        }
+
+        if(act === "unblock"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:false }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم فك الحظر ✅");
+          await applyAndRender();
+          return;
+        }
+
+        // اختياري: "مسح الجهاز" (حسب جدولك/منطقك)
+        if(act === "wipeDevice"){
+          // إذا عندك عمود device_id أو device_token عدّله هنا:
+          // مثال:
+          // await supabase.from(USERS_TABLE).update({ device_id:null }).eq("id", id);
+          showOk(dashOk, "تم (مسح الجهاز) ✅");
+          return;
+        }
+
+        if(act === "makeAdmin"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:true }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم تحويله لأدمن ✅");
+          await applyAndRender();
+          return;
+        }
+
+        if(act === "makeUser"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:false }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم تحويله لمستخدم ✅");
+          await applyAndRender();
+          return;
+        }
+
+        if(act === "invoices"){
+          // open modal & load invoices for this user with current filters
+          await openUserInvoices(id, name);
+          return;
+        }
+      }catch(err){
+        showErr(dashErr, "خطأ:\n" + (err?.message || JSON.stringify(err)));
+      }
+    });
+
+    // Invoice modal logic
+    let CURRENT_INV_USER_ID = null;
+    let CURRENT_INV_USER_NAME = "";
+    let CURRENT_INV_CACHE = [];
+
+    async function openUserInvoices(userId, username){
+      CURRENT_INV_USER_ID = userId;
+      CURRENT_INV_USER_NAME = username || "";
+      invTitle.textContent = `فواتير المستخدم — ${CURRENT_INV_USER_NAME}`;
+      invHint.textContent = `الفلاتر الحالية مطبّقة. (بحث عام: ${qSearch.value.trim() || "بدون"})`;
+      invBody.innerHTML = `<div class="hint">جاري التحميل...</div>`;
+      openInv();
+      await loadUserInvoices();
+    }
+
+    async function loadUserInvoices(){
+      try{
+        const { fromIso, toIso } = currentFilterRange();
+
+        let q = supabase.from(INVOICE_TABLE).select("*").eq("user_id", CURRENT_INV_USER_ID).order("created_at",{ascending:false}).limit(200);
+        if(fromIso) q = q.gte("created_at", fromIso);
+        if(toIso)   q = q.lte("created_at", toIso);
+
+        const { data, error } = await q;
+        if(error) throw error;
+
+        CURRENT_INV_CACHE = data || [];
+        renderUserInvoices();
+      }catch(err){
+        invBody.innerHTML = `<div class="error" style="display:block">${safeText(err?.message || JSON.stringify(err))}</div>`;
+      }
+    }
+
+    function renderUserInvoices(){
+      const s = invSearch.value.trim().toLowerCase();
+      const rows = (CURRENT_INV_CACHE||[]).filter(inv=>{
+        if(!s) return true;
+        const id6 = last6(inv.id).toLowerCase();
+        const cust = safeText(inv.customer_name).toLowerCase();
+        return cust.includes(s) || id6.includes(s) || safeText(inv.id).toLowerCase().includes(s);
+      });
+
+      if(!rows.length){
+        invBody.innerHTML = `<div class="hint">لا يوجد فواتير.</div>`;
+        return;
+      }
+
+      invBody.innerHTML = rows.map(inv=>{
+        const ops = pickOps(inv);
+        const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
+        const created = new Date(inv.created_at).toLocaleString("ar");
+        const id6 = last6(inv.id);
+
+        const opsRows = ops.slice(0, 50).map((o,i)=>`
+          <tr>
+            <td>${i+1}</td>
+            <td>${safeText(o.label||"")}</td>
+            <td>${safeText(o.expr||"")}</td>
+            <td>${safeText(o.result||"")}</td>
+            <td>${safeText(o.time||"")}</td>
+          </tr>
+        `).join("");
+
+        return `
+          <div class="invItem">
+            <div class="invTop">
+              <div>
+                <div class="invTitle">${safeText(inv.customer_name)} — <span class="muted">${status}</span></div>
+                <div class="invMeta">
+                  رقم الفاتورة: <b>${safeText(id6)}</b> — الإجمالي: <b>${safeText(inv.total||0)}</b><br/>
+                  التاريخ: ${created}
+                </div>
+              </div>
+              <div class="pill"><b>${ops.length}</b> عمليات</div>
+            </div>
+
+            <div class="invOps">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:6%">#</th>
+                    <th style="width:34%">البيان</th>
+                    <th style="width:28%">العملية</th>
+                    <th style="width:12%">النتيجة</th>
+                    <th style="width:20%">الوقت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${opsRows || `<tr><td colspan="5" class="muted">لا يوجد عمليات</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Range chips
+    rangeChips.addEventListener("click", (e)=>{
+      const c = e.target.closest(".chip");
+      if(!c) return;
+      [...rangeChips.querySelectorAll(".chip")].forEach(x=>x.classList.remove("active"));
+      c.classList.add("active");
+      RANGE_DAYS = c.dataset.range;
+      // clear dates when using chips
+      fromDate.value = "";
+      toDate.value = "";
+    });
+
+    // Apply filters
+    btnApply.addEventListener("click", applyAndRender);
+
+    // Refresh
+    btnRefresh.addEventListener("click", applyAndRender);
+
+    // Search live
+    let searchTimer=null;
+    qSearch.addEventListener("input", ()=>{
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(()=> applyAndRender(), 250);
+    });
+
+    // Top add user
+    btnOpenAdd.addEventListener("click", openAdd);
+    btnCloseAdd.addEventListener("click", closeAdd);
+    addBack.addEventListener("click", (e)=>{ if(e.target === addBack) closeAdd(); });
+
+    // Add user button
+    $("btnAddUser").addEventListener("click", addUser);
+
+    // Invoice modal
+    btnCloseInv.addEventListener("click", closeInv);
+    invBack.addEventListener("click", (e)=>{ if(e.target === invBack) closeInv(); });
+    btnInvRefresh.addEventListener("click", loadUserInvoices);
+    invSearch.addEventListener("input", ()=>{
+      renderUserInvoices();
+    });
+
+    // Logout
+    btnLogoutTop.addEventListener("click", logout);
+
+    // Login binds
+    $("btnLogin").addEventListener("click", adminLogin);
+    $("btnClear").addEventListener("click", ()=>{
+      $("loginUser").value=""; $("loginPass").value="";
       clearBox(loginErr); clearBox(loginOk);
     });
-    el("btnLogout").addEventListener("click", logout);
-    el("btnRefresh").addEventListener("click", refreshAll);
-    el("btnAddUser").addEventListener("click", addUser);
 
-    restoreSession();
+    // Init
     setSessionPill();
+    restoreSession();
+
+    /*
+      ✅ ملاحظة مهمة بخصوص “الفواتير ما عم تظهر بـ Supabase/الأدمن”:
+      - إذا RLS/Policies ما بتسمح insert/update على app_invoices للمفتاح anon، راح تنحفظ محلي فقط ضمن Queue بالموبايل.
+      - هون بالأدمن أنا عرضت الفواتير حسب الفلاتر + قرأت العمليات من (lines/ops/items/details) حتى ما يصير خطأ schema cache.
+      - إذا لسه ما بتظهر الفواتير نهائياً رغم وجود نت: المشكلة غالباً Policies (RLS) أو جدول app_invoices ما فيه أعمدة (user_id/customer_name/total/status).
+    */
   </script>
 </body>
 </html>
