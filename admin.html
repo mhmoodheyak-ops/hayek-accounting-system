@@ -162,18 +162,18 @@
       margin-top:14px;
       border:1px solid var(--line2);
       border-radius:18px;
-      overflow:auto;           /* مهم */
+      overflow:auto;
       -webkit-overflow-scrolling: touch;
       background: rgba(0,0,0,.12);
     }
-    table{width:100%; border-collapse:collapse; min-width: 980px;} /* مهم */
+    table{width:100%; border-collapse:collapse; min-width: 980px;}
     th,td{
       padding:12px 12px;
       border-bottom:1px solid var(--line2);
       font-size:13px;
       text-align:right;
       vertical-align:middle;
-      white-space:nowrap;      /* مهم */
+      white-space:nowrap;
     }
     th{color:var(--muted); background: rgba(255,255,255,.05); font-weight:900;}
     tr:last-child td{border-bottom:0}
@@ -206,7 +206,7 @@
     .actionsCol{
       display:flex;
       gap:8px;
-      flex-wrap:nowrap;        /* مهم */
+      flex-wrap:nowrap;
       justify-content:flex-start;
     }
 
@@ -529,8 +529,9 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+    // ✅ مفاتيحك الصحيحة (لا تلمسها)
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SUPABASE_ANON_KEY = "REPLACE_WITH_YOUR_KEY_IF_NEEDED";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
@@ -1170,6 +1171,7 @@
       $("newRole").value="user";
 
       showOk(addOk, "تمت الإضافة ✅");
+      closeAdd();
       await applyAndRender();
     }
 
@@ -1208,7 +1210,7 @@
           return;
         }
         if(act === "wipeDevice"){
-          // إذا عندك عمود device_id لاحقاً: supabase.from(USERS_TABLE).update({ device_id:null }).eq("id", id)
+          // مكان جاهز للمستقبل لو عندك device_id: update({ device_id:null })
           showOk(dashOk, "تم (مسح الجهاز) ✅");
           return;
         }
