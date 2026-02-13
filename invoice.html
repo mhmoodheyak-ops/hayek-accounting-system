@@ -12,8 +12,6 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-  <!-- ✅ لا تحمل supabase-js هنا (صار داخل config.js كـ module) -->
-
   <style>
     :root{
       --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
@@ -45,23 +43,17 @@
     .k.eq{background:rgba(31,98,255,.85)}
     .k.wide{grid-column:span 2}
     .tableWrap{margin-top:12px;overflow:auto;border-radius:16px;border:1px solid var(--line)}
-
-    /* ✅ إزالة خلفية الجدول */
     table{width:100%;border-collapse:collapse;min-width:700px;background:transparent}
     th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;background:transparent}
     th{color:rgba(255,255,255,.85);text-align:right;background:transparent}
     td{text-align:right;color:rgba(255,255,255,.95)}
-
     .total{margin-top:12px;border:2px dashed rgba(255,255,255,.18);border-radius:16px;padding:12px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
     .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
     .a{flex:1;border:none;border-radius:16px;padding:14px;font-size:16px;cursor:pointer;min-width:180px}
     .a.pdf{background:var(--blue);color:#fff}
     .a.new{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.14)}
     .a.danger{background:rgba(255,90,107,.18);color:#fff;border:1px solid rgba(255,90,107,.35)}
-
     .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;line-height:1.7}
-
-    /* شاشة قفل */
     #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
     #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
   </style>
@@ -206,15 +198,14 @@
     </div>
   </div>
 
-<!-- ✅ Modules load -->
 <script type="module">
-  import { supabase } from "./config.js?v=3";
-  import "./auth.js?v=3";
+  // ✅ مهم: نفس المسار تماماً مثل app.js (بدون ?v=)
+  import { supabase } from "./config.js";
+  import "./auth.js";
 
   (() => {
     const $ = (id)=>document.getElementById(id);
 
-    // ===== AUTH Gate =====
     const lock = $("lock");
     $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
 
@@ -226,14 +217,11 @@
     const session = window.HAYEK_AUTH.getUser() || {};
     if (session.role === "admin") { location.href = "admin.html?v="+Date.now(); return; }
 
-    // ===== Supabase (خلف الكواليس) =====
-    // ✅ الآن لدينا عميل جاهز من config.js
     const sb = supabase;
     const T_USERS = "app_users";
     const T_INV   = "app_invoices";
     const T_OPS   = "app_operations";
 
-    // ===== Online dot =====
     const onlineDot = $("onlineDot");
     function refreshOnline(){
       const on = navigator.onLine;
@@ -246,7 +234,6 @@
 
     $("logoutBtn").onclick = () => { window.HAYEK_AUTH.logout(); location.href="index.html?v="+Date.now(); };
 
-    // ===== Tabs =====
     document.querySelectorAll(".tab").forEach(tab=>{
       tab.onclick=()=>{
         document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -257,9 +244,7 @@
       };
     });
 
-    // ===== Local storage =====
     const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_V4";
-
     function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
     function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
     function nowIso(){ return new Date().toISOString(); }
@@ -269,9 +254,7 @@
     }
     function vibrateTiny(){ try{ navigator.vibrate && navigator.vibrate(18);}catch{} }
 
-    // ===== State =====
     const state = { invoice:null, expr:"", lastResult:0 };
-
     const customerName = $("customerName");
     const lineText = $("lineText");
     const exprInput = $("expr");
@@ -294,7 +277,6 @@
     }
     loadCurrent();
 
-    // ===== حفظ last_seen + device_id (خلف الكواليس) =====
     async function touchUser(){
       if(!navigator.onLine) return;
       try{
@@ -304,7 +286,6 @@
     }
     touchUser();
 
-    // ===== إنشاء فاتورة على السيرفر عند توفر إنترنت =====
     async function ensureRemoteInvoice(inv){
       if(!navigator.onLine) return inv;
       if(inv.remote_id) return inv;
@@ -353,7 +334,6 @@
       return state.invoice;
     }
 
-    // ===== Calculator safe eval =====
     function setExpr(v){ state.expr = v; exprInput.value = v; }
     function appendToken(tok){
       if(tok==="BACK"){ setExpr(state.expr.slice(0,-1)); return; }
@@ -366,7 +346,6 @@
       const cleaned=(expr||"").replace(/\s+/g,"");
       if(!cleaned) throw 0;
       if(!/^[0-9+\-*/().]+$/.test(cleaned)) throw 0;
-      // eslint-disable-next-line no-new-func
       const val = Function('"use strict";return ('+cleaned+');')();
       const n = Number(val);
       if(!Number.isFinite(n)) throw 0;
@@ -407,7 +386,6 @@
     }
     render();
 
-    // ===== مزامنة سطر عملية (خلف الكواليس) =====
     async function syncOp(inv, row){
       if(!navigator.onLine) return;
 
@@ -427,7 +405,6 @@
       try{ await sb.from(T_OPS).insert(payload); }catch{}
     }
 
-    // ===== إضافة عملية =====
     async function commitLine(){
       let inv = ensureInvoiceLocal();
       if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
@@ -460,7 +437,6 @@
       syncOp(inv, row);
     }
 
-    // ===== فاتورة جديدة / حذف العمليات =====
     function clearOnlyOps(){
       const inv = ensureInvoiceLocal();
       if(!inv) { alert("أدخل اسم الزبون"); customerName.focus(); return; }
@@ -491,7 +467,6 @@
     $("newInvoiceBtn").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
     $("newInvoiceTop").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
 
-    // ===== فتح تلقائي عند إدخال اسم الزبون =====
     let custTm = null;
     customerName.addEventListener("input", ()=>{
       clearTimeout(custTm);
@@ -505,7 +480,6 @@
       }, 350);
     });
 
-    // ===== إغلاق الفاتورة (تلقائي عند PDF) =====
     async function closeInvoice(inv){
       if(!inv) return;
       if(inv.status === "closed") return;
@@ -528,7 +502,6 @@
       }
     }
 
-    // ===== PDF export (HTML -> canvas) =====
     function buildInvoiceHtml(inv){
       const rowsHtml = (inv.rows||[]).map((r, i)=>`
         <tr>
@@ -628,11 +601,9 @@
 
     $("pdfBtn").onclick = () => { vibrateTiny(); exportPDF(); };
 
-    // Service Worker (Offline)
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
     }
-
   })();
 </script>
 
