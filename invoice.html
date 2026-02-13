@@ -261,6 +261,9 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
+    /* =========================
+       PDF STYLE (مثل صورتك)
+       ========================= */
     #printArea{
       position: fixed;
       left:-9999px;
@@ -269,18 +272,148 @@
       background:#fff;
       color:#111827;
       padding:22px;
+      direction: rtl;
+      font-family: Arial, "Segoe UI", Tahoma, sans-serif;
     }
-    #printArea h1{margin:0;font-size:20px;letter-spacing:.2px}
-    #printArea .pTop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
-    #printArea .pMuted{color:#6b7280;font-size:12px}
-    #printArea .pLine{height:1px;background:#e5e7eb;margin:12px 0}
-    #printArea table th{background:#f3f4f6;color:#111827;border-bottom:1px solid #e5e7eb;font-size:12px}
-    #printArea table td{border-bottom:1px solid #e5e7eb;font-size:12px}
-    #printArea .pFooter{
-      margin-top:14px;border:1px dashed #cbd5e1;padding:12px;border-radius:12px;
-      display:flex;justify-content:space-between;align-items:center;gap:12px
+
+    .p-box{
+      border:2px solid #111;
+      border-radius:16px;
+      padding:14px 16px;
+      margin-bottom:14px;
     }
-    #printArea .pTotal{font-size:16px;font-weight:900}
+
+    .p-header{
+      text-align:center;
+      padding:18px 16px;
+    }
+
+    .p-title{
+      font-weight:900;
+      font-size:18px;
+      margin:0;
+    }
+
+    .p-subtitle{
+      margin-top:6px;
+      font-size:12px;
+      color:#0a7a55;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .p-chiprow{
+      margin-top:12px;
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .p-chip{
+      border:1px solid #111;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:800;
+      background:#fff;
+    }
+
+    .p-field{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:2px solid #111;
+      border-radius:14px;
+      margin-bottom:10px;
+    }
+
+    .p-field .k{
+      font-size:12px;
+      font-weight:900;
+      color:#111;
+      white-space:nowrap;
+    }
+
+    .p-field .v{
+      font-size:12px;
+      font-weight:800;
+      color:#111;
+      word-break:break-all;
+      text-align:left;
+      direction:ltr;
+    }
+
+    .p-tableWrap{
+      border:2px solid #111;
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    #printArea table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+    }
+
+    #printArea thead th{
+      font-size:12px;
+      font-weight:900;
+      color:#111;
+      padding:10px;
+      border-bottom:2px solid #111;
+      background:#fff; /* بدون خلفية مزعجة */
+    }
+
+    #printArea tbody td{
+      font-size:12px;
+      padding:10px;
+      border-bottom:1px solid #111;
+      background:#fff; /* بدون خلفية */
+    }
+
+    #printArea tbody tr:last-child td{
+      border-bottom:0;
+    }
+
+    .p-totalBox{
+      border:2px dashed #111;
+      border-radius:16px;
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:12px;
+      font-weight:900;
+    }
+
+    .p-foot{
+      border:2px solid #111;
+      border-radius:16px;
+      padding:14px 16px;
+      margin-top:14px;
+      text-align:center;
+    }
+
+    .p-foot .small{
+      font-size:12px;
+      color:#555;
+      font-weight:800;
+      line-height:1.8;
+    }
+
+    .p-phone{
+      display:inline-block;
+      margin-top:10px;
+      border:2px solid #0a7a55;
+      color:#0a7a55;
+      border-radius:999px;
+      padding:10px 18px;
+      font-weight:900;
+      font-size:16px;
+    }
   </style>
 </head>
 
@@ -320,7 +453,7 @@
 
       <div class="row" style="align-items:center">
         <button class="btn small out" id="btnLogout">خروج</button>
-        <!-- ✅ زر فاتورة جديدة محذوف حسب طلبك -->
+        <!-- زر فاتورة جديدة محذوف -->
       </div>
 
       <div class="sep"></div>
@@ -371,7 +504,6 @@
           </div>
 
           <div class="actions2">
-            <!-- ✅ زر مسح العمليات (جديد) -->
             <button class="btn gray" id="btnClearOps">مسح العمليات</button>
             <button class="btn blue" id="btnPDF">تصدير PDF</button>
           </div>
@@ -410,7 +542,6 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ مفاتيحك (Legacy anon)
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -451,7 +582,7 @@
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1500);
+      setTimeout(()=> toastEl.style.display="none", 1400);
     }
     function nowTime(){
       return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"});
@@ -491,35 +622,65 @@
     }
 
     // ---------- Offline queue ----------
-    const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V1";
+    const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V2";
     function qLoad(){ try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]")}catch{return []} }
     function qSave(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
-    function qPush(job){
+
+    // upsert local invoice insert job (حتى ما يصير إدخالين)
+    function qUpsertInsert(localId, payloadBase, opsSnapshot){
       const q = qLoad();
-      q.push(job);
+      const idx = q.findIndex(j => j.type==="insert_invoice" && j.localId===localId);
+      const job = {
+        type:"insert_invoice",
+        table: INVOICE_TABLE,
+        localId,
+        payloadBase,
+        opsSnapshot: Array.isArray(opsSnapshot) ? opsSnapshot : []
+      };
+      if(idx>=0) q[idx]=job; else q.push(job);
       qSave(q);
     }
+
+    async function insertInvoiceServer(payloadBase, opsSnapshot){
+      // نجرب إدخال مع أعمدة عمليات مختلفة حسب الموجود عندك
+      const base = { ...payloadBase };
+      for(const col of OPS_COL_CANDIDATES){
+        try{
+          const payload = { ...base, [col]: opsSnapshot };
+          const { data, error } = await supabase.from(INVOICE_TABLE).insert(payload).select("*").limit(1);
+          if(!error && data?.[0]?.id) return { ok:true, id: data[0].id };
+          const msg = (error?.message||"").toLowerCase();
+          if(msg.includes("could not find") || msg.includes("column") || msg.includes("schema cache")){
+            continue;
+          }
+          return { ok:false, error };
+        }catch(e){
+          continue;
+        }
+      }
+      // آخر محاولة بدون ops
+      const { data, error } = await supabase.from(INVOICE_TABLE).insert(base).select("*").limit(1);
+      if(!error && data?.[0]?.id) return { ok:true, id: data[0].id };
+      return { ok:false, error };
+    }
+
     async function flushQueue(){
       if(!navigator.onLine) return;
-      let q = qLoad();
+      const q = qLoad();
       if(!q.length) return;
 
       const still = [];
       for(const job of q){
         try{
           if(job.type==="insert_invoice"){
-            const { table, payload, localId } = job;
-            const { data, error } = await supabase.from(table).insert(payload).select("*").limit(1);
-            if(error) throw error;
-            if(localId && data?.[0]?.id){
+            const { payloadBase, opsSnapshot, localId } = job;
+            const r = await insertInvoiceServer(payloadBase, opsSnapshot);
+            if(!r.ok) throw r.error;
+            if(localId && r.id){
               const map = loadLocalInvoiceMap();
-              map[localId] = data[0].id;
+              map[localId] = r.id;
               saveLocalInvoiceMap(map);
             }
-          }else if(job.type==="update_invoice"){
-            const { table, id, payload } = job;
-            const { error } = await supabase.from(table).update(payload).eq("id", id);
-            if(error) throw error;
           }
         }catch{
           still.push(job);
@@ -537,7 +698,6 @@
     // ---------- App state ----------
     let USER = null;
 
-    // invoice state hidden:
     let invoiceId = null;     // server id or local id
     let invoiceOpen = false;
     let ops = [];
@@ -684,7 +844,6 @@
       return false;
     }
 
-    // ✅ تعديل جذري: إذا فشل فتح الفاتورة أونلاين، نكمل محلي بصمت (بدون رسالة للمستخدم)
     async function ensureInvoiceOpened(){
       const customer = requireCustomer();
       if(!customer) return false;
@@ -694,31 +853,34 @@
 
       if(invoiceOpen) return true;
 
-      // 1) إذا ما في نت: افتح محلي
+      // لو ما في نت: افتح محلي (ولا تعمل إدخالين)
       if(!navigator.onLine){
         const lid = localInvoiceId();
         invoiceId = lid;
         invoiceOpen = true;
 
-        qPush({
-          type: "insert_invoice",
-          table: INVOICE_TABLE,
-          localId: lid,
-          payload: { user_id: USER.id, customer_name: customer, total: 0, status: "open" }
-        });
+        // job واحد فقط يُحدّث لاحقاً
+        qUpsertInsert(lid, {
+          user_id: USER.id,
+          customer_name: customer,
+          total: 0,
+          status: "open"
+        }, ops);
+
         return true;
       }
 
-      // 2) إذا في نت: جرّب تفتح على السيرفر… وإذا فشل، افتح محلي بصمت
+      // في نت: جرّب إدخال على السيرفر مع ops
       try{
-        const { data, error } = await supabase
-          .from(INVOICE_TABLE)
-          .insert({ user_id: USER.id, customer_name: customer, total: 0, status: "open" })
-          .select("*")
-          .limit(1);
+        const r = await insertInvoiceServer({
+          user_id: USER.id,
+          customer_name: customer,
+          total: 0,
+          status: "open"
+        }, ops);
 
-        if(!error && data?.[0]?.id){
-          invoiceId = data[0].id;
+        if(r.ok){
+          invoiceId = r.id;
           invoiceOpen = true;
           return true;
         }
@@ -729,12 +891,12 @@
       invoiceId = lid;
       invoiceOpen = true;
 
-      qPush({
-        type: "insert_invoice",
-        table: INVOICE_TABLE,
-        localId: lid,
-        payload: { user_id: USER.id, customer_name: customer, total: 0, status: "open" }
-      });
+      qUpsertInsert(lid, {
+        user_id: USER.id,
+        customer_name: customer,
+        total: 0,
+        status: "open"
+      }, ops);
 
       return true;
     }
@@ -756,12 +918,14 @@
       const total = calcTotal();
       const base = { customer_name: customer, total, status: "open" };
 
+      // إذا محلي: حدّث نفس job (بدون تكرار)
       if(String(invoiceId).startsWith("local-")){
-        const map = loadLocalInvoiceMap();
-        const serverId = map[invoiceId];
-        if(serverId){
-          await tryUpdateOps(serverId, base);
-        }
+        qUpsertInsert(invoiceId, {
+          user_id: USER.id,
+          customer_name: customer,
+          total,
+          status: "open"
+        }, ops);
         return;
       }
 
@@ -770,8 +934,6 @@
         if(!ok){
           await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
         }
-      }else{
-        qPush({ type:"update_invoice", table: INVOICE_TABLE, id: invoiceId, payload: base });
       }
     }
 
@@ -862,7 +1024,6 @@
       if(navigator.vibrate) navigator.vibrate(20);
     }
 
-    // ✅ زر مسح العمليات (جديد)
     async function clearOperations(){
       clearErr(appErr);
       ops = [];
@@ -871,7 +1032,6 @@
       exprView.textContent = "";
       resView.textContent = "0";
       renderLog();
-      // لو الفاتورة مفتوحة بالخلفية، احفظ التعديل بصمت
       await autosaveBackground();
       toast("تم المسح ✅");
     }
@@ -906,54 +1066,77 @@
     // ---------- PDF ----------
     function buildPrintArea(){
       const pa = $("printArea");
-      const customer = custInput.value.trim() || "بدون اسم";
-      const user = USER?.username || "";
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const invId = String(invoiceId || "").replace("local-","");
+      const dateText = new Date().toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
       const total = calcTotal();
 
       const rows = ops.slice().reverse().map((o,i)=>`
         <tr>
-          <td>${i+1}</td>
-          <td>${escapeHtml(o.label||"")}</td>
-          <td>${escapeHtml(o.expr||"")}</td>
-          <td>${escapeHtml(o.result)}</td>
-          <td>${escapeHtml(o.time || "")}</td>
+          <td style="width:24%">${escapeHtml(o.time || "")}</td>
+          <td style="width:34%">${escapeHtml(o.label || "")}</td>
+          <td style="width:26%">${escapeHtml(o.expr || "")}</td>
+          <td style="width:16%">${escapeHtml(o.result)}</td>
         </tr>
       `).join("");
 
       pa.innerHTML = `
-        <div class="pTop">
-          <div>
-            <div class="pMuted">شركة الحايك</div>
-            <h1>HAYEK SPOT</h1>
-          </div>
-          <div style="text-align:right">
-            <div class="pMuted">اسم الزبون: <b>${escapeHtml(customer)}</b></div>
-            <div class="pMuted">اسم المستخدم: <b>${escapeHtml(user)}</b></div>
-            <div class="pMuted">التاريخ: ${escapeHtml(todayStr())}</div>
+        <div class="p-box p-header">
+          <div class="p-title">شركة الحايك</div>
+          <div class="p-subtitle">HAYEK SPOT</div>
+          <div class="p-chiprow">
+            <div class="p-chip">PDF / طباعة</div>
+            <div class="p-chip">سجل عمليات كامل</div>
+            <div class="p-chip">فاتورة رسمية</div>
           </div>
         </div>
 
-        <div class="pLine"></div>
+        <div class="p-field">
+          <div class="k">اسم المستخدم</div>
+          <div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div>
+        </div>
 
-        <div class="pMuted" style="font-weight:800; margin-bottom:6px">سجل العمليات</div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width:6%">#</th>
-              <th style="width:34%">البيان</th>
-              <th style="width:28%">العملية</th>
-              <th style="width:12%">النتيجة</th>
-              <th style="width:20%">الوقت</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="5" class="pMuted" style="padding:10px">لا يوجد عمليات</td></tr>`}
-          </tbody>
-        </table>
+        <div class="p-field">
+          <div class="k">اسم العميل</div>
+          <div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div>
+        </div>
 
-        <div class="pFooter">
-          <div class="pMuted">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
-          <div class="pTotal">إجمالي الكشف: ${escapeHtml(total)}</div>
+        <div class="p-field">
+          <div class="k">رقم الفاتورة</div>
+          <div class="v">${escapeHtml(invId || "—")}</div>
+        </div>
+
+        <div class="p-field">
+          <div class="k">التاريخ</div>
+          <div class="v" style="direction:ltr">${escapeHtml(dateText)}</div>
+        </div>
+
+        <div class="p-tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الوقت</th>
+                <th>البيان</th>
+                <th>العملية</th>
+                <th>النتيجة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-totalBox">
+          <div>إجمالي الكشف:</div>
+          <div>${escapeHtml(total)}</div>
+        </div>
+
+        <div class="p-foot">
+          <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
+          <div class="p-phone">05510217646</div>
         </div>
       `;
       return pa;
@@ -964,24 +1147,25 @@
 
       const customer = custInput.value.trim();
       const total = calcTotal();
-      const base = { customer_name: customer, total, status: "closed" };
 
-      // local close silently
+      // إذا محلي: حدّث نفس job لحالة closed (بدون إدخال جديد)
       if(String(invoiceId).startsWith("local-")){
-        qPush({ type:"insert_invoice", table: INVOICE_TABLE, localId: invoiceId, payload:{
-          user_id: USER.id, customer_name: customer, total, status:"closed"
-        }});
+        qUpsertInsert(invoiceId, {
+          user_id: USER.id,
+          customer_name: customer,
+          total,
+          status: "closed"
+        }, ops);
         invoiceOpen = false;
         return;
       }
 
+      // إذا سيرفر: update مع ops
       if(navigator.onLine){
+        const base = { customer_name: customer, total, status:"closed" };
         const ok = await tryUpdateOps(invoiceId, base);
         if(!ok) await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
-      }else{
-        qPush({ type:"update_invoice", table: INVOICE_TABLE, id: invoiceId, payload: base });
       }
-
       invoiceOpen = false;
     }
 
@@ -1028,11 +1212,8 @@
 
       toast("تم تنزيل PDF ✅");
 
-      // بعد التصدير: جهّز لفاتورة جديدة (بدون زر) — المستخدم يكتب اسم زبون جديد
       await resetAll(false);
-
-      // حاول يفلّش طابور المزامنة (مخفي)
-      flushQueue();
+      flushQueue(); // مزامنة مخفية
     }
 
     // ---------- UI binds ----------
@@ -1050,11 +1231,10 @@
       if(!k) return;
       press(k);
     });
+
     $("btnBack").addEventListener("click", backspace);
     $("btnEq").addEventListener("click", equalsAndLog);
     $("btnPDF").addEventListener("click", exportPDF);
-
-    // ✅ زر مسح العمليات
     $("btnClearOps").addEventListener("click", clearOperations);
 
     // Initial
