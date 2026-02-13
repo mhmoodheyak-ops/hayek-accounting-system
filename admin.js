@@ -2,8 +2,8 @@ import { supabase } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 
-function setSys(msg){ const el=$("sysMsg"); if(el) el.textContent = msg; }
-function setUsersStatus(msg){ const el=$("usersStatus"); if(el) el.textContent = msg; }
+function setSys(msg){ const el=$("sysMsg"); if(el) el.textContent = msg || "—"; }
+function setUsersStatus(msg){ const el=$("usersStatus"); if(el) el.textContent = msg || ""; }
 function vibrate(){ try{ navigator.vibrate && navigator.vibrate(15); }catch{} }
 
 function escapeHtml(s){
@@ -20,49 +20,52 @@ function fmtDate(iso){
 }
 function boolText(v){ return v ? "نعم" : "لا"; }
 
-// ===== Gate (بدون تقليب) =====
 const lock = $("lock");
-$("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
-
 function showLock(title, msg){
   $("lockTitle").textContent = title;
   $("lockMsg").textContent = msg;
   lock.style.display = "flex";
 }
 
+$("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
+
 function emailUserName(email){
-  const s = String(email||"");
-  return s.includes("@") ? s.split("@")[0].toLowerCase() : s.toLowerCase();
+  const s = String(email||"").toLowerCase();
+  return s.includes("@") ? s.split("@")[0] : s;
 }
 
-async function gateAdmin(){
+/** ✅ Gate جذري: لا تقليب بين الصفحات */
+async function requireAdminOrLock(){
   const { data } = await supabase.auth.getSession();
   const user = data?.session?.user;
 
   if(!user){
     $("sessionInfo").textContent = "غير مسجّل";
     showLock("تسجيل الدخول مطلوب", "الرجاء تسجيل الدخول أولاً.");
-    throw new Error("NO_SESSION");
+    return null;
   }
 
   const uname = emailUserName(user.email);
   $("sessionInfo").textContent = "مسجّل: " + uname;
 
-  // ✅ شرط الأدمن الجذري الآن: admin@hayek.local فقط
+  // شرط الأدمن الآن: admin@hayek.local فقط (جذري وبسيط)
   if(uname !== "admin"){
     showLock("غير مصرح", "هذه الصفحة للأدمن فقط.");
-    throw new Error("NOT_ADMIN");
+    return null;
   }
+
+  return user;
 }
 
-// ===== Buttons =====
-$("btnLogout")?.addEventListener("click", async ()=>{
+// Logout
+$("btnLogout").addEventListener("click", async ()=>{
   vibrate();
   try{ await supabase.auth.signOut(); }catch{}
   location.href = "index.html?v=" + Date.now();
 });
 
-$("btnRefresh")?.addEventListener("click", async ()=>{
+// Refresh
+$("btnRefresh").addEventListener("click", async ()=>{
   vibrate();
   await refreshSummary();
   await loadUsers(true);
@@ -84,43 +87,63 @@ document.querySelectorAll(".tab").forEach(btn=>{
   });
 });
 
-// ===== Users state =====
+// Users state
 let usersPage = 1;
 let usersPageSize = 25;
 let usersLastBatchCount = 0;
-let usersLoading = false;
+let usersTotalKnown = null;
 let usersQueryTimer = null;
 
-$("pageSizeUsers")?.addEventListener("change", ()=>{
+$("pageSizeUsers").addEventListener("change", ()=>{
   usersPageSize = Number($("pageSizeUsers").value || 25);
   usersPage = 1;
   loadUsers(true);
 });
-$("qUsers")?.addEventListener("input", ()=>{
+$("qUsers").addEventListener("input", ()=>{
   clearTimeout(usersQueryTimer);
   usersQueryTimer = setTimeout(()=>{
     usersPage = 1;
     loadUsers(true);
   }, 300);
 });
-$("prevUsers")?.addEventListener("click", ()=>{
+$("prevUsers").addEventListener("click", ()=>{
   if(usersPage > 1){
     usersPage--;
     loadUsers(false);
   }
 });
-$("nextUsers")?.addEventListener("click", ()=>{
+$("nextUsers").addEventListener("click", ()=>{
   if(usersLastBatchCount === usersPageSize){
     usersPage++;
     loadUsers(false);
   }
 });
 
-// ===== Load users =====
-async function loadUsers(force=false){
-  if(usersLoading) return;
-  usersLoading = true;
+async function refreshSummary(){
+  try{
+    const { count: usersCount, error: e1 } = await supabase
+      .from("app_users")
+      .select("id", { count: "exact", head: true });
+    if(e1) throw e1;
 
+    const u = $("pillUsers");
+    u.textContent = `Users: ${usersCount ?? "—"}`;
+    u.classList.add("ok");
+
+    const { count: invCount, error: e2 } = await supabase
+      .from("app_invoices")
+      .select("id", { count: "exact", head: true });
+
+    const inv = $("pillInvoices");
+    inv.textContent = `Invoices: ${e2 ? "—" : (invCount ?? "—")}`;
+    if(!e2) inv.classList.add("ok");
+  }catch(e){
+    console.error(e);
+    setSys("ملخص: تعذر الجلب (" + (e.message || e) + ")");
+  }
+}
+
+async function loadUsers(){
   setUsersStatus("جارٍ التحميل...");
   $("usersTbody").innerHTML = "";
 
@@ -143,9 +166,10 @@ async function loadUsers(force=false){
     if(error) throw error;
 
     usersLastBatchCount = (data || []).length;
+    usersTotalKnown = count ?? null;
 
     $("usersPageInfo").textContent = `صفحة ${usersPage}`;
-    $("usersCountInfo").textContent = (count != null) ? `النتائج: ${count}` : `النتائج: —`;
+    $("usersCountInfo").textContent = usersTotalKnown != null ? `النتائج: ${usersTotalKnown}` : `النتائج: —`;
 
     renderUsers(data || []);
     setUsersStatus("تم ✅");
@@ -153,8 +177,6 @@ async function loadUsers(force=false){
     console.error(e);
     setUsersStatus("خطأ ❌");
     $("usersTbody").innerHTML = `<tr><td colspan="6" style="color:rgba(255,77,77,.95);">فشل تحميل المستخدمين: ${escapeHtml(e.message || e)}</td></tr>`;
-  }finally{
-    usersLoading = false;
   }
 }
 
@@ -164,7 +186,7 @@ function renderUsers(rows){
     return;
   }
 
-  const html = rows.map(u=>{
+  $("usersTbody").innerHTML = rows.map(u=>{
     const isBlocked = !!u.blocked;
     const pillClass = isBlocked ? "bad" : "ok";
     const pillText = isBlocked ? "محظور" : "نشط";
@@ -185,8 +207,6 @@ function renderUsers(rows){
       </tr>
     `;
   }).join("");
-
-  $("usersTbody").innerHTML = html;
 
   $("usersTbody").querySelectorAll("button[data-act]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
@@ -212,7 +232,6 @@ async function setBlocked(id, nextBlocked){
       .from("app_users")
       .update({ blocked: nextBlocked })
       .eq("id", id);
-
     if(error) throw error;
 
     setSys(nextBlocked ? "تم الحظر ✅" : "تم فك الحظر ✅");
@@ -224,44 +243,11 @@ async function setBlocked(id, nextBlocked){
   }
 }
 
-// ===== Summary =====
-async function refreshSummary(){
-  try{
-    const { count: usersCount, error: e1 } = await supabase
-      .from("app_users")
-      .select("id", { count: "exact", head: true });
-
-    if(e1) throw e1;
-
-    const u = $("pillUsers");
-    if(u){
-      u.textContent = `Users: ${usersCount ?? "—"}`;
-      u.classList.add("ok");
-    }
-
-    const { count: invCount, error: e2 } = await supabase
-      .from("app_invoices")
-      .select("id", { count: "exact", head: true });
-
-    const inv = $("pillInvoices");
-    if(inv){
-      inv.textContent = `Invoices: ${e2 ? "—" : (invCount ?? "—")}`;
-      if(!e2) inv.classList.add("ok");
-    }
-  }catch(e){
-    console.error(e);
-    setSys("ملخص: تعذر الجلب (" + (e.message || e) + ")");
-  }
-}
-
-// ===== Init =====
+// INIT
 (async function init(){
   setSys("تشغيل الأدمن...");
-  try{
-    await gateAdmin();
-  }catch{
-    return; // قفل الصفحة
-  }
+  const ok = await requireAdminOrLock();
+  if(!ok) return;
 
   await refreshSummary();
   await loadUsers(true);
