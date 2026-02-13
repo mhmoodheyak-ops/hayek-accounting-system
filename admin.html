@@ -4,8 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>لوحة الأدمن - HAYEK</title>
-
-  <!-- منع طلب favicon الافتراضي -->
   <link rel="icon" href="data:," />
 
   <style>
@@ -30,7 +28,6 @@
     .brand{ display:flex; flex-direction:column; gap:2px; }
     .brand b{ font-size:16px; }
     .brand span{ font-size:12px; color:var(--muted); }
-
     .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     button{
       border:1px solid var(--line); background:var(--btn); color:var(--txt);
@@ -108,23 +105,14 @@
     .pager .left, .pager .right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .small{ font-size:12px; color:var(--muted); }
 
-    /* ===== Lock Overlay (بدون Redirect) ===== */
+    /* Lock */
     #lock{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.82);
-      z-index:9999;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
+      position:fixed; inset:0; background:rgba(0,0,0,.82);
+      z-index:9999; display:none; align-items:center; justify-content:center; padding:16px;
     }
     #lock .box{
-      width:min(560px,100%);
-      background:#0b1820;
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:20px;
-      padding:18px;
-      text-align:center;
+      width:min(560px,100%); background:#0b1820; border:1px solid rgba(255,255,255,.12);
+      border-radius:20px; padding:18px; text-align:center;
     }
     #lock h3{ margin:0 0 8px; }
     #lock p{ margin:0 0 12px; color:#b9cde0; line-height:1.7; }
@@ -140,7 +128,6 @@
 </head>
 
 <body>
-  <!-- قفل -->
   <div id="lock">
     <div class="box">
       <h3 id="lockTitle">تسجيل الدخول مطلوب</h3>
@@ -238,8 +225,8 @@
     </div>
   </div>
 
-  <!-- Gate + تحميل admin.js فقط للأدمن -->
   <script type="module">
+    // ✅ المصدر الوحيد لعميل Supabase (Singleton)
     import { supabase } from "./config.js";
 
     const $ = (id)=>document.getElementById(id);
@@ -258,7 +245,6 @@
     function isAdminUsername(u){
       return String(u||"").toLowerCase() === "admin";
     }
-
     function showLock(title, msg, showLogout=false){
       lockTitle.textContent = title;
       lockMsg.textContent = msg;
@@ -272,7 +258,6 @@
       location.href = "index.html?v=" + Date.now();
     };
 
-    // نقرأ المستخدم الحالي (Supabase Auth)
     const { data } = await supabase.auth.getUser();
     const user = data?.user;
 
@@ -283,19 +268,24 @@
     }
 
     const username = usernameFromEmail(user.email);
-    sessionInfo.textContent = `${username} (admin gate)`;
+    sessionInfo.textContent = `${username}`;
 
-    // إذا ليس أدمن: لا Redirect — فقط قفل
     if(!isAdminUsername(username)){
       showLock("لا تملك صلاحية الأدمن", "هذا الحساب ليس أدمن. سجّل دخول بحساب الأدمن للمتابعة.", true);
       throw new Error("Not admin");
     }
 
-    // ✅ أدمن: حمّل admin.js الآن
+    // ✅ أدمن: حمّل admin.js
     const s = document.createElement("script");
     s.type = "module";
-    s.src = "./admin.js?v=" + Date.now(); // كسر كاش بسيط
+    s.src = "./admin.js?v=" + Date.now();
     document.body.appendChild(s);
+
+    // Logout buttons
+    $("btnLogout").onclick = async ()=> {
+      await supabase.auth.signOut();
+      location.href = "index.html?v=" + Date.now();
+    };
   </script>
 </body>
 </html>
