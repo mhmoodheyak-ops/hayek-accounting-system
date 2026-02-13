@@ -69,6 +69,7 @@
     .w-60{ flex: 1 1 420px; }
     .w-20{ flex: 1 1 160px; }
     .hint{ font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; }
+
     .status{ font-size:12px; color:var(--muted); margin-top:10px; }
 
     .tableWrap{
@@ -96,13 +97,6 @@
     }
     .pill.ok{ border-color: rgba(53,208,127,.35); color: rgba(53,208,127,.95); }
     .pill.bad{ border-color: rgba(255,77,77,.35); color: rgba(255,77,77,.95); }
-
-    .pager{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-top:12px;
-    }
-    .pager .left, .pager .right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .small{ font-size:12px; color:var(--muted); }
 
     /* ✅ شاشة قفل بدون تقليب */
     #lock{
@@ -186,20 +180,20 @@
             </table>
           </div>
 
-          <div class="pager">
-            <div class="left">
+          <div style="display:flex;justify-content:space-between;gap:10px;margin-top:12px;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <button id="prevUsers">السابق</button>
               <button id="nextUsers">التالي</button>
-              <span class="small" id="usersPageInfo">صفحة 1</span>
+              <span style="font-size:12px;color:var(--muted);" id="usersPageInfo">صفحة 1</span>
             </div>
-            <div class="right">
-              <span class="small" id="usersCountInfo">—</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--muted);" id="usersCountInfo">—</span>
             </div>
           </div>
         </div>
 
         <div id="invoicesPanel" style="display:none;">
-          <div class="hint">سيتم تفعيل هذا التبويب بعد ما تكتب "تم".</div>
+          <div class="hint">سيتم تفعيل هذا التبويب لاحقاً.</div>
         </div>
 
         <div id="reportsPanel" style="display:none;">
@@ -219,6 +213,6 @@
     </div>
   </div>
 
-  <script type="module" src="./admin.js"></script>
+  <script type="module" src="./admin.js?v=1"></script>
 </body>
 </html>
