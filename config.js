@@ -1,20 +1,44 @@
 // config.js
+// ==================================================
+// Supabase FINAL configuration
+// يُستخدم في كامل المشروع (Front-end)
+// ==================================================
+
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-// رابط مشروع Supabase
-const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+// 🔐 Project URL (ثابت – نهائي)
+export const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
 
-// المفتاح الصحيح (sb_publishable) — لا تغيّر أي حرف
-const SUPABASE_ANON_KEY =
-  "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+// 🔐 Publishable (Anon) Key فقط — ممنوع secret
+export const SUPABASE_ANON_KEY =
+  "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_"; // ضع المفتاح كاملاً كما هو عندك
 
-// إنشاء العميل
+// ==================================================
+// إنشاء عميل Supabase واحد فقط (Singleton)
+// ==================================================
 export const supabase = createClient(
   SUPABASE_URL,
-  SUPABASE_ANON_KEY
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  }
 );
 
-// ثابت عام إذا احتجته لاحقًا
-export const HAYEK = {
-  SUPABASE_URL,
-};
+// ==================================================
+// فحص أمان (اختياري – أثناء التطوير فقط)
+// ==================================================
+(function checkConfig() {
+  if (!SUPABASE_URL || !SUPABASE_URL.includes(".supabase.co")) {
+    throw new Error("❌ SUPABASE_URL غير صحيح");
+  }
+  if (
+    !SUPABASE_ANON_KEY ||
+    !SUPABASE_ANON_KEY.startsWith("sb_publishable_")
+  ) {
+    throw new Error("❌ يجب استخدام publishable key فقط");
+  }
+})();
