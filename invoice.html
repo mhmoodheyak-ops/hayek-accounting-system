@@ -364,14 +364,14 @@
       color:#111;
       padding:10px;
       border-bottom:2px solid #111;
-      background:#fff; /* بدون خلفية مزعجة */
+      background:#fff;
     }
 
     #printArea tbody td{
       font-size:12px;
       padding:10px;
       border-bottom:1px solid #111;
-      background:#fff; /* بدون خلفية */
+      background:#fff;
     }
 
     #printArea tbody tr:last-child td{
@@ -453,7 +453,6 @@
 
       <div class="row" style="align-items:center">
         <button class="btn small out" id="btnLogout">خروج</button>
-        <!-- زر فاتورة جديدة محذوف -->
       </div>
 
       <div class="sep"></div>
@@ -587,9 +586,6 @@
     function nowTime(){
       return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"});
     }
-    function todayStr(){
-      return new Date().toLocaleDateString("ar");
-    }
 
     // ---------- Memory ----------
     const MEM_CUST_KEY = "HAYEK_MEM_CUSTOMERS";
@@ -621,34 +617,55 @@
       renderDatalist(itemList, loadMem(MEM_ITEM_KEY));
     }
 
-    // ---------- Offline queue ----------
-    const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V2";
+    // ---------- Tables ----------
+    const INVOICE_TABLE = "app_invoices";
+    const USERS_TABLE   = "app_users";
+    const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"];
+
+    // ---------- Offline Sync Queue (idempotent) ----------
+    const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V3";
     function qLoad(){ try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]")}catch{return []} }
     function qSave(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
 
-    // upsert local invoice insert job (حتى ما يصير إدخالين)
-    function qUpsertInsert(localId, payloadBase, opsSnapshot){
+    // job: upsert_invoice (idempotent)
+    function qUpsertInvoice(payloadBase, opsSnapshot){
       const q = qLoad();
-      const idx = q.findIndex(j => j.type==="insert_invoice" && j.localId===localId);
+      const invId = String(payloadBase.id || "");
+      const idx = q.findIndex(j => j.type==="upsert_invoice" && String(j.payloadBase?.id||"")===invId);
       const job = {
-        type:"insert_invoice",
+        type:"upsert_invoice",
         table: INVOICE_TABLE,
-        localId,
         payloadBase,
-        opsSnapshot: Array.isArray(opsSnapshot) ? opsSnapshot : []
+        opsSnapshot: Array.isArray(opsSnapshot) ? opsSnapshot : [],
+        ts: Date.now()
       };
       if(idx>=0) q[idx]=job; else q.push(job);
       qSave(q);
     }
 
-    async function insertInvoiceServer(payloadBase, opsSnapshot){
-      // نجرب إدخال مع أعمدة عمليات مختلفة حسب الموجود عندك
+    function uuid(){
+      if(window.crypto?.randomUUID) return crypto.randomUUID();
+      // fallback
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c=>{
+        const r = (Math.random()*16)|0, v = c==="x" ? r : (r&0x3)|0x8;
+        return v.toString(16);
+      });
+    }
+
+    async function upsertInvoiceServer(payloadBase, opsSnapshot){
+      // upsert with ops candidate columns
       const base = { ...payloadBase };
+
       for(const col of OPS_COL_CANDIDATES){
         try{
           const payload = { ...base, [col]: opsSnapshot };
-          const { data, error } = await supabase.from(INVOICE_TABLE).insert(payload).select("*").limit(1);
-          if(!error && data?.[0]?.id) return { ok:true, id: data[0].id };
+          const { data, error } = await supabase
+            .from(INVOICE_TABLE)
+            .upsert(payload, { onConflict: "id" })
+            .select("id")
+            .limit(1);
+
+          if(!error && (data?.[0]?.id || payloadBase.id)) return { ok:true, id: payloadBase.id };
           const msg = (error?.message||"").toLowerCase();
           if(msg.includes("could not find") || msg.includes("column") || msg.includes("schema cache")){
             continue;
@@ -658,55 +675,61 @@
           continue;
         }
       }
-      // آخر محاولة بدون ops
-      const { data, error } = await supabase.from(INVOICE_TABLE).insert(base).select("*").limit(1);
-      if(!error && data?.[0]?.id) return { ok:true, id: data[0].id };
+
+      // last: upsert without ops
+      const { data, error } = await supabase
+        .from(INVOICE_TABLE)
+        .upsert(base, { onConflict: "id" })
+        .select("id")
+        .limit(1);
+
+      if(!error && (data?.[0]?.id || payloadBase.id)) return { ok:true, id: payloadBase.id };
       return { ok:false, error };
     }
 
+    let syncing = false;
     async function flushQueue(){
+      if(syncing) return;
       if(!navigator.onLine) return;
+
       const q = qLoad();
       if(!q.length) return;
 
+      syncing = true;
       const still = [];
-      for(const job of q){
-        try{
-          if(job.type==="insert_invoice"){
-            const { payloadBase, opsSnapshot, localId } = job;
-            const r = await insertInvoiceServer(payloadBase, opsSnapshot);
-            if(!r.ok) throw r.error;
-            if(localId && r.id){
-              const map = loadLocalInvoiceMap();
-              map[localId] = r.id;
-              saveLocalInvoiceMap(map);
+      try{
+        for(const job of q){
+          try{
+            if(job.type==="upsert_invoice"){
+              const r = await upsertInvoiceServer(job.payloadBase, job.opsSnapshot);
+              if(!r.ok) throw r.error;
+            }else{
+              // unknown job, keep it
+              still.push(job);
             }
+          }catch{
+            still.push(job);
           }
-        }catch{
-          still.push(job);
         }
+        qSave(still);
+      }finally{
+        syncing = false;
       }
-      qSave(still);
     }
-    window.addEventListener("online", flushQueue);
 
-    // ---------- Local invoice mapping ----------
-    const MAP_KEY="HAYEK_LOCAL_TO_SERVER_MAP_V1";
-    function loadLocalInvoiceMap(){ try{return JSON.parse(localStorage.getItem(MAP_KEY)||"{}")}catch{return {}} }
-    function saveLocalInvoiceMap(map){ localStorage.setItem(MAP_KEY, JSON.stringify(map)); }
+    // sync triggers
+    window.addEventListener("online", flushQueue);
+    document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) flushQueue(); });
+    setInterval(flushQueue, 20000);
 
     // ---------- App state ----------
     let USER = null;
 
-    let invoiceId = null;     // server id or local id
+    let invoiceId = null;     // UUID ثابت (سيرفر + أوفلاين)
     let invoiceOpen = false;
     let ops = [];
     let expr = "";
     let lastResult = 0;
-
-    const INVOICE_TABLE = "app_invoices";
-    const USERS_TABLE   = "app_users";
-    const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"];
 
     // ---------- Auth ----------
     async function login(){
@@ -820,30 +843,6 @@
       return c;
     }
 
-    function localInvoiceId(){
-      return "local-" + Math.random().toString(16).slice(2) + Date.now().toString(16);
-    }
-
-    async function tryUpdateOps(invoiceServerId, payloadBase){
-      for(const col of OPS_COL_CANDIDATES){
-        try{
-          const payload = { ...payloadBase };
-          payload[col] = ops;
-          const { error } = await supabase.from(INVOICE_TABLE).update(payload).eq("id", invoiceServerId);
-          if(!error) return true;
-
-          const msg = (error.message||"").toLowerCase();
-          if(msg.includes("could not find") || msg.includes("column") || msg.includes("schema cache")){
-            continue;
-          }
-          return false;
-        }catch{
-          continue;
-        }
-      }
-      return false;
-    }
-
     async function ensureInvoiceOpened(){
       const customer = requireCustomer();
       if(!customer) return false;
@@ -853,51 +852,21 @@
 
       if(invoiceOpen) return true;
 
-      // لو ما في نت: افتح محلي (ولا تعمل إدخالين)
-      if(!navigator.onLine){
-        const lid = localInvoiceId();
-        invoiceId = lid;
-        invoiceOpen = true;
-
-        // job واحد فقط يُحدّث لاحقاً
-        qUpsertInsert(lid, {
-          user_id: USER.id,
-          customer_name: customer,
-          total: 0,
-          status: "open"
-        }, ops);
-
-        return true;
-      }
-
-      // في نت: جرّب إدخال على السيرفر مع ops
-      try{
-        const r = await insertInvoiceServer({
-          user_id: USER.id,
-          customer_name: customer,
-          total: 0,
-          status: "open"
-        }, ops);
-
-        if(r.ok){
-          invoiceId = r.id;
-          invoiceOpen = true;
-          return true;
-        }
-      }catch{}
-
-      // fallback local silently
-      const lid = localInvoiceId();
-      invoiceId = lid;
+      // ID ثابت جذري (لنفس الفاتورة)
+      invoiceId = uuid();
       invoiceOpen = true;
 
-      qUpsertInsert(lid, {
+      // نضعها مباشرة بالطابور (open) — ثم sync مخفي
+      qUpsertInvoice({
+        id: invoiceId,
         user_id: USER.id,
         customer_name: customer,
         total: 0,
         status: "open"
       }, ops);
 
+      // إذا في نت: نجرب فوراً
+      flushQueue();
       return true;
     }
 
@@ -912,29 +881,20 @@
     }
 
     async function autosaveBackground(){
-      if(!invoiceOpen) return;
+      if(!invoiceOpen || !invoiceId) return;
 
       const customer = custInput.value.trim();
       const total = calcTotal();
-      const base = { customer_name: customer, total, status: "open" };
 
-      // إذا محلي: حدّث نفس job (بدون تكرار)
-      if(String(invoiceId).startsWith("local-")){
-        qUpsertInsert(invoiceId, {
-          user_id: USER.id,
-          customer_name: customer,
-          total,
-          status: "open"
-        }, ops);
-        return;
-      }
+      qUpsertInvoice({
+        id: invoiceId,
+        user_id: USER.id,
+        customer_name: customer,
+        total,
+        status: "open"
+      }, ops);
 
-      if(navigator.onLine){
-        const ok = await tryUpdateOps(invoiceId, base);
-        if(!ok){
-          await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
-        }
-      }
+      flushQueue();
     }
 
     // auto open when customer typed
@@ -963,6 +923,7 @@
     }
     function sanitizeForEval(s){
       return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
+
     }
     function safeEval(s){
       const cleaned = sanitizeForEval(s).trim();
@@ -1068,7 +1029,7 @@
       const pa = $("printArea");
       const customer = (custInput.value.trim() || "—");
       const user = (USER?.full_name || USER?.username || "—");
-      const invId = String(invoiceId || "").replace("local-","");
+      const invId = String(invoiceId || "—");
       const dateText = new Date().toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
       const total = calcTotal();
 
@@ -1143,30 +1104,22 @@
     }
 
     async function closeInvoiceHidden(){
-      if(!invoiceOpen) return;
+      if(!invoiceOpen || !invoiceId) return;
 
       const customer = custInput.value.trim();
       const total = calcTotal();
 
-      // إذا محلي: حدّث نفس job لحالة closed (بدون إدخال جديد)
-      if(String(invoiceId).startsWith("local-")){
-        qUpsertInsert(invoiceId, {
-          user_id: USER.id,
-          customer_name: customer,
-          total,
-          status: "closed"
-        }, ops);
-        invoiceOpen = false;
-        return;
-      }
+      // نغلقها محلياً + بالطابور (idempotent)
+      qUpsertInvoice({
+        id: invoiceId,
+        user_id: USER.id,
+        customer_name: customer,
+        total,
+        status: "closed"
+      }, ops);
 
-      // إذا سيرفر: update مع ops
-      if(navigator.onLine){
-        const base = { customer_name: customer, total, status:"closed" };
-        const ok = await tryUpdateOps(invoiceId, base);
-        if(!ok) await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
-      }
       invoiceOpen = false;
+      flushQueue();
     }
 
     async function exportPDF(){
@@ -1243,7 +1196,9 @@
     resView.textContent = "0";
     refreshDatalists();
     restoreSession();
-    window.addEventListener("online", flushQueue);
+
+    // أول sync
+    flushQueue();
   </script>
 </body>
 </html>
