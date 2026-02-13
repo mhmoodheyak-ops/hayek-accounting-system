@@ -114,7 +114,6 @@
     </div>
 
     <div class="grid">
-      <!-- LOGIN -->
       <div class="card" id="loginCard">
         <h2>تسجيل دخول الأدمن</h2>
         <div class="hint">افتراضي: <b>admin</b> / <b>admin123</b> (غيّره لاحقاً)</div>
@@ -130,7 +129,6 @@
         <div class="okbox" id="loginOk"></div>
       </div>
 
-      <!-- DASHBOARD -->
       <div class="card hide" id="dashCard">
         <div class="row" style="align-items:flex-start">
           <div style="flex:1">
@@ -198,10 +196,9 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ ضع رابط مشروعك
+    // ✅ مفاتيحك الصحيحة
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    // ✅ ضع المفتاح كاملاً sb_publishable_... من Project Settings > API
-    const SUPABASE_ANON_KEY = "PASTE_FULL_SB_PUBLISHABLE_KEY_HERE";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -468,7 +465,6 @@
     el("btnRefresh").addEventListener("click", refreshAll);
     el("btnAddUser").addEventListener("click", addUser);
 
-    // start
     restoreSession();
     setSessionPill();
   </script>
