@@ -17,8 +17,6 @@
       --line:rgba(255,255,255,.08);
       --txt:#e9f1ff;
       --muted:#98a8c2;
-      --key:#2a3641;
-      --key2:#313f4b;
       --blue:#1f5bd8;
       --blue2:#2967ee;
       --shadow: 0 12px 35px rgba(0,0,0,.35);
@@ -69,10 +67,9 @@
       overflow:hidden;
     }
 
-    /* Login */
     .hint{color:var(--muted); font-size:12px; line-height:1.6}
     label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
-    input, select{
+    input{
       width:100%;
       padding:12px 12px;
       border-radius:14px;
@@ -112,10 +109,8 @@
       font-size:12px;
       font-weight:800;
     }
-    .btn.out{
-      background: rgba(255,255,255,.05);
-    }
-    .btn.red{background: rgba(255,77,77,.12); border-color: rgba(255,77,77,.25);}
+    .btn.out{background: rgba(255,255,255,.05);}
+    .btn.gray{background: rgba(255,255,255,.07);}
 
     .sep{height:1px; background: var(--line); margin:12px 0}
 
@@ -147,7 +142,6 @@
       text-align:center;
     }
 
-    /* Tabs */
     .tabs{
       display:flex;
       gap:10px;
@@ -169,7 +163,6 @@
       border-color: rgba(31,91,216,.25);
     }
 
-    /* Calculator UI like video */
     .calcBox{
       border:1px solid var(--line);
       background: rgba(0,0,0,.12);
@@ -239,6 +232,7 @@
       grid-template-columns: 1fr;
       gap:10px;
     }
+
     .footerNote{
       margin-top:10px;
       text-align:center;
@@ -247,7 +241,6 @@
       line-height:1.6;
     }
 
-    /* Log */
     .logTable{
       margin-top:10px;
       border:1px solid var(--line);
@@ -266,59 +259,28 @@
     th{color:var(--muted); background: rgba(255,255,255,.05)}
     tr:last-child td{border-bottom:0}
     .muted{color:var(--muted)}
-
-    /* Hide */
     .hide{display:none !important}
 
-    /* Print area (for PDF) */
     #printArea{
       position: fixed;
       left:-9999px;
       top:0;
-      width: 794px; /* ~A4 at 96dpi */
+      width: 794px;
       background:#fff;
       color:#111827;
       padding:22px;
-      border-radius:0;
     }
-    #printArea h1{
-      margin:0;
-      font-size:20px;
-      letter-spacing:.2px;
-    }
-    #printArea .pTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      margin-bottom:8px;
-    }
-    #printArea .pMuted{color:#6b7280; font-size:12px}
-    #printArea .pLine{height:1px; background:#e5e7eb; margin:12px 0}
-    #printArea table th{
-      background:#f3f4f6;
-      color:#111827;
-      border-bottom:1px solid #e5e7eb;
-      font-size:12px;
-    }
-    #printArea table td{
-      border-bottom:1px solid #e5e7eb;
-      font-size:12px;
-    }
+    #printArea h1{margin:0;font-size:20px;letter-spacing:.2px}
+    #printArea .pTop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+    #printArea .pMuted{color:#6b7280;font-size:12px}
+    #printArea .pLine{height:1px;background:#e5e7eb;margin:12px 0}
+    #printArea table th{background:#f3f4f6;color:#111827;border-bottom:1px solid #e5e7eb;font-size:12px}
+    #printArea table td{border-bottom:1px solid #e5e7eb;font-size:12px}
     #printArea .pFooter{
-      margin-top:14px;
-      border:1px dashed #cbd5e1;
-      padding:12px;
-      border-radius:12px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      margin-top:14px;border:1px dashed #cbd5e1;padding:12px;border-radius:12px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px
     }
-    #printArea .pTotal{
-      font-size:16px;
-      font-weight:900;
-    }
+    #printArea .pTotal{font-size:16px;font-weight:900}
   </style>
 </head>
 
@@ -358,7 +320,7 @@
 
       <div class="row" style="align-items:center">
         <button class="btn small out" id="btnLogout">خروج</button>
-        <button class="btn small" id="btnNew" title="فاتورة جديدة">فاتورة جديدة</button>
+        <!-- ✅ زر فاتورة جديدة محذوف حسب طلبك -->
       </div>
 
       <div class="sep"></div>
@@ -384,22 +346,21 @@
           <div class="resLine"><span>النتيجة:</span> <b id="resView">0</b></div>
 
           <div class="keys" id="keys">
-            <!-- row 1 -->
             <button class="key op" data-k="÷">÷</button>
             <button class="key" data-k="9">9</button>
             <button class="key" data-k="8">8</button>
             <button class="key" data-k="7">7</button>
-            <!-- row 2 -->
+
             <button class="key op" data-k="×">×</button>
             <button class="key" data-k="6">6</button>
             <button class="key" data-k="5">5</button>
             <button class="key" data-k="4">4</button>
-            <!-- row 3 -->
+
             <button class="key op" data-k="-">-</button>
             <button class="key" data-k="3">3</button>
             <button class="key" data-k="2">2</button>
             <button class="key" data-k="1">1</button>
-            <!-- row 4 -->
+
             <button class="key op" data-k="+">+</button>
             <button class="key" data-k="(">(</button>
             <button class="key" data-k="0">0</button>
@@ -410,6 +371,8 @@
           </div>
 
           <div class="actions2">
+            <!-- ✅ زر مسح العمليات (جديد) -->
+            <button class="btn gray" id="btnClearOps">مسح العمليات</button>
             <button class="btn blue" id="btnPDF">تصدير PDF</button>
           </div>
 
@@ -447,7 +410,7 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ✅ مفاتيحك (Legacy anon) — صحيحة
+    // ✅ مفاتيحك (Legacy anon)
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -477,7 +440,6 @@
     const logBody   = $("logBody");
     const toastEl   = $("toast");
 
-    // ---------- UX helpers ----------
     function showErr(box, msg){
       box.style.display = "block";
       box.textContent = msg;
@@ -489,7 +451,7 @@
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1600);
+      setTimeout(()=> toastEl.style.display="none", 1500);
     }
     function nowTime(){
       return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"});
@@ -498,7 +460,7 @@
       return new Date().toLocaleDateString("ar");
     }
 
-    // ---------- Memory (typeahead) ----------
+    // ---------- Memory ----------
     const MEM_CUST_KEY = "HAYEK_MEM_CUSTOMERS";
     const MEM_ITEM_KEY = "HAYEK_MEM_ITEMS";
     function loadMem(key){
@@ -549,7 +511,6 @@
             const { table, payload, localId } = job;
             const { data, error } = await supabase.from(table).insert(payload).select("*").limit(1);
             if(error) throw error;
-            // map local id to server id
             if(localId && data?.[0]?.id){
               const map = loadLocalInvoiceMap();
               map[localId] = data[0].id;
@@ -560,7 +521,7 @@
             const { error } = await supabase.from(table).update(payload).eq("id", id);
             if(error) throw error;
           }
-        }catch(e){
+        }catch{
           still.push(job);
         }
       }
@@ -576,17 +537,15 @@
     // ---------- App state ----------
     let USER = null;
 
-    // invoice state hidden from user:
-    let invoiceId = null;     // can be server id OR local id (local-xxx)
-    let invoiceOpen = false;  // open/closed hidden
-    let ops = [];             // operations list
-    let expr = "";            // calculator expression
+    // invoice state hidden:
+    let invoiceId = null;     // server id or local id
+    let invoiceOpen = false;
+    let ops = [];
+    let expr = "";
     let lastResult = 0;
 
     const INVOICE_TABLE = "app_invoices";
     const USERS_TABLE   = "app_users";
-
-    // we will try these column names automatically:
     const OPS_COL_CANDIDATES = ["lines", "ops", "items", "details"];
 
     // ---------- Auth ----------
@@ -626,8 +585,7 @@
       subtitle.textContent = "فاتورة المستخدم";
       pill.innerHTML = `<b>${u.username}</b>`;
       refreshDatalists();
-      await newInvoice(true);
-      toast("جاهز ✅");
+      await resetAll(true);
       flushQueue();
     }
 
@@ -643,7 +601,7 @@
           subtitle.textContent = "فاتورة المستخدم";
           pill.innerHTML = `<b>${USER.username}</b>`;
           refreshDatalists();
-          await newInvoice(true);
+          await resetAll(true);
           flushQueue();
         }
       }catch{}
@@ -673,8 +631,8 @@
       }
     }
 
-    // ---------- Invoice behavior (hidden) ----------
-    async function newInvoice(silent=false){
+    // ---------- Core reset ----------
+    async function resetAll(silent=false){
       clearErr(appErr);
       invoiceId = null;
       invoiceOpen = false;
@@ -684,14 +642,13 @@
       exprView.textContent = "";
       resView.textContent = "0";
       renderLog();
-
-      // keep customer/item as user typed (don't wipe customer unless user wants)
       if(!silent){
         custInput.value = "";
         itemInput.value = "";
       }
     }
 
+    // ---------- Invoice behavior ----------
     function requireCustomer(){
       const c = custInput.value.trim();
       if(!c){
@@ -707,9 +664,7 @@
       return "local-" + Math.random().toString(16).slice(2) + Date.now().toString(16);
     }
 
-    // try to update ops with any available column name
     async function tryUpdateOps(invoiceServerId, payloadBase){
-      // payloadBase should include customer_name/total/status etc.
       for(const col of OPS_COL_CANDIDATES){
         try{
           const payload = { ...payloadBase };
@@ -717,7 +672,6 @@
           const { error } = await supabase.from(INVOICE_TABLE).update(payload).eq("id", invoiceServerId);
           if(!error) return true;
 
-          // if it's "column not found" try next
           const msg = (error.message||"").toLowerCase();
           if(msg.includes("could not find") || msg.includes("column") || msg.includes("schema cache")){
             continue;
@@ -730,17 +684,17 @@
       return false;
     }
 
+    // ✅ تعديل جذري: إذا فشل فتح الفاتورة أونلاين، نكمل محلي بصمت (بدون رسالة للمستخدم)
     async function ensureInvoiceOpened(){
       const customer = requireCustomer();
       if(!customer) return false;
 
-      // memory
       addMem(MEM_CUST_KEY, customer);
       refreshDatalists();
 
       if(invoiceOpen) return true;
 
-      // If offline: create local invoice + queue insert later
+      // 1) إذا ما في نت: افتح محلي
       if(!navigator.onLine){
         const lid = localInvoiceId();
         invoiceId = lid;
@@ -750,50 +704,48 @@
           type: "insert_invoice",
           table: INVOICE_TABLE,
           localId: lid,
-          payload: {
-            user_id: USER.id,
-            customer_name: customer,
-            total: 0,
-            status: "open"
-          }
+          payload: { user_id: USER.id, customer_name: customer, total: 0, status: "open" }
         });
-
         return true;
       }
 
-      // Online: insert server invoice
-      const { data, error } = await supabase
-        .from(INVOICE_TABLE)
-        .insert({
-          user_id: USER.id,
-          customer_name: customer,
-          total: 0,
-          status: "open"
-        })
-        .select("*")
-        .limit(1);
+      // 2) إذا في نت: جرّب تفتح على السيرفر… وإذا فشل، افتح محلي بصمت
+      try{
+        const { data, error } = await supabase
+          .from(INVOICE_TABLE)
+          .insert({ user_id: USER.id, customer_name: customer, total: 0, status: "open" })
+          .select("*")
+          .limit(1);
 
-      if(error){
-        showErr(appErr, "تعذر فتح الفاتورة حالياً. حاول لاحقاً.");
-        return false;
-      }
+        if(!error && data?.[0]?.id){
+          invoiceId = data[0].id;
+          invoiceOpen = true;
+          return true;
+        }
+      }catch{}
 
-      invoiceId = data[0].id;
+      // fallback local silently
+      const lid = localInvoiceId();
+      invoiceId = lid;
       invoiceOpen = true;
+
+      qPush({
+        type: "insert_invoice",
+        table: INVOICE_TABLE,
+        localId: lid,
+        payload: { user_id: USER.id, customer_name: customer, total: 0, status: "open" }
+      });
+
       return true;
     }
 
     function calcTotal(){
-      // Here total = sum of results (or last results) - you can adjust.
-      // We'll use sum of numeric results per operation if exists:
       let t = 0;
       for(const o of ops){
         const n = Number(o.result);
         if(Number.isFinite(n)) t += n;
       }
-      // If user did one calc and didn't log many, total equals lastResult:
       if(!ops.length && Number.isFinite(lastResult)) t = lastResult;
-      // round
       return Math.round(t*100)/100;
     }
 
@@ -804,25 +756,18 @@
       const total = calcTotal();
       const base = { customer_name: customer, total, status: "open" };
 
-      // If local invoice, try map to server if already synced
       if(String(invoiceId).startsWith("local-")){
         const map = loadLocalInvoiceMap();
         const serverId = map[invoiceId];
         if(serverId){
           await tryUpdateOps(serverId, base);
-        }else{
-          // queue update after insert becomes known
-          qPush({ type:"update_local_wait", localId: invoiceId, payload: { base, ops: ops }});
         }
         return;
       }
 
-      // server invoice
       if(navigator.onLine){
-        // update with best available column
         const ok = await tryUpdateOps(invoiceId, base);
         if(!ok){
-          // if cannot update ops column, at least update basics
           await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
         }
       }else{
@@ -830,31 +775,7 @@
       }
     }
 
-    // After insert mapping happens, apply pending update_local_wait
-    async function flushLocalWaitUpdates(){
-      if(!navigator.onLine) return;
-      let q = qLoad();
-      if(!q.length) return;
-
-      const map = loadLocalInvoiceMap();
-      const still = [];
-      for(const job of q){
-        if(job.type !== "update_local_wait"){ still.push(job); continue; }
-        const sid = map[job.localId];
-        if(!sid){ still.push(job); continue; }
-        // apply update with ops
-        ops = job.payload.ops || [];
-        const base = job.payload.base || {};
-        const ok = await tryUpdateOps(sid, base);
-        if(!ok){
-          await supabase.from(INVOICE_TABLE).update(base).eq("id", sid);
-        }
-      }
-      qSave(still);
-    }
-    window.addEventListener("online", ()=>{ flushLocalWaitUpdates(); });
-
-    // Auto open invoice when customer typed (hidden)
+    // auto open when customer typed
     let custTimer=null;
     custInput.addEventListener("input", ()=>{
       clearErr(appErr);
@@ -862,9 +783,8 @@
       custTimer = setTimeout(async ()=>{
         const c = custInput.value.trim();
         if(!c) return;
-        // open invoice silently if not open
         if(!invoiceOpen) await ensureInvoiceOpened();
-      }, 450);
+      }, 350);
     });
 
     itemInput.addEventListener("input", ()=>{
@@ -873,55 +793,32 @@
       refreshDatalists();
     });
 
-    // ---------- Calculator logic ----------
+    // ---------- Calculator ----------
     function setExpr(v){
       expr = v;
       exprView.textContent = expr || "";
       updatePreview();
     }
-
     function sanitizeForEval(s){
-      // allow digits, operators, parentheses, dot, spaces
-      // convert × ÷ to * /
-      return s
-        .replaceAll("×","*")
-        .replaceAll("÷","/")
-        .replaceAll("٫",".")
-        .replaceAll(",",".");
+      return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
     }
-
     function safeEval(s){
-      // Very simple safe eval: only numbers/operators/paren/dot/spaces
       const cleaned = sanitizeForEval(s).trim();
       if(!cleaned) return 0;
       if(!/^[0-9+\-*/().\s]+$/.test(cleaned)) throw new Error("bad");
-      // eslint-disable-next-line no-new-func
       const fn = new Function("return ("+cleaned+");");
       const val = fn();
       if(!Number.isFinite(val)) return 0;
       return Math.round(val*100)/100;
     }
-
     function updatePreview(){
-      try{
-        const v = safeEval(expr);
-        resView.textContent = String(v);
-      }catch{
-        resView.textContent = "0";
-      }
+      try{ resView.textContent = String(safeEval(expr)); }
+      catch{ resView.textContent = "0"; }
     }
-
     function press(k){
-      if(k==="÷" || k==="×" || k==="+" || k==="-" || k==="(" || k===")"){
-        // simple spacing
-        setExpr(expr + k);
-        return;
-      }
-      // digits
       setExpr(expr + String(k));
       if(navigator.vibrate) navigator.vibrate(10);
     }
-
     function backspace(){
       if(!expr) return;
       setExpr(expr.slice(0,-1));
@@ -937,37 +834,57 @@
       if(!ok) return;
 
       let result = 0;
-      try{
-        result = safeEval(expr);
-      }catch{
+      try{ result = safeEval(expr); }
+      catch{
         showErr(appErr, "صيغة العملية غير صحيحة.");
         return;
       }
 
       lastResult = result;
 
-      const item = itemInput.value.trim(); // optional
+      const item = itemInput.value.trim();
       if(item) addMem(MEM_ITEM_KEY, item);
 
       const label = item || "عملية";
-      const record = {
+      ops.unshift({
         label,
         expr: expr || "",
         result,
         at: new Date().toISOString(),
         time: nowTime()
-      };
-      ops.unshift(record); // newest first
-      renderLog();
-      setExpr(""); // clear expression after logging
-      toast("تمت إضافة العملية ✅");
+      });
 
-      // autosave silently
+      renderLog();
+      setExpr("");
+      toast("تمت الإضافة ✅");
+
       await autosaveBackground();
       if(navigator.vibrate) navigator.vibrate(20);
     }
 
-    // ---------- Render log ----------
+    // ✅ زر مسح العمليات (جديد)
+    async function clearOperations(){
+      clearErr(appErr);
+      ops = [];
+      expr = "";
+      lastResult = 0;
+      exprView.textContent = "";
+      resView.textContent = "0";
+      renderLog();
+      // لو الفاتورة مفتوحة بالخلفية، احفظ التعديل بصمت
+      await autosaveBackground();
+      toast("تم المسح ✅");
+    }
+
+    // ---------- Log render ----------
+    function escapeHtml(s){
+      return String(s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
     function renderLog(){
       if(!ops.length){
         logBody.innerHTML = `<tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>`;
@@ -986,16 +903,7 @@
       }).join("");
     }
 
-    function escapeHtml(s){
-      return String(s||"")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    // ---------- PDF + auto close invoice ----------
+    // ---------- PDF ----------
     function buildPrintArea(){
       const pa = $("printArea");
       const customer = custInput.value.trim() || "بدون اسم";
@@ -1058,7 +966,7 @@
       const total = calcTotal();
       const base = { customer_name: customer, total, status: "closed" };
 
-      // if local id, queue close and try mapping later
+      // local close silently
       if(String(invoiceId).startsWith("local-")){
         qPush({ type:"insert_invoice", table: INVOICE_TABLE, localId: invoiceId, payload:{
           user_id: USER.id, customer_name: customer, total, status:"closed"
@@ -1069,9 +977,7 @@
 
       if(navigator.onLine){
         const ok = await tryUpdateOps(invoiceId, base);
-        if(!ok){
-          await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
-        }
+        if(!ok) await supabase.from(INVOICE_TABLE).update(base).eq("id", invoiceId);
       }else{
         qPush({ type:"update_invoice", table: INVOICE_TABLE, id: invoiceId, payload: base });
       }
@@ -1085,13 +991,10 @@
       const customer = requireCustomer();
       if(!customer) return;
 
-      // ensure opened (even if no ops, we still allow)
       await ensureInvoiceOpened();
-
-      // close invoice behind the scenes when exporting
+      await autosaveBackground();
       await closeInvoiceHidden();
 
-      // build PDF
       const pa = buildPrintArea();
       const canvas = await html2canvas(pa, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
       const imgData = canvas.toDataURL("image/png");
@@ -1124,24 +1027,22 @@
       pdf.save(`HAYEK_${safeName}.pdf`);
 
       toast("تم تنزيل PDF ✅");
-      // start a new invoice silently for same customer (optional)
-      await newInvoice(true);
 
-      // try sync pending jobs
+      // بعد التصدير: جهّز لفاتورة جديدة (بدون زر) — المستخدم يكتب اسم زبون جديد
+      await resetAll(false);
+
+      // حاول يفلّش طابور المزامنة (مخفي)
       flushQueue();
-      flushLocalWaitUpdates();
     }
 
-    // ---------- Bind events ----------
+    // ---------- UI binds ----------
     $("btnLogin").addEventListener("click", login);
     $("btnClear").addEventListener("click", ()=>{ $("loginUser").value=""; $("loginPass").value=""; clearErr(loginErr); });
     $("btnLogout").addEventListener("click", logout);
-    $("btnNew").addEventListener("click", ()=>{ newInvoice(false); toast("فاتورة جديدة"); });
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
     tabLog.addEventListener("click", ()=>setTab("log"));
 
-    // keypad
     $("keys").addEventListener("click", (e)=>{
       const b = e.target.closest("button");
       if(!b) return;
@@ -1153,12 +1054,16 @@
     $("btnEq").addEventListener("click", equalsAndLog);
     $("btnPDF").addEventListener("click", exportPDF);
 
+    // ✅ زر مسح العمليات
+    $("btnClearOps").addEventListener("click", clearOperations);
+
     // Initial
     setTab("calc");
     exprView.textContent = "";
     resView.textContent = "0";
     refreshDatalists();
     restoreSession();
+    window.addEventListener("online", flushQueue);
   </script>
 </body>
 </html>
