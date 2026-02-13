@@ -2,119 +2,156 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — تسجيل الدخول</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js?v=2"></script>
-  <script src="./auth.js?v=2"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>تسجيل دخول الأدمن - HAYEK</title>
   <style>
-    :root{ --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12); --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --danger:#ff6b6b; }
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt);display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui}
-    .card{width:min(450px,100%);background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:30px;backdrop-filter:blur(10px);text-align:center}
-    input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:#fff;margin-bottom:15px;outline:none;box-sizing:border-box}
-    .btn{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;font-weight:bold;font-size:16px}
-    .blue{background:var(--blue);color:#fff}
-    .err{color:var(--danger);font-size:13px;text-align:center;margin-top:15px;min-height:1.2em}
-    .hint{color:var(--mut);font-size:12px;margin-top:10px;line-height:1.7}
+    :root{
+      --bg:#0b0f14; --card:#121823; --txt:#e8eefc; --muted:#9aa7bd;
+      --line:#243044; --accent:#4da3ff; --danger:#ff4d4d;
+      --btn:#1a2433; --btn2:#223149; --radius:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family:system-ui, -apple-system, "Segoe UI", Tahoma, Arial;
+      background:linear-gradient(180deg,#070a10,#0b0f14 40%);
+      color:var(--txt); min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .card{
+      width:min(420px, 100%);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:rgba(18,24,35,.85);
+      backdrop-filter: blur(8px);
+      padding:16px;
+    }
+    h2{ margin:0 0 8px 0; font-size:18px; }
+    .sub{ color:var(--muted); font-size:12px; margin-bottom:12px; }
+    input{
+      width:100%;
+      border:1px solid var(--line);
+      background:#0f1622;
+      color:var(--txt);
+      padding:12px;
+      border-radius:12px;
+      outline:none;
+      margin-top:10px;
+      font-size:14px;
+    }
+    button{
+      width:100%;
+      border:1px solid rgba(77,163,255,.45);
+      background:rgba(77,163,255,.10);
+      color:var(--txt);
+      padding:12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      margin-top:12px;
+      font-size:14px;
+    }
+    button:hover{ background:rgba(77,163,255,.16); }
+    .msg{ margin-top:10px; color:var(--muted); font-size:13px; }
+    .err{ color:var(--danger); }
+    .ok{ color:#35d07f; }
   </style>
 </head>
-
 <body>
   <div class="card">
-    <h2 style="margin:0 0 14px">HAYEK SPOT</h2>
+    <h2>تسجيل دخول الأدمن</h2>
+    <div class="sub">الدخول يعتمد على جدول <b>app_users</b> (username / pass)</div>
 
-    <input id="u" placeholder="اسم المستخدم" spellcheck="false" autocomplete="username">
-    <input id="p" type="password" placeholder="كلمة السر" autocomplete="current-password">
-    <button class="btn blue" id="loginBtn">دخول للنظام</button>
+    <input id="u" placeholder="اسم المستخدم" autocomplete="username" />
+    <input id="p" placeholder="كلمة السر" type="password" autocomplete="current-password" />
+    <button id="login">دخول</button>
 
-    <div class="hint">
-      ملاحظة: الحساب مرتبط بجهاز واحد. إذا تغيّر الجهاز يجب أن يقوم الأدمن بمسح الجهاز من لوحة الإدارة.
-    </div>
-
-    <div class="err" id="err"></div>
+    <div id="msg" class="msg">—</div>
   </div>
 
-  <script>
-    const $ = (id) => document.getElementById(id);
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    function showErr(msg){ $("err").textContent = msg || ""; }
-    function getSB(){
-      const cfg = window.HAYEK_CONFIG;
-      if(!cfg?.supabaseUrl || !cfg?.supabaseKey) throw new Error("config.js غير محمّل أو ناقص");
-      return supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+    // بياناتك كما أرسلتها
+    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_j4ubd1htJvuMVOWUKC9w7g_mwVQzHb_";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const msgEl = document.getElementById("msg");
+    const setMsg = (t, kind="")=>{
+      msgEl.textContent = t;
+      msgEl.className = "msg " + (kind || "");
+    };
+
+    function getOrCreateDeviceId(){
+      const key="HAYEK_DEVICE_ID";
+      let id=localStorage.getItem(key);
+      if(!id){
+        id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random()));
+        localStorage.setItem(key,id);
+      }
+      return id;
     }
 
-    const sb = getSB();
+    document.getElementById("login").addEventListener("click", async ()=>{
+      const username = document.getElementById("u").value.trim();
+      const pass = document.getElementById("p").value.trim();
 
-    $("loginBtn").onclick = async () => {
-      showErr("");
-      const userVal = $("u").value.trim();
-      const passVal = $("p").value.trim();
-
-      if (!userVal || !passVal) {
-        showErr("يرجى ملء كافة الحقول");
+      if(!username || !pass){
+        setMsg("أدخل اسم المستخدم وكلمة السر", "err");
         return;
       }
 
-      try {
-        const T_USERS = window.HAYEK_CONFIG.tables.users;
+      setMsg("جارٍ التحقق...");
 
-        const { data, error } = await sb
-          .from(T_USERS)
-          .select("id, username, pass, is_admin, blocked, device_id, last_seen")
-          .eq("username", userVal)
-          .single();
+      try{
+        const device_id = getOrCreateDeviceId();
 
-        if (error || !data) { showErr("اسم المستخدم غير موجود"); return; }
-        if (String(data.pass) !== passVal) { showErr("كلمة السر غير صحيحة"); return; }
-        if (data.blocked) { showErr("هذا الحساب محظور"); return; }
+        // تحقق من الحساب من جدولك مباشرة
+        const { data: user, error } = await supabase
+          .from("app_users")
+          .select("id,username,pass,is_admin,blocked,device_id")
+          .eq("username", username)
+          .eq("pass", pass)
+          .maybeSingle();
 
-        // ✅ ربط الجهاز
-        const myDeviceId = window.HAYEK_AUTH.getOrCreateDeviceId();
+        if(error) throw error;
+        if(!user){ setMsg("بيانات الدخول غير صحيحة", "err"); return; }
+        if(user.blocked){ setMsg("هذا الحساب محظور", "err"); return; }
+        if(!user.is_admin){ setMsg("هذا الحساب ليس أدمن", "err"); return; }
 
-        // إذا كان الحساب مرتبط بجهاز آخر => منع الدخول
-        if (data.device_id && String(data.device_id) !== String(myDeviceId)) {
-          showErr("هذا الحساب مرتبط بجهاز آخر. تواصل مع الأدمن لمسح الجهاز.");
+        // ربط الأدمن بجهاز واحد (إذا سبق وربط، لازم نفس الجهاز)
+        const existing = (user.device_id || "").trim();
+        if(existing && existing !== device_id){
+          setMsg("هذا الأدمن مربوط بجهاز آخر", "err");
           return;
         }
 
-        // إذا ما في device_id => اربطه بهذا الجهاز (أول دخول)
-        if (!data.device_id) {
-          try {
-            await sb.from(T_USERS).update({ device_id: myDeviceId }).eq("id", data.id);
-          } catch(e) {
-            console.warn("فشل ربط الجهاز:", e?.message || e);
-          }
+        // إذا غير مربوط، اربطه الآن
+        if(!existing){
+          const { error: e2 } = await supabase
+            .from("app_users")
+            .update({ device_id })
+            .eq("id", user.id);
+
+          if(e2) throw e2;
         }
 
-        // ✅ إنشاء الجلسة (موحدة مع auth.js)
-        const session = {
-          id: data.id,
-          username: data.username,
-          role: data.is_admin ? "admin" : "user",
-          deviceId: myDeviceId
-        };
-        window.HAYEK_AUTH.setSession(session);
+        // حفظ جلسة أدمن محلية
+        localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({
+          id: user.id,
+          username: user.username,
+          device_id
+        }));
 
-        // تحديث last_seen
-        try {
-          await sb.from(T_USERS).update({ last_seen: new Date().toISOString() }).eq("id", data.id);
-        } catch (e) {
-          console.warn("فشل تحديث last_seen:", e?.message || e);
-        }
-
-        // توجيه
-        const ts = Date.now();
-        if (data.is_admin) window.location.replace("admin.html?v=" + ts);
-        else window.location.replace("invoice.html?v=" + ts);
-
-      } catch (e) {
-        console.error("خطأ في تسجيل الدخول:", e);
-        showErr("خطأ في الاتصال: " + (e.message || "غير معروف"));
+        setMsg("تم تسجيل الدخول ✅", "ok");
+        location.href = "./admin.html";
+      }catch(e){
+        console.error(e);
+        setMsg("فشل الدخول: " + (e.message || e), "err");
       }
-    };
+    });
   </script>
 </body>
 </html>
