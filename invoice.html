@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK — الفاتورة</title>
 
-  <!-- PDF (تصوير الصفحة كصورة لضمان العربية 100%) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -95,7 +94,6 @@
     .kpi b{font-size:18px}
     .hide{display:none !important;}
 
-    /* Printable area for PDF capture */
     #printArea{
       background:#ffffff;
       color:#111827;
@@ -121,7 +119,6 @@
       <div class="pill" id="sessionPill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- LOGIN -->
     <div class="card" id="loginCard">
       <h2>تسجيل دخول</h2>
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
@@ -136,7 +133,6 @@
       <div class="error" id="loginErr"></div>
     </div>
 
-    <!-- APP -->
     <div class="card hide" id="appCard">
       <div class="row" style="align-items:flex-start">
         <div style="flex:1">
@@ -210,15 +206,16 @@
       <div class="okbox" id="appOk"></div>
     </div>
 
-    <!-- Hidden printable area -->
     <div class="hide" id="printArea"></div>
   </div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+    // ✅ مفاتيحك الصحيحة
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SUPABASE_ANON_KEY = "PASTE_FULL_SB_PUBLISHABLE_KEY_HERE";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const el = (id)=>document.getElementById(id);
@@ -372,8 +369,6 @@
       el("op").value = "+";
       recalc();
       renderLines();
-
-      // لا ننشئ سجل في DB إلا بعد إدخال اسم الزبون أو أول عملية
       showOk("فاتورة جديدة ✅");
     }
 
@@ -420,7 +415,6 @@
         .eq("id", invoiceId);
 
       if(error){
-        // لا نوقف المستخدم، بس نعرض خطأ لطيف
         showErr(appErr, "حصل خطأ بالحفظ:\n" + (error.message || JSON.stringify(error)));
       }else{
         clearErr(appErr);
@@ -455,8 +449,6 @@
       el("op").value = "+";
 
       await autoSave();
-
-      // اهتزاز خفيف (إن متاح)
       if(navigator.vibrate) navigator.vibrate(20);
     }
 
@@ -529,7 +521,6 @@
       await autoSave();
 
       const pa = buildPrintArea();
-
       const canvas = await html2canvas(pa, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
       const imgData = canvas.toDataURL("image/png");
 
@@ -538,18 +529,14 @@
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
 
-      // حساب الأبعاد للحفاظ على النسبة
       const imgW = pageW;
       const imgH = canvas.height * (imgW / canvas.width);
 
-      let y = 0;
       if(imgH <= pageH){
         pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
       }else{
-        // صفحات متعددة
         let remaining = imgH;
         let position = 0;
-
         while(remaining > 0){
           pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
           remaining -= pageH;
@@ -561,13 +548,11 @@
       }
 
       pa.classList.add("hide");
-
       const name = (el("customerName").value.trim() || "invoice") + ".pdf";
       pdf.save(name);
       showOk("تم تنزيل PDF ✅");
     }
 
-    // events
     el("btnLogin").addEventListener("click", login);
     el("btnClear").addEventListener("click", ()=>{ el("loginUser").value=""; el("loginPass").value=""; clearErr(loginErr); });
     el("btnLogout").addEventListener("click", logout);
@@ -577,12 +562,10 @@
     el("btnClose").addEventListener("click", closeInvoice);
     el("btnExport").addEventListener("click", exportPDF);
 
-    // auto save on customer change (بعد إنشاء الفاتورة)
     el("customerName").addEventListener("input", ()=>{
       if(invoiceId) autoSave();
     });
 
-    // start
     restoreSession();
     setSessionPill();
   </script>
