@@ -2,553 +2,589 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>HAYEK SPOT — الحاسبة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HAYEK — الفاتورة</title>
 
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#071820" />
-
-  <!-- PDF -->
+  <!-- PDF (تصوير الصفحة كصورة لضمان العربية 100%) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
     :root{
-      --bg:#071820; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf4ff; --mut:#a7bdd0; --blue:#1f62ff; --red:#ff5a6b;
+      --bg:#0b0f14; --card:#121823; --txt:#e8eefc; --muted:#9aa7bd;
+      --line:#243041; --btn:#1a2432; --btn2:#233044; --danger:#ff4d4d; --ok:#22c55e;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
     }
-    *{box-sizing:border-box;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    body{margin:0;min-height:100vh;background:radial-gradient(1200px 600px at 30% 20%, #0f3a3f 0%, var(--bg) 55%);color:var(--txt)}
-    .wrap{max-width:980px;margin:18px auto;padding:16px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .dot{width:12px;height:12px;border-radius:50%;background:#49e39a;box-shadow:0 0 0 6px rgba(73,227,154,.12)}
-    .btnSmall{border:none;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .btnSmall.danger{background:rgba(255,90,107,.18);border:1px solid rgba(255,90,107,.35)}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 70px rgba(0,0,0,.45);backdrop-filter:blur(10px);overflow:hidden}
-    .head{padding:16px;border-bottom:1px solid var(--line);display:flex;gap:12px;flex-wrap:wrap;align-items:end}
-    .field{flex:1;min-width:220px}
-    label{display:block;color:var(--mut);font-size:13px;margin:0 0 6px}
-    input{width:100%;padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--txt);font-size:16px;outline:none}
-    input[readonly]{opacity:.95}
-    .tabs{display:flex;gap:10px;margin-inline-start:auto}
-    .tab{border:none;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-    .tab.active{background:rgba(31,98,255,.35);border:1px solid rgba(31,98,255,.55)}
-    .body{padding:16px}
-    .row2{display:flex;gap:12px;flex-wrap:wrap}
-    .panel{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:18px;padding:14px;flex:1;min-width:300px}
-    .kpad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-    .k{padding:18px;border:none;border-radius:16px;background:rgba(255,255,255,.08);color:#fff;font-size:18px;cursor:pointer}
-    .k.op{background:rgba(255,255,255,.12)}
-    .k.eq{background:rgba(31,98,255,.85)}
-    .k.wide{grid-column:span 2}
-    .tableWrap{margin-top:12px;overflow:auto;border-radius:16px;border:1px solid var(--line)}
-    table{width:100%;border-collapse:collapse;min-width:700px;background:transparent}
-    th,td{padding:10px;border-bottom:1px dashed rgba(255,255,255,.12);font-size:14px;background:transparent}
-    th{color:rgba(255,255,255,.85);text-align:right;background:transparent}
-    td{text-align:right;color:rgba(255,255,255,.95)}
-    .total{margin-top:12px;border:2px dashed rgba(255,255,255,.18);border-radius:16px;padding:12px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
-    .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
-    .a{flex:1;border:none;border-radius:16px;padding:14px;font-size:16px;cursor:pointer;min-width:180px}
-    .a.pdf{background:var(--blue);color:#fff}
-    .a.new{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.14)}
-    .a.danger{background:rgba(255,90,107,.18);color:#fff;border:1px solid rgba(255,90,107,.35)}
-    .foot{margin-top:10px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;line-height:1.7}
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:linear-gradient(180deg,#070a0f 0%, #0b0f14 40%, #0b0f14 100%);
+      color:var(--txt); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      min-height:100vh; display:flex; justify-content:center; padding:16px;
+    }
+    .wrap{width:100%; max-width:900px;}
+    .topbar{display:flex; justify-content:space-between; align-items:center; margin:8px 0 16px; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .dot{width:12px;height:12px;border-radius:50%; background:var(--ok); box-shadow:0 0 0 6px rgba(34,197,94,.15)}
+    .title{font-weight:800}
+    .sub{color:var(--muted); font-size:13px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(36,48,65,.85);
+      color:var(--muted); font-size:12px;
+      white-space:nowrap;
+    }
 
-    /* شاشة قفل */
-    #lock{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px}
-    #lock .box{width:min(520px,100%);background:#0b1820;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:18px;text-align:center}
+    .card{
+      background:rgba(18,24,35,.92);
+      border:1px solid rgba(36,48,65,.7);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+      backdrop-filter: blur(8px);
+      margin-bottom:14px;
+    }
+    h2{margin:0 0 10px; font-size:16px}
+    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px}
+    input, select, textarea{
+      width:100%; padding:12px 12px;
+      border-radius:12px; border:1px solid rgba(36,48,65,.85);
+      background:#0e141e; color:var(--txt);
+      outline:none;
+    }
+    textarea{min-height:44px; resize:vertical}
+    .row{display:flex; gap:10px; align-items:center}
+    .row > *{flex:1}
+    .btn{
+      border:1px solid rgba(36,48,65,.85);
+      background:var(--btn);
+      color:var(--txt);
+      padding:11px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      transition:.15s;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px); background:var(--btn2)}
+    .btn.primary{background:#1d4ed8; border-color:#1d4ed8}
+    .btn.primary:hover{background:#2563eb}
+    .btn.danger{background:#3a1414; border-color:#5a1f1f; color:#ffd4d4}
+    .btn.danger:hover{background:#4a1818}
+    .btn.big{width:100%; padding:14px 12px; border-radius:14px}
+    .sep{height:1px; background:rgba(36,48,65,.7); margin:12px 0}
+    .hint{color:var(--muted); font-size:12px; line-height:1.6}
+    .error{
+      color:#ffd0d0; background:rgba(255,77,77,.08);
+      border:1px solid rgba(255,77,77,.25);
+      padding:10px; border-radius:12px; margin-top:10px; display:none;
+      white-space:pre-wrap;
+    }
+    .okbox{
+      color:#c9ffe0; background:rgba(34,197,94,.08);
+      border:1px solid rgba(34,197,94,.25);
+      padding:10px; border-radius:12px; margin-top:10px; display:none;
+      white-space:pre-wrap;
+    }
+
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:14px}
+    th,td{border-bottom:1px solid rgba(36,48,65,.7); padding:10px; text-align:right; font-size:13px}
+    th{color:var(--muted); background:rgba(10,14,20,.55)}
+    tr:last-child td{border-bottom:0}
+    .kpi{display:flex; justify-content:space-between; align-items:center; gap:10px}
+    .kpi b{font-size:18px}
+    .hide{display:none !important;}
+
+    /* Printable area for PDF capture */
+    #printArea{
+      background:#ffffff;
+      color:#111827;
+      border-radius:16px;
+      padding:16px;
+    }
+    #printArea h3{margin:0 0 8px; font-size:18px}
+    #printArea .pmuted{color:#6b7280; font-size:12px}
+    #printArea table th{background:#f3f4f6; color:#111827}
+    #printArea table td, #printArea table th{border-bottom:1px solid #e5e7eb}
   </style>
 </head>
-
 <body>
-  <div id="lock">
-    <div class="box">
-      <h3>تسجيل الدخول مطلوب</h3>
-      <p style="color:#b9cde0;margin:0 0 12px">غير مسموح تصفح الصفحة بدون تسجيل دخول.</p>
-      <button class="btnSmall" id="goLogin">الذهاب لتسجيل الدخول</button>
-    </div>
-  </div>
-
   <div class="wrap">
     <div class="topbar">
       <div class="brand">
-        <span class="dot" id="onlineDot"></span>
+        <div class="dot"></div>
         <div>
-          <div style="font-weight:800;font-size:18px">حاسبة الحايك</div>
-          <div style="color:var(--mut);font-size:13px">زر واحد: تصدير PDF</div>
+          <div class="title">HAYEK — نظام الفاتورة</div>
+          <div class="sub" id="subTitle">تسجيل دخول المستخدم</div>
         </div>
       </div>
-
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="btnSmall danger" id="newInvoiceTop">فاتورة جديدة</button>
-        <button class="btnSmall" id="logoutBtn">خروج</button>
-      </div>
+      <div class="pill" id="sessionPill"><b>غير مسجل</b></div>
     </div>
 
-    <div class="card">
-      <div class="head">
-        <div class="field">
-          <label>اسم الزبون (إجباري)</label>
-          <input id="customerName" placeholder="مثال: أبو إبراهيم">
-        </div>
-
-        <div class="field">
-          <label>نص السطر (اختياري)</label>
-          <input id="lineText" placeholder="مثال: محارم / رز / مصروف...">
-        </div>
-
-        <div class="tabs">
-          <button class="tab active" data-tab="calc">الحاسبة</button>
-          <button class="tab" data-tab="log">سجل العمليات</button>
-        </div>
+    <!-- LOGIN -->
+    <div class="card" id="loginCard">
+      <h2>تسجيل دخول</h2>
+      <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
+      <label>اسم المستخدم</label>
+      <input id="loginUser" autocomplete="username" />
+      <label>كلمة السر</label>
+      <input id="loginPass" type="password" autocomplete="current-password" />
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnLogin">دخول</button>
+        <button class="btn" id="btnClear">تفريغ</button>
       </div>
-
-      <div class="body">
-        <div id="tab_calc">
-          <div class="row2">
-            <div class="panel">
-              <label>العملية الحسابية (من أزرار الشاشة)</label>
-              <input id="expr" readonly placeholder="5+5">
-              <div style="margin-top:8px;color:var(--mut);font-size:13px">
-                النتيجة: <span id="res" style="font-weight:800;color:#fff">0</span>
-              </div>
-
-              <div class="kpad" id="pad">
-                <button class="k" data-k="7">7</button>
-                <button class="k" data-k="8">8</button>
-                <button class="k" data-k="9">9</button>
-                <button class="k op" data-k="÷">÷</button>
-
-                <button class="k" data-k="4">4</button>
-                <button class="k" data-k="5">5</button>
-                <button class="k" data-k="6">6</button>
-                <button class="k op" data-k="×">×</button>
-
-                <button class="k" data-k="1">1</button>
-                <button class="k" data-k="2">2</button>
-                <button class="k" data-k="3">3</button>
-                <button class="k op" data-k="-">-</button>
-
-                <button class="k op" data-k="(">(</button>
-                <button class="k" data-k="0">0</button>
-                <button class="k op" data-k=")">)</button>
-                <button class="k op" data-k="+">+</button>
-
-                <button class="k wide op" data-k="BACK">⌫</button>
-                <button class="k wide eq" data-k="=">=</button>
-              </div>
-
-              <div class="actions">
-                <button class="a new" id="newInvoiceBtn">فاتورة جديدة</button>
-                <button class="a danger" id="clearOpsBtn">حذف العمليات الحالية</button>
-                <button class="a pdf" id="pdfBtn">تصدير PDF</button>
-              </div>
-
-              <div class="foot">
-                تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك — 05510217646
-              </div>
-            </div>
-
-            <div class="panel">
-              <div class="tableWrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>الوقت</th>
-                      <th>البيان</th>
-                      <th>العملية</th>
-                      <th>النتيجة</th>
-                    </tr>
-                  </thead>
-                  <tbody id="rows"></tbody>
-                </table>
-              </div>
-
-              <div class="total">
-                <span>إجمالي الكشف:</span>
-                <strong id="total">0</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="tab_log" style="display:none">
-          <div class="panel">
-            <div class="tableWrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>الوقت</th>
-                    <th>البيان</th>
-                    <th>العملية</th>
-                    <th>النتيجة</th>
-                  </tr>
-                </thead>
-                <tbody id="rows2"></tbody>
-              </table>
-            </div>
-
-            <div class="total">
-              <span>الإجمالي:</span>
-              <strong id="total2">0</strong>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <div class="error" id="loginErr"></div>
     </div>
+
+    <!-- APP -->
+    <div class="card hide" id="appCard">
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1">
+          <h2 style="margin-bottom:6px">إنشاء فاتورة</h2>
+          <div class="hint">أضف عمليات، ثم أغلق الفاتورة أو صدّر PDF.</div>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end">
+          <button class="btn danger" id="btnLogout">خروج</button>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <label>اسم الزبون</label>
+      <input id="customerName" placeholder="مثال: أبو أحمد" />
+
+      <div class="row">
+        <div>
+          <label>نص العملية</label>
+          <input id="lineText" placeholder="مثال: أجرة تركيب" />
+        </div>
+        <div>
+          <label>العملية</label>
+          <select id="op">
+            <option value="+">جمع +</option>
+            <option value="-">طرح -</option>
+            <option value="*">ضرب ×</option>
+            <option value="/">قسمة ÷</option>
+          </select>
+        </div>
+        <div>
+          <label>الرقم</label>
+          <input id="amount" type="number" inputmode="decimal" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnAddLine">إضافة للسجل</button>
+        <button class="btn" id="btnNewInvoice">فاتورة جديدة</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="kpi">
+        <div class="hint">عدد العمليات: <b id="linesCount">0</b></div>
+        <div>المجموع: <b id="total">0</b></div>
+      </div>
+
+      <div style="margin-top:12px; overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>النص</th>
+              <th>العملية</th>
+              <th>الرقم</th>
+              <th>النتيجة</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="linesTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="sep"></div>
+
+      <button class="btn big primary" id="btnExport">تصدير PDF</button>
+      <button class="btn big" id="btnClose" style="margin-top:10px">إغلاق الفاتورة (حفظ نهائي)</button>
+
+      <div class="error" id="appErr"></div>
+      <div class="okbox" id="appOk"></div>
+    </div>
+
+    <!-- Hidden printable area -->
+    <div class="hide" id="printArea"></div>
   </div>
 
-<script type="module">
-import { supabase } from "./config.js";
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-(() => {
-  const $ = (id)=>document.getElementById(id);
+    const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
+    const SUPABASE_ANON_KEY = "PASTE_FULL_SB_PUBLISHABLE_KEY_HERE";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ===== AUTH Gate (Supabase) =====
-  const lock = $("lock");
-  $("goLogin").onclick = () => location.href = "index.html?v=" + Date.now();
+    const el = (id)=>document.getElementById(id);
 
-  async function gate(){
-    const { data } = await supabase.auth.getSession();
-    const user = data?.session?.user;
+    const loginCard = el("loginCard");
+    const appCard   = el("appCard");
+    const loginErr  = el("loginErr");
+    const appErr    = el("appErr");
+    const appOk     = el("appOk");
+    const sessionPill = el("sessionPill");
+    const subTitle  = el("subTitle");
 
-    if(!user){
-      lock.style.display = "flex";
-      return null;
+    let USER = null;
+    let invoiceId = null;
+    let lines = [];
+    let running = 0;
+
+    function showErr(box, msg){ box.style.display="block"; box.textContent=msg; }
+    function clearErr(box){ box.style.display="none"; box.textContent=""; }
+    function showOk(msg){ appOk.style.display="block"; appOk.textContent=msg; setTimeout(()=>appOk.style.display="none", 1800); }
+
+    function setSessionPill(){
+      if(!USER){ sessionPill.innerHTML="<b>غير مسجل</b>"; return; }
+      sessionPill.innerHTML = `<b>${USER.username}</b>`;
     }
 
-    // لو admin افتح admin مباشرة
-    const email = String(user.email||"").toLowerCase();
-    const uname = email.includes("@") ? email.split("@")[0] : email;
-    if(uname === "admin"){
-      location.href = "admin.html?v=" + Date.now();
-      return null;
+    function fmtOp(op){
+      if(op==="+") return "+";
+      if(op==="-") return "-";
+      if(op==="*") return "×";
+      if(op==="/") return "÷";
+      return op;
     }
 
-    return { user, uname };
-  }
-
-  // ===== Online dot =====
-  const onlineDot = $("onlineDot");
-  function refreshOnline(){
-    const on = navigator.onLine;
-    onlineDot.style.background = on ? "#49e39a" : "#ffb1b1";
-    onlineDot.style.boxShadow = on ? "0 0 0 6px rgba(73,227,154,.12)" : "0 0 0 6px rgba(255,107,107,.12)";
-  }
-  window.addEventListener("online", refreshOnline);
-  window.addEventListener("offline", refreshOnline);
-  refreshOnline();
-
-  $("logoutBtn").onclick = async () => {
-    try{ await supabase.auth.signOut(); }catch{}
-    location.href="index.html?v="+Date.now();
-  };
-
-  // ===== Tabs =====
-  document.querySelectorAll(".tab").forEach(tab=>{
-    tab.onclick=()=>{
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-      const key = tab.getAttribute("data-tab");
-      $("tab_calc").style.display = key==="calc" ? "block" : "none";
-      $("tab_log").style.display  = key==="log"  ? "block" : "none";
-    };
-  });
-
-  // ===== Local storage =====
-  const LS_CURRENT = "HAYEK_USER_CURRENT_INVOICE_V4";
-  function jparse(s, fallback){ try { return JSON.parse(s) ?? fallback; } catch { return fallback; } }
-  function jset(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
-  function nowIso(){ return new Date().toISOString(); }
-  function nowTime(){
-    const d = new Date();
-    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  }
-  function vibrateTiny(){ try{ navigator.vibrate && navigator.vibrate(18);}catch{} }
-
-  // ===== State =====
-  const state = { invoice:null, expr:"", lastResult:0 };
-
-  const customerName = $("customerName");
-  const lineText = $("lineText");
-  const exprInput = $("expr");
-  const resEl = $("res");
-  const rowsEl = $("rows");
-  const rows2El = $("rows2");
-  const totalEl = $("total");
-  const total2El = $("total2");
-
-  function uuid(){
-    return (crypto?.randomUUID?.() || ("inv_" + Math.random().toString(16).slice(2) + Date.now()));
-  }
-
-  function ensureInvoiceLocal(username){
-    const cust = (customerName.value||"").trim();
-    if(!cust) return null;
-
-    if(!state.invoice || state.invoice.status !== "open"){
-      state.invoice = {
-        id: uuid(),
-        username,
-        customer_name: cust,
-        created_at: nowIso(),
-        status: "open",
-        rows: [],
-        total: 0,
-      };
-      jset(LS_CURRENT, state.invoice);
-    } else {
-      state.invoice.customer_name = cust;
-      jset(LS_CURRENT, state.invoice);
-    }
-    return state.invoice;
-  }
-
-  function loadCurrent(username){
-    const cur = jparse(localStorage.getItem(LS_CURRENT), null);
-    if(cur && cur.username === username && cur.status === "open"){
-      state.invoice = cur;
-      customerName.value = cur.customer_name || "";
-    }
-  }
-
-  // ===== Calculator safe eval =====
-  function setExpr(v){ state.expr = v; exprInput.value = v; }
-  function appendToken(tok){
-    if(tok==="BACK"){ setExpr(state.expr.slice(0,-1)); return; }
-    if(tok==="×") tok="*";
-    if(tok==="÷") tok="/";
-    if(!/^[0-9+\-*/().]$/.test(tok)) return;
-    setExpr(state.expr + tok);
-  }
-  function safeEval(expr){
-    const cleaned=(expr||"").replace(/\s+/g,"");
-    if(!cleaned) throw 0;
-    if(!/^[0-9+\-*/().]+$/.test(cleaned)) throw 0;
-    const val = Function('"use strict";return ('+cleaned+');')();
-    const n = Number(val);
-    if(!Number.isFinite(n)) throw 0;
-    return n;
-  }
-
-  $("pad").addEventListener("click",(e)=>{
-    const btn = e.target.closest(".k"); if(!btn) return;
-    const k = btn.getAttribute("data-k");
-    vibrateTiny();
-    if(k==="=") commitLine();
-    else appendToken(k);
-  });
-
-  function escapeHtml(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function render(){
-    const inv = state.invoice;
-    const arr = inv?.rows || [];
-    rowsEl.innerHTML = arr.map((r)=>`
-      <tr>
-        <td>${escapeHtml(r.t||"")}</td>
-        <td>${escapeHtml(r.text||"—")}</td>
-        <td>${escapeHtml(r.expr||"")}</td>
-        <td>${escapeHtml(String(r.result ?? ""))}</td>
-      </tr>
-    `).join("");
-    rows2El.innerHTML = rowsEl.innerHTML;
-    totalEl.textContent  = String(inv?.total ?? 0);
-    total2El.textContent = String(inv?.total ?? 0);
-  }
-
-  async function commitLine(){
-    if(!window.__HAYEK_USER__) return;
-
-    let inv = ensureInvoiceLocal(window.__HAYEK_USER__);
-    if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
-
-    const expr = (state.expr||"").trim();
-    if(!expr) return;
-
-    let result;
-    try{ result = safeEval(expr); }catch{ resEl.textContent="خطأ"; return; }
-
-    const text = (lineText.value||"").trim();
-    const row = { t: nowTime(), text, expr, result };
-
-    inv.rows.push(row);
-    inv.total = inv.rows.reduce((a,r)=>a + Number(r.result||0), 0);
-    inv.customer_name = (customerName.value||"").trim();
-
-    jset(LS_CURRENT, inv);
-    state.invoice = inv;
-
-    state.lastResult = result;
-    resEl.textContent = String(result);
-
-    lineText.value = "";
-    setExpr("");
-    render();
-  }
-
-  function clearOnlyOps(){
-    if(!window.__HAYEK_USER__) return;
-
-    const inv = ensureInvoiceLocal(window.__HAYEK_USER__);
-    if(!inv) { alert("أدخل اسم الزبون"); customerName.focus(); return; }
-    inv.rows = [];
-    inv.total = 0;
-    jset(LS_CURRENT, inv);
-    state.invoice = inv;
-    resEl.textContent = "0";
-    setExpr("");
-    render();
-  }
-
-  function newInvoice(){
-    localStorage.removeItem(LS_CURRENT);
-    state.invoice = null;
-    resEl.textContent = "0";
-    setExpr("");
-    render();
-    if((customerName.value||"").trim() && window.__HAYEK_USER__){
-      ensureInvoiceLocal(window.__HAYEK_USER__);
-      render();
-    }
-  }
-
-  $("clearOpsBtn").onclick = ()=>{ vibrateTiny(); if(confirm("حذف العمليات الحالية؟")) clearOnlyOps(); };
-  $("newInvoiceBtn").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
-  $("newInvoiceTop").onclick = ()=>{ vibrateTiny(); if(confirm("فتح فاتورة جديدة؟")) newInvoice(); };
-
-  // PDF export
-  function buildInvoiceHtml(inv){
-    const rowsHtml = (inv.rows||[]).map((r, i)=>`
-      <tr>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:10%">${i+1}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:16%">${escapeHtml(r.t||"")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:right;width:34%">${escapeHtml(r.text||"عملية")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%">${escapeHtml(r.expr||"")}</td>
-        <td style="border:1px solid #111;padding:8px;text-align:center;width:20%;font-weight:900">${escapeHtml(String(r.result ?? ""))}</td>
-      </tr>
-    `).join("");
-
-    const invNo = String(inv.id || "").slice(-6);
-
-    return `
-      <div style="direction:rtl;font-family:Arial,system-ui; background:#fff; color:#111; padding:18px;">
-        <div style="border:2px solid #111;border-radius:14px;padding:16px;">
-          <div style="text-align:center;font-weight:900;font-size:24px;margin-bottom:4px;">شركة الحايك</div>
-          <div style="text-align:center;font-weight:900;font-size:20px;color:#0a7c3a;margin-bottom:10px;">HAYEK SPOT</div>
-
-          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:10px;flex-wrap:wrap">
-            <div>اسم الزبون: <b>${escapeHtml(inv.customer_name||"-")}</b></div>
-            <div>اسم المستخدم: <b>${escapeHtml(inv.username||"-")}</b></div>
-            <div>رقم الفاتورة: <b>${escapeHtml(invNo)}</b></div>
-            <div>التاريخ: <b>${new Date().toLocaleString("ar")}</b></div>
-          </div>
-
-          <div style="border-top:1px solid #111;margin:10px 0"></div>
-
-          <div style="font-weight:900;margin:6px 0 10px;">تفاصيل العمليات</div>
-
-          <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
-            <thead>
-              <tr style="background:#f3f3f3">
-                <th style="border:1px solid #111;padding:8px;text-align:center;">#</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">الوقت</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">البيان</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">العملية</th>
-                <th style="border:1px solid #111;padding:8px;text-align:center;">النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml || `<tr><td colspan="5" style="border:1px solid #111;padding:14px;text-align:center;color:#666">لا يوجد عمليات</td></tr>`}
-            </tbody>
-          </table>
-
-          <div style="margin-top:12px;border:2px dashed #111;border-radius:12px;padding:10px;display:flex;justify-content:space-between;font-weight:900">
-            <span>إجمالي الكشف:</span>
-            <span>${escapeHtml(String(inv.total || 0))}</span>
-          </div>
-
-          <div style="margin-top:12px;border:2px solid #111;border-radius:14px;padding:12px;text-align:center;font-size:12px;line-height:1.8">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك<br/>
-            <span style="display:inline-block;margin-top:8px;border:2px solid #0a7c3a;color:#0a7c3a;border-radius:12px;padding:8px 16px;font-weight:900;font-size:16px;">05510217646</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async function exportPDF(){
-    if(!window.__HAYEK_USER__) return;
-
-    const inv = ensureInvoiceLocal(window.__HAYEK_USER__);
-    if(!inv){ alert("أدخل اسم الزبون"); customerName.focus(); return; }
-    if(!inv.rows?.length){ alert("لا يوجد عمليات لتصديرها"); return; }
-
-    const tmp = document.createElement("div");
-    tmp.style.position="fixed"; tmp.style.left="-99999px"; tmp.style.top="0"; tmp.style.width="794px";
-    tmp.innerHTML = buildInvoiceHtml(inv);
-    document.body.appendChild(tmp);
-
-    const canvas = await html2canvas(tmp, { scale: 2, backgroundColor:"#ffffff" });
-    tmp.remove();
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.95);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p","pt","a4");
-
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = canvas.height * (imgW / canvas.width);
-
-    let y = 0;
-    let remaining = imgH;
-    while (remaining > 0) {
-      pdf.addImage(imgData, "JPEG", 0, y, imgW, imgH);
-      remaining -= pageH;
-      if (remaining > 0) { pdf.addPage(); y -= pageH; }
+    function recalc(){
+      running = 0;
+      for(const l of lines){
+        const n = Number(l.amount||0);
+        if(l.op==="+") running = running + n;
+        else if(l.op==="-") running = running - n;
+        else if(l.op==="*") running = running * n;
+        else if(l.op==="/") running = n===0 ? running : (running / n);
+        l.result = running;
+      }
+      el("total").textContent = Number.isFinite(running) ? (Math.round(running*100)/100) : "0";
+      el("linesCount").textContent = String(lines.length);
     }
 
-    const cust = (inv.customer_name||"invoice").trim().replace(/\s+/g,"_");
-    const invNo = String(inv.id||"").slice(-6);
-    pdf.save(`HAYEK_${cust}_${invNo}.pdf`);
-  }
+    function renderLines(){
+      const tb = el("linesTbody");
+      tb.innerHTML = "";
+      lines.forEach((l, idx)=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${idx+1}</td>
+          <td>${l.text||""}</td>
+          <td>${fmtOp(l.op)}</td>
+          <td>${l.amount}</td>
+          <td>${(Math.round((l.result||0)*100)/100)}</td>
+          <td><button class="btn danger" data-i="${idx}" style="padding:6px 10px;border-radius:10px;font-size:12px">حذف</button></td>
+        `;
+        tb.appendChild(tr);
+      });
+      tb.querySelectorAll("button[data-i]").forEach(b=>{
+        b.addEventListener("click", ()=>{
+          const i = Number(b.dataset.i);
+          lines.splice(i,1);
+          recalc();
+          renderLines();
+          autoSave();
+        });
+      });
+    }
 
-  $("pdfBtn").onclick = () => { vibrateTiny(); exportPDF(); };
+    async function login(){
+      clearErr(loginErr);
+      const username = el("loginUser").value.trim();
+      const password = el("loginPass").value.trim();
+      if(!username || !password){
+        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
+        return;
+      }
 
-  // ✅ تشغيل بعد Gate
-  (async ()=>{
-    const g = await gate();
-    if(!g) return;
-    window.__HAYEK_USER__ = g.uname;
+      const { data, error } = await supabase
+        .from("app_users")
+        .select("*")
+        .eq("username", username)
+        .limit(1);
 
-    loadCurrent(g.uname);
-    render();
+      if(error){
+        showErr(loginErr, "خطأ Supabase:\n" + (error.message || JSON.stringify(error)));
+        return;
+      }
+      if(!data?.length){
+        showErr(loginErr, "المستخدم غير موجود.");
+        return;
+      }
 
-    // فتح تلقائي عند إدخال اسم الزبون
-    let custTm = null;
-    customerName.addEventListener("input", ()=>{
-      clearTimeout(custTm);
-      custTm = setTimeout(()=>{
-        const cust = (customerName.value||"").trim();
-        if(cust){
-          ensureInvoiceLocal(g.uname);
-          render();
+      const u = data[0];
+      if(u.password !== password){
+        showErr(loginErr, "كلمة السر غير صحيحة.");
+        return;
+      }
+      if(u.is_blocked){
+        showErr(loginErr, "هذا الحساب محظور.");
+        return;
+      }
+
+      USER = u;
+      localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, username:u.username }));
+      loginCard.classList.add("hide");
+      appCard.classList.remove("hide");
+      subTitle.textContent = "فاتورة المستخدم";
+      setSessionPill();
+      await newInvoice();
+    }
+
+    function logout(){
+      USER = null;
+      localStorage.removeItem("HAYEK_USER_SESSION");
+      appCard.classList.add("hide");
+      loginCard.classList.remove("hide");
+      subTitle.textContent = "تسجيل دخول المستخدم";
+      setSessionPill();
+    }
+
+    async function restoreSession(){
+      try{
+        const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION") || "null");
+        if(!s?.id) return;
+        const { data } = await supabase.from("app_users").select("*").eq("id", s.id).limit(1);
+        if(data?.length && !data[0].is_blocked){
+          USER = data[0];
+          loginCard.classList.add("hide");
+          appCard.classList.remove("hide");
+          subTitle.textContent = "فاتورة المستخدم";
+          setSessionPill();
+          await newInvoice();
         }
-      }, 350);
-    });
-  })();
+      }catch{}
+    }
 
-})();
-</script>
+    async function newInvoice(){
+      clearErr(appErr);
+      lines = [];
+      running = 0;
+      invoiceId = null;
+      el("customerName").value = "";
+      el("lineText").value = "";
+      el("amount").value = "";
+      el("op").value = "+";
+      recalc();
+      renderLines();
+
+      // لا ننشئ سجل في DB إلا بعد إدخال اسم الزبون أو أول عملية
+      showOk("فاتورة جديدة ✅");
+    }
+
+    async function ensureInvoice(){
+      const customer = el("customerName").value.trim();
+      if(!customer){
+        showErr(appErr, "اكتب اسم الزبون أولاً.");
+        return false;
+      }
+
+      if(invoiceId) return true;
+
+      const payload = {
+        user_id: USER.id,
+        customer_name: customer,
+        lines: [],
+        total: 0,
+        status: "open"
+      };
+
+      const { data, error } = await supabase
+        .from("app_invoices")
+        .insert(payload)
+        .select("*")
+        .limit(1);
+
+      if(error){
+        showErr(appErr, "فشل إنشاء الفاتورة:\n" + (error.message || JSON.stringify(error)));
+        return false;
+      }
+
+      invoiceId = data[0].id;
+      return true;
+    }
+
+    async function autoSave(){
+      if(!invoiceId) return;
+      const customer = el("customerName").value.trim();
+      const total = Number(el("total").textContent) || 0;
+
+      const { error } = await supabase
+        .from("app_invoices")
+        .update({ customer_name: customer, lines: lines, total: total })
+        .eq("id", invoiceId);
+
+      if(error){
+        // لا نوقف المستخدم، بس نعرض خطأ لطيف
+        showErr(appErr, "حصل خطأ بالحفظ:\n" + (error.message || JSON.stringify(error)));
+      }else{
+        clearErr(appErr);
+      }
+    }
+
+    async function addLine(){
+      clearErr(appErr);
+
+      const ok = await ensureInvoice();
+      if(!ok) return;
+
+      const text = el("lineText").value.trim();
+      const op = el("op").value;
+      const amount = Number(el("amount").value);
+
+      if(!text){
+        showErr(appErr, "اكتب نص العملية.");
+        return;
+      }
+      if(!Number.isFinite(amount)){
+        showErr(appErr, "اكتب رقم صحيح.");
+        return;
+      }
+
+      lines.push({ text, op, amount, result: 0, at: new Date().toISOString() });
+      recalc();
+      renderLines();
+
+      el("lineText").value = "";
+      el("amount").value = "";
+      el("op").value = "+";
+
+      await autoSave();
+
+      // اهتزاز خفيف (إن متاح)
+      if(navigator.vibrate) navigator.vibrate(20);
+    }
+
+    async function closeInvoice(){
+      clearErr(appErr);
+      const ok = await ensureInvoice();
+      if(!ok) return;
+
+      await autoSave();
+      const { error } = await supabase.from("app_invoices").update({ status:"closed" }).eq("id", invoiceId);
+      if(error){
+        showErr(appErr, "فشل إغلاق الفاتورة:\n" + (error.message || JSON.stringify(error)));
+        return;
+      }
+      showOk("تم إغلاق الفاتورة ✅");
+    }
+
+    function buildPrintArea(){
+      const customer = el("customerName").value.trim() || "بدون اسم";
+      const total = el("total").textContent;
+
+      const pa = el("printArea");
+      const rows = lines.map((l,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td>${l.text||""}</td>
+          <td>${fmtOp(l.op)}</td>
+          <td>${l.amount}</td>
+          <td>${Math.round((l.result||0)*100)/100}</td>
+        </tr>
+      `).join("");
+
+      pa.innerHTML = `
+        <h3>فاتورة — HAYEK</h3>
+        <div class="pmuted">الزبون: <b>${customer}</b></div>
+        <div class="pmuted">التاريخ: ${new Date().toLocaleString()}</div>
+        <div style="height:10px"></div>
+
+        <table style="width:100%; border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="padding:8px; text-align:right">#</th>
+              <th style="padding:8px; text-align:right">العملية</th>
+              <th style="padding:8px; text-align:right">الرمز</th>
+              <th style="padding:8px; text-align:right">الرقم</th>
+              <th style="padding:8px; text-align:right">النتيجة</th>
+            </tr>
+          </thead>
+          <tbody>${rows || `<tr><td colspan="5" style="padding:10px; color:#6b7280">لا يوجد عمليات</td></tr>`}</tbody>
+        </table>
+
+        <div style="height:12px"></div>
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center">
+          <div class="pmuted">عدد العمليات: <b>${lines.length}</b></div>
+          <div style="font-size:18px">المجموع: <b>${total}</b></div>
+        </div>
+        <div style="margin-top:10px; font-size:11px; color:#6b7280">
+          تم تطوير الحاسبة من قبل الحايك للحلول الرقمية
+        </div>
+      `;
+      pa.classList.remove("hide");
+      return pa;
+    }
+
+    async function exportPDF(){
+      clearErr(appErr);
+      const ok = await ensureInvoice();
+      if(!ok) return;
+
+      await autoSave();
+
+      const pa = buildPrintArea();
+
+      const canvas = await html2canvas(pa, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      // حساب الأبعاد للحفاظ على النسبة
+      const imgW = pageW;
+      const imgH = canvas.height * (imgW / canvas.width);
+
+      let y = 0;
+      if(imgH <= pageH){
+        pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
+      }else{
+        // صفحات متعددة
+        let remaining = imgH;
+        let position = 0;
+
+        while(remaining > 0){
+          pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+          remaining -= pageH;
+          if(remaining > 0){
+            pdf.addPage();
+            position -= pageH;
+          }
+        }
+      }
+
+      pa.classList.add("hide");
+
+      const name = (el("customerName").value.trim() || "invoice") + ".pdf";
+      pdf.save(name);
+      showOk("تم تنزيل PDF ✅");
+    }
+
+    // events
+    el("btnLogin").addEventListener("click", login);
+    el("btnClear").addEventListener("click", ()=>{ el("loginUser").value=""; el("loginPass").value=""; clearErr(loginErr); });
+    el("btnLogout").addEventListener("click", logout);
+
+    el("btnAddLine").addEventListener("click", addLine);
+    el("btnNewInvoice").addEventListener("click", newInvoice);
+    el("btnClose").addEventListener("click", closeInvoice);
+    el("btnExport").addEventListener("click", exportPDF);
+
+    // auto save on customer change (بعد إنشاء الفاتورة)
+    el("customerName").addEventListener("input", ()=>{
+      if(invoiceId) autoSave();
+    });
+
+    // start
+    restoreSession();
+    setSessionPill();
+  </script>
 </body>
 </html>
