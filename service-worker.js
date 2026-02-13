@@ -1,52 +1,62 @@
-/* service-worker.js - HAYEK SPOT offline cache
-   - Caches user page assets so it opens without internet.
+/* service-worker.js (FINAL SAFE)
+   - لا يلمس ملفات JS/CSS/Modules أبداً (Network only)
+   - يحافظ على Offline لصفحات التنقل فقط (navigate)
 */
-const CACHE = "hayek-user-v1";
 
-const ASSETS = [
-  "./user.html",
-  "./user.js",
-  "./service-worker.js",
-  "./config.js",
-  "./auth.js",
-  "./jspdf.umd.min.js",
-  "./amiri-font.js",
-  "./style.css",
-  "./"
+const CACHE_NAME = "hayek-cache-v9";
+const OFFLINE_FALLBACK = "./index.html";
+
+// ملفات نسمح بتخزينها (خفيف وآمن)
+const PRECACHE = [
+  "./",
+  "./index.html",
+  "./invoice.html",
+  "./admin.html",
+  "./manifest.json"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : null)))).then(() => self.clients.claim())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+      await self.clients.claim();
+    })()
   );
 });
 
+// ✅ أهم نقطة: أي شيء مو "navigate" => fetch مباشر (خصوصاً JS)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+  const url = new URL(req.url);
 
-  // Network-first for html, cache-first for others
-  if (req.headers.get("accept")?.includes("text/html")) {
-    event.respondWith(
-      fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(cache => cache.put(req, copy));
-        return res;
-      }).catch(() => caches.match(req).then(r => r || caches.match("./user.html")))
-    );
+  // لا تتدخل مع supabase/cdn أو أي origin خارجي
+  if (url.origin !== self.location.origin) return;
+
+  // ✅ لا تتدخل مع: js/css/json/svg/ttf… إلخ (خاصة admin.js)
+  if (req.mode !== "navigate") {
+    event.respondWith(fetch(req));
     return;
   }
 
+  // ✅ للصفحات فقط: جرّب network، وإذا فشل رجّع fallback من الكاش
   event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE).then((cache) => cache.put(req, copy));
-      return res;
-    }).catch(() => cached))
+    (async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, fresh.clone());
+        return fresh;
+      } catch (e) {
+        const cache = await caches.open(CACHE_NAME);
+        return (await cache.match(req)) || (await cache.match(OFFLINE_FALLBACK));
+      }
+    })()
   );
 });
