@@ -3,122 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK - تسجيل دخول آمن</title>
-
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Supabase JS (CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Config then Auth -->
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
+  <title>HAYEK - تسجيل الدخول</title>
 
   <style>
-    /* (خفيف) إذا ما عندك ستايل جاهز */
-    body{background:#0b1220; min-height:100vh; display:flex; align-items:center; justify-content:center; margin:0; font-family:system-ui,Segoe UI,Tahoma,Arial}
-    .card{width:min(520px,92vw); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    h1{color:#fff; margin:0 0 8px; font-size:22px}
-    .sub{color:rgba(255,255,255,.75); margin:0 0 18px; font-size:13px}
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    input{flex:1; min-width:220px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); color:#fff; padding:14px 12px; border-radius:12px; outline:none}
-    button{width:100%; margin-top:12px; padding:14px 12px; border-radius:12px; border:0; background:#1f3a5a; color:#fff; font-weight:700; cursor:pointer}
-    button:disabled{opacity:.6; cursor:not-allowed}
-    .msg{margin-top:10px; min-height:22px; font-size:13px}
+    body{background:#0b1220;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;font-family:system-ui,Segoe UI,Tahoma,Arial}
+    .card{width:min(520px,92vw);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+    h1{color:#fff;margin:0 0 8px;font-size:22px}
+    .sub{color:rgba(255,255,255,.75);margin:0 0 18px;font-size:13px;line-height:1.5}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    input{flex:1;min-width:220px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#fff;padding:14px 12px;border-radius:12px;outline:none}
+    input::placeholder{color:rgba(255,255,255,.55)}
+    button{width:100%;margin-top:12px;padding:14px 12px;border-radius:12px;border:0;background:#1f3a5a;color:#fff;font-weight:800;cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .msg{margin-top:10px;min-height:22px;font-size:13px}
     .ok{color:#68ffb0}
     .err{color:#ff6b6b}
-    .hint{color:rgba(255,255,255,.6); font-size:12px; margin-top:10px}
+    .hint{color:rgba(255,255,255,.6);font-size:12px;margin-top:10px;line-height:1.6}
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h1>تسجيل دخول آمن</h1>
-    <p class="sub">الدخول يعتمد على Supabase Auth (اسم/رقم + PIN) مع ربط الجهاز</p>
+    <h1>تسجيل الدخول</h1>
+    <p class="sub">
+      اكتب <b>اسم/رقم المستخدم</b> + <b>PIN</b>.<br>
+      (لا تكتب <b>mailto:</b> — فقط اسم المستخدم مثل: <b>admin</b>)
+    </p>
 
     <div class="row">
-      <input id="username" placeholder="اسم المستخدم أو الرقم" autocomplete="username" />
-      <input id="pin" type="password" placeholder="PIN (4-6 أرقام)" autocomplete="current-password" />
+      <input id="username" type="text" placeholder="اسم المستخدم أو الرقم" autocomplete="username" />
+      <input id="pin" type="password" placeholder="PIN (مثال: 1234)" autocomplete="current-password" />
     </div>
 
-    <button id="btn">دخول</button>
+    <button id="loginBtn">دخول</button>
     <div id="msg" class="msg"></div>
 
     <div class="hint">
-      ملاحظة: لا تكتب <b>mailto:</b> — اكتب فقط: <b>admin</b> أو <b>admin@hayek.local</b>
+      إذا كان لديك جلسة دخول موجودة، سيتم تحويلك تلقائيًا إلى الصفحة المناسبة.
     </div>
   </div>
 
-  <script>
-    const $ = (id) => document.getElementById(id);
-    const msg = (text, ok=false) => {
-      const el = $("msg");
-      el.className = "msg " + (ok ? "ok" : "err");
-      el.textContent = text || "";
-    };
-
-    (async () => {
-      if (!window.HAYEK_AUTH) {
-        msg("خطأ: auth.js لم يُحمّل. تأكد أن config.js صحيح.", false);
-        return;
-      }
-
-      // إذا فيه جلسة سابقة، وجّه مباشرة
-      const session = await HAYEK_AUTH.getSession();
-      if (session?.user) {
-        // نجيب profile ونحوّل
-        const { data: profile } = await HAYEK_AUTH.sb
-          .from("profiles")
-          .select("is_admin,blocked")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile?.blocked) {
-          await HAYEK_AUTH.signOut();
-        } else if (profile?.is_admin) {
-          location.href = "admin.html";
-          return;
-        } else {
-          location.href = "invoice.html";
-          return;
-        }
-      }
-    })();
-
-    $("btn").addEventListener("click", async () => {
-      try {
-        msg("");
-        $("btn").disabled = true;
-
-        let u = $("username").value.trim();
-        let p = $("pin").value.trim();
-
-        // إذا كتب إيميل داخلي، نسمح
-        u = u.replace(/^mailto:/i, "").trim();
-
-        // دعم: إذا كتب admin@hayek.local نأخذه كما هو كـ username (راح يتحول داخليًا أيضًا)
-        const cleanU = u.includes("@") ? u.split("@")[0] : u;
-
-        const res = await HAYEK_AUTH.signInWithUsernamePin(cleanU, p);
-
-        msg("تم تسجيل الدخول ✅", true);
-
-        // توجيه حسب الصلاحية
-        if (res.profile.is_admin) location.href = "admin.html";
-        else location.href = "invoice.html";
-
-      } catch (e) {
-        console.error(e);
-        const m = String(e?.message || e);
-
-        if (m.includes("Invalid login credentials")) msg("بيانات الدخول غير صحيحة", false);
-        else if (m.includes("blocked")) msg("هذا الحساب محظور", false);
-        else if (m.includes("device_mismatch")) msg("هذا الحساب مربوط بجهاز آخر ❌", false);
-        else msg("فشل الدخول: " + m, false);
-      } finally {
-        $("btn").disabled = false;
-      }
-    });
-  </script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
