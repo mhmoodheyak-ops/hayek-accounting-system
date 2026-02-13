@@ -1,11 +1,18 @@
 {
   "name": "HAYEK SPOT",
-  "short_name": "HAYEK SPOT",
+  "short_name": "HAYEK",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#071820",
   "theme_color": "#071820",
+
   "icons": [
-    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=",
+      "sizes": "1x1",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
