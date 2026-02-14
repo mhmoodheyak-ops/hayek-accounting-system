@@ -19,12 +19,34 @@
     .ok{color:#68ffb0}
     .err{color:#ff6b6b}
     .hint{color:rgba(255,255,255,.6);font-size:12px;margin-top:10px;line-height:1.6}
+
+    /* ✅ أيقونة الرابط داخل العنوان */
+    .titleRow{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+    .linkIcon{
+      width:34px;height:34px;border-radius:12px;
+      display:inline-flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 12px 30px rgba(0,0,0,.25);
+      flex:0 0 auto;
+    }
+    .linkIcon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.95}
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h1>تسجيل الدخول</h1>
+    <div class="titleRow">
+      <!-- ✅ أيقونة رابط (Chain Link) -->
+      <div class="linkIcon" aria-hidden="true" title="رابط الدخول">
+        <svg viewBox="0 0 24 24">
+          <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0 0-7.07 5 5 0 0 0-7.07 0L10 5"/>
+          <path d="M14 11a5 5 0 0 0-7.07 0L5.52 12.4a5 5 0 0 0 0 7.07 5 5 0 0 0 7.07 0L14 19"/>
+        </svg>
+      </div>
+      <h1 style="margin:0">تسجيل الدخول</h1>
+    </div>
+
     <p class="sub">
       اكتب <b>اسم/رقم المستخدم</b> + <b>PIN</b>.<br>
       (لا تكتب <b>mailto:</b> — فقط اسم المستخدم مثل: <b>admin</b>)
@@ -46,3 +68,4 @@
   <script type="module" src="./app.js"></script>
 </body>
 </html>
+
