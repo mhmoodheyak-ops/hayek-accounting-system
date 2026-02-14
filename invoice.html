@@ -174,9 +174,6 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* ===========================
-       ✅ PDF hidden (UPDATED ONLY)
-       =========================== */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -190,11 +187,9 @@
     .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
     .p-header{text-align:center; padding:18px 16px;}
 
-    /* ✅ العلوي: تكبير النصوص التعريفية (تقريباً ×2) */
     .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
 
-    /* ✅ حقول التعريف: تكبير الخط (تقريباً ×2) */
     .p-field{
       display:flex;
       justify-content:space-between;
@@ -210,7 +205,6 @@
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
     #printArea table{width:100%; border-collapse:collapse; background:#fff;}
 
-    /* ✅ جدول العمليات: خط عريض جدًا + أسود */
     #printArea thead th{
       font-size:18px;
       font-weight:1000;
@@ -243,7 +237,6 @@
 
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
 
-    /* ✅ السفلي: نفس تأثير النصوص التعريفية (تكبير + أوضح) */
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
 
     .p-phone{
@@ -423,7 +416,7 @@
     }
 
     // =========================
-    // ✅ Net Check (REAL) + Cached State (Fix mobile/PWA online bug)
+    // ✅ Net Check (FIXED FOR MOBILE/PWA)
     // =========================
     let NET_OK = false;
     let NET_LAST = 0;
@@ -434,13 +427,19 @@
         const ctrl = new AbortController();
         const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
-        const url = `${SUPABASE_URL}/rest/v1/`;
-        // المهم: "يوصل للسيرفر" حتى لو رجع 401/404 — لا تهمنا الحالة
+        // ✅ GET حقيقي + headers صحيحة (يحل CORS على الموبايل)
+        const url =
+          `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
+
         await fetch(url, {
-          method: "HEAD",
+          method: "GET",
           mode: "cors",
           cache: "no-store",
-          signal: ctrl.signal
+          signal: ctrl.signal,
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + SUPABASE_ANON_KEY
+          }
         });
 
         clearTimeout(t);
@@ -467,23 +466,25 @@
     }
 
     function netNow(){
-      // قرار سريع بدون انتظار: يستخدم آخر نتيجة
       return !!NET_OK;
     }
 
-    // شغّل فحص الشبكة بشكل ذكي
     async function kickNet(){
       await refreshNetState(true);
     }
-    window.addEventListener("online",  ()=>{ kickNet(); qSyncSilently(); syncDeviceIdIfNeeded(); });
-    window.addEventListener("focus",   ()=>{ kickNet(); qSyncSilently(); syncDeviceIdIfNeeded(); });
-    document.addEventListener("visibilitychange", ()=>{
-      if(!document.hidden){ kickNet(); qSyncSilently(); syncDeviceIdIfNeeded(); }
+
+    // ✅ اجعل الأحداث تنتظر تحديث NET_OK ثم تزامن
+    window.addEventListener("online", async ()=>{ await kickNet(); await qSyncSilently(); await syncDeviceIdIfNeeded(); });
+    window.addEventListener("focus",  async ()=>{ await kickNet(); await qSyncSilently(); await syncDeviceIdIfNeeded(); });
+    document.addEventListener("visibilitychange", async ()=>{
+      if(!document.hidden){ await kickNet(); await qSyncSilently(); await syncDeviceIdIfNeeded(); }
     });
-    setInterval(()=>{ refreshNetState(false); qSyncSilently(); }, 8000);
+
+    // ✅ مؤقت: يحدّث حالة الشبكة ثم يزامن (بدون race)
+    setInterval(async ()=>{ await refreshNetState(false); await qSyncSilently(); }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently) - FINAL FIX
+    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently)
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -528,7 +529,7 @@
     }
 
     // =========================
-    // ✅ Offline Login Cache (آخر مستخدم سجّل دخول على نفس الجهاز)
+    // ✅ Offline Login Cache
     // =========================
     const OFFLINE_USER_KEY = "HAYEK_OFFLINE_LAST_USER_V1";
     function saveOfflineUser(u){
@@ -554,7 +555,7 @@
     }
 
     // =========================
-    // ✅ قفل جهاز واحد + قفل تبويب واحد (ثابت)
+    // ✅ Device/Tab Locks
     // =========================
     function getOrCreateDeviceId(){
       const KEY = "HAYEK_DEVICE_ID_V1";
@@ -672,7 +673,6 @@
     async function enforceDeviceLockForUserRow(u){
       const deviceId = getOrCreateDeviceId();
 
-      // Offline: تحقق محلياً فقط
       await refreshNetState(false);
       if(!netNow()){
         if(!u.device_id){
@@ -686,7 +686,6 @@
         return u;
       }
 
-      // Online: ثبت device_id مرة واحدة فقط
       if(!u.device_id){
         const { error: uerr } = await supabase
           .from(USERS_TABLE)
@@ -738,7 +737,7 @@
     }
 
     // =========================
-    // ✅ ذاكرة النص التنبؤي (اقتراحات)
+    // ✅ Suggestions
     // =========================
     const SUG_CUSTOMERS_KEY = "HAYEK_SUG_CUSTOMERS";
     const SUG_ITEMS_KEY     = "HAYEK_SUG_ITEMS";
@@ -811,7 +810,6 @@
 
       await refreshNetState(false);
 
-      // Offline: خزّن مباشرة
       if(!netNow()){
         qAdd(payload);
         return { ok:true, id: invoiceId, queued:true };
@@ -856,10 +854,8 @@
         return;
       }
 
-      // ✅ قرار الشبكة الحقيقي
       await refreshNetState(true);
 
-      // ✅ Offline login (آخر مستخدم فقط)
       if(!netNow()){
         const cached = readOfflineUser();
         if(!cached){
@@ -901,7 +897,6 @@
         return;
       }
 
-      // ✅ Online login
       try{
         const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
         if(error){ showErr(loginErr, "خطأ اتصال:\n" + (error.message||"")); return; }
@@ -933,7 +928,6 @@
 
         renderSug();
 
-        // ✅ مزامنة خلفية فورية
         qSyncSilently();
         syncDeviceIdIfNeeded();
       }catch(e){
@@ -948,7 +942,6 @@
 
         await refreshNetState(true);
 
-        // ✅ إذا أوفلاين: حاول من الكاش المحلي
         if(!netNow()){
           const cached = readOfflineUser();
           if(!cached || cached.id !== s.id) return;
@@ -980,7 +973,6 @@
           return;
         }
 
-        // ✅ Online restore
         const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(error) return;
         if(!data?.length) return;
@@ -1182,7 +1174,6 @@
         showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
       }
 
-      // مزامنة صامتة إذا رجع النت
       qSyncSilently();
     }
 
@@ -1297,7 +1288,6 @@
       toast("تم تنزيل PDF ✅");
       resetAll(false);
 
-      // ✅ بعد التصدير: حاول مزامنة خلفية (لو رجع النت فعلاً)
       qSyncSilently();
     }
 
@@ -1324,12 +1314,10 @@
 
     setTab("calc");
 
-    // أول تشغيل
     renderSug();
     refreshNetState(true).then(()=>{ qSyncSilently(); });
     restoreSession();
 
-    // ✅ Register Service Worker (if file exists)
     try{
       if("serviceWorker" in navigator){
         navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
