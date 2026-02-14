@@ -365,8 +365,15 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+    // ==================================================
+    // ✅ FIX 1: المفتاح الصحيح (Publishable) — جاهز
+    // ==================================================
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
+    const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+
+    // ✅ Edge Function
+    const HAYEK_SYNC_URL = `${SUPABASE_URL}/functions/v1/hayek-sync`;
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
@@ -416,7 +423,7 @@
     }
 
     // =========================
-    // ✅ Net Check (FIXED FOR MOBILE/PWA)
+    // ✅ Net Check
     // =========================
     let NET_OK = false;
     let NET_LAST = 0;
@@ -442,10 +449,7 @@
         });
 
         clearTimeout(t);
-
-        // ✅ أهم تعديل: لازم نتأكد response.ok
         if(!res || !res.ok) return false;
-
         return true;
       }catch{
         return false;
@@ -476,7 +480,6 @@
       await refreshNetState(true);
     }
 
-    // ✅ أحداث رجوع الاتصال — الآن نعمل SYNC "إجباري" حتى لو NET_OK ما تحدّث
     window.addEventListener("online", async ()=>{
       await kickNet();
       await qSyncSilently(true);
@@ -497,21 +500,19 @@
       }
     });
 
-    // ✅ صفحات PWA أحياناً ما بتطلق focus/online — pageshow أقوى
     window.addEventListener("pageshow", async ()=>{
       await kickNet();
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
     });
 
-    // ✅ مؤقت تزامن دوري (هاد يضمن رجوع النت حتى لو ما وصل event)
     setInterval(async ()=>{
       await refreshNetState(false);
       await qSyncSilently(false);
     }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently) — FIXED (NO DEPEND ON NET_OK)
+    // ✅ OFFLINE QUEUE
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -531,10 +532,6 @@
 
     let __syncing = false;
 
-    // ✅ أهم تعديل جذري:
-    // - ما عاد نوقف المزامنة بسبب NET_OK
-    // - إذا force=true منجرب فوراً
-    // - إذا فشل upsert لأي سبب منخلي العنصر بالطابور
     async function qSyncSilently(force=false){
       if(__syncing) return;
 
@@ -881,6 +878,45 @@
       return [meta, ...ops];
     }
 
+    // =========================
+    // ✅ LOGIN عبر Edge Function (hayek-sync)
+    // =========================
+    async function apiLoginViaEdge(username, password){
+      const deviceId = getOrCreateDeviceId();
+
+      // ✅ FIX 2: أضف apikey + Authorization (مهم جداً)
+      const res = await fetch(HAYEK_SYNC_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+
+          "x-hayek-device": deviceId,
+          "x-hayek-user": String(username||""),
+          "x-hayek-pass": String(password||"")
+        },
+        body: JSON.stringify({ action: "login" })
+      });
+
+      const data = await res.json().catch(()=>null);
+      if(!res.ok || !data?.ok){
+        const err = data?.error || ("HTTP_" + res.status);
+        throw new Error(err);
+      }
+      return data.user;
+    }
+
+    function mapEdgeError(err){
+      const e = String(err||"");
+      if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
+      if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
+      if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
+      if(e === "Missing headers") return "مشكلة في الطلب (headers).";
+      if(e === "HTTP_401") return "401 (صلاحيات/مفتاح) — تأكد أن Secrets للـ Function صحيحة.";
+      return "فشل تسجيل الدخول:\n" + e;
+    }
+
     // ------- LOGIN -------
     async function login(){
       clearErr(loginErr);
@@ -935,14 +971,23 @@
         return;
       }
 
+      // ✅ ONLINE: عبر Edge Function
       try{
-        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
-        if(error){ showErr(loginErr, "خطأ اتصال:\n" + (error.message||"")); return; }
-        if(!data?.length){ showErr(loginErr, "المستخدم غير موجود."); return; }
+        const edgeUser = await apiLoginViaEdge(username, password);
 
-        let u = data[0];
-        if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
-        if(u.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
+        let u = {
+          id: edgeUser.id,
+          username: edgeUser.username,
+          full_name: edgeUser.full_name || "",
+          device_id: edgeUser.device_id || null,
+          is_blocked: !!edgeUser.is_blocked,
+          password: password
+        };
+
+        if(u.is_blocked){
+          showErr(loginErr, "هذا الحساب محظور.");
+          return;
+        }
 
         try{
           u = await enforceDeviceLockForUserRow(u);
@@ -969,7 +1014,7 @@
         await qSyncSilently(true);
         await syncDeviceIdIfNeeded();
       }catch(e){
-        showErr(loginErr, "خطأ غير متوقع:\n" + (e?.message || String(e)));
+        showErr(loginErr, mapEdgeError(e?.message || e));
       }
     }
 
@@ -1021,6 +1066,11 @@
           return;
         }
 
+        const cached = readOfflineUser();
+        const pass = cached?.password || "";
+
+        u = { ...u, password: pass };
+
         try{
           u = await enforceDeviceLockForUserRow(u);
         }catch(e){
@@ -1058,7 +1108,6 @@
       pill.innerHTML = "<b>غير مسجل</b>";
     }
 
-    // ------- UI / Tabs -------
     function setTab(which){
       if(which==="calc"){
         tabCalc.classList.add("active");
@@ -1073,7 +1122,6 @@
       }
     }
 
-    // ------- Core -------
     function resetAll(silent=false){
       clearErr(appErr);
       invoiceId = null;
