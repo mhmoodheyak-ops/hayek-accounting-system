@@ -41,9 +41,18 @@
       min-height:100vh;
       display:flex;
       justify-content:center;
-      padding:16px;
+      padding:14px;
     }
-    .wrap{width:100%; max-width:1160px;}
+
+    /* ✅ مناسب للجوال واللاب */
+    .wrap{
+      width:100%;
+      max-width:1280px;
+      margin:0 auto;
+    }
+    @media(min-width:1200px){
+      .wrap{max-width:1500px;}
+    }
 
     .topbar{
       display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -54,6 +63,7 @@
     .dot{
       width:12px; height:12px; border-radius:999px; background:var(--ok);
       box-shadow:0 0 0 7px rgba(34,197,94,.14);
+      flex:0 0 auto;
     }
     .title{font-weight:900; letter-spacing:.2px}
     .sub{font-size:12px; color:var(--muted); margin-top:2px}
@@ -89,11 +99,9 @@
     .btn.danger{background:rgba(127,29,29,.55); border-color:rgba(159,31,31,.55)}
     .btn.danger:hover{background:rgba(159,31,31,.62)}
     .btn.soft{background:rgba(255,255,255,.06)}
+    .btn.small{padding:8px 10px; border-radius:12px; font-size:12px; font-weight:900}
     .btn.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35)}
     .btn.warn:hover{background:rgba(245,158,11,.18)}
-
-    /* ✅ تصغير أزرار small حتى لا تتحول لـ 5 أسطر */
-    .btn.small{padding:7px 9px; border-radius:12px; font-size:11px; font-weight:900}
 
     .card{
       background:linear-gradient(180deg, rgba(18,24,35,.94) 0%, rgba(12,18,28,.92) 100%);
@@ -160,7 +168,7 @@
     .chip.active{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
     .dateRow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
-    /* ✅ جدول بالنِسب % بدون سكرول يمين/يسار */
+    /* ✅ جدول بدون سكرول يمين/يسار على الموبايل (منخفي أعمدة) */
     .tableWrap{
       margin-top:14px;
       border:1px solid var(--line2);
@@ -168,12 +176,7 @@
       overflow:hidden;
       background: rgba(0,0,0,.12);
     }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:0;
-      table-layout:fixed;
-    }
+    table{width:100%; border-collapse:collapse; table-layout:fixed;}
     th,td{
       padding:12px 12px;
       border-bottom:1px solid var(--line2);
@@ -187,6 +190,7 @@
     th{color:var(--muted); background: rgba(255,255,255,.05); font-weight:900;}
     tr:last-child td{border-bottom:0}
 
+    /* عمود الإجراءات */
     td.actionsCell{
       white-space:normal;
       overflow:visible;
@@ -219,13 +223,36 @@
       min-width:62px;
     }
 
-    /* ✅ الأزرار جنب بعض مع لف مرتب */
     .actionsCol{
       display:flex;
-      gap:6px;
-      flex-wrap:wrap;
+      gap:8px;
       align-items:center;
       justify-content:flex-start;
+      flex-wrap:wrap; /* موبايل: لف عادي */
+    }
+
+    /* ✅ لابتوب: سطر واحد + سكرول داخل نفس خلية الإجراءات */
+    @media (min-width: 900px){
+      table{table-layout:auto;}
+      th,td{white-space:nowrap;}
+      td.actionsCell{width:1%;}
+      .actionsCol{
+        flex-wrap:nowrap;
+        overflow-x:auto;
+        overflow-y:hidden;
+        padding-bottom:4px;
+        scrollbar-width:thin;
+      }
+      .actionsCol::-webkit-scrollbar{height:7px}
+      .actionsCol::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:999px}
+    }
+
+    /* ✅ موبايل: اخفي "نشط منذ" لتصير الشاشة أريح */
+    @media (max-width: 680px){
+      .wrap{padding-bottom:10px;}
+      th:nth-child(4), td:nth-child(4){display:none;} /* نشط منذ */
+      th,td{font-size:12px; padding:10px;}
+      .actionsCol .btn{padding:8px 10px; font-size:12px;}
     }
 
     .reportBar{
@@ -310,9 +337,9 @@
       overflow:auto;
       background: rgba(0,0,0,.12);
     }
-    .invOps table{min-width:720px;}
+    .invOps table{min-width: 720px;}
     .invOps table th{background: rgba(255,255,255,.05)}
-    .invBtns{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .invBtns{display:flex; gap:8px; flex-wrap:wrap}
 
     #printArea{
       position: fixed;
@@ -395,7 +422,7 @@
       <div class="card hide" id="dashCard">
         <div class="searchBox">
           <input id="qSearch" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
-          <div class="hint" style="margin-top:8px">يفضل البحث بآخر 6 أرقام من رقم الفاتورة أو اسم المستخدم أو اسم الزبون.</div>
+          <div class="hint" style="margin-top:8px">يفضل البحث بآخر 6 أرقام من رقم الفاتورة أو اسم المستخدم.</div>
         </div>
 
         <div class="filtersCard">
@@ -444,18 +471,9 @@
 
         <div class="tableWrap">
           <table>
-            <!-- ✅ أعمدة بالنِسَب حتى الإجراءات تكون عريضة -->
-            <colgroup>
-              <col style="width:22%">
-              <col style="width:12%">
-              <col style="width:14%">
-              <col style="width:18%">
-              <col style="width:34%">
-            </colgroup>
-
             <thead>
               <tr>
-                <th>اسم المستخدم</th>
+                <th>المستخدم</th>
                 <th>عدد الفواتير</th>
                 <th>الحالة</th>
                 <th>نشط منذ</th>
@@ -607,7 +625,6 @@
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
 
-    // ✅ جدولك فيه rows jsonb غالباً
     const OPS_COL_CANDIDATES = ["rows","lines","ops","items","details"];
 
     let ADMIN = null;
@@ -693,18 +710,16 @@
       return [];
     }
 
-    // ✅ استخراج اسم الزبون حتى لو محفوظ داخل rows[0].__meta.customer
+    /* ✅ اسم الزبون من customer_name أو من rows[0].__meta.customer */
     function getCustomerName(inv){
-      const direct = (safeText(inv?.customer_name || inv?.customer || "").trim());
+      const direct = safeText(inv.customer_name || inv.customer || "").trim();
       if(direct) return direct;
 
       const ops = pickOps(inv);
-      if(Array.isArray(ops) && ops.length){
-        const meta = ops.find(x => x && (x.__meta === true || x.__meta === "true"));
-        const m = safeText(meta?.customer || meta?.customer_name || "").trim();
-        if(m) return m;
-      }
-      return "بدون اسم";
+      const meta = ops?.[0];
+      if(meta && meta.__meta && meta.customer) return safeText(meta.customer).trim();
+
+      return "";
     }
 
     function matchesInvoice(inv, query){
@@ -806,40 +821,39 @@
       usersTbody.innerHTML = users.map(u=>{
         const c = counts[u.id] || 0;
         const blocked = !!u.is_blocked;
-
         const statusHtml = blocked
           ? `<span class="statusPill blocked">محظور</span>`
           : `<span class="statusPill">نشط</span>`;
-
         const activeText = fmtRelTime(lastActive[u.id] || u.created_at || u.updated_at);
 
-        // ✅ زرين دائمًا ظاهرين (واحد يتعطل حسب الحالة)
-        const blockBtn   = `<button class="btn small warn" ${blocked ? "disabled style='opacity:.45;cursor:not-allowed'" : ""} data-act="block" data-id="${u.id}">حظر</button>`;
-        const unblockBtn = `<button class="btn small" ${!blocked ? "disabled style='opacity:.45;cursor:not-allowed'" : ""} data-act="unblock" data-id="${u.id}">فك الحظر</button>`;
-
-        // ✅ عرض الاسم الكامل جنب username (سطر واحد)
-        const full = safeText(u.full_name).trim();
+        const full = safeText(u.full_name || "").trim();
         const userCell = full
-          ? `<span style="font-weight:950">${escHtml(u.username)}</span> — <span class="muted">${escHtml(full)}</span>`
-          : `<span style="font-weight:950">${escHtml(u.username)}</span>`;
+          ? `<div style="font-weight:950">${escHtml(u.username)} <span style="color:var(--muted);font-weight:800">— ${escHtml(full)}</span></div>`
+          : `<div style="font-weight:950">${escHtml(u.username)}</div>`;
 
         return `
           <tr>
-            <td title="${escHtml(full || u.username)}">${userCell}</td>
+            <td>${userCell}</td>
             <td><span class="countPill">${c}</span></td>
             <td>${statusHtml}</td>
             <td class="muted">${escHtml(activeText)}</td>
             <td class="actionsCell">
               <div class="actionsCol">
-                <button class="btn small primary" data-act="invoices" data-id="${u.id}" data-name="${escHtml(u.username)}">الفواتير</button>
-                <button class="btn small soft" data-act="wipeDevice" data-id="${u.id}">مسح الجهاز</button>
-                ${blockBtn}
-                ${unblockBtn}
-                <button class="btn small danger" data-act="del" data-id="${u.id}" data-name="${escHtml(u.username)}">حذف</button>
+                <button class="btn small primary" data-act="invoices" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">الفواتير</button>
+                <button class="btn small soft" data-act="wipeDevice" data-id="${escHtml(u.id)}">مسح الجهاز</button>
+
+                ${
+                  blocked
+                    ? `<button class="btn small" data-act="unblock" data-id="${escHtml(u.id)}">فك الحظر</button>`
+                    : `<button class="btn small warn" data-act="block" data-id="${escHtml(u.id)}">حظر</button>`
+                }
+
+                <button class="btn small danger" data-act="del" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">حذف</button>
+
                 ${
                   (!u.is_admin)
-                    ? `<button class="btn small" data-act="makeAdmin" data-id="${u.id}">جعله أدمن</button>`
-                    : `<button class="btn small" data-act="makeUser" data-id="${u.id}">جعله مستخدم</button>`
+                    ? `<button class="btn small" data-act="makeAdmin" data-id="${escHtml(u.id)}">جعله أدمن</button>`
+                    : `<button class="btn small" data-act="makeUser" data-id="${escHtml(u.id)}">جعله مستخدم</button>`
                 }
               </div>
             </td>
@@ -867,7 +881,9 @@
         const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
-        const custName = getCustomerName(inv);
+        const id6 = last6(inv.id);
+
+        const custName = getCustomerName(inv) || "بدون اسم";
 
         return `
           <div class="invItem" data-last-inv-id="${escHtml(inv.id)}">
@@ -875,8 +891,8 @@
               <div>
                 <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  اسم الزبون: <b>${escHtml(custName)}</b> —
                   المستخدم: <b>${escHtml(safeText(u?.username||inv._userName||""))}</b> —
+                  رقم: <b>${escHtml(id6)}</b> —
                   المجموع: <b>${escHtml(safeText(inv.total ?? 0))}</b>
                   <div style="margin-top:6px">بتاريخ: ${escHtml(created)}</div>
                 </div>
@@ -902,18 +918,15 @@
                 </thead>
                 <tbody>
                   ${
-                    ops
-                      .filter(x => !(x && (x.__meta === true || x.__meta === "true")))
-                      .slice(0,200)
-                      .map((o,i)=>`
-                        <tr>
-                          <td>${i+1}</td>
-                          <td>${escHtml(o.label||o.name||"")}</td>
-                          <td>${escHtml(o.expr||o.operation||"")}</td>
-                          <td>${escHtml(o.result||o.value||"")}</td>
-                          <td>${escHtml(o.time||o.at||"")}</td>
-                        </tr>
-                      `).join("") || `<tr><td colspan="5" class="muted" style="text-align:center">لا يوجد عمليات</td></tr>`
+                    ops.slice(0,200).map((o,i)=>`
+                      <tr>
+                        <td>${i+1}</td>
+                        <td>${escHtml(o.label||o.name||"")}</td>
+                        <td>${escHtml(o.expr||o.operation||"")}</td>
+                        <td>${escHtml(o.result||o.value||"")}</td>
+                        <td>${escHtml(o.time||o.at||"")}</td>
+                      </tr>
+                    `).join("") || `<tr><td colspan="5" class="muted" style="text-align:center">لا يوجد عمليات</td></tr>`
                   }
                 </tbody>
               </table>
@@ -931,11 +944,6 @@
 
         const invoices = await fetchInvoicesFiltered();
 
-        // ✅ ربط _userName
-        const userMap = {};
-        users.forEach(u=> userMap[u.id]=u);
-        invoices.forEach(inv=> inv._userName = userMap[inv.owner_id]?.username || "");
-
         calcStats(users, invoices);
         buildUsersTable(users, invoices);
         buildLastInvoices(invoices, users);
@@ -950,9 +958,8 @@
     // ---------- PDF Export ----------
     function buildInvoicePrint(inv, username){
       const pa = $("printArea");
-      const opsRaw = pickOps(inv);
-      const ops = opsRaw.filter(x => !(x && (x.__meta === true || x.__meta === "true")));
-      const customer = getCustomerName(inv);
+      const ops = pickOps(inv);
+      const customer = getCustomerName(inv) || "بدون اسم";
       const user = safeText(username || "");
       const total = safeText(inv.total ?? 0);
       const id = safeText(inv.id);
@@ -1049,7 +1056,7 @@
         }
       }
 
-      const safeName = getCustomerName(inv).replace(/[\\/:*?"<>|]/g,"-");
+      const safeName = (getCustomerName(inv) || "invoice").replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}_${last6(inv.id)}.pdf`);
     }
 
@@ -1103,19 +1110,19 @@
       }
 
       invBody.innerHTML = rows.map(inv=>{
-        const opsRaw = pickOps(inv);
-        const ops = opsRaw.filter(x => !(x && (x.__meta === true || x.__meta === "true")));
+        const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
-        const cust = getCustomerName(inv);
+        const id6 = last6(inv.id);
+        const custName = getCustomerName(inv) || "بدون اسم";
 
         return `
           <div class="invItem" data-inv-id="${escHtml(inv.id)}">
             <div class="invTop">
               <div>
-                <div class="invTitle">${escHtml(cust)} — <span class="muted">${escHtml(status)}</span></div>
+                <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  اسم الزبون: <b>${escHtml(cust)}</b> — الإجمالي: <b>${escHtml(inv.total ?? 0)}</b><br/>
+                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(inv.total ?? 0)}</b><br/>
                   التاريخ: ${escHtml(created)}
                 </div>
               </div>
@@ -1172,7 +1179,7 @@
       const act = b.dataset.act;
       if(act === "toggle"){
         const box = wrap.querySelector(".invOps");
-        if(box) box.classList.toggle("hide");
+        box.classList.toggle("hide");
         return;
       }
       if(act === "pdf"){
@@ -1316,7 +1323,6 @@
     usersTbody.addEventListener("click", async (e)=>{
       const b = e.target.closest("button");
       if(!b) return;
-      if(b.disabled) return;
 
       const act = b.dataset.act;
       const id  = b.dataset.id;
@@ -1411,7 +1417,6 @@
       clearBox(loginErr); clearBox(loginOk);
     });
 
-    // Init
     setSessionPill();
     restoreSession();
   </script>
