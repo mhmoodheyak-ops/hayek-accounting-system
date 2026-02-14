@@ -153,10 +153,14 @@
       <div class="sep"></div>
 
       <label>اسم الزبون (إجباري)</label>
-      <input id="customerName" placeholder="مثال: أبو أحمد" />
+      <!-- ✅ ذاكرة + اقتراحات -->
+      <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
+      <datalist id="custList"></datalist>
 
       <label>اسم المنتج / البيان (اختياري)</label>
-      <input id="itemName" placeholder="مثال: قداحة" />
+      <!-- ✅ ذاكرة + اقتراحات -->
+      <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
+      <datalist id="itemList"></datalist>
 
       <div class="tabs">
         <button class="tab active" id="tabCalc">الحاسبة</button>
@@ -251,6 +255,9 @@
     const custInput = $("customerName");
     const itemInput = $("itemName");
 
+    const custList  = $("custList");
+    const itemList  = $("itemList");
+
     const exprView  = $("exprView");
     const resView   = $("resView");
     const logBody   = $("logBody");
@@ -258,6 +265,47 @@
 
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
+
+    // =========================
+    // ✅ ذاكرة النص التنبؤي (اقتراحات)
+    // =========================
+    const SUG_CUSTOMERS_KEY = "HAYEK_SUG_CUSTOMERS";
+    const SUG_ITEMS_KEY     = "HAYEK_SUG_ITEMS";
+    const MAX_SUG = 60;
+
+    function readSug(key){
+      try{
+        const arr = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(arr) ? arr.filter(Boolean) : [];
+      }catch{ return []; }
+    }
+    function writeSug(key, arr){
+      localStorage.setItem(key, JSON.stringify(arr.slice(0, MAX_SUG)));
+    }
+    function addSug(key, value){
+      const v = String(value || "").trim();
+      if(!v) return;
+
+      // تنظيف بسيط + منع تكرار بنفس النص
+      const arr = readSug(key);
+      const norm = v.toLowerCase();
+
+      const filtered = arr.filter(x => String(x).toLowerCase() !== norm);
+      filtered.unshift(v); // أحدث شيء أولاً
+      writeSug(key, filtered);
+      renderSug(); // تحديث فوري
+    }
+    function renderDatalist(el, values){
+      el.innerHTML = values.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
+    }
+    function renderSug(){
+      renderDatalist(custList, readSug(SUG_CUSTOMERS_KEY));
+      renderDatalist(itemList, readSug(SUG_ITEMS_KEY));
+    }
+
+    // (اختياري) عند خروج المؤشر من الحقل نحفظ القيمة كاقتراح
+    custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
+    itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
 
     function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
     function clearErr(box){ box.style.display="none"; box.textContent = ""; }
@@ -286,8 +334,6 @@
     let lastResult = 0;
 
     // ------- SUPABASE SAVE (FIXED) -------
-    // ✅ يرسل فقط الأعمدة المؤكدة الموجودة: id, owner_id, rows, total, status, closed_at
-    // ✅ يخزن اسم الزبون داخل rows كـ meta لتجنب اختلاف اسم العمود customer/customer_name
     async function saveInvoice(status){
       if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
 
@@ -310,7 +356,6 @@
         .limit(1);
 
       if(error){
-        // هذا هو السبب الحقيقي للـ 400/409 وسيظهر للمستخدم مباشرة
         return { ok:false, msg: (error.message || JSON.stringify(error)) };
       }
       return { ok:true, id: (data?.[0]?.id || invoiceId) };
@@ -323,7 +368,6 @@
         user: USER?.username || "",
         saved_at: new Date().toISOString()
       };
-      // نخلي meta أول عنصر حتى يبقى واضح
       return [meta, ...ops];
     }
 
@@ -353,6 +397,9 @@
       subtitle.textContent = "فاتورة المستخدم";
       pill.innerHTML = `<b>${u.username}</b>`;
       resetAll(true);
+
+      // ✅ حمّل الاقتراحات فوراً بعد الدخول
+      renderSug();
     }
 
     async function restoreSession(){
@@ -367,6 +414,9 @@
           subtitle.textContent = "فاتورة المستخدم";
           pill.innerHTML = `<b>${USER.username}</b>`;
           resetAll(true);
+
+          // ✅ حمّل الاقتراحات فوراً
+          renderSug();
         }
       }catch{}
     }
@@ -420,6 +470,10 @@
         return null;
       }
       clearErr(appErr);
+
+      // ✅ خزّن اسم الزبون كاقتراح (ذاكرة)
+      addSug(SUG_CUSTOMERS_KEY, c);
+
       return c;
     }
 
@@ -431,7 +485,6 @@
       invoiceId = uuid();
       invoiceOpen = true;
 
-      // أول حفظ = open
       const r = await saveInvoice("open");
       if(!r.ok){
         showErr(appErr, "فشل الحفظ (open):\n" + r.msg + "\n\n✅ تأكد أن عمود id Primary Key في Supabase.");
@@ -524,6 +577,10 @@
 
       const item = itemInput.value.trim();
       const label = item || "عملية";
+
+      // ✅ خزّن اسم المنتج/البيان كاقتراح (ذاكرة)
+      if(item) addSug(SUG_ITEMS_KEY, item);
+
       ops.unshift({
         label,
         expr: expr || "",
@@ -536,7 +593,6 @@
       setExpr("");
       toast("تمت الإضافة ✅");
 
-      // حفظ تحديثات
       const r = await saveInvoice("open");
       if(!r.ok){
         showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
@@ -614,12 +670,14 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      // أغلق الفاتورة حفظ نهائي
       const r = await saveInvoice("closed");
       if(!r.ok){
         showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
         return;
       }
+
+      // ✅ تأكيد حفظ اسم الزبون ضمن الاقتراحات قبل التصدير
+      addSug(SUG_CUSTOMERS_KEY, customer);
 
       const pa = buildPrintArea();
       const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
@@ -675,8 +733,11 @@
     $("btnClearOps").addEventListener("click", clearOperations);
 
     setTab("calc");
+
+    // ✅ حمّل الاقتراحات من البداية
+    renderSug();
+
     restoreSession();
   </script>
 </body>
 </html>
-
