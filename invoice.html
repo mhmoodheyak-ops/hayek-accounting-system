@@ -281,25 +281,12 @@
       margin-bottom:14px;
     }
 
-    .p-header{
-      text-align:center;
-      padding:18px 16px;
-    }
-
-    .p-title{
-      font-weight:900;
-      font-size:18px;
-      margin:0;
-    }
-
+    .p-header{ text-align:center; padding:18px 16px; }
+    .p-title{ font-weight:900; font-size:18px; margin:0; }
     .p-subtitle{
-      margin-top:6px;
-      font-size:12px;
-      color:#0a7a55;
-      font-weight:800;
-      letter-spacing:.2px;
+      margin-top:6px; font-size:12px; color:#0a7a55;
+      font-weight:800; letter-spacing:.2px;
     }
-
     .p-chiprow{
       margin-top:12px;
       display:flex;
@@ -307,7 +294,6 @@
       gap:10px;
       flex-wrap:wrap;
     }
-
     .p-chip{
       border:1px solid #111;
       border-radius:999px;
@@ -316,65 +302,27 @@
       font-weight:800;
       background:#fff;
     }
-
     .p-field{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border:2px solid #111;
-      border-radius:14px;
-      margin-bottom:10px;
+      display:flex; justify-content:space-between; align-items:center;
+      gap:10px; padding:10px 12px;
+      border:2px solid #111; border-radius:14px; margin-bottom:10px;
     }
-
-    .p-field .k{
-      font-size:12px;
-      font-weight:900;
-      color:#111;
-      white-space:nowrap;
-    }
-
+    .p-field .k{ font-size:12px; font-weight:900; color:#111; white-space:nowrap; }
     .p-field .v{
-      font-size:12px;
-      font-weight:800;
-      color:#111;
-      word-break:break-all;
-      text-align:left;
-      direction:ltr;
+      font-size:12px; font-weight:800; color:#111;
+      word-break:break-all; text-align:left; direction:ltr;
     }
-
-    .p-tableWrap{
-      border:2px solid #111;
-      border-radius:16px;
-      overflow:hidden;
-    }
-
-    #printArea table{
-      width:100%;
-      border-collapse:collapse;
-      background:#fff;
-    }
-
+    .p-tableWrap{ border:2px solid #111; border-radius:16px; overflow:hidden; }
+    #printArea table{ width:100%; border-collapse:collapse; background:#fff; }
     #printArea thead th{
-      font-size:12px;
-      font-weight:900;
-      color:#111;
-      padding:10px;
-      border-bottom:2px solid #111;
-      background:#fff;
+      font-size:12px; font-weight:900; color:#111;
+      padding:10px; border-bottom:2px solid #111; background:#fff;
     }
-
     #printArea tbody td{
-      font-size:12px;
-      padding:10px;
-      border-bottom:1px solid #111;
-      background:#fff;
+      font-size:12px; padding:10px;
+      border-bottom:1px solid #111; background:#fff;
     }
-
-    #printArea tbody tr:last-child td{
-      border-bottom:0;
-    }
+    #printArea tbody tr:last-child td{ border-bottom:0; }
 
     .p-totalBox{
       border:2px dashed #111;
@@ -386,7 +334,6 @@
       margin-top:12px;
       font-weight:900;
     }
-
     .p-foot{
       border:2px solid #111;
       border-radius:16px;
@@ -394,14 +341,12 @@
       margin-top:14px;
       text-align:center;
     }
-
     .p-foot .small{
       font-size:12px;
       color:#555;
       font-weight:800;
       line-height:1.8;
     }
-
     .p-phone{
       display:inline-block;
       margin-top:10px;
@@ -448,7 +393,6 @@
 
     <!-- App -->
     <div class="card hide" id="appCard">
-
       <div class="row" style="align-items:center">
         <button class="btn small out" id="btnLogout">خروج</button>
       </div>
@@ -568,20 +512,32 @@
     const logBody   = $("logBody");
     const toastEl   = $("toast");
 
-    function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
-    function clearErr(box){ box.style.display="none"; box.textContent = ""; }
+    function showErr(box, msg){
+      box.style.display = "block";
+      box.textContent = msg;
+    }
+    function clearErr(box){
+      box.style.display = "none";
+      box.textContent = "";
+    }
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
       setTimeout(()=> toastEl.style.display="none", 1400);
     }
-    function nowTime(){ return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"}); }
+    function nowTime(){
+      return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"});
+    }
 
     // ---------- Memory ----------
     const MEM_CUST_KEY = "HAYEK_MEM_CUSTOMERS";
     const MEM_ITEM_KEY = "HAYEK_MEM_ITEMS";
-    function loadMem(key){ try{ return JSON.parse(localStorage.getItem(key)||"[]") }catch{ return [] } }
-    function saveMem(key, arr){ localStorage.setItem(key, JSON.stringify(arr.slice(0,120))); }
+    function loadMem(key){
+      try{ return JSON.parse(localStorage.getItem(key)||"[]") }catch{ return [] }
+    }
+    function saveMem(key, arr){
+      localStorage.setItem(key, JSON.stringify(arr.slice(0,120)));
+    }
     function addMem(key, val){
       const v = (val||"").trim();
       if(!v) return;
@@ -603,71 +559,23 @@
       renderDatalist(itemList, loadMem(MEM_ITEM_KEY));
     }
 
-    // ---------- Tables ----------
+    // ✅ Tables (مطابقة لأعمدة Supabase عندك)
     const INVOICE_TABLE = "app_invoices";
     const USERS_TABLE   = "app_users";
 
-    // ✅ Detect real columns in app_invoices (حل جذري)
-    const COLS = {
-      owner: null,      // owner_id or user_id
-      customer: null,   // customer_name or customer
-      total: null,      // total
-      status: null,     // status
-      closedAt: null,   // closed_at
-      createdAt: null,  // created_at
-      ops: null         // rows OR lines/ops/items/details
-    };
-
-    async function colExists(col){
-      try{
-        const { error } = await supabase.from(INVOICE_TABLE).select(col).limit(1);
-        return !error;
-      }catch{ return false; }
-    }
-
-    async function detectInvoiceCols(){
-      // owner
-      if(await colExists("owner_id")) COLS.owner = "owner_id";
-      else if(await colExists("user_id")) COLS.owner = "user_id";
-
-      // customer
-      if(await colExists("customer_name")) COLS.customer = "customer_name";
-      else if(await colExists("customer")) COLS.customer = "customer";
-
-      // total/status/created/closed
-      if(await colExists("total")) COLS.total = "total";
-      if(await colExists("status")) COLS.status = "status";
-      if(await colExists("created_at")) COLS.createdAt = "created_at";
-      if(await colExists("closed_at")) COLS.closedAt = "closed_at";
-
-      // ops
-      const opsCandidates = ["rows","lines","ops","items","details"];
-      for(const c of opsCandidates){
-        if(await colExists(c)){ COLS.ops = c; break; }
-      }
-
-      // حد أدنى لازم owner + customer + id
-      if(!COLS.owner || !COLS.customer){
-        throw new Error(
-          "جدول app_invoices أعمدته غير مطابقة.\n" +
-          "المطلوب وجود owner_id أو user_id + customer_name أو customer."
-        );
-      }
-    }
-
-    // ---------- Offline Sync Queue ----------
+    // ---------- Offline Sync Queue (idempotent) ----------
     const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V4";
     function qLoad(){ try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]")}catch{return []} }
     function qSave(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
 
-    function qUpsertInvoice(payloadLogical, opsSnapshot){
+    function qUpsertInvoice(payloadBase, opsSnapshot){
       const q = qLoad();
-      const invId = String(payloadLogical.id || "");
-      const idx = q.findIndex(j => j.type==="upsert_invoice" && String(j.payloadLogical?.id||"")===invId);
+      const invId = String(payloadBase.id || "");
+      const idx = q.findIndex(j => j.type==="upsert_invoice" && String(j.payloadBase?.id||"")===invId);
       const job = {
         type:"upsert_invoice",
         table: INVOICE_TABLE,
-        payloadLogical,
+        payloadBase,
         opsSnapshot: Array.isArray(opsSnapshot) ? opsSnapshot : [],
         ts: Date.now()
       };
@@ -683,36 +591,20 @@
       });
     }
 
-    function buildInvoicePayload(logical, opsSnapshot){
-      const p = { id: logical.id };
-
-      // owner + customer
-      p[COLS.owner] = logical.ownerId;
-      p[COLS.customer] = logical.customer;
-
-      // optional
-      if(COLS.total) p[COLS.total] = logical.total;
-      if(COLS.status) p[COLS.status] = logical.status;
-      if(COLS.closedAt && logical.closedAt) p[COLS.closedAt] = logical.closedAt;
-      // created_at غالباً default بالسيرفر، ما نحتاج نرسله
-
-      // ops
-      if(COLS.ops) p[COLS.ops] = opsSnapshot;
-
-      return p;
-    }
-
-    async function upsertInvoiceServer(payloadLogical, opsSnapshot){
-      const payload = buildInvoicePayload(payloadLogical, opsSnapshot);
-
+    // ✅ upsert مطابق لجدولك: owner_id + rows + closed_at
+    async function upsertInvoiceServer(payloadBase, opsSnapshot){
+      const payload = {
+        ...payloadBase,
+        rows: opsSnapshot
+      };
       const { data, error } = await supabase
         .from(INVOICE_TABLE)
         .upsert(payload, { onConflict: "id" })
         .select("id")
         .limit(1);
 
-      if(error) return { ok:false, error };
-      return { ok:true, id: data?.[0]?.id || payloadLogical.id };
+      if(!error) return { ok:true, id: (data?.[0]?.id || payloadBase.id) };
+      return { ok:false, error };
     }
 
     let syncing = false;
@@ -729,7 +621,7 @@
         for(const job of q){
           try{
             if(job.type==="upsert_invoice"){
-              const r = await upsertInvoiceServer(job.payloadLogical, job.opsSnapshot);
+              const r = await upsertInvoiceServer(job.payloadBase, job.opsSnapshot);
               if(!r.ok) throw r.error;
             }else{
               still.push(job);
@@ -787,13 +679,6 @@
         return;
       }
 
-      try{
-        await detectInvoiceCols();
-      }catch(e){
-        showErr(loginErr, "خطأ إعداد الجدول:\n" + (e?.message || ""));
-        return;
-      }
-
       USER = u;
       localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id }));
       loginCard.classList.add("hide");
@@ -809,21 +694,17 @@
       try{
         const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
         if(!s?.id) return;
-
-        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
-        if(error || !data?.length) return;
-        if(data[0].is_blocked) return;
-
-        await detectInvoiceCols();
-
-        USER = data[0];
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${USER.username}</b>`;
-        refreshDatalists();
-        await resetAll(true);
-        flushQueue();
+        const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
+        if(data?.length && !data[0].is_blocked){
+          USER = data[0];
+          loginCard.classList.add("hide");
+          appCard.classList.remove("hide");
+          subtitle.textContent = "فاتورة المستخدم";
+          pill.innerHTML = `<b>${USER.username}</b>`;
+          refreshDatalists();
+          await resetAll(true);
+          flushQueue();
+        }
       }catch{}
     }
 
@@ -894,11 +775,12 @@
 
       qUpsertInvoice({
         id: invoiceId,
-        ownerId: USER.id,
-        customer,
+        owner_id: USER.id,          /* ✅ */
+        customer_name: customer,    /* ✅ */
+        customer: customer,         /* ✅ (عندك عمود customer كمان) */
         total: 0,
         status: "open",
-        closedAt: null
+        closed_at: null
       }, ops);
 
       flushQueue();
@@ -923,11 +805,12 @@
 
       qUpsertInvoice({
         id: invoiceId,
-        ownerId: USER.id,
-        customer,
+        owner_id: USER.id,        /* ✅ */
+        customer_name: customer,
+        customer: customer,
         total,
         status: "open",
-        closedAt: null
+        closed_at: null
       }, ops);
 
       flushQueue();
@@ -1068,7 +951,7 @@
       const dateText = new Date().toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
       const total = calcTotal();
 
-      const rows = ops.slice().reverse().map((o,i)=>`
+      const rows = ops.slice().reverse().map(o=>`
         <tr>
           <td style="width:24%">${escapeHtml(o.time || "")}</td>
           <td style="width:34%">${escapeHtml(o.label || "")}</td>
@@ -1146,11 +1029,12 @@
 
       qUpsertInvoice({
         id: invoiceId,
-        ownerId: USER.id,
-        customer,
+        owner_id: USER.id,     /* ✅ */
+        customer_name: customer,
+        customer: customer,
         total,
         status: "closed",
-        closedAt: new Date().toISOString()
+        closed_at: new Date().toISOString()   /* ✅ */
       }, ops);
 
       invoiceOpen = false;
