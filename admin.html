@@ -23,6 +23,7 @@
       --blue:#1d4ed8;
       --blue2:#2563eb;
       --danger:#7f1d1d;
+      --danger2:#9f1f1f;
       --ok:#22c55e;
       --warn:#f59e0b;
       --shadow: 0 14px 38px rgba(0,0,0,.38);
@@ -201,7 +202,12 @@
       font-weight:900;
       min-width:62px;
     }
-    .actionsCol{display:flex; gap:8px; flex-wrap:nowrap; justify-content:flex-start;}
+    .actionsCol{
+      display:flex;
+      gap:8px;
+      flex-wrap:nowrap;
+      justify-content:flex-start;
+    }
 
     .reportBar{
       margin-top:12px;
@@ -345,6 +351,7 @@
     </div>
 
     <div class="grid">
+      <!-- LOGIN -->
       <div class="card" id="loginCard">
         <h2>تسجيل دخول الأدمن</h2>
         <div class="hint">افتراضي: <b>admin</b> / <b>admin123</b></div>
@@ -364,6 +371,7 @@
         <div class="okbox" id="loginOk"></div>
       </div>
 
+      <!-- DASHBOARD -->
       <div class="card hide" id="dashCard">
         <div class="searchBox">
           <input id="qSearch" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
@@ -436,7 +444,7 @@
 
         <div class="sep"></div>
         <h2 style="margin-bottom:6px">آخر الفواتير (حسب الفلاتر)</h2>
-        <div class="hint">هنا تظهر أحدث الفواتير بعد الضغط على "عرض الفواتير".</div>
+        <div class="hint">هنا تظهر أحدث الفواتير بعد الضغط على "عرض الفواتير" — مع زر فتح وتصدير.</div>
 
         <div class="invGrid" id="lastInvGrid">
           <div class="hint">اضغط "عرض الفواتير".</div>
@@ -445,6 +453,7 @@
     </div>
   </div>
 
+  <!-- MODAL: Add user -->
   <div class="modalBack" id="addBack">
     <div class="modal">
       <div class="modalHead">
@@ -494,6 +503,7 @@
     </div>
   </div>
 
+  <!-- MODAL: User invoices -->
   <div class="modalBack" id="invBack">
     <div class="modal">
       <div class="modalHead">
@@ -568,6 +578,9 @@
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
 
+    // ✅ IMPORTANT: جدولك فيه rows jsonb
+    const OPS_COL_CANDIDATES = ["rows","lines","ops","items","details"];
+
     let ADMIN = null;
 
     function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
@@ -621,9 +634,25 @@
       return { fromIso:null, toIso:null };
     }
 
-    // ✅ عمليات الفاتورة من عمود rows (حسب جدولك)
+    function normalizeOps(v){
+      if(Array.isArray(v)) return v;
+      if(typeof v === "string"){
+        try{
+          const j = JSON.parse(v);
+          if(Array.isArray(j)) return j;
+        }catch{}
+      }
+      return [];
+    }
+
     function pickOps(inv){
-      return Array.isArray(inv?.rows) ? inv.rows : [];
+      for(const c of OPS_COL_CANDIDATES){
+        if(inv && inv[c] !== undefined && inv[c] !== null){
+          const ops = normalizeOps(inv[c]);
+          if(Array.isArray(ops)) return ops;
+        }
+      }
+      return [];
     }
 
     function matchesInvoice(inv, query){
@@ -641,10 +670,15 @@
     async function safeOrderQuery(baseQuery){
       let { data, error } = await baseQuery.order("created_at", { ascending:false });
       if(!error) return { data, error:null };
-      ({ data, error } = await baseQuery.order("id", { ascending:false }));
-      if(!error) return { data, error:null };
-      ({ data, error } = await baseQuery);
-      return { data: data||[], error: error||null };
+
+      const msg = (error.message||"").toLowerCase();
+      if(msg.includes("created_at") || msg.includes("column") || msg.includes("order")){
+        ({ data, error } = await baseQuery.order("id", { ascending:false }));
+        if(!error) return { data, error:null };
+        ({ data, error } = await baseQuery);
+        return { data: data||[], error: error||null };
+      }
+      return { data: data||[], error };
     }
 
     async function fetchUsers(){
@@ -660,7 +694,7 @@
 
       let base = supabase.from(INVOICE_TABLE).select("*").limit(500);
 
-      // ✅ هنا كان user_id — صار owner_id
+      // ✅ جدولك يستخدم owner_id وليس user_id
       if(uFilter && uFilter !== "all") base = base.eq("owner_id", uFilter);
       if(fromIso) base = base.gte("created_at", fromIso);
       if(toIso)   base = base.lte("created_at", toIso);
@@ -703,7 +737,7 @@
       const userMap = {};
       users.forEach(u=> userMap[u.id]=u);
 
-      // ✅ ربط الفواتير بالمستخدم عبر owner_id
+      // ✅ ربط اسم المستخدم بالفاتورة عبر owner_id
       invoices.forEach(inv=> inv._userName = userMap[inv.owner_id]?.username || "");
 
       const query = qSearch.value.trim();
@@ -714,7 +748,7 @@
         if(!matchesInvoice(inv, query)) return;
         const uid = inv.owner_id;
         counts[uid] = (counts[uid]||0) + 1;
-        const ca = inv.created_at || inv.updated_at || null;
+        const ca = inv.created_at || inv.updated_at || inv.closed_at || null;
         if(ca && (!lastActive[uid] || (new Date(ca) > new Date(lastActive[uid])))) lastActive[uid]=ca;
       });
 
@@ -754,12 +788,15 @@
       }).join("") || `<tr><td colspan="5" class="muted">لا يوجد بيانات.</td></tr>`;
     }
 
+    // ✅ الآن "آخر الفواتير" صار فيه زر فتح + PDF
     function buildLastInvoices(invoices, users){
       const userMap = {};
       users.forEach(u=> userMap[u.id]=u);
 
       const query = qSearch.value.trim();
-      const filtered = invoices.filter(inv=> matchesInvoice(inv, query)).slice(0, 12);
+      const filtered = invoices
+        .filter(inv=> matchesInvoice(inv, query))
+        .slice(0, 20);
 
       if(!filtered.length){
         lastInvGrid.innerHTML = `<div class="hint">لا يوجد فواتير حسب الفلاتر/البحث.</div>`;
@@ -772,21 +809,53 @@
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
         const id6 = last6(inv.id);
-        const cust = safeText(inv.customer_name || inv.customer);
+        const custName = safeText(inv.customer_name || inv.customer || "");
 
         return `
-          <div class="invItem">
+          <div class="invItem" data-last-inv-id="${escHtml(inv.id)}">
             <div class="invTop">
               <div>
-                <div class="invTitle">${cust} — <span class="muted">${status}</span></div>
+                <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  المستخدم: <b>${safeText(u?.username||"")}</b> —
-                  رقم: <b>${safeText(id6)}</b> —
-                  المجموع: <b>${safeText(inv.total||0)}</b>
-                  <div style="margin-top:6px">بتاريخ: ${created}</div>
+                  المستخدم: <b>${escHtml(safeText(u?.username||inv._userName||""))}</b> —
+                  رقم: <b>${escHtml(id6)}</b> —
+                  المجموع: <b>${escHtml(safeText(inv.total ?? 0))}</b>
+                  <div style="margin-top:6px">بتاريخ: ${escHtml(created)}</div>
                 </div>
               </div>
-              <div class="pill"><b>${ops.length}</b> عمليات</div>
+
+              <div class="invBtns">
+                <button class="btn small soft" data-act="toggleLast">فتح</button>
+                <button class="btn small primary" data-act="pdfLast">تصدير PDF</button>
+                <div class="pill"><b>${ops.length}</b> عمليات</div>
+              </div>
+            </div>
+
+            <div class="invOps hide">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:6%">#</th>
+                    <th style="width:34%">البيان</th>
+                    <th style="width:28%">العملية</th>
+                    <th style="width:12%">النتيجة</th>
+                    <th style="width:20%">الوقت</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    ops.slice(0,200).map((o,i)=>`
+                      <tr>
+                        <td>${i+1}</td>
+                        <td>${escHtml(o.label||o.name||"")}</td>
+                        <td>${escHtml(o.expr||o.operation||"")}</td>
+                        <td>${escHtml(o.result||o.value||"")}</td>
+                        <td>${escHtml(o.time||o.at||"")}</td>
+                      </tr>
+                    `).join("") || `<tr><td colspan="5" class="muted" style="text-align:center">لا يوجد عمليات</td></tr>`
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
         `;
@@ -804,11 +873,16 @@
         calcStats(users, invoices);
         buildUsersTable(users, invoices);
         buildLastInvoices(invoices, users);
+
+        // خزّن آخر داتا لزرار آخر الفواتير
+        LAST_USERS_CACHE = users;
+        LAST_INVS_CACHE = invoices;
       }catch(e){
         showErr(dashErr, "خطأ Supabase:\n" + (e?.message || JSON.stringify(e)));
       }
     }
 
+    // ---------- PDF Export ----------
     function escHtml(s){
       return String(s||"")
         .replaceAll("&","&amp;")
@@ -830,10 +904,10 @@
       const rows = ops.map((o,i)=>`
         <tr>
           <td>${i+1}</td>
-          <td>${escHtml(o.label||"")}</td>
-          <td>${escHtml(o.expr||"")}</td>
-          <td>${escHtml(o.result||"")}</td>
-          <td>${escHtml(o.time||"")}</td>
+          <td>${escHtml(o.label||o.name||"")}</td>
+          <td>${escHtml(o.expr||o.operation||"")}</td>
+          <td>${escHtml(o.result||o.value||"")}</td>
+          <td>${escHtml(o.time||o.at||"")}</td>
         </tr>
       `).join("");
 
@@ -918,10 +992,11 @@
         }
       }
 
-      const safeName = (safeText(inv.customer_name||inv.customer||"invoice")).replace(/[\\/:*?"<>|]/g,"-");
+      const safeName = (safeText(inv.customer_name || inv.customer || "invoice")).replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}_${last6(inv.id)}.pdf`);
     }
 
+    // ---------- Invoices Modal ----------
     let CURRENT_INV_USER_ID = null;
     let CURRENT_INV_USER_NAME = "";
     let CURRENT_INV_CACHE = [];
@@ -942,7 +1017,6 @@
     async function loadUserInvoices(){
       try{
         const { fromIso, toIso } = currentFilterRange();
-        // ✅ هنا كان user_id — صار owner_id
         let base = supabase.from(INVOICE_TABLE).select("*").eq("owner_id", CURRENT_INV_USER_ID).limit(400);
         if(fromIso) base = base.gte("created_at", fromIso);
         if(toIso)   base = base.lte("created_at", toIso);
@@ -976,15 +1050,14 @@
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
         const id6 = last6(inv.id);
-        const cust = inv.customer_name || inv.customer || "";
 
         return `
           <div class="invItem" data-inv-id="${escHtml(inv.id)}">
             <div class="invTop">
               <div>
-                <div class="invTitle">${escHtml(cust)} — <span class="muted">${escHtml(status)}</span></div>
+                <div class="invTitle">${escHtml(inv.customer_name || inv.customer || "")} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(inv.total||0)}</b><br/>
+                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(inv.total ?? 0)}</b><br/>
                   التاريخ: ${escHtml(created)}
                 </div>
               </div>
@@ -1012,10 +1085,10 @@
                     ops.slice(0, 200).map((o,i)=>`
                       <tr>
                         <td>${i+1}</td>
-                        <td>${escHtml(o.label||"")}</td>
-                        <td>${escHtml(o.expr||"")}</td>
-                        <td>${escHtml(o.result||"")}</td>
-                        <td>${escHtml(o.time||"")}</td>
+                        <td>${escHtml(o.label||o.name||"")}</td>
+                        <td>${escHtml(o.expr||o.operation||"")}</td>
+                        <td>${escHtml(o.result||o.value||"")}</td>
+                        <td>${escHtml(o.time||o.at||"")}</td>
                       </tr>
                     `).join("") || `<tr><td colspan="5" class="muted">لا يوجد عمليات</td></tr>`
                   }
@@ -1050,6 +1123,34 @@
       }
     });
 
+    // ✅ أزرار آخر الفواتير (فتح/PDF)
+    let LAST_USERS_CACHE = [];
+    let LAST_INVS_CACHE = [];
+    lastInvGrid.addEventListener("click", async (e)=>{
+      const b = e.target.closest("button");
+      if(!b) return;
+
+      const item = b.closest(".invItem");
+      if(!item) return;
+
+      const invId = item.getAttribute("data-last-inv-id");
+      const inv = (LAST_INVS_CACHE||[]).find(x => String(x.id) === String(invId));
+      if(!inv) return;
+
+      const act = b.dataset.act;
+      if(act === "toggleLast"){
+        const box = item.querySelector(".invOps");
+        if(box) box.classList.toggle("hide");
+        return;
+      }
+      if(act === "pdfLast"){
+        const u = (LAST_USERS_CACHE||[]).find(x => String(x.id) === String(inv.owner_id));
+        await exportInvoicePDF(inv, u?.username || inv._userName || "");
+        return;
+      }
+    });
+
+    // ---------- Admin auth ----------
     async function adminLogin(){
       clearBox(loginErr); clearBox(loginOk);
 
@@ -1113,6 +1214,7 @@
       }catch{}
     }
 
+    // ---------- Add user modal ----------
     function openAdd(){ addBack.style.display="flex"; clearBox(addErr); clearBox(addOk); }
     function closeAdd(){ addBack.style.display="none"; }
 
@@ -1152,6 +1254,7 @@
       await applyAndRender();
     }
 
+    // ---------- Actions on users ----------
     usersTbody.addEventListener("click", async (e)=>{
       const b = e.target.closest("button");
       if(!b) return;
@@ -1212,6 +1315,7 @@
       }
     });
 
+    // ---------- UI binds ----------
     rangeChips.addEventListener("click", (e)=>{
       const c = e.target.closest(".chip");
       if(!c) return;
@@ -1248,6 +1352,7 @@
       clearBox(loginErr); clearBox(loginOk);
     });
 
+    // Init
     setSessionPill();
     restoreSession();
   </script>
