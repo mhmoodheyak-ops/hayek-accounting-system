@@ -263,18 +263,20 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <div class="card" id="loginCard">
+    <!-- ✅ FIX: loginCard صار FORM حتى المتصفح يحفظ كلمة السر -->
+    <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
-      <input id="loginUser" autocomplete="username" />
+      <input id="loginUser" autocomplete="username" name="username" />
       <label>كلمة السر</label>
-      <input id="loginPass" type="password" autocomplete="current-password" />
+      <input id="loginPass" type="password" autocomplete="current-password" name="password" />
       <div class="row" style="margin-top:12px">
-        <button class="btn blue" id="btnLogin">دخول</button>
-        <button class="btn" id="btnClear">تفريغ</button>
+        <!-- ✅ FIX: submit -->
+        <button class="btn blue" type="submit">دخول</button>
+        <button class="btn" id="btnClear" type="button">تفريغ</button>
       </div>
       <div class="error" id="loginErr"></div>
-    </div>
+    </form>
 
     <div class="card hide" id="appCard">
       <div class="row" style="align-items:center">
@@ -292,8 +294,8 @@
       <datalist id="itemList"></datalist>
 
       <div class="tabs">
-        <button class="tab active" id="tabCalc">الحاسبة</button>
-        <button class="tab" id="tabLog">سجل العمليات</button>
+        <button class="tab active" id="tabCalc" type="button">الحاسبة</button>
+        <button class="tab" id="tabLog" type="button">سجل العمليات</button>
       </div>
 
       <div id="viewCalc">
@@ -303,33 +305,33 @@
           <div class="resLine"><span>النتيجة:</span> <b id="resView">0</b></div>
 
           <div class="keys" id="keys">
-            <button class="key op" data-k="÷">÷</button>
-            <button class="key" data-k="9">9</button>
-            <button class="key" data-k="8">8</button>
-            <button class="key" data-k="7">7</button>
+            <button class="key op" data-k="÷" type="button">÷</button>
+            <button class="key" data-k="9" type="button">9</button>
+            <button class="key" data-k="8" type="button">8</button>
+            <button class="key" data-k="7" type="button">7</button>
 
-            <button class="key op" data-k="×">×</button>
-            <button class="key" data-k="6">6</button>
-            <button class="key" data-k="5">5</button>
-            <button class="key" data-k="4">4</button>
+            <button class="key op" data-k="×" type="button">×</button>
+            <button class="key" data-k="6" type="button">6</button>
+            <button class="key" data-k="5" type="button">5</button>
+            <button class="key" data-k="4" type="button">4</button>
 
-            <button class="key op" data-k="-">-</button>
-            <button class="key" data-k="3">3</button>
-            <button class="key" data-k="2">2</button>
-            <button class="key" data-k="1">1</button>
+            <button class="key op" data-k="-" type="button">-</button>
+            <button class="key" data-k="3" type="button">3</button>
+            <button class="key" data-k="2" type="button">2</button>
+            <button class="key" data-k="1" type="button">1</button>
 
-            <button class="key op" data-k="+">+</button>
-            <button class="key" data-k="(">(</button>
-            <button class="key" data-k="0">0</button>
-            <button class="key" data-k=")">)</button>
+            <button class="key op" data-k="+" type="button">+</button>
+            <button class="key" data-k="(" type="button">(</button>
+            <button class="key" data-k="0" type="button">0</button>
+            <button class="key" data-k=")" type="button">)</button>
 
-            <button class="key eq" id="btnEq">=</button>
-            <button class="key back" id="btnBack">⌫</button>
+            <button class="key eq" id="btnEq" type="button">=</button>
+            <button class="key back" id="btnBack" type="button">⌫</button>
           </div>
 
           <div class="actions2">
-            <button class="btn" id="btnClearOps">مسح العمليات</button>
-            <button class="btn blue" id="btnPDF">تصدير PDF</button>
+            <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
+            <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
           </div>
 
           <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
@@ -367,8 +369,6 @@
     const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
     const HAYEK_SYNC_URL = `${SUPABASE_URL}/functions/v1/hayek-sync`;
-
-    // ما زلنا نستخدم supabase-js فقط للأمور الثانوية (قراءة/تحديث user)
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
@@ -430,6 +430,7 @@
         const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
         const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
+
         const res = await fetch(url, {
           method: "GET",
           mode: "cors",
@@ -465,8 +466,13 @@
       }
     }
 
-    function netNow(){ return !!NET_OK; }
-    async function kickNet(){ await refreshNetState(true); }
+    function netNow(){
+      return !!NET_OK;
+    }
+
+    async function kickNet(){
+      await refreshNetState(true);
+    }
 
     window.addEventListener("online", async ()=>{
       await kickNet();
@@ -518,7 +524,6 @@
       qWrite(filtered);
     }
 
-    // ✅ تنظيف أي payload قبل الرفع
     function cleanInvoicePayload(p){
       if(!p || typeof p !== "object") return null;
 
@@ -530,72 +535,12 @@
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
+
       return out;
-    }
-
-    // =========================
-    // ✅ Edge API Helpers (NO apikey/Authorization)
-    // =========================
-    function getOrCreateDeviceId(){
-      const KEY = "HAYEK_DEVICE_ID_V1";
-      let v = localStorage.getItem(KEY);
-      if(!v){
-        v = (crypto?.randomUUID?.() || ("dev_" + Math.random().toString(16).slice(2) + Date.now()));
-        localStorage.setItem(KEY, v);
-      }
-      return v;
-    }
-
-    async function apiLoginViaEdge(username, password){
-      const deviceId = getOrCreateDeviceId();
-
-      const res = await fetch(HAYEK_SYNC_URL, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-hayek-device": deviceId,
-          "x-hayek-user": String(username||""),
-          "x-hayek-pass": String(password||"")
-        },
-        body: JSON.stringify({ action: "login" })
-      });
-
-      const data = await res.json().catch(()=>null);
-      if(!res.ok || !data?.ok){
-        const err = data?.error || ("HTTP_" + res.status);
-        throw new Error(err);
-      }
-      return data.user;
-    }
-
-    async function apiUpsertInvoiceViaEdge(invoicePayload){
-      if(!USER?.username || !USER?.password){
-        throw new Error("NO_SESSION");
-      }
-      const deviceId = getOrCreateDeviceId();
-
-      const res = await fetch(HAYEK_SYNC_URL, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-hayek-device": deviceId,
-          "x-hayek-user": String(USER.username||""),
-          "x-hayek-pass": String(USER.password||"")
-        },
-        body: JSON.stringify({ action: "upsert_invoice", invoice: invoicePayload })
-      });
-
-      const data = await res.json().catch(()=>null);
-      if(!res.ok || !data?.ok){
-        const err = data?.error || ("HTTP_" + res.status);
-        throw new Error(err);
-      }
-      return data;
     }
 
     let __syncing = false;
 
-    // ✅ FIX جذري: المزامنة الآن عبر Edge Function بدل supabase-js
     async function qSyncSilently(force=false){
       if(__syncing) return;
 
@@ -607,9 +552,6 @@
         if(!netNow()) return;
       }
 
-      // بدون جلسة مستخدم ما منزامن
-      if(!USER?.username || !USER?.password) return;
-
       __syncing = true;
       try{
         const keep = [];
@@ -620,7 +562,11 @@
               continue;
             }
 
-            await apiUpsertInvoiceViaEdge(payload);
+            const { error } = await supabase
+              .from(INVOICE_TABLE)
+              .upsert(payload, { onConflict: "id" });
+
+            if(error) keep.push(raw);
           }catch{
             keep.push(raw);
           }
@@ -660,6 +606,16 @@
     // =========================
     // ✅ Device/Tab Locks
     // =========================
+    function getOrCreateDeviceId(){
+      const KEY = "HAYEK_DEVICE_ID_V1";
+      let v = localStorage.getItem(KEY);
+      if(!v){
+        v = (crypto?.randomUUID?.() || ("dev_" + Math.random().toString(16).slice(2) + Date.now()));
+        localStorage.setItem(KEY, v);
+      }
+      return v;
+    }
+
     function getOrCreateTabId(){
       const KEY = "HAYEK_TAB_ID_V1";
       let v = sessionStorage.getItem(KEY);
@@ -885,7 +841,7 @@
     let expr = "";
     let lastResult = 0;
 
-    // ------- SUPABASE SAVE (NOW via EDGE) -------
+    // ------- SUPABASE SAVE -------
     async function saveInvoice(status){
       if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
 
@@ -911,9 +867,17 @@
       }
 
       try{
-        // ✅ رفع مباشر عبر Edge Function (Service Role)
-        await apiUpsertInvoiceViaEdge(payload);
-        return { ok:true, id: invoiceId };
+        const { data, error } = await supabase
+          .from(INVOICE_TABLE)
+          .upsert(payload, { onConflict: "id" })
+          .select("id")
+          .limit(1);
+
+        if(error){
+          qAdd(payload);
+          return { ok:true, id: invoiceId, queued:true };
+        }
+        return { ok:true, id: (data?.[0]?.id || invoiceId) };
       }catch{
         qAdd(payload);
         return { ok:true, id: invoiceId, queued:true };
@@ -930,13 +894,37 @@
       return [meta, ...ops];
     }
 
+    // =========================
+    // ✅ LOGIN عبر Edge Function (hayek-sync)
+    // =========================
+    async function apiLoginViaEdge(username, password){
+      const deviceId = getOrCreateDeviceId();
+
+      const res = await fetch(HAYEK_SYNC_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-hayek-device": deviceId,
+          "x-hayek-user": String(username||""),
+          "x-hayek-pass": String(password||"")
+        },
+        body: JSON.stringify({ action: "login" })
+      });
+
+      const data = await res.json().catch(()=>null);
+      if(!res.ok || !data?.ok){
+        const err = data?.error || ("HTTP_" + res.status);
+        throw new Error(err);
+      }
+      return data.user;
+    }
+
     function mapEdgeError(err){
       const e = String(err||"");
       if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
       if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
       if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
       if(e === "Missing headers") return "مشكلة في الطلب (headers).";
-      if(e === "DEVICE_MISMATCH") return "❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.";
       return "فشل تسجيل الدخول:\n" + e;
     }
 
@@ -994,7 +982,6 @@
         return;
       }
 
-      // ✅ ONLINE: عبر Edge Function
       try{
         const edgeUser = await apiLoginViaEdge(username, password);
 
@@ -1091,6 +1078,7 @@
 
         const cached = readOfflineUser();
         const pass = cached?.password || "";
+
         u = { ...u, password: pass };
 
         try{
@@ -1280,7 +1268,7 @@
 
       const r = await saveInvoice("open");
       if(!r.ok){
-        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg);
+        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
       }
 
       await qSyncSilently(false);
@@ -1360,7 +1348,7 @@
 
       const r = await saveInvoice("closed");
       if(!r.ok){
-        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg);
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
         return;
       }
 
@@ -1401,8 +1389,17 @@
     }
 
     // ------- binds -------
-    $("btnLogin").addEventListener("click", login);
-    $("btnClear").addEventListener("click", ()=>{ $("loginUser").value=""; $("loginPass").value=""; clearErr(loginErr); });
+    // ✅ FIX: submit form حتى حفظ كلمة المرور
+    document.getElementById("loginCard").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      login();
+    });
+
+    $("btnClear").addEventListener("click", ()=>{
+      $("loginUser").value="";
+      $("loginPass").value="";
+      clearErr(loginErr);
+    });
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
