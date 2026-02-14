@@ -23,7 +23,6 @@
       --blue:#1d4ed8;
       --blue2:#2563eb;
       --danger:#7f1d1d;
-      --danger2:#9f1f1f;
       --ok:#22c55e;
       --warn:#f59e0b;
       --shadow: 0 14px 38px rgba(0,0,0,.38);
@@ -202,12 +201,7 @@
       font-weight:900;
       min-width:62px;
     }
-    .actionsCol{
-      display:flex;
-      gap:8px;
-      flex-wrap:nowrap;
-      justify-content:flex-start;
-    }
+    .actionsCol{display:flex; gap:8px; flex-wrap:nowrap; justify-content:flex-start;}
 
     .reportBar{
       margin-top:12px;
@@ -574,44 +568,6 @@
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
 
-    // ✅ Detect real invoice columns
-    const COLS = {
-      owner: null,      // owner_id or user_id
-      customer: null,   // customer_name or customer
-      total: null,      // total
-      status: null,     // status
-      createdAt: null,  // created_at
-      ops: null         // rows / lines / ops / items / details
-    };
-
-    async function colExists(col){
-      try{
-        const { error } = await supabase.from(INVOICE_TABLE).select(col).limit(1);
-        return !error;
-      }catch{ return false; }
-    }
-
-    async function detectInvoiceCols(){
-      if(await colExists("owner_id")) COLS.owner = "owner_id";
-      else if(await colExists("user_id")) COLS.owner = "user_id";
-
-      if(await colExists("customer_name")) COLS.customer = "customer_name";
-      else if(await colExists("customer")) COLS.customer = "customer";
-
-      if(await colExists("total")) COLS.total = "total";
-      if(await colExists("status")) COLS.status = "status";
-      if(await colExists("created_at")) COLS.createdAt = "created_at";
-
-      const opsCandidates = ["rows","lines","ops","items","details"];
-      for(const c of opsCandidates){
-        if(await colExists(c)){ COLS.ops = c; break; }
-      }
-
-      if(!COLS.owner || !COLS.customer){
-        throw new Error("جدول app_invoices أعمدته غير مطابقة (owner_id/user_id + customer_name/customer).");
-      }
-    }
-
     let ADMIN = null;
 
     function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
@@ -665,9 +621,9 @@
       return { fromIso:null, toIso:null };
     }
 
+    // ✅ عمليات الفاتورة من عمود rows (حسب جدولك)
     function pickOps(inv){
-      if(COLS.ops && Array.isArray(inv?.[COLS.ops])) return inv[COLS.ops];
-      return [];
+      return Array.isArray(inv?.rows) ? inv.rows : [];
     }
 
     function matchesInvoice(inv, query){
@@ -676,31 +632,25 @@
 
       const cid = safeText(inv.id).toLowerCase();
       const c6  = last6(inv.id).toLowerCase();
-      const cust = safeText(inv[COLS.customer]).toLowerCase();
+      const cust = safeText(inv.customer_name || inv.customer).toLowerCase();
       const user = safeText(inv._userName).toLowerCase();
 
       return cust.includes(q) || user.includes(q) || c6.includes(q.replace(/\s+/g,"")) || cid.includes(q);
     }
 
     async function safeOrderQuery(baseQuery){
-      let { data, error } = await baseQuery.order(COLS.createdAt || "created_at", { ascending:false });
+      let { data, error } = await baseQuery.order("created_at", { ascending:false });
       if(!error) return { data, error:null };
-
       ({ data, error } = await baseQuery.order("id", { ascending:false }));
       if(!error) return { data, error:null };
-
       ({ data, error } = await baseQuery);
       return { data: data||[], error: error||null };
     }
 
     async function fetchUsers(){
       const base = supabase.from(USERS_TABLE).select("*");
-      const { data, error } = await base.order("created_at", { ascending:false });
-      if(error){
-        const r2 = await base.order("id", { ascending:false });
-        if(r2.error) throw (r2.error);
-        return r2.data || [];
-      }
+      const { data, error } = await safeOrderQuery(base);
+      if(error) throw error;
       return data || [];
     }
 
@@ -710,9 +660,10 @@
 
       let base = supabase.from(INVOICE_TABLE).select("*").limit(500);
 
-      if(uFilter && uFilter !== "all") base = base.eq(COLS.owner, uFilter);
-      if(fromIso) base = base.gte(COLS.createdAt || "created_at", fromIso);
-      if(toIso)   base = base.lte(COLS.createdAt || "created_at", toIso);
+      // ✅ هنا كان user_id — صار owner_id
+      if(uFilter && uFilter !== "all") base = base.eq("owner_id", uFilter);
+      if(fromIso) base = base.gte("created_at", fromIso);
+      if(toIso)   base = base.lte("created_at", toIso);
 
       const { data, error } = await safeOrderQuery(base);
       if(error) throw error;
@@ -737,10 +688,9 @@
 
       let sum = 0, closed = 0, open = 0;
       for(const inv of filtered){
-        const t = Number(COLS.total ? inv[COLS.total] : inv.total);
+        const t = Number(inv.total);
         if(Number.isFinite(t)) sum += t;
-        const st = COLS.status ? inv[COLS.status] : inv.status;
-        if(st === "closed") closed++; else open++;
+        if(inv.status === "closed") closed++; else open++;
       }
 
       stUsers.textContent = String(users.length);
@@ -753,7 +703,8 @@
       const userMap = {};
       users.forEach(u=> userMap[u.id]=u);
 
-      invoices.forEach(inv=> inv._userName = userMap[inv[COLS.owner]]?.username || "");
+      // ✅ ربط الفواتير بالمستخدم عبر owner_id
+      invoices.forEach(inv=> inv._userName = userMap[inv.owner_id]?.username || "");
 
       const query = qSearch.value.trim();
 
@@ -761,9 +712,9 @@
       const lastActive = {};
       invoices.forEach(inv=>{
         if(!matchesInvoice(inv, query)) return;
-        const uid = inv[COLS.owner];
+        const uid = inv.owner_id;
         counts[uid] = (counts[uid]||0) + 1;
-        const ca = inv[COLS.createdAt || "created_at"] || inv.updated_at || null;
+        const ca = inv.created_at || inv.updated_at || null;
         if(ca && (!lastActive[uid] || (new Date(ca) > new Date(lastActive[uid])))) lastActive[uid]=ca;
       });
 
@@ -816,22 +767,22 @@
       }
 
       lastInvGrid.innerHTML = filtered.map(inv=>{
-        const u = userMap[inv[COLS.owner]];
+        const u = userMap[inv.owner_id];
         const ops = pickOps(inv);
-        const status = (COLS.status ? inv[COLS.status] : inv.status) === "closed" ? "مغلقة" : "مفتوحة";
-        const created = new Date(inv[COLS.createdAt || "created_at"] || Date.now()).toLocaleString("ar");
+        const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
+        const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
         const id6 = last6(inv.id);
-        const total = COLS.total ? inv[COLS.total] : inv.total;
+        const cust = safeText(inv.customer_name || inv.customer);
 
         return `
           <div class="invItem">
             <div class="invTop">
               <div>
-                <div class="invTitle">${safeText(inv[COLS.customer])} — <span class="muted">${status}</span></div>
+                <div class="invTitle">${cust} — <span class="muted">${status}</span></div>
                 <div class="invMeta">
                   المستخدم: <b>${safeText(u?.username||"")}</b> —
                   رقم: <b>${safeText(id6)}</b> —
-                  المجموع: <b>${safeText(total||0)}</b>
+                  المجموع: <b>${safeText(inv.total||0)}</b>
                   <div style="margin-top:6px">بتاريخ: ${created}</div>
                 </div>
               </div>
@@ -870,11 +821,11 @@
     function buildInvoicePrint(inv, username){
       const pa = $("printArea");
       const ops = pickOps(inv);
-      const customer = safeText(inv[COLS.customer] || "بدون اسم");
+      const customer = safeText(inv.customer_name || inv.customer || "بدون اسم");
       const user = safeText(username || "");
-      const total = safeText((COLS.total ? inv[COLS.total] : inv.total) ?? 0);
+      const total = safeText(inv.total ?? 0);
       const id = safeText(inv.id);
-      const created = new Date(inv[COLS.createdAt || "created_at"] || Date.now()).toLocaleString("ar");
+      const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
 
       const rows = ops.map((o,i)=>`
         <tr>
@@ -967,7 +918,7 @@
         }
       }
 
-      const safeName = (safeText(inv[COLS.customer]||"invoice")).replace(/[\\/:*?"<>|]/g,"-");
+      const safeName = (safeText(inv.customer_name||inv.customer||"invoice")).replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}_${last6(inv.id)}.pdf`);
     }
 
@@ -991,9 +942,10 @@
     async function loadUserInvoices(){
       try{
         const { fromIso, toIso } = currentFilterRange();
-        let base = supabase.from(INVOICE_TABLE).select("*").eq(COLS.owner, CURRENT_INV_USER_ID).limit(400);
-        if(fromIso) base = base.gte(COLS.createdAt || "created_at", fromIso);
-        if(toIso)   base = base.lte(COLS.createdAt || "created_at", toIso);
+        // ✅ هنا كان user_id — صار owner_id
+        let base = supabase.from(INVOICE_TABLE).select("*").eq("owner_id", CURRENT_INV_USER_ID).limit(400);
+        if(fromIso) base = base.gte("created_at", fromIso);
+        if(toIso)   base = base.lte("created_at", toIso);
 
         const { data, error } = await safeOrderQuery(base);
         if(error) throw error;
@@ -1010,7 +962,7 @@
       const rows = (CURRENT_INV_CACHE||[]).filter(inv=>{
         if(!s) return true;
         const id6 = last6(inv.id).toLowerCase();
-        const cust = safeText(inv[COLS.customer]).toLowerCase();
+        const cust = safeText(inv.customer_name || inv.customer).toLowerCase();
         return cust.includes(s) || id6.includes(s) || safeText(inv.id).toLowerCase().includes(s);
       });
 
@@ -1021,18 +973,18 @@
 
       invBody.innerHTML = rows.map(inv=>{
         const ops = pickOps(inv);
-        const status = (COLS.status ? inv[COLS.status] : inv.status) === "closed" ? "مغلقة" : "مفتوحة";
-        const created = new Date(inv[COLS.createdAt || "created_at"] || Date.now()).toLocaleString("ar");
+        const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
+        const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
         const id6 = last6(inv.id);
-        const total = COLS.total ? inv[COLS.total] : inv.total;
+        const cust = inv.customer_name || inv.customer || "";
 
         return `
           <div class="invItem" data-inv-id="${escHtml(inv.id)}">
             <div class="invTop">
               <div>
-                <div class="invTitle">${escHtml(inv[COLS.customer] || "")} — <span class="muted">${escHtml(status)}</span></div>
+                <div class="invTitle">${escHtml(cust)} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(total||0)}</b><br/>
+                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(inv.total||0)}</b><br/>
                   التاريخ: ${escHtml(created)}
                 </div>
               </div>
@@ -1117,13 +1069,6 @@
       if(!u.is_admin){ showErr(loginErr, "هذا الحساب ليس أدمن."); return; }
       if(u.is_blocked){ showErr(loginErr, "هذا الأدمن محظور."); return; }
 
-      try{
-        await detectInvoiceCols();
-      }catch(e){
-        showErr(loginErr, "خطأ إعداد جدول الفواتير:\n" + (e?.message || ""));
-        return;
-      }
-
       ADMIN = u;
       localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id }));
       loginCard.classList.add("hide");
@@ -1153,11 +1098,8 @@
       try{
         const s = JSON.parse(localStorage.getItem("HAYEK_ADMIN_SESSION") || "null");
         if(!s?.id) return;
-
         const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(data?.length && data[0].is_admin && !data[0].is_blocked){
-          await detectInvoiceCols();
-
           ADMIN = data[0];
           loginCard.classList.add("hide");
           dashCard.classList.remove("hide");
