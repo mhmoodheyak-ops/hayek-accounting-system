@@ -45,7 +45,6 @@
       padding: clamp(10px, 2vw, 16px);
     }
 
-    /* ✅ الصفحة بالمنتصف + عرض 100% */
     .wrap{
       width:100%;
       max-width: 1400px;
@@ -131,7 +130,6 @@
     }
     label{display:block; color:var(--muted); font-size:12px; margin:10px 0 6px}
 
-    /* ✅ GRID: بالداشبورد يصير عمود واحد حتى ما يترك فراغ */
     .grid{display:grid; gap:14px; grid-template-columns: 1fr;}
     .mode-login .grid{
       grid-template-columns: 1fr;
@@ -177,7 +175,6 @@
     .chip.active{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
     .dateRow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
-    /* ✅ جدول عرض 100% + سكرول أفقي عند الحاجة */
     .tableWrap{
       margin-top:14px;
       border:1px solid var(--line2);
@@ -189,7 +186,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width: 760px; /* ليظهر سكرول بالموبايل بدل ما تخرب الأعمدة */
+      min-width: 760px;
     }
     th,td{
       padding:12px 12px;
@@ -228,7 +225,6 @@
       min-width:62px;
     }
 
-    /* ✅ الأزرار: سطر واحد + سكرول تحتها + مسافة "تقريباً 5% من عرض الشاشة" (5vw لكن بدون مبالغة) */
     .actionsCol{
       display:flex;
       align-items:center;
@@ -236,7 +232,7 @@
       flex-wrap:nowrap;
       overflow-x:auto;
       overflow-y:hidden;
-      gap: clamp(8px, 5vw, 18px); /* 5% من عرض الشاشة مع حد أعلى */
+      gap: clamp(8px, 5vw, 18px);
       padding: 2px 2px 10px;
       scrollbar-width:thin;
     }
@@ -706,7 +702,7 @@
       return [];
     }
 
-    /* ✅ اسم الزبون: نبحث في أكثر من مكان (عشان ما يطلع "بدون اسم") */
+    /* ✅ اسم الزبون: نبحث في أكثر من مكان */
     function getCustomerName(inv){
       const candidates = [
         inv?.customer_name, inv?.customer, inv?.customerName,
@@ -899,10 +895,10 @@
         const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
-        const id6 = last6(inv.id);
 
         const custName = getCustomerName(inv) || "بدون اسم";
 
+        /* ✅✅✅ التعديل الوحيد هنا: بدل "رقم: آخر6" صار "اسم الزبون" */
         return `
           <div class="invItem" data-last-inv-id="${encId(inv.id)}">
             <div class="invTop">
@@ -910,7 +906,7 @@
                 <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
                   المستخدم: <b>${escHtml(safeText(u?.username||inv._userName||""))}</b> —
-                  رقم: <b>${escHtml(id6)}</b> —
+                  اسم الزبون: <b>${escHtml(custName)}</b> —
                   المجموع: <b>${escHtml(safeText(inv.total ?? 0))}</b>
                   <div style="margin-top:6px">بتاريخ: ${escHtml(created)}</div>
                 </div>
@@ -1445,7 +1441,6 @@
       clearBox(loginErr); clearBox(loginOk);
     });
 
-    // Init
     setSessionPill();
     restoreSession();
   </script>
