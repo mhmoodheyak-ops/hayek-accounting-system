@@ -332,8 +332,17 @@
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
 
+    function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
+    function clearErr(box){ box.style.display="none"; box.textContent = ""; }
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.style.display = "block";
+      setTimeout(()=> toastEl.style.display="none", 1400);
+    }
+    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
+
     // =========================
-    // ✅ قفل جهاز واحد + قفل تبويب واحد (جذري داخل invoice.html)
+    // ✅ قفل جهاز واحد + قفل تبويب واحد (ثابت)
     // =========================
     function getOrCreateDeviceId(){
       const KEY = "HAYEK_DEVICE_ID_V1";
@@ -356,9 +365,7 @@
     }
 
     let TAB_BLOCKED = false;
-    let TAB_OWNER = false;
     let TAB_TIMER = null;
-    let TAB_BC = null;
     let TAB_USERNAME = null;
 
     function lockKeyFor(username){ return `HAYEK_ACTIVE_TAB_LOCK::${username}`; }
@@ -373,11 +380,19 @@
         return obj;
       }catch{ return null; }
     }
+
     function writeLock(username, objOrNull){
       try{
         if(!objOrNull) localStorage.removeItem(lockKeyFor(username));
         else localStorage.setItem(lockKeyFor(username), JSON.stringify(objOrNull));
       }catch{}
+    }
+
+    function stopSingleTabGuard(){
+      if(TAB_TIMER) clearInterval(TAB_TIMER);
+      TAB_TIMER = null;
+      TAB_BLOCKED = false;
+      TAB_USERNAME = null;
     }
 
     function startSingleTabGuard(username){
@@ -387,17 +402,6 @@
       const tabId = getOrCreateTabId();
       const TTL = 12000;
       const HEARTBEAT = 4000;
-
-      const bcName = `HAYEK_TAB_BC::${username}`;
-      try{
-        TAB_BC = new BroadcastChannel(bcName);
-        TAB_BC.onmessage = (ev)=>{
-          const msg = ev?.data || {};
-          if(msg?.type === "LOCK_RELEASED") tryAcquire();
-        };
-      }catch{
-        TAB_BC = null;
-      }
 
       function isStale(lock){
         if(!lock?.ts) return true;
@@ -409,14 +413,11 @@
 
         if(!lock || isStale(lock) || lock.tabId === tabId){
           writeLock(username, { tabId, ts: nowMs() });
-          TAB_OWNER = true;
           TAB_BLOCKED = false;
           return true;
         }
 
-        TAB_OWNER = false;
         TAB_BLOCKED = true;
-
         if(!sessionStorage.getItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`)){
           sessionStorage.setItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`, "1");
           showErr(loginErr, "❌ هذا الحساب مفتوح بالفعل في تبويب آخر.\nأغلق التبويب الآخر للمتابعة.");
@@ -424,54 +425,48 @@
         return false;
       }
 
-      // expose for BC
-      window.__HAYEK_TRY_ACQUIRE__ = tryAcquire;
-
+      // أول محاولة
       tryAcquire();
 
+      // تحديث/محاولة كل فترة
       TAB_TIMER = setInterval(()=>{
         if(!TAB_USERNAME) return;
 
         const lock = readLock(username);
-        const tabIdNow = getOrCreateTabId();
 
-        if(TAB_OWNER && lock && lock.tabId === tabIdNow){
-          writeLock(username, { tabId: tabIdNow, ts: nowMs() });
+        // إذا القفل لنا -> حدث timestamp
+        if(lock && lock.tabId === tabId){
+          writeLock(username, { tabId, ts: nowMs() });
+          TAB_BLOCKED = false;
           return;
         }
 
-        if(!TAB_OWNER) tryAcquire();
+        // إذا ليس لنا -> حاول تكتسب إذا صار قديم/انحذف
+        tryAcquire();
       }, HEARTBEAT);
 
+      // إذا تبويب ثاني أغلق/حرر القفل -> يصل storage event
+      window.addEventListener("storage", (e)=>{
+        if(e.key === lockKeyFor(username)){
+          tryAcquire();
+        }
+      });
+
+      // عند إغلاق التبويب: حرر القفل إذا كان لنا
       window.addEventListener("beforeunload", ()=>{
         try{
-          const tabIdNow = getOrCreateTabId();
           const lock = readLock(username);
-          if(lock && lock.tabId === tabIdNow){
+          if(lock && lock.tabId === tabId){
             writeLock(username, null);
-            try{ TAB_BC?.postMessage({ type:"LOCK_RELEASED" }); }catch{}
           }
         }catch{}
       });
-
-      function tryAcquire(){ return window.__HAYEK_TRY_ACQUIRE__ && window.__HAYEK_TRY_ACQUIRE__(); }
     }
 
-    function stopSingleTabGuard(){
-      if(TAB_TIMER) clearInterval(TAB_TIMER);
-      TAB_TIMER = null;
-      try{ TAB_BC?.close?.(); }catch{}
-      TAB_BC = null;
-      TAB_BLOCKED = false;
-      TAB_OWNER = false;
-      TAB_USERNAME = null;
-    }
-
-    // ✅ قفل جهاز واحد على app_users.device_id
     async function enforceDeviceLockForUserRow(u){
       const deviceId = getOrCreateDeviceId();
 
-      // إذا أول مرة device_id = null -> ثبتّه (مرة واحدة فقط)
+      // أول مرة: ثبت device_id مرة واحدة فقط
       if(!u.device_id){
         const { error: uerr } = await supabase
           .from(USERS_TABLE)
@@ -481,7 +476,7 @@
 
         if(uerr) throw new Error(uerr.message || "فشل تحديث device_id");
 
-        // أعد القراءة بعد محاولة التثبيت
+        // اقرأ من جديد
         const { data, error } = await supabase
           .from(USERS_TABLE)
           .select("*")
@@ -540,15 +535,6 @@
     custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
     itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
 
-    function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
-    function clearErr(box){ box.style.display="none"; box.textContent = ""; }
-    function toast(msg){
-      toastEl.textContent = msg;
-      toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1400);
-    }
-    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
-
     function uuid(){
       if(window.crypto?.randomUUID) return crypto.randomUUID();
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c=>{
@@ -566,7 +552,7 @@
     let expr = "";
     let lastResult = 0;
 
-    // ------- SUPABASE SAVE (FIXED) -------
+    // ------- SUPABASE SAVE -------
     async function saveInvoice(status){
       if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
 
@@ -607,7 +593,6 @@
     // ------- LOGIN -------
     async function login(){
       clearErr(loginErr);
-
       const username = $("loginUser").value.trim();
       const password = $("loginPass").value.trim();
 
@@ -624,7 +609,7 @@
       if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
       if(u.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
 
-      // ✅ قفل جهاز واحد (سيكتب device_id لأول مرة)
+      // ✅ قفل جهاز واحد
       try{
         u = await enforceDeviceLockForUserRow(u);
       }catch(e){
@@ -635,8 +620,7 @@
       // ✅ قفل تبويب واحد
       startSingleTabGuard(u.username);
       if(TAB_BLOCKED){
-        // لا نفتح التطبيق في هذا التبويب
-        USER = null;
+        // لا تدخل من هذا التبويب
         return;
       }
 
@@ -667,7 +651,7 @@
           return;
         }
 
-        // ✅ enforce device lock حتى في الاستعادة
+        // ✅ قفل جهاز واحد (حتى بالاستعادة)
         try{
           u = await enforceDeviceLockForUserRow(u);
         }catch(e){
@@ -676,12 +660,9 @@
           return;
         }
 
-        // ✅ enforce single tab حتى في الاستعادة
+        // ✅ قفل تبويب واحد (حتى بالاستعادة)
         startSingleTabGuard(u.username);
-        if(TAB_BLOCKED){
-          USER = null;
-          return;
-        }
+        if(TAB_BLOCKED) return;
 
         USER = u;
         loginCard.classList.add("hide");
@@ -689,7 +670,6 @@
         subtitle.textContent = "فاتورة المستخدم";
         pill.innerHTML = `<b>${USER.username}</b>`;
         resetAll(true);
-
         renderSug();
       }catch{}
     }
@@ -745,9 +725,7 @@
         return null;
       }
       clearErr(appErr);
-
       addSug(SUG_CUSTOMERS_KEY, c);
-
       return c;
     }
 
@@ -851,7 +829,6 @@
 
       const item = itemInput.value.trim();
       const label = item || "عملية";
-
       if(item) addSug(SUG_ITEMS_KEY, item);
 
       ops.unshift({
@@ -1006,8 +983,10 @@
 
     setTab("calc");
 
+    // ✅ حمّل الاقتراحات من البداية
     renderSug();
 
+    // ✅ استعادة جلسة + فرض قفل الجهاز/التبويب
     restoreSession();
   </script>
 </body>
