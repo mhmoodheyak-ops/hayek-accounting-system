@@ -522,85 +522,19 @@
       qWrite(filtered);
     }
 
-    // ✅ FIX جذري: تنظيف أي payload قبل الرفع حتى لا يعطي 400
+    // ✅ تنظيف payload قبل الرفع
     function cleanInvoicePayload(p){
       if(!p || typeof p !== "object") return null;
 
       const out = { ...p };
-      delete out.__queued_at;     // سبب 400
-      delete out.__meta;          // احتياط
-      delete out.__local;         // احتياط
+      delete out.__queued_at;
+      delete out.__meta;
+      delete out.__local;
 
-      // لا نرسل قيم undefined (PostgREST يكرهها)
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
-
       return out;
-    }
-
-    let __syncing = false;
-
-    async function qSyncSilently(force=false){
-      if(__syncing) return;
-
-      const arr = qRead();
-      if(!arr.length) return;
-
-      if(!force){
-        await refreshNetState(false);
-        if(!netNow()) return;
-      }
-
-      __syncing = true;
-      try{
-        const keep = [];
-        for(const raw of arr){
-          try{
-            const payload = cleanInvoicePayload(raw);
-            if(!payload?.id){
-              continue;
-            }
-
-            const { error } = await supabase
-              .from(INVOICE_TABLE)
-              .upsert(payload, { onConflict: "id" });
-
-            if(error) keep.push(raw);
-          }catch{
-            keep.push(raw);
-          }
-        }
-        qWrite(keep);
-      }finally{
-        __syncing = false;
-      }
-    }
-
-    // =========================
-    // ✅ Offline Login Cache
-    // =========================
-    const OFFLINE_USER_KEY = "HAYEK_OFFLINE_LAST_USER_V1";
-    function saveOfflineUser(u){
-      try{
-        const slim = {
-          id: u?.id || null,
-          username: u?.username || "",
-          password: u?.password || "",
-          full_name: u?.full_name || "",
-          is_blocked: !!u?.is_blocked,
-          device_id: u?.device_id || null,
-          saved_at: new Date().toISOString()
-        };
-        localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(slim));
-      }catch{}
-    }
-    function readOfflineUser(){
-      try{
-        const v = JSON.parse(localStorage.getItem(OFFLINE_USER_KEY) || "null");
-        if(!v || typeof v !== "object") return null;
-        return v;
-      }catch{ return null; }
     }
 
     // =========================
@@ -719,6 +653,112 @@
       });
     }
 
+    // ------- STATE -------
+    let USER = null;
+    let invoiceId = null;
+    let invoiceOpen = false;
+
+    let ops = [];
+    let expr = "";
+    let lastResult = 0;
+
+    // =========================
+    // ✅ Edge: Upsert Invoice (جذري)
+    // =========================
+    async function apiUpsertInvoiceViaEdge(invoicePayload){
+      const deviceId = getOrCreateDeviceId();
+
+      const res = await fetch(HAYEK_SYNC_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-hayek-device": deviceId,
+          "x-hayek-user-id": String(USER?.id || "")
+        },
+        body: JSON.stringify({
+          action: "upsert_invoice",
+          invoice: invoicePayload
+        })
+      });
+
+      const data = await res.json().catch(()=>null);
+
+      if(!res.ok || !data?.ok){
+        const err = data?.error || ("HTTP_" + res.status);
+        throw new Error(err);
+      }
+
+      return data;
+    }
+
+    // =========================
+    // ✅ SYNC (عبر الفنكشن بدل supabase-js)
+    // =========================
+    let __syncing = false;
+
+    async function qSyncSilently(force=false){
+      if(__syncing) return;
+
+      const arr = qRead();
+      if(!arr.length) return;
+
+      if(!force){
+        await refreshNetState(false);
+        if(!netNow()) return;
+      }
+
+      // ما نعمل sync إذا ما في user (حتى ما يرفضها السيرفر)
+      if(!USER?.id) return;
+
+      __syncing = true;
+      try{
+        const keep = [];
+        for(const raw of arr){
+          try{
+            const payload = cleanInvoicePayload(raw);
+            if(!payload?.id){
+              continue;
+            }
+
+            // ✅ عبر Edge Function
+            await apiUpsertInvoiceViaEdge(payload);
+
+          }catch{
+            keep.push(raw);
+          }
+        }
+        qWrite(keep);
+      }finally{
+        __syncing = false;
+      }
+    }
+
+    // =========================
+    // ✅ Offline Login Cache
+    // =========================
+    const OFFLINE_USER_KEY = "HAYEK_OFFLINE_LAST_USER_V1";
+    function saveOfflineUser(u){
+      try{
+        const slim = {
+          id: u?.id || null,
+          username: u?.username || "",
+          password: u?.password || "",
+          full_name: u?.full_name || "",
+          is_blocked: !!u?.is_blocked,
+          device_id: u?.device_id || null,
+          saved_at: new Date().toISOString()
+        };
+        localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(slim));
+      }catch{}
+    }
+    function readOfflineUser(){
+      try{
+        const v = JSON.parse(localStorage.getItem(OFFLINE_USER_KEY) || "null");
+        if(!v || typeof v !== "object") return null;
+        return v;
+      }catch{ return null; }
+    }
+
     async function enforceDeviceLockForUserRow(u){
       const deviceId = getOrCreateDeviceId();
 
@@ -832,15 +872,6 @@
       });
     }
 
-    // ------- STATE -------
-    let USER = null;
-    let invoiceId = null;
-    let invoiceOpen = false;
-
-    let ops = [];
-    let expr = "";
-    let lastResult = 0;
-
     // ------- SUPABASE SAVE -------
     async function saveInvoice(status){
       if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
@@ -851,11 +882,8 @@
       const payload = {
         id: invoiceId,
         owner_id: USER.id,
-
-        // ✅ FIX: خزن اسم الزبون بالعمودين الموجودين عندك
         customer_name: customer || null,
         customer: customer || null,
-
         rows: buildRowsWithMeta(customer),
         total: total,
         status: status,
@@ -870,17 +898,9 @@
       }
 
       try{
-        const { data, error } = await supabase
-          .from(INVOICE_TABLE)
-          .upsert(payload, { onConflict: "id" })
-          .select("id")
-          .limit(1);
-
-        if(error){
-          qAdd(payload);
-          return { ok:true, id: invoiceId, queued:true };
-        }
-        return { ok:true, id: (data?.[0]?.id || invoiceId) };
+        // ✅ جذري: عبر Edge Function بدل supabase-js (بدون 400)
+        await apiUpsertInvoiceViaEdge(payload);
+        return { ok:true, id: invoiceId };
       }catch{
         qAdd(payload);
         return { ok:true, id: invoiceId, queued:true };
@@ -903,7 +923,7 @@
     async function apiLoginViaEdge(username, password){
       const deviceId = getOrCreateDeviceId();
 
-      // ✅ FIX: بعد ما طفّينا Verify JWT ما عاد بدنا apikey ولا Authorization
+      // ✅ لا apikey ولا Authorization
       const res = await fetch(HAYEK_SYNC_URL, {
         method: "POST",
         headers: {
@@ -1083,7 +1103,6 @@
 
         const cached = readOfflineUser();
         const pass = cached?.password || "";
-
         u = { ...u, password: pass };
 
         try{
