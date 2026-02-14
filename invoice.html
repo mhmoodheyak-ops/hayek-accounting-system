@@ -236,9 +236,7 @@
     }
 
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
-
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
-
     .p-phone{
       display:inline-block;
       margin-top:12px;
@@ -365,15 +363,10 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // ==================================================
-    // ✅ FIX 1: المفتاح الصحيح (Publishable) — جاهز
-    // ==================================================
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
-    // ✅ Edge Function
     const HAYEK_SYNC_URL = `${SUPABASE_URL}/functions/v1/hayek-sync`;
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
@@ -434,8 +427,7 @@
         const ctrl = new AbortController();
         const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
-        const url =
-          `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
+        const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
 
         const res = await fetch(url, {
           method: "GET",
@@ -530,6 +522,23 @@
       qWrite(filtered);
     }
 
+    // ✅ FIX جذري: تنظيف أي payload قبل الرفع حتى لا يعطي 400
+    function cleanInvoicePayload(p){
+      if(!p || typeof p !== "object") return null;
+
+      const out = { ...p };
+      delete out.__queued_at;     // سبب 400
+      delete out.__meta;          // احتياط
+      delete out.__local;         // احتياط
+
+      // لا نرسل قيم undefined (PostgREST يكرهها)
+      for(const k of Object.keys(out)){
+        if(out[k] === undefined) delete out[k];
+      }
+
+      return out;
+    }
+
     let __syncing = false;
 
     async function qSyncSilently(force=false){
@@ -546,15 +555,20 @@
       __syncing = true;
       try{
         const keep = [];
-        for(const payload of arr){
+        for(const raw of arr){
           try{
+            const payload = cleanInvoicePayload(raw);
+            if(!payload?.id){
+              continue;
+            }
+
             const { error } = await supabase
               .from(INVOICE_TABLE)
               .upsert(payload, { onConflict: "id" });
 
-            if(error) keep.push(payload);
+            if(error) keep.push(raw);
           }catch{
-            keep.push(payload);
+            keep.push(raw);
           }
         }
         qWrite(keep);
@@ -837,6 +851,11 @@
       const payload = {
         id: invoiceId,
         owner_id: USER.id,
+
+        // ✅ FIX: خزن اسم الزبون بالعمودين الموجودين عندك
+        customer_name: customer || null,
+        customer: customer || null,
+
         rows: buildRowsWithMeta(customer),
         total: total,
         status: status,
@@ -884,14 +903,11 @@
     async function apiLoginViaEdge(username, password){
       const deviceId = getOrCreateDeviceId();
 
-      // ✅ FIX 2: أضف apikey + Authorization (مهم جداً)
+      // ✅ FIX: بعد ما طفّينا Verify JWT ما عاد بدنا apikey ولا Authorization
       const res = await fetch(HAYEK_SYNC_URL, {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": "Bearer " + SUPABASE_ANON_KEY,
-
           "x-hayek-device": deviceId,
           "x-hayek-user": String(username||""),
           "x-hayek-pass": String(password||"")
@@ -913,7 +929,6 @@
       if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
       if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
       if(e === "Missing headers") return "مشكلة في الطلب (headers).";
-      if(e === "HTTP_401") return "401 (صلاحيات/مفتاح) — تأكد أن Secrets للـ Function صحيحة.";
       return "فشل تسجيل الدخول:\n" + e;
     }
 
@@ -1178,6 +1193,7 @@
 
     function sanitizeForEval(s){
       return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
+
     }
     function safeEval(s){
       const cleaned = sanitizeForEval(s).trim();
