@@ -1,71 +1,11 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>HAYEK - تسجيل الدخول</title>
-
-  <style>
-    body{background:#0b1220;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;font-family:system-ui,Segoe UI,Tahoma,Arial}
-    .card{width:min(520px,92vw);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    h1{color:#fff;margin:0 0 8px;font-size:22px}
-    .sub{color:rgba(255,255,255,.75);margin:0 0 18px;font-size:13px;line-height:1.5}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    input{flex:1;min-width:220px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#fff;padding:14px 12px;border-radius:12px;outline:none}
-    input::placeholder{color:rgba(255,255,255,.55)}
-    button{width:100%;margin-top:12px;padding:14px 12px;border-radius:12px;border:0;background:#1f3a5a;color:#fff;font-weight:800;cursor:pointer}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .msg{margin-top:10px;min-height:22px;font-size:13px}
-    .ok{color:#68ffb0}
-    .err{color:#ff6b6b}
-    .hint{color:rgba(255,255,255,.6);font-size:12px;margin-top:10px;line-height:1.6}
-
-    /* ✅ أيقونة الرابط داخل العنوان */
-    .titleRow{display:flex;align-items:center;gap:10px;margin:0 0 8px}
-    .linkIcon{
-      width:34px;height:34px;border-radius:12px;
-      display:inline-flex;align-items:center;justify-content:center;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 12px 30px rgba(0,0,0,.25);
-      flex:0 0 auto;
-    }
-    .linkIcon svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.95}
-  </style>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=invoice.html">
+  <script>
+    window.location.replace("invoice.html");
+  </script>
 </head>
-
-<body>
-  <div class="card">
-    <div class="titleRow">
-      <!-- ✅ أيقونة رابط (Chain Link) -->
-      <div class="linkIcon" aria-hidden="true" title="رابط الدخول">
-        <svg viewBox="0 0 24 24">
-          <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0 0-7.07 5 5 0 0 0-7.07 0L10 5"/>
-          <path d="M14 11a5 5 0 0 0-7.07 0L5.52 12.4a5 5 0 0 0 0 7.07 5 5 0 0 0 7.07 0L14 19"/>
-        </svg>
-      </div>
-      <h1 style="margin:0">تسجيل الدخول</h1>
-    </div>
-
-    <p class="sub">
-      اكتب <b>اسم/رقم المستخدم</b> + <b>PIN</b>.<br>
-      (لا تكتب <b>mailto:</b> — فقط اسم المستخدم مثل: <b>admin</b>)
-    </p>
-
-    <div class="row">
-      <input id="username" type="text" placeholder="اسم المستخدم أو الرقم" autocomplete="username" />
-      <input id="pin" type="password" placeholder="PIN (مثال: 1234)" autocomplete="current-password" />
-    </div>
-
-    <button id="loginBtn">دخول</button>
-    <div id="msg" class="msg"></div>
-
-    <div class="hint">
-      إذا كان لديك جلسة دخول موجودة، سيتم تحويلك تلقائيًا إلى الصفحة المناسبة.
-    </div>
-  </div>
-
-  <script type="module" src="./app.js"></script>
-</body>
+<body></body>
 </html>
-
