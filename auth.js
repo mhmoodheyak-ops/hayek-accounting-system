@@ -1,6 +1,7 @@
-// auth.js (FINAL - Single Device + Single Tab)
-// - جهاز واحد: عبر app_users.device_id
-// - تبويب واحد: قفل تبويب واحد لكل مستخدم بنفس المتصفح (بدون logout حتى لا يطرد التبويب الأساسي)
+// auth.js (FINAL - Device Lock enforced ALWAYS + Single Tab)
+// - يثبت device_id في public.app_users تلقائياً عند وجود Session
+// - يمنع تسجيل الدخول من جهاز ثاني
+// - يمنع فتح الحساب في تبويبين (بدون logout للتبويب الثاني)
 
 import { supabase } from "./config.js";
 
@@ -48,23 +49,36 @@ async function loadAppUserByUsername(username) {
   return data || null;
 }
 
-// ===== قفل جهاز واحد =====
-async function enforceSingleDeviceFor(username) {
+// ===== قفل جهاز واحد (حل جذري) =====
+// ملاحظة: نثبت device_id عن طريق username مباشرة (أوضح وأضمن)
+async function enforceDeviceLock(username) {
   const deviceId = getOrCreateDeviceId();
 
-  const row = await loadAppUserByUsername(username);
+  // 1) اقرأ صف المستخدم
+  let row = await loadAppUserByUsername(username);
   if (!row) throw new Error("هذا المستخدم غير موجود بقاعدة البيانات. اطلب من الأدمن إضافته.");
   if (row.is_blocked) throw new Error("هذا الحساب محظور. تواصل مع الأدمن.");
 
+  // 2) إذا أول مرة (device_id = NULL) ثبّته
   if (!row.device_id) {
+    // نحاول تحديث فقط إذا ما زال NULL حتى لا يصير سباق بين جهازين
     const { error: uerr } = await supabase
       .from("app_users")
       .update({ device_id: deviceId })
-      .eq("id", row.id);
+      .eq("username", username)
+      .is("device_id", null);
+
     if (uerr) throw uerr;
-    return await loadAppUserByUsername(username);
+
+    // أعد القراءة: إذا جهاز آخر سبقك وثبّت device_id رح يظهر الآن
+    row = await loadAppUserByUsername(username);
+    if (!row?.device_id) {
+      // لو بقي NULL فهذا يعني التحديث لم ينجح فعلياً
+      throw new Error("تعذر تثبيت device_id على قاعدة البيانات (تحقق من صلاحيات الجدول app_users).");
+    }
   }
 
+  // 3) إذا صار في قاعدة البيانات device_id مختلف -> امنع هذا الجهاز
   if (row.device_id !== deviceId) {
     throw new Error("هذا الحساب مسجّل على جهاز آخر. تواصل مع الأدمن لإعادة تعيين الجهاز.");
   }
@@ -73,7 +87,7 @@ async function enforceSingleDeviceFor(username) {
 }
 
 // ===================================================================
-// ===== قفل تبويب واحد (Single Tab) بدون logout (حتى لا يطرد الأساسي) =====
+// ===== قفل تبويب واحد (Single Tab) بدون logout للتبويب الثاني =====
 // ===================================================================
 let _tabBlocked = false;
 let _tabOwner = false;
@@ -84,10 +98,7 @@ let _tabUsername = null;
 function lockKeyFor(username) {
   return `HAYEK_ACTIVE_TAB_LOCK::${username}`;
 }
-
-function nowMs() {
-  return Date.now();
-}
+function nowMs() { return Date.now(); }
 
 function readLock(username) {
   try {
@@ -100,7 +111,6 @@ function readLock(username) {
     return null;
   }
 }
-
 function writeLock(username, objOrNull) {
   try {
     if (!objOrNull) localStorage.removeItem(lockKeyFor(username));
@@ -109,22 +119,19 @@ function writeLock(username, objOrNull) {
 }
 
 function startSingleTabGuard(username) {
-  stopSingleTabGuard(); // تأكد ما في قفل قديم
+  stopSingleTabGuard();
   _tabUsername = username;
 
   const tabId = getOrCreateTabId();
-  const TTL = 12000;      // إذا التبويب مات/انغلق بدون clean-up، بعد 12 ثانية يعتبر غير نشط
-  const HEARTBEAT = 4000; // تحديث كل 4 ثواني
+  const TTL = 12000;
+  const HEARTBEAT = 4000;
 
   const bcName = `HAYEK_TAB_BC::${username}`;
   try {
     _tabBC = new BroadcastChannel(bcName);
     _tabBC.onmessage = (ev) => {
       const msg = ev?.data || {};
-      // لو التبويب الأساسي أغلق وحرر القفل، خلّي التبويب الثاني يحاول يقتنص القفل مباشرة
-      if (msg?.type === "LOCK_RELEASED") {
-        tryAcquire();
-      }
+      if (msg?.type === "LOCK_RELEASED") tryAcquire();
     };
   } catch {
     _tabBC = null;
@@ -138,7 +145,6 @@ function startSingleTabGuard(username) {
   function tryAcquire() {
     const lock = readLock(username);
 
-    // لا يوجد قفل / القفل قديم / نفس التبويب
     if (!lock || isStale(lock) || lock.tabId === tabId) {
       writeLock(username, { tabId, ts: nowMs() });
       _tabOwner = true;
@@ -146,42 +152,32 @@ function startSingleTabGuard(username) {
       return true;
     }
 
-    // يوجد تبويب آخر نشط
     _tabOwner = false;
     _tabBlocked = true;
 
-    // تنبيه مرة واحدة فقط (أول ما يصير بلوك)
     if (!sessionStorage.getItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`)) {
       sessionStorage.setItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`, "1");
       alert("❌ هذا الحساب مفتوح بالفعل في تبويب آخر. أغلق التبويب الآخر للمتابعة.");
     }
-
     return false;
   }
 
-  // أول محاولة
   tryAcquire();
 
-  // heartbeat: فقط المالك يحدّث القفل
   _tabTimer = setInterval(() => {
     if (!_tabUsername) return;
 
     const lock = readLock(username);
     const tabIdNow = getOrCreateTabId();
 
-    // إذا نحن المالك، حدّث
     if (_tabOwner && lock && lock.tabId === tabIdNow) {
       writeLock(username, { tabId: tabIdNow, ts: nowMs() });
       return;
     }
 
-    // إذا لم نعد مالك (أو القفل تغير)، جرّب تكتسب عند الحاجة
-    if (!_tabOwner) {
-      tryAcquire();
-    }
+    if (!_tabOwner) tryAcquire();
   }, HEARTBEAT);
 
-  // عند إغلاق التبويب: إذا نحن المالك، حرّر القفل
   window.addEventListener("beforeunload", () => {
     try {
       const tabIdNow = getOrCreateTabId();
@@ -206,26 +202,40 @@ function stopSingleTabGuard() {
   _tabUsername = null;
 }
 
-// ===== Session bootstrap =====
+// ============================================================
+// ===== فرض القفل تلقائياً عند وجود Session (جذري) =====
+// ============================================================
+async function enforceAllGuardsFromSession() {
+  if (!_session?.user?.email) {
+    _appUser = null;
+    stopSingleTabGuard();
+    return;
+  }
+
+  const username = usernameFromEmail(_session.user.email);
+
+  // 1) Device lock
+  try {
+    _appUser = await enforceDeviceLock(username);
+  } catch (e) {
+    // هنا لازم نطلع هذا الجهاز فقط (signOut لهذا الجهاز طبيعي)
+    try { await supabase.auth.signOut(); } catch {}
+    _session = null;
+    _appUser = null;
+    stopSingleTabGuard();
+    alert(e?.message || "تم منع الدخول");
+    return;
+  }
+
+  // 2) Single tab guard
+  startSingleTabGuard(username);
+}
+
 async function initSession() {
   try {
     const { data } = await supabase.auth.getSession();
     _session = data?.session || null;
-
-    if (_session?.user?.email) {
-      const username = usernameFromEmail(_session.user.email);
-      try {
-        _appUser = await loadAppUserByUsername(username);
-      } catch {
-        _appUser = null;
-      }
-
-      // شغّل قفل التبويب فقط إذا عندنا جلسة
-      startSingleTabGuard(username);
-    } else {
-      _appUser = null;
-      stopSingleTabGuard();
-    }
+    await enforceAllGuardsFromSession();
   } catch {
     _session = null;
     _appUser = null;
@@ -234,23 +244,9 @@ async function initSession() {
 }
 await initSession();
 
-// تحديث الجلسة تلقائياً عند أي تغيير
 supabase.auth.onAuthStateChange(async (_event, session) => {
   _session = session || null;
-
-  if (_session?.user?.email) {
-    const username = usernameFromEmail(_session.user.email);
-    try {
-      _appUser = await loadAppUserByUsername(username);
-    } catch {
-      _appUser = null;
-    }
-
-    startSingleTabGuard(username);
-  } else {
-    _appUser = null;
-    stopSingleTabGuard();
-  }
+  await enforceAllGuardsFromSession();
 });
 
 // ====== API العامة ======
@@ -258,28 +254,14 @@ export async function login(username, password) {
   const u = String(username || "").trim().replace(/^mailto:/i, "");
   const email = `${u}@hayek.local`;
 
-  // 1) Supabase Auth
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data?.user) throw new Error("فشل تسجيل الدخول: بيانات غير صحيحة");
 
-  // 2) جهاز واحد
-  try {
-    _appUser = await enforceSingleDeviceFor(u);
-  } catch (e) {
-    // هنا مسموح نعمل signOut لأننا لسه داخلين الآن (ولا يوجد تبويب أساسي)
-    await supabase.auth.signOut();
-    _session = null;
-    _appUser = null;
-    stopSingleTabGuard();
-    throw e;
-  }
+  // بعد login، فرض القفل مباشرة
+  await initSession();
 
-  // 3) تبويب واحد
-  startSingleTabGuard(u);
-  if (_tabBlocked) {
-    // لا نعمل signOut (حتى لا نطرد تبويب آخر)
-    throw new Error("هذا الحساب مفتوح في تبويب آخر.");
-  }
+  // لو صار التبويب محجوب، امنع استخدامه (بدون logout)
+  if (_tabBlocked) throw new Error("هذا الحساب مفتوح في تبويب آخر.");
 
   return data.user;
 }
@@ -291,7 +273,6 @@ export async function logout() {
   _appUser = null;
 }
 
-// ✅ أهم نقطة: إذا التبويب محجوب، اعتبره غير مسجل
 export function isAuthed() {
   return !!_session?.user && !_tabBlocked;
 }
@@ -301,12 +282,11 @@ export function getUser() {
 
   const email = _session.user.email || "";
   const username = usernameFromEmail(email);
-  const isAdmin = !!_appUser?.is_admin;
 
   return {
     id: _appUser?.id || null,
     username,
-    role: isAdmin ? "admin" : "user",
+    role: _appUser?.is_admin ? "admin" : "user",
     email,
     full_name: _appUser?.full_name || null,
     phone: _appUser?.phone || null
@@ -324,4 +304,4 @@ window.HAYEK_AUTH = {
   getOrCreateDeviceId
 };
 
-console.log("HAYEK AUTH loaded (Single Device + Single Tab)");
+console.log("HAYEK AUTH loaded (Device Lock ALWAYS + Single Tab)");
