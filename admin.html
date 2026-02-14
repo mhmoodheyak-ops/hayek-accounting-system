@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>لوحة الأدمن - HAYEK</title>
 
-  <!-- PDF -->
+  <!-- PDF (للأدمن عند تصدير فاتورة) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -30,7 +30,6 @@
       --radius:18px;
     }
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
@@ -45,12 +44,8 @@
       padding:16px;
     }
 
-    /* ✅ توسيط + عرض مناسب لابتوب/جوال */
-    .wrap{
-      width:100%;
-      max-width:1180px;
-      margin:0 auto;
-    }
+    /* ✅ توسعة العرض العام شوي */
+    .wrap{width:100%; max-width:1320px;}
 
     .topbar{
       display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -61,7 +56,6 @@
     .dot{
       width:12px; height:12px; border-radius:999px; background:var(--ok);
       box-shadow:0 0 0 7px rgba(34,197,94,.14);
-      flex:0 0 auto;
     }
     .title{font-weight:900; letter-spacing:.2px}
     .sub{font-size:12px; color:var(--muted); margin-top:2px}
@@ -97,7 +91,12 @@
     .btn.danger{background:rgba(127,29,29,.55); border-color:rgba(159,31,31,.55)}
     .btn.danger:hover{background:rgba(159,31,31,.62)}
     .btn.soft{background:rgba(255,255,255,.06)}
-    .btn.small{padding:8px 10px; border-radius:12px; font-size:12px; font-weight:900}
+    .btn.small{
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:12px;
+      font-weight:900
+    }
     .btn.warn{background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35)}
     .btn.warn:hover{background:rgba(245,158,11,.18)}
 
@@ -133,7 +132,10 @@
     .grid{display:grid; gap:14px;}
     @media(min-width:980px){ .grid{grid-template-columns: 420px 1fr;} }
 
-    .searchBox input{ border-radius:18px; background: rgba(255,255,255,.04); }
+    .searchBox input{
+      border-radius:18px;
+      background: rgba(255,255,255,.04);
+    }
     .filtersCard{
       margin-top:12px;
       padding:14px;
@@ -163,15 +165,20 @@
     .chip.active{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
     .dateRow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
-    /* ✅ جدول اللابتوب */
+    /* ✅ أهم إصلاح: الجدول يركب عالعرض وما يخفي الإجراءات */
     .tableWrap{
       margin-top:14px;
       border:1px solid var(--line2);
       border-radius:18px;
-      overflow:hidden;
+      overflow:hidden;            /* ما عاد في سكرول أفقي */
       background: rgba(0,0,0,.12);
     }
-    table{width:100%; border-collapse:collapse;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:0;                /* كان 980px = يخفي عمود الإجراءات */
+      table-layout:fixed;         /* يساعد على التزام العرض */
+    }
     th,td{
       padding:12px 12px;
       border-bottom:1px solid var(--line2);
@@ -179,9 +186,25 @@
       text-align:right;
       vertical-align:middle;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     th{color:var(--muted); background: rgba(255,255,255,.05); font-weight:900;}
     tr:last-child td{border-bottom:0}
+
+    /* ✅ خلية الإجراءات: تسمح باللف (حتى تظهر كل الأزرار) */
+    td.actionsCell{
+      white-space:normal;
+      overflow:visible;
+      text-overflow:clip;
+    }
+    .actionsCol{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;           /* ✅ لف أزرار */
+      justify-content:flex-start;
+      align-items:center;
+    }
 
     .statusPill{
       display:inline-flex; align-items:center; justify-content:center;
@@ -207,12 +230,6 @@
       background: rgba(255,255,255,.05);
       font-weight:900;
       min-width:62px;
-    }
-    .actionsCol{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-start;
     }
 
     .reportBar{
@@ -276,6 +293,7 @@
     .modalHead{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
       margin-bottom:10px;
+      flex-wrap:wrap;
     }
     .modalHead h3{margin:0; font-size:16px}
     .muted{color:var(--muted)}
@@ -297,9 +315,9 @@
       overflow:auto;
       background: rgba(0,0,0,.12);
     }
-    .invOps table{min-width: 720px;}
+    .invOps table{min-width: 720px; table-layout:auto;}
     .invOps table th{background: rgba(255,255,255,.05)}
-    .invBtns{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .invBtns{display:flex; gap:8px; flex-wrap:wrap}
 
     #printArea{
       position: fixed;
@@ -336,24 +354,11 @@
     }
     #printArea .totalRow b{font-size:16px}
 
-    /* ✅ على الجوال: جدول المستخدمين يتحول بطاقات = بدون scrollbar يمين/يسار */
-    .usersCards{display:none; margin-top:14px; gap:10px;}
-    .uCard{
-      border:1px solid var(--line2);
-      background: rgba(255,255,255,.04);
-      border-radius:18px;
-      padding:12px;
-    }
-    .uTop{display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap}
-    .uName{font-weight:950}
-    .uName small{color:var(--muted); font-weight:800}
-    .uMeta{margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .uBtns{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
-
-    @media(max-width:860px){
-      .grid{grid-template-columns: 1fr;}
-      .tableWrap{display:none;}
-      .usersCards{display:grid;}
+    /* ✅ تحسين خفيف للموبايل حتى الأزرار تضل ظاهرة */
+    @media(max-width:520px){
+      body{padding:12px;}
+      th,td{font-size:12px; padding:10px;}
+      .btn.small{font-size:11px; padding:7px 9px;}
     }
   </style>
 </head>
@@ -401,8 +406,8 @@
       <!-- DASHBOARD -->
       <div class="card hide" id="dashCard">
         <div class="searchBox">
-          <input id="qSearch" placeholder="بحث: اسم المستخدم / اسم الزبون / آخر 6 أرقام من رقم الفاتورة..." />
-          <div class="hint" style="margin-top:8px">يفضل البحث بآخر 6 أرقام من رقم الفاتورة أو اسم الزبون.</div>
+          <input id="qSearch" placeholder="بحث: اسم المستخدم / اسم الزبون / رقم الفاتورة (آخر 6 أرقام)..." />
+          <div class="hint" style="margin-top:8px">يفضل البحث بآخر 6 أرقام من رقم الفاتورة أو اسم المستخدم.</div>
         </div>
 
         <div class="filtersCard">
@@ -449,12 +454,11 @@
           <div class="stat"><div class="k">مغلقة / مفتوحة</div><div class="v" id="stCO">0 / 0</div></div>
         </div>
 
-        <!-- ✅ لابتوب: جدول -->
         <div class="tableWrap">
           <table>
             <thead>
               <tr>
-                <th>المستخدم</th>
+                <th>اسم المستخدم</th>
                 <th>عدد الفواتير</th>
                 <th>الحالة</th>
                 <th>نشط منذ</th>
@@ -466,9 +470,6 @@
             </tbody>
           </table>
         </div>
-
-        <!-- ✅ جوال: بطاقات -->
-        <div class="usersCards" id="usersCards"></div>
 
         <div class="error" id="dashErr"></div>
         <div class="okbox" id="dashOk"></div>
@@ -583,7 +584,6 @@
     const toDate = $("toDate");
     const btnApply = $("btnApply");
     const usersTbody = $("usersTbody");
-    const usersCards = $("usersCards");
     const lastInvGrid = $("lastInvGrid");
 
     const stUsers = $("stUsers");
@@ -618,21 +618,12 @@
     function showOk(box, msg){ box.style.display="block"; box.textContent = msg; setTimeout(()=>box.style.display="none", 2200); }
     function clearBox(box){ box.style.display="none"; box.textContent=""; }
 
+    function setSessionPill(){
+      sessionPill.innerHTML = ADMIN ? `<b>${ADMIN.username}</b> — أدمن` : "<b>غير مسجل</b>";
+    }
+
     function safeText(v){ return (v===null || v===undefined) ? "" : String(v); }
     function last6(id){ const s = safeText(id); return s.length<=6 ? s : s.slice(-6); }
-
-    function escHtml(s){
-      return String(s||"")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
-    function setSessionPill(){
-      sessionPill.innerHTML = ADMIN ? `<b>${escHtml(ADMIN.username)}</b> — أدمن` : "<b>غير مسجل</b>";
-    }
 
     function fmtRelTime(dateIso){
       if(!dateIso) return "—";
@@ -695,25 +686,13 @@
       return [];
     }
 
-    /* ✅ استخراج اسم الزبون من meta داخل rows[0] */
-    function extractCustomer(inv){
-      const direct = safeText(inv.customer_name || inv.customer || "").trim();
-      if(direct) return direct;
-
-      const ops = pickOps(inv);
-      const meta = ops && ops.length ? ops[0] : null;
-      const m = meta && typeof meta === "object" ? meta : null;
-      const c = safeText(m?.customer || m?.client || m?.name || "").trim();
-      return c || "بدون اسم";
-    }
-
     function matchesInvoice(inv, query){
       const q = (query||"").trim().toLowerCase();
       if(!q) return true;
 
       const cid = safeText(inv.id).toLowerCase();
       const c6  = last6(inv.id).toLowerCase();
-      const cust = extractCustomer(inv).toLowerCase();
+      const cust = safeText(inv.customer_name || inv.customer).toLowerCase();
       const user = safeText(inv._userName).toLowerCase();
 
       return cust.includes(q) || user.includes(q) || c6.includes(q.replace(/\s+/g,"")) || cid.includes(q);
@@ -802,7 +781,6 @@
         if(ca && (!lastActive[uid] || (new Date(ca) > new Date(lastActive[uid])))) lastActive[uid]=ca;
       });
 
-      // ✅ جدول اللابتوب
       usersTbody.innerHTML = users.map(u=>{
         const c = counts[u.id] || 0;
         const blocked = !!u.is_blocked;
@@ -810,26 +788,24 @@
           ? `<span class="statusPill blocked">محظور</span>`
           : `<span class="statusPill">نشط</span>`;
         const activeText = fmtRelTime(lastActive[u.id] || u.created_at || u.updated_at);
-        const full = safeText(u.full_name).trim();
 
         return `
           <tr>
-            <td style="font-weight:950">
-              ${escHtml(u.username)}
-              ${full ? `<span class="muted"> — ${escHtml(full)}</span>` : ``}
-            </td>
+            <td style="font-weight:950">${escHtml(u.username)}</td>
             <td><span class="countPill">${c}</span></td>
             <td>${statusHtml}</td>
             <td class="muted">${escHtml(activeText)}</td>
-            <td>
+            <td class="actionsCell">
               <div class="actionsCol">
                 <button class="btn small primary" data-act="invoices" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">الفواتير</button>
                 <button class="btn small soft" data-act="wipeDevice" data-id="${escHtml(u.id)}">مسح الجهاز</button>
+
                 ${
                   blocked
                     ? `<button class="btn small" data-act="unblock" data-id="${escHtml(u.id)}">فك الحظر</button>`
                     : `<button class="btn small warn" data-act="block" data-id="${escHtml(u.id)}">حظر</button>`
                 }
+
                 <button class="btn small danger" data-act="del" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">حذف</button>
                 ${
                   (!u.is_admin)
@@ -841,42 +817,6 @@
           </tr>
         `;
       }).join("") || `<tr><td colspan="5" class="muted">لا يوجد بيانات.</td></tr>`;
-
-      // ✅ بطاقات الجوال (بدون سكرول أفقي)
-      usersCards.innerHTML = users.map(u=>{
-        const c = counts[u.id] || 0;
-        const blocked = !!u.is_blocked;
-        const activeText = fmtRelTime(lastActive[u.id] || u.created_at || u.updated_at);
-        const full = safeText(u.full_name).trim();
-        const statusHtml = blocked
-          ? `<span class="statusPill blocked">محظور</span>`
-          : `<span class="statusPill">نشط</span>`;
-
-        return `
-          <div class="uCard">
-            <div class="uTop">
-              <div class="uName">
-                ${escHtml(u.username)}
-                ${full ? `<small> — ${escHtml(full)}</small>` : ``}
-              </div>
-              <span class="countPill">${c}</span>
-            </div>
-            <div class="uMeta">
-              ${statusHtml}
-              <span class="muted">${escHtml(activeText)}</span>
-            </div>
-            <div class="uBtns">
-              <button class="btn small primary" data-act="invoices" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">الفواتير</button>
-              ${
-                blocked
-                  ? `<button class="btn small" data-act="unblock" data-id="${escHtml(u.id)}">فك الحظر</button>`
-                  : `<button class="btn small warn" data-act="block" data-id="${escHtml(u.id)}">حظر</button>`
-              }
-              <button class="btn small danger" data-act="del" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">حذف</button>
-            </div>
-          </div>
-        `;
-      }).join("") || `<div class="hint">لا يوجد بيانات.</div>`;
     }
 
     function buildLastInvoices(invoices, users){
@@ -898,7 +838,8 @@
         const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
-        const custName = extractCustomer(inv);
+        const id6 = last6(inv.id);
+        const custName = safeText(inv.customer_name || inv.customer || "");
 
         return `
           <div class="invItem" data-last-inv-id="${escHtml(inv.id)}">
@@ -907,6 +848,7 @@
                 <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
                   المستخدم: <b>${escHtml(safeText(u?.username||inv._userName||""))}</b> —
+                  رقم: <b>${escHtml(id6)}</b> —
                   المجموع: <b>${escHtml(safeText(inv.total ?? 0))}</b>
                   <div style="margin-top:6px">بتاريخ: ${escHtml(created)}</div>
                 </div>
@@ -970,10 +912,19 @@
     }
 
     // ---------- PDF Export ----------
+    function escHtml(s){
+      return String(s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
     function buildInvoicePrint(inv, username){
       const pa = $("printArea");
       const ops = pickOps(inv);
-      const customer = extractCustomer(inv);
+      const customer = safeText(inv.customer_name || inv.customer || "بدون اسم");
       const user = safeText(username || "");
       const total = safeText(inv.total ?? 0);
       const id = safeText(inv.id);
@@ -1063,11 +1014,14 @@
         while(remaining > 0){
           pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
           remaining -= pageH;
-          if(remaining > 0){ pdf.addPage(); position -= pageH; }
+          if(remaining > 0){
+            pdf.addPage();
+            position -= pageH;
+          }
         }
       }
 
-      const safeName = extractCustomer(inv).replace(/[\\/:*?"<>|]/g,"-");
+      const safeName = (safeText(inv.customer_name || inv.customer || "invoice")).replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}_${last6(inv.id)}.pdf`);
     }
 
@@ -1102,7 +1056,7 @@
         CURRENT_INV_CACHE = data || [];
         renderUserInvoices();
       }catch(err){
-        invBody.innerHTML = `<div class="error" style="display:block">${escHtml(safeText(err?.message || JSON.stringify(err)))}</div>`;
+        invBody.innerHTML = `<div class="error" style="display:block">${safeText(err?.message || JSON.stringify(err))}</div>`;
       }
     }
 
@@ -1111,7 +1065,7 @@
       const rows = (CURRENT_INV_CACHE||[]).filter(inv=>{
         if(!s) return true;
         const id6 = last6(inv.id).toLowerCase();
-        const cust = extractCustomer(inv).toLowerCase();
+        const cust = safeText(inv.customer_name || inv.customer).toLowerCase();
         return cust.includes(s) || id6.includes(s) || safeText(inv.id).toLowerCase().includes(s);
       });
 
@@ -1124,22 +1078,22 @@
         const ops = pickOps(inv);
         const status = inv.status === "closed" ? "مغلقة" : "مفتوحة";
         const created = new Date(inv.created_at || Date.now()).toLocaleString("ar");
-        const custName = extractCustomer(inv);
+        const id6 = last6(inv.id);
 
         return `
           <div class="invItem" data-inv-id="${escHtml(inv.id)}">
             <div class="invTop">
               <div>
-                <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
+                <div class="invTitle">${escHtml(inv.customer_name || inv.customer || "")} — <span class="muted">${escHtml(status)}</span></div>
                 <div class="invMeta">
-                  الإجمالي: <b>${escHtml(inv.total ?? 0)}</b><br/>
+                  رقم الفاتورة: <b>${escHtml(id6)}</b> — الإجمالي: <b>${escHtml(inv.total ?? 0)}</b><br/>
                   التاريخ: ${escHtml(created)}
                 </div>
               </div>
 
               <div class="invBtns">
-                <button class="btn small soft" data-act="toggle">فتح</button>
-                <button class="btn small primary" data-act="pdf">تصدير PDF</button>
+                <button class="btn small soft" data-act="toggle">عرض الفاتورة</button>
+                <button class="btn small primary" data-act="pdf">تصدير الفاتورة PDF</button>
                 <div class="pill"><b>${ops.length}</b> عمليات</div>
               </div>
             </div>
@@ -1190,7 +1144,6 @@
       if(act === "toggle"){
         const box = wrap.querySelector(".invOps");
         box.classList.toggle("hide");
-        b.textContent = box.classList.contains("hide") ? "فتح" : "إغلاق";
         return;
       }
       if(act === "pdf"){
@@ -1216,10 +1169,7 @@
       const act = b.dataset.act;
       if(act === "toggleLast"){
         const box = item.querySelector(".invOps");
-        if(box){
-          box.classList.toggle("hide");
-          b.textContent = box.classList.contains("hide") ? "فتح" : "إغلاق";
-        }
+        if(box) box.classList.toggle("hide");
         return;
       }
       if(act === "pdfLast"){
@@ -1251,16 +1201,12 @@
 
       ADMIN = u;
       localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id }));
-
-      // ✅ إخفاء تسجيل الدخول فوراً + إظهار الداش
       loginCard.classList.add("hide");
       dashCard.classList.remove("hide");
-
       subTitle.textContent = "لوحة الإدارة";
       btnOpenAdd.classList.remove("hide");
       btnRefresh.classList.remove("hide");
       btnLogoutTop.classList.remove("hide");
-
       setSessionPill();
       showOk(loginOk, "تم تسجيل الدخول ✅");
       await applyAndRender();
@@ -1285,15 +1231,12 @@
         const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(data?.length && data[0].is_admin && !data[0].is_blocked){
           ADMIN = data[0];
-
           loginCard.classList.add("hide");
           dashCard.classList.remove("hide");
-
           subTitle.textContent = "لوحة الإدارة";
           btnOpenAdd.classList.remove("hide");
           btnRefresh.classList.remove("hide");
           btnLogoutTop.classList.remove("hide");
-
           setSessionPill();
           await applyAndRender();
         }
@@ -1340,8 +1283,8 @@
       await applyAndRender();
     }
 
-    // ---------- Actions on users (table + cards) ----------
-    function handleUserActionClick(e){
+    // ---------- Actions on users ----------
+    usersTbody.addEventListener("click", async (e)=>{
       const b = e.target.closest("button");
       if(!b) return;
 
@@ -1351,60 +1294,55 @@
 
       clearBox(dashErr); clearBox(dashOk);
 
-      (async ()=>{
-        try{
-          if(act === "del"){
-            if(!confirm(`تأكيد حذف المستخدم: ${name} ؟`)) return;
-            const { error } = await supabase.from(USERS_TABLE).delete().eq("id", id);
-            if(error) throw error;
-            showOk(dashOk, "تم الحذف ✅");
-            await applyAndRender();
-            return;
-          }
-          if(act === "block"){
-            const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:true }).eq("id", id);
-            if(error) throw error;
-            showOk(dashOk, "تم الحظر ✅");
-            await applyAndRender();
-            return;
-          }
-          if(act === "unblock"){
-            const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:false }).eq("id", id);
-            if(error) throw error;
-            showOk(dashOk, "تم فك الحظر ✅");
-            await applyAndRender();
-            return;
-          }
-          if(act === "wipeDevice"){
-            showOk(dashOk, "تم (مسح الجهاز) ✅");
-            return;
-          }
-          if(act === "makeAdmin"){
-            const { error } = await supabase.from(USERS_TABLE).update({ is_admin:true }).eq("id", id);
-            if(error) throw error;
-            showOk(dashOk, "تم تحويله لأدمن ✅");
-            await applyAndRender();
-            return;
-          }
-          if(act === "makeUser"){
-            const { error } = await supabase.from(USERS_TABLE).update({ is_admin:false }).eq("id", id);
-            if(error) throw error;
-            showOk(dashOk, "تم تحويله لمستخدم ✅");
-            await applyAndRender();
-            return;
-          }
-          if(act === "invoices"){
-            await openUserInvoices(id, name);
-            return;
-          }
-        }catch(err){
-          showErr(dashErr, "خطأ:\n" + (err?.message || JSON.stringify(err)));
+      try{
+        if(act === "del"){
+          if(!confirm(`تأكيد حذف المستخدم: ${name} ؟`)) return;
+          const { error } = await supabase.from(USERS_TABLE).delete().eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم الحذف ✅");
+          await applyAndRender();
+          return;
         }
-      })();
-    }
-
-    usersTbody.addEventListener("click", handleUserActionClick);
-    usersCards.addEventListener("click", handleUserActionClick);
+        if(act === "block"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:true }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم الحظر ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "unblock"){ /* ✅ فك الحظر موجود وعم يظهر هلأ */
+          const { error } = await supabase.from(USERS_TABLE).update({ is_blocked:false }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم فك الحظر ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "wipeDevice"){
+          showOk(dashOk, "تم (مسح الجهاز) ✅");
+          return;
+        }
+        if(act === "makeAdmin"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:true }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم تحويله لأدمن ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "makeUser"){
+          const { error } = await supabase.from(USERS_TABLE).update({ is_admin:false }).eq("id", id);
+          if(error) throw error;
+          showOk(dashOk, "تم تحويله لمستخدم ✅");
+          await applyAndRender();
+          return;
+        }
+        if(act === "invoices"){
+          await openUserInvoices(id, name);
+          return;
+        }
+      }catch(err){
+        showErr(dashErr, "خطأ:\n" + (err?.message || JSON.stringify(err)));
+      }
+    });
 
     // ---------- UI binds ----------
     rangeChips.addEventListener("click", (e)=>{
@@ -1443,6 +1381,7 @@
       clearBox(loginErr); clearBox(loginOk);
     });
 
+    // Init
     setSessionPill();
     restoreSession();
   </script>
