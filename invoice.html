@@ -11,352 +11,111 @@
 
   <style>
     :root{
-      --bg:#071018;
-      --panel:#0e1b26;
-      --panel2:#0b1620;
-      --line:rgba(255,255,255,.08);
-      --txt:#e9f1ff;
-      --muted:#98a8c2;
-      --blue:#1f5bd8;
-      --blue2:#2967ee;
-      --shadow: 0 12px 35px rgba(0,0,0,.35);
-      --radius:22px;
+      --bg:#071018; --panel:#0e1b26; --line:rgba(255,255,255,.08);
+      --txt:#e9f1ff; --muted:#98a8c2; --blue:#1f5bd8; --blue2:#2967ee;
+      --shadow:0 12px 35px rgba(0,0,0,.35); --radius:22px;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
       background: radial-gradient(1200px 700px at 50% -10%, rgba(31,91,216,.18), transparent 55%),
                   radial-gradient(900px 600px at 10% 20%, rgba(34,197,94,.10), transparent 55%),
                   linear-gradient(180deg,#061018 0%, #071018 50%, #061018 100%);
-      color:var(--txt);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      padding:14px;
+      color:var(--txt); min-height:100vh; display:flex; justify-content:center; padding:14px;
     }
     .wrap{width:100%; max-width:420px}
-    .top{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:10px 10px 14px;
-    }
+    .top{display:flex; align-items:center; justify-content:space-between; padding:10px 10px 14px}
     .brand{display:flex; align-items:center; gap:10px}
-    .dot{
-      width:12px;height:12px;border-radius:999px;
-      background:#22c55e;
-      box-shadow: 0 0 0 6px rgba(34,197,94,.12);
-    }
-    .ttl{font-weight:900; letter-spacing:.3px}
-    .sub{font-size:12px; color:var(--muted); margin-top:2px}
-    .pill{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      color:var(--muted);
-      white-space:nowrap;
-    }
-
+    .dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12)}
+    .ttl{font-weight:900}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .pill{border:1px solid var(--line); background:rgba(255,255,255,.04); padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
     .card{
       background: linear-gradient(180deg, rgba(14,27,38,.95) 0%, rgba(10,20,30,.92) 100%);
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:14px;
-      overflow:hidden;
+      border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
-
     .hint{color:var(--muted); font-size:12px; line-height:1.6}
     label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
     input{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-      color:var(--txt);
-      outline:none;
+      width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
+      background: rgba(0,0,0,.18); color:var(--txt); outline:none;
     }
-    input:focus{
-      border-color: rgba(31,91,216,.55);
-      box-shadow: 0 0 0 4px rgba(31,91,216,.18);
-    }
+    input:focus{border-color:rgba(31,91,216,.55); box-shadow:0 0 0 4px rgba(31,91,216,.18)}
     .row{display:flex; gap:10px}
-    .row > *{flex:1}
+    .row>*{flex:1}
     .btn{
-      width:100%;
-      padding:12px 12px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color:var(--txt);
-      font-weight:900;
-      cursor:pointer;
-      transition:.15s;
-      user-select:none;
+      width:100%; padding:12px 12px; border-radius:16px; border:1px solid var(--line);
+      background: rgba(255,255,255,.06); color:var(--txt); font-weight:900; cursor:pointer; transition:.15s;
     }
-    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.08);}
-    .btn.blue{
-      background: var(--blue);
-      border-color: rgba(31,91,216,.2);
-    }
-    .btn.blue:hover{background: var(--blue2);}
-    .btn.small{
-      width:auto;
-      padding:9px 12px;
-      border-radius:14px;
-      font-size:12px;
-      font-weight:800;
-    }
-    .btn.out{background: rgba(255,255,255,.05);}
-    .btn.gray{background: rgba(255,255,255,.07);}
-
-    .sep{height:1px; background: var(--line); margin:12px 0}
-
+    .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
+    .btn.blue{background:var(--blue); border-color:rgba(31,91,216,.2)}
+    .btn.blue:hover{background:var(--blue2)}
+    .btn.small{width:auto; padding:9px 12px; border-radius:14px; font-size:12px}
+    .sep{height:1px; background:var(--line); margin:12px 0}
     .error{
-      margin-top:10px;
-      display:none;
-      padding:10px;
-      border-radius:14px;
-      border:1px solid rgba(255,77,77,.25);
-      background: rgba(255,77,77,.10);
-      color:#ffd6d6;
-      white-space:pre-wrap;
-      font-size:12px;
+      margin-top:10px; display:none; padding:10px; border-radius:14px;
+      border:1px solid rgba(255,77,77,.25); background:rgba(255,77,77,.10);
+      color:#ffd6d6; white-space:pre-wrap; font-size:12px;
     }
     .toast{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 16px;
-      background: rgba(0,0,0,.75);
-      border:1px solid rgba(255,255,255,.10);
-      padding:10px 12px;
-      border-radius:999px;
-      color:#eaf2ff;
-      font-size:12px;
-      display:none;
-      z-index:9999;
-      max-width: 92vw;
-      text-align:center;
+      position:fixed; left:50%; transform:translateX(-50%); bottom:16px;
+      background:rgba(0,0,0,.75); border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px; border-radius:999px; color:#eaf2ff; font-size:12px; display:none; z-index:9999;
+      max-width:92vw; text-align:center;
     }
-
-    .tabs{
-      display:flex;
-      gap:10px;
-      margin-top:8px;
-      margin-bottom:10px;
-    }
+    .tabs{display:flex; gap:10px; margin-top:8px; margin-bottom:10px}
     .tab{
-      flex:1;
-      padding:10px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color:var(--txt);
-      font-weight:900;
-      cursor:pointer;
+      flex:1; padding:10px 10px; border-radius:999px; border:1px solid var(--line);
+      background:rgba(255,255,255,.05); color:var(--txt); font-weight:900; cursor:pointer;
     }
-    .tab.active{
-      background: rgba(31,91,216,.22);
-      border-color: rgba(31,91,216,.25);
-    }
-
-    .calcBox{
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.12);
-      border-radius:18px;
-      padding:12px;
-    }
+    .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
+    .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
     .exprTitle{font-size:12px; color:var(--muted); margin-bottom:8px}
     .expr{
-      width:100%;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-      border-radius:16px;
-      padding:12px;
-      text-align:right;
-      min-height:46px;
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap:8px;
-      overflow:auto;
-      white-space:nowrap;
-      font-weight:800;
+      width:100%; border:1px solid var(--line); background:rgba(0,0,0,.18); border-radius:16px;
+      padding:12px; text-align:right; min-height:46px; display:flex; align-items:center; justify-content:flex-end;
+      white-space:nowrap; overflow:auto; font-weight:800;
     }
-    .resLine{
-      margin-top:10px;
-      display:flex;
-      justify-content:flex-end;
-      gap:8px;
-      color:var(--muted);
-      font-size:12px;
-      align-items:baseline;
-    }
+    .resLine{margin-top:10px; display:flex; justify-content:flex-end; gap:8px; color:var(--muted); font-size:12px}
     .resLine b{font-size:14px; color:var(--txt)}
-
-    .keys{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
-      gap:10px;
-    }
+    .keys{margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
     .key{
-      border:0;
-      border-radius:14px;
-      background: rgba(255,255,255,.10);
-      color:var(--txt);
-      padding:14px 0;
-      font-size:16px;
-      font-weight:900;
-      cursor:pointer;
-      transition:.12s;
+      border:0; border-radius:14px; background:rgba(255,255,255,.10);
+      color:var(--txt); padding:14px 0; font-size:16px; font-weight:900; cursor:pointer;
     }
-    .key:hover{transform: translateY(-1px); background: rgba(255,255,255,.12);}
-    .key.op{background: rgba(255,255,255,.12);}
-    .key.eq{
-      grid-column: 1 / span 2;
-      background: var(--blue);
-    }
-    .key.eq:hover{background: var(--blue2);}
-    .key.back{
-      grid-column: 3 / span 2;
-      background: rgba(255,255,255,.10);
-    }
-
-    .actions2{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-
-    .footerNote{
-      margin-top:10px;
-      text-align:center;
-      font-size:11px;
-      color: var(--muted);
-      line-height:1.6;
-    }
-
-    .logTable{
-      margin-top:10px;
-      border:1px solid var(--line);
-      border-radius:18px;
-      overflow:hidden;
-      background: rgba(0,0,0,.10);
-    }
+    .key:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
+    .key.op{background:rgba(255,255,255,.12)}
+    .key.eq{grid-column:1 / span 2; background:var(--blue)}
+    .key.eq:hover{background:var(--blue2)}
+    .key.back{grid-column:3 / span 2}
+    .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
+    .footerNote{margin-top:10px; text-align:center; font-size:11px; color:var(--muted); line-height:1.6}
+    .logTable{margin-top:10px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(0,0,0,.10)}
     table{width:100%; border-collapse:collapse}
-    th,td{
-      padding:10px 10px;
-      border-bottom:1px solid var(--line);
-      font-size:12px;
-      text-align:right;
-      vertical-align:top;
-    }
-    th{color:var(--muted); background: rgba(255,255,255,.05)}
+    th,td{padding:10px 10px; border-bottom:1px solid var(--line); font-size:12px; text-align:right; vertical-align:top}
+    th{color:var(--muted); background:rgba(255,255,255,.05)}
     tr:last-child td{border-bottom:0}
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* PDF STYLE */
-    #printArea{
-      position: fixed;
-      left:-9999px;
-      top:0;
-      width: 794px;
-      background:#fff;
-      color:#111827;
-      padding:22px;
-      direction: rtl;
-      font-family: Arial, "Segoe UI", Tahoma, sans-serif;
-    }
-
-    .p-box{
-      border:2px solid #111;
-      border-radius:16px;
-      padding:14px 16px;
-      margin-bottom:14px;
-    }
-
-    .p-header{ text-align:center; padding:18px 16px; }
-    .p-title{ font-weight:900; font-size:18px; margin:0; }
-    .p-subtitle{
-      margin-top:6px; font-size:12px; color:#0a7a55;
-      font-weight:800; letter-spacing:.2px;
-    }
-    .p-chiprow{
-      margin-top:12px;
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .p-chip{
-      border:1px solid #111;
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:12px;
-      font-weight:800;
-      background:#fff;
-    }
-    .p-field{
-      display:flex; justify-content:space-between; align-items:center;
-      gap:10px; padding:10px 12px;
-      border:2px solid #111; border-radius:14px; margin-bottom:10px;
-    }
-    .p-field .k{ font-size:12px; font-weight:900; color:#111; white-space:nowrap; }
-    .p-field .v{
-      font-size:12px; font-weight:800; color:#111;
-      word-break:break-all; text-align:left; direction:ltr;
-    }
-    .p-tableWrap{ border:2px solid #111; border-radius:16px; overflow:hidden; }
-    #printArea table{ width:100%; border-collapse:collapse; background:#fff; }
-    #printArea thead th{
-      font-size:12px; font-weight:900; color:#111;
-      padding:10px; border-bottom:2px solid #111; background:#fff;
-    }
-    #printArea tbody td{
-      font-size:12px; padding:10px;
-      border-bottom:1px solid #111; background:#fff;
-    }
-    #printArea tbody tr:last-child td{ border-bottom:0; }
-
-    .p-totalBox{
-      border:2px dashed #111;
-      border-radius:16px;
-      padding:12px 14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:12px;
-      font-weight:900;
-    }
-    .p-foot{
-      border:2px solid #111;
-      border-radius:16px;
-      padding:14px 16px;
-      margin-top:14px;
-      text-align:center;
-    }
-    .p-foot .small{
-      font-size:12px;
-      color:#555;
-      font-weight:800;
-      line-height:1.8;
-    }
-    .p-phone{
-      display:inline-block;
-      margin-top:10px;
-      border:2px solid #0a7a55;
-      color:#0a7a55;
-      border-radius:999px;
-      padding:10px 18px;
-      font-weight:900;
-      font-size:16px;
-    }
+    /* PDF hidden */
+    #printArea{position:fixed; left:-9999px; top:0; width:794px; background:#fff; color:#111827; padding:22px; direction:rtl; font-family:Arial,"Segoe UI",Tahoma,sans-serif;}
+    .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
+    .p-header{text-align:center; padding:18px 16px;}
+    .p-title{font-weight:900; font-size:18px; margin:0;}
+    .p-subtitle{margin-top:6px; font-size:12px; color:#0a7a55; font-weight:800;}
+    .p-field{display:flex; justify-content:space-between; gap:10px; padding:10px 12px; border:2px solid #111; border-radius:14px; margin-bottom:10px;}
+    .p-field .k{font-size:12px; font-weight:900;}
+    .p-field .v{font-size:12px; font-weight:800;}
+    .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
+    #printArea table{width:100%; border-collapse:collapse; background:#fff;}
+    #printArea thead th{font-size:12px; font-weight:900; padding:10px; border-bottom:2px solid #111; background:#fff;}
+    #printArea tbody td{font-size:12px; padding:10px; border-bottom:1px solid #111; background:#fff;}
+    #printArea tbody tr:last-child td{border-bottom:0;}
+    .p-totalBox{border:2px dashed #111; border-radius:16px; padding:12px 14px; display:flex; justify-content:space-between; margin-top:12px; font-weight:900;}
+    .p-foot{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-top:14px; text-align:center;}
+    .p-foot .small{font-size:12px; color:#555; font-weight:800; line-height:1.8;}
+    .p-phone{display:inline-block; margin-top:10px; border:2px solid #0a7a55; color:#0a7a55; border-radius:999px; padding:10px 18px; font-weight:900; font-size:16px;}
   </style>
 </head>
 
@@ -373,46 +132,37 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- Login -->
     <div class="card" id="loginCard">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
-
       <label>اسم المستخدم</label>
       <input id="loginUser" autocomplete="username" />
-
       <label>كلمة السر</label>
       <input id="loginPass" type="password" autocomplete="current-password" />
-
       <div class="row" style="margin-top:12px">
         <button class="btn blue" id="btnLogin">دخول</button>
         <button class="btn" id="btnClear">تفريغ</button>
       </div>
-
       <div class="error" id="loginErr"></div>
     </div>
 
-    <!-- App -->
     <div class="card hide" id="appCard">
       <div class="row" style="align-items:center">
-        <button class="btn small out" id="btnLogout">خروج</button>
+        <button class="btn small" id="btnLogout">خروج</button>
       </div>
 
       <div class="sep"></div>
 
       <label>اسم الزبون (إجباري)</label>
-      <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" />
-      <datalist id="custList"></datalist>
+      <input id="customerName" placeholder="مثال: أبو أحمد" />
 
       <label>اسم المنتج / البيان (اختياري)</label>
-      <input id="itemName" placeholder="مثال: قداحة" list="itemList" />
-      <datalist id="itemList"></datalist>
+      <input id="itemName" placeholder="مثال: قداحة" />
 
       <div class="tabs">
         <button class="tab active" id="tabCalc">الحاسبة</button>
         <button class="tab" id="tabLog">سجل العمليات</button>
       </div>
 
-      <!-- Calculator -->
       <div id="viewCalc">
         <div class="calcBox">
           <div class="exprTitle">العملية الحسابية (من أزرار الشاشة)</div>
@@ -445,17 +195,14 @@
           </div>
 
           <div class="actions2">
-            <button class="btn gray" id="btnClearOps">مسح العمليات</button>
+            <button class="btn" id="btnClearOps">مسح العمليات</button>
             <button class="btn blue" id="btnPDF">تصدير PDF</button>
           </div>
 
-          <div class="footerNote">
-            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية
-          </div>
+          <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
         </div>
       </div>
 
-      <!-- Log -->
       <div id="viewLog" class="hide">
         <div class="logTable">
           <table>
@@ -493,7 +240,6 @@
     const appCard   = $("appCard");
     const loginErr  = $("loginErr");
     const appErr    = $("appErr");
-
     const subtitle  = $("subtitle");
     const pill      = $("pill");
 
@@ -504,84 +250,23 @@
 
     const custInput = $("customerName");
     const itemInput = $("itemName");
-    const custList  = $("custList");
-    const itemList  = $("itemList");
 
     const exprView  = $("exprView");
     const resView   = $("resView");
     const logBody   = $("logBody");
     const toastEl   = $("toast");
 
-    function showErr(box, msg){
-      box.style.display = "block";
-      box.textContent = msg;
-    }
-    function clearErr(box){
-      box.style.display = "none";
-      box.textContent = "";
-    }
+    const USERS_TABLE   = "app_users";
+    const INVOICE_TABLE = "app_invoices";
+
+    function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
+    function clearErr(box){ box.style.display="none"; box.textContent = ""; }
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
       setTimeout(()=> toastEl.style.display="none", 1400);
     }
-    function nowTime(){
-      return new Date().toLocaleTimeString("ar", {hour:"2-digit", minute:"2-digit"});
-    }
-
-    // ---------- Memory ----------
-    const MEM_CUST_KEY = "HAYEK_MEM_CUSTOMERS";
-    const MEM_ITEM_KEY = "HAYEK_MEM_ITEMS";
-    function loadMem(key){
-      try{ return JSON.parse(localStorage.getItem(key)||"[]") }catch{ return [] }
-    }
-    function saveMem(key, arr){
-      localStorage.setItem(key, JSON.stringify(arr.slice(0,120)));
-    }
-    function addMem(key, val){
-      const v = (val||"").trim();
-      if(!v) return;
-      let arr = loadMem(key);
-      arr = arr.filter(x => x !== v);
-      arr.unshift(v);
-      saveMem(key, arr);
-    }
-    function renderDatalist(listEl, arr){
-      listEl.innerHTML = "";
-      arr.slice(0,25).forEach(v=>{
-        const o = document.createElement("option");
-        o.value = v;
-        listEl.appendChild(o);
-      });
-    }
-    function refreshDatalists(){
-      renderDatalist(custList, loadMem(MEM_CUST_KEY));
-      renderDatalist(itemList, loadMem(MEM_ITEM_KEY));
-    }
-
-    // ✅ Tables (مطابقة لأعمدة Supabase عندك)
-    const INVOICE_TABLE = "app_invoices";
-    const USERS_TABLE   = "app_users";
-
-    // ---------- Offline Sync Queue (idempotent) ----------
-    const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V4";
-    function qLoad(){ try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]")}catch{return []} }
-    function qSave(q){ localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
-
-    function qUpsertInvoice(payloadBase, opsSnapshot){
-      const q = qLoad();
-      const invId = String(payloadBase.id || "");
-      const idx = q.findIndex(j => j.type==="upsert_invoice" && String(j.payloadBase?.id||"")===invId);
-      const job = {
-        type:"upsert_invoice",
-        table: INVOICE_TABLE,
-        payloadBase,
-        opsSnapshot: Array.isArray(opsSnapshot) ? opsSnapshot : [],
-        ts: Date.now()
-      };
-      if(idx>=0) q[idx]=job; else q.push(job);
-      qSave(q);
-    }
+    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
 
     function uuid(){
       if(window.crypto?.randomUUID) return crypto.randomUUID();
@@ -591,65 +276,58 @@
       });
     }
 
-    // ✅ upsert مطابق لجدولك: owner_id + rows + closed_at
-    async function upsertInvoiceServer(payloadBase, opsSnapshot){
+    // ------- STATE -------
+    let USER = null;
+    let invoiceId = null;
+    let invoiceOpen = false;
+
+    let ops = [];
+    let expr = "";
+    let lastResult = 0;
+
+    // ------- SUPABASE SAVE (FIXED) -------
+    // ✅ يرسل فقط الأعمدة المؤكدة الموجودة: id, owner_id, rows, total, status, closed_at
+    // ✅ يخزن اسم الزبون داخل rows كـ meta لتجنب اختلاف اسم العمود customer/customer_name
+    async function saveInvoice(status){
+      if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
+
+      const customer = custInput.value.trim();
+
+      const total = calcTotal();
       const payload = {
-        ...payloadBase,
-        rows: opsSnapshot
+        id: invoiceId,
+        owner_id: USER.id,
+        rows: buildRowsWithMeta(customer),
+        total: total,
+        status: status,
+        closed_at: status === "closed" ? new Date().toISOString() : null
       };
+
       const { data, error } = await supabase
         .from(INVOICE_TABLE)
         .upsert(payload, { onConflict: "id" })
         .select("id")
         .limit(1);
 
-      if(!error) return { ok:true, id: (data?.[0]?.id || payloadBase.id) };
-      return { ok:false, error };
-    }
-
-    let syncing = false;
-    async function flushQueue(){
-      if(syncing) return;
-      if(!navigator.onLine) return;
-
-      const q = qLoad();
-      if(!q.length) return;
-
-      syncing = true;
-      const still = [];
-      try{
-        for(const job of q){
-          try{
-            if(job.type==="upsert_invoice"){
-              const r = await upsertInvoiceServer(job.payloadBase, job.opsSnapshot);
-              if(!r.ok) throw r.error;
-            }else{
-              still.push(job);
-            }
-          }catch{
-            still.push(job);
-          }
-        }
-        qSave(still);
-      }finally{
-        syncing = false;
+      if(error){
+        // هذا هو السبب الحقيقي للـ 400/409 وسيظهر للمستخدم مباشرة
+        return { ok:false, msg: (error.message || JSON.stringify(error)) };
       }
+      return { ok:true, id: (data?.[0]?.id || invoiceId) };
     }
 
-    window.addEventListener("online", flushQueue);
-    document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) flushQueue(); });
-    setInterval(flushQueue, 20000);
+    function buildRowsWithMeta(customer){
+      const meta = {
+        __meta: true,
+        customer: customer || "",
+        user: USER?.username || "",
+        saved_at: new Date().toISOString()
+      };
+      // نخلي meta أول عنصر حتى يبقى واضح
+      return [meta, ...ops];
+    }
 
-    // ---------- App state ----------
-    let USER = null;
-
-    let invoiceId = null;
-    let invoiceOpen = false;
-    let ops = [];
-    let expr = "";
-    let lastResult = 0;
-
-    // ---------- Auth ----------
+    // ------- LOGIN -------
     async function login(){
       clearErr(loginErr);
       const username = $("loginUser").value.trim();
@@ -661,23 +339,12 @@
       }
 
       const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
-      if(error){
-        showErr(loginErr, "خطأ اتصال:\n" + (error.message||""));
-        return;
-      }
-      if(!data?.length){
-        showErr(loginErr, "المستخدم غير موجود.");
-        return;
-      }
+      if(error){ showErr(loginErr, "خطأ اتصال:\n" + (error.message||"")); return; }
+      if(!data?.length){ showErr(loginErr, "المستخدم غير موجود."); return; }
+
       const u = data[0];
-      if(u.password !== password){
-        showErr(loginErr, "كلمة السر غير صحيحة.");
-        return;
-      }
-      if(u.is_blocked){
-        showErr(loginErr, "هذا الحساب محظور.");
-        return;
-      }
+      if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
+      if(u.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
 
       USER = u;
       localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id }));
@@ -685,9 +352,7 @@
       appCard.classList.remove("hide");
       subtitle.textContent = "فاتورة المستخدم";
       pill.innerHTML = `<b>${u.username}</b>`;
-      refreshDatalists();
-      await resetAll(true);
-      flushQueue();
+      resetAll(true);
     }
 
     async function restoreSession(){
@@ -701,9 +366,7 @@
           appCard.classList.remove("hide");
           subtitle.textContent = "فاتورة المستخدم";
           pill.innerHTML = `<b>${USER.username}</b>`;
-          refreshDatalists();
-          await resetAll(true);
-          flushQueue();
+          resetAll(true);
         }
       }catch{}
     }
@@ -717,7 +380,7 @@
       pill.innerHTML = "<b>غير مسجل</b>";
     }
 
-    // ---------- Tabs ----------
+    // ------- UI / Tabs -------
     function setTab(which){
       if(which==="calc"){
         tabCalc.classList.add("active");
@@ -732,8 +395,8 @@
       }
     }
 
-    // ---------- Core reset ----------
-    async function resetAll(silent=false){
+    // ------- Core -------
+    function resetAll(silent=false){
       clearErr(appErr);
       invoiceId = null;
       invoiceOpen = false;
@@ -749,7 +412,6 @@
       }
     }
 
-    // ---------- Invoice behavior ----------
     function requireCustomer(){
       const c = custInput.value.trim();
       if(!c){
@@ -764,26 +426,17 @@
     async function ensureInvoiceOpened(){
       const customer = requireCustomer();
       if(!customer) return false;
-
-      addMem(MEM_CUST_KEY, customer);
-      refreshDatalists();
-
       if(invoiceOpen) return true;
 
       invoiceId = uuid();
       invoiceOpen = true;
 
-      qUpsertInvoice({
-        id: invoiceId,
-        owner_id: USER.id,          /* ✅ */
-        customer_name: customer,    /* ✅ */
-        customer: customer,         /* ✅ (عندك عمود customer كمان) */
-        total: 0,
-        status: "open",
-        closed_at: null
-      }, ops);
-
-      flushQueue();
+      // أول حفظ = open
+      const r = await saveInvoice("open");
+      if(!r.ok){
+        showErr(appErr, "فشل الحفظ (open):\n" + r.msg + "\n\n✅ تأكد أن عمود id Primary Key في Supabase.");
+        return false;
+      }
       return true;
     }
 
@@ -797,51 +450,8 @@
       return Math.round(t*100)/100;
     }
 
-    async function autosaveBackground(){
-      if(!invoiceOpen || !invoiceId) return;
-
-      const customer = custInput.value.trim();
-      const total = calcTotal();
-
-      qUpsertInvoice({
-        id: invoiceId,
-        owner_id: USER.id,        /* ✅ */
-        customer_name: customer,
-        customer: customer,
-        total,
-        status: "open",
-        closed_at: null
-      }, ops);
-
-      flushQueue();
-    }
-
-    let custTimer=null;
-    custInput.addEventListener("input", ()=>{
-      clearErr(appErr);
-      if(custTimer) clearTimeout(custTimer);
-      custTimer = setTimeout(async ()=>{
-        const c = custInput.value.trim();
-        if(!c) return;
-        if(!invoiceOpen) await ensureInvoiceOpened();
-      }, 350);
-    });
-
-    itemInput.addEventListener("input", ()=>{
-      const v = itemInput.value.trim();
-      if(v) addMem(MEM_ITEM_KEY, v);
-      refreshDatalists();
-    });
-
-    // ---------- Calculator ----------
-    function setExpr(v){
-      expr = v;
-      exprView.textContent = expr || "";
-      updatePreview();
-    }
     function sanitizeForEval(s){
       return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
-
     }
     function safeEval(s){
       const cleaned = sanitizeForEval(s).trim();
@@ -856,6 +466,11 @@
       try{ resView.textContent = String(safeEval(expr)); }
       catch{ resView.textContent = "0"; }
     }
+    function setExpr(v){
+      expr = v;
+      exprView.textContent = expr || "";
+      updatePreview();
+    }
     function press(k){
       setExpr(expr + String(k));
       if(navigator.vibrate) navigator.vibrate(10);
@@ -866,56 +481,6 @@
       if(navigator.vibrate) navigator.vibrate(10);
     }
 
-    async function equalsAndLog(){
-      clearErr(appErr);
-      const customer = requireCustomer();
-      if(!customer) return;
-
-      const ok = await ensureInvoiceOpened();
-      if(!ok) return;
-
-      let result = 0;
-      try{ result = safeEval(expr); }
-      catch{
-        showErr(appErr, "صيغة العملية غير صحيحة.");
-        return;
-      }
-
-      lastResult = result;
-
-      const item = itemInput.value.trim();
-      if(item) addMem(MEM_ITEM_KEY, item);
-
-      const label = item || "عملية";
-      ops.unshift({
-        label,
-        expr: expr || "",
-        result,
-        at: new Date().toISOString(),
-        time: nowTime()
-      });
-
-      renderLog();
-      setExpr("");
-      toast("تمت الإضافة ✅");
-
-      await autosaveBackground();
-      if(navigator.vibrate) navigator.vibrate(20);
-    }
-
-    async function clearOperations(){
-      clearErr(appErr);
-      ops = [];
-      expr = "";
-      lastResult = 0;
-      exprView.textContent = "";
-      resView.textContent = "0";
-      renderLog();
-      await autosaveBackground();
-      toast("تم المسح ✅");
-    }
-
-    // ---------- Log render ----------
     function escapeHtml(s){
       return String(s||"")
         .replaceAll("&","&amp;")
@@ -924,6 +489,7 @@
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
+
     function renderLog(){
       if(!ops.length){
         logBody.innerHTML = `<tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>`;
@@ -942,13 +508,63 @@
       }).join("");
     }
 
-    // ---------- PDF ----------
+    async function equalsAndLog(){
+      clearErr(appErr);
+      const customer = requireCustomer();
+      if(!customer) return;
+
+      const ok = await ensureInvoiceOpened();
+      if(!ok) return;
+
+      let result = 0;
+      try{ result = safeEval(expr); }
+      catch{ showErr(appErr, "صيغة العملية غير صحيحة."); return; }
+
+      lastResult = result;
+
+      const item = itemInput.value.trim();
+      const label = item || "عملية";
+      ops.unshift({
+        label,
+        expr: expr || "",
+        result,
+        at: new Date().toISOString(),
+        time: nowTime()
+      });
+
+      renderLog();
+      setExpr("");
+      toast("تمت الإضافة ✅");
+
+      // حفظ تحديثات
+      const r = await saveInvoice("open");
+      if(!r.ok){
+        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
+      }
+    }
+
+    async function clearOperations(){
+      clearErr(appErr);
+      ops = [];
+      expr = "";
+      lastResult = 0;
+      exprView.textContent = "";
+      resView.textContent = "0";
+      renderLog();
+
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
+      }
+      toast("تم المسح ✅");
+    }
+
     function buildPrintArea(){
       const pa = $("printArea");
       const customer = (custInput.value.trim() || "—");
       const user = (USER?.full_name || USER?.username || "—");
       const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
       const total = calcTotal();
 
       const rows = ops.slice().reverse().map(o=>`
@@ -964,53 +580,21 @@
         <div class="p-box p-header">
           <div class="p-title">شركة الحايك</div>
           <div class="p-subtitle">HAYEK SPOT</div>
-          <div class="p-chiprow">
-            <div class="p-chip">PDF / طباعة</div>
-            <div class="p-chip">سجل عمليات كامل</div>
-            <div class="p-chip">فاتورة رسمية</div>
-          </div>
         </div>
 
-        <div class="p-field">
-          <div class="k">اسم المستخدم</div>
-          <div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div>
-        </div>
-
-        <div class="p-field">
-          <div class="k">اسم العميل</div>
-          <div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div>
-        </div>
-
-        <div class="p-field">
-          <div class="k">رقم الفاتورة</div>
-          <div class="v">${escapeHtml(invId || "—")}</div>
-        </div>
-
-        <div class="p-field">
-          <div class="k">التاريخ</div>
-          <div class="v" style="direction:ltr">${escapeHtml(dateText)}</div>
-        </div>
+        <div class="p-field"><div class="k">اسم المستخدم</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
+        <div class="p-field"><div class="k">اسم العميل</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
+        <div class="p-field"><div class="k">رقم الفاتورة</div><div class="v">${escapeHtml(invId)}</div></div>
+        <div class="p-field"><div class="k">التاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
 
         <div class="p-tableWrap">
           <table>
-            <thead>
-              <tr>
-                <th>الوقت</th>
-                <th>البيان</th>
-                <th>العملية</th>
-                <th>النتيجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}
-            </tbody>
+            <thead><tr><th>الوقت</th><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}</tbody>
           </table>
         </div>
 
-        <div class="p-totalBox">
-          <div>إجمالي الكشف:</div>
-          <div>${escapeHtml(total)}</div>
-        </div>
+        <div class="p-totalBox"><div>إجمالي الكشف:</div><div>${escapeHtml(total)}</div></div>
 
         <div class="p-foot">
           <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
@@ -1021,42 +605,28 @@
       return pa;
     }
 
-    async function closeInvoiceHidden(){
-      if(!invoiceOpen || !invoiceId) return;
-
-      const customer = custInput.value.trim();
-      const total = calcTotal();
-
-      qUpsertInvoice({
-        id: invoiceId,
-        owner_id: USER.id,     /* ✅ */
-        customer_name: customer,
-        customer: customer,
-        total,
-        status: "closed",
-        closed_at: new Date().toISOString()   /* ✅ */
-      }, ops);
-
-      invoiceOpen = false;
-      flushQueue();
-    }
-
     async function exportPDF(){
       clearErr(appErr);
 
       const customer = requireCustomer();
       if(!customer) return;
 
-      await ensureInvoiceOpened();
-      await autosaveBackground();
-      await closeInvoiceHidden();
+      const ok = await ensureInvoiceOpened();
+      if(!ok) return;
+
+      // أغلق الفاتورة حفظ نهائي
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        return;
+      }
 
       const pa = buildPrintArea();
-      const canvas = await html2canvas(pa, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
+      const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
       const imgData = canvas.toDataURL("image/png");
 
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF("p", "mm", "a4");
+      const pdf = new jsPDF("p","mm","a4");
 
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
@@ -1065,17 +635,14 @@
       const imgH = canvas.height * (imgW / canvas.width);
 
       if(imgH <= pageH){
-        pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
+        pdf.addImage(imgData,"PNG",0,0,imgW,imgH);
       }else{
         let remaining = imgH;
         let position = 0;
         while(remaining > 0){
-          pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+          pdf.addImage(imgData,"PNG",0,position,imgW,imgH);
           remaining -= pageH;
-          if(remaining > 0){
-            pdf.addPage();
-            position -= pageH;
-          }
+          if(remaining > 0){ pdf.addPage(); position -= pageH; }
         }
       }
 
@@ -1083,12 +650,10 @@
       pdf.save(`HAYEK_${safeName}.pdf`);
 
       toast("تم تنزيل PDF ✅");
-
-      await resetAll(false);
-      flushQueue();
+      resetAll(false);
     }
 
-    // ---------- UI binds ----------
+    // ------- binds -------
     $("btnLogin").addEventListener("click", login);
     $("btnClear").addEventListener("click", ()=>{ $("loginUser").value=""; $("loginPass").value=""; clearErr(loginErr); });
     $("btnLogout").addEventListener("click", logout);
@@ -1109,13 +674,9 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
-    // Initial
     setTab("calc");
-    exprView.textContent = "";
-    resView.textContent = "0";
-    refreshDatalists();
     restoreSession();
-    flushQueue();
   </script>
 </body>
 </html>
+
