@@ -1,5 +1,4 @@
 <!doctype html>
-<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
@@ -424,57 +423,76 @@
     }
 
     // =========================
-    // ✅ NET CHECK (REAL) — لا تعتمد على navigator.onLine
+    // ✅ Net Check (REAL) + Cached State (Fix mobile/PWA online bug)
     // =========================
-    let _NET_CACHE = { ok:null, ts:0 };
-    async function isNetOK(){
-      const now = Date.now();
-      if(_NET_CACHE.ok !== null && (now - _NET_CACHE.ts) < 5000) return _NET_CACHE.ok;
+    let NET_OK = false;
+    let NET_LAST = 0;
+    let NET_INFLIGHT = false;
 
-      // لو المتصفح يقول offline غالباً صحيح، بس نتحقق سريعاً
-      // (مهم للموبايل/PWA لأنه أحياناً يعطي false غلط)
+    async function isNetOK(timeoutMs = 4500){
       try{
         const ctrl = new AbortController();
-        const t = setTimeout(()=>ctrl.abort(), 2500);
+        const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
-        // Ping خفيف على Supabase (لا يحتاج صلاحيات خاصة، المهم وصول الشبكة)
-        const r = await fetch(SUPABASE_URL + "/rest/v1/", {
-          method: "GET",
+        const url = `${SUPABASE_URL}/rest/v1/`;
+        // المهم: "يوصل للسيرفر" حتى لو رجع 401/404 — لا تهمنا الحالة
+        await fetch(url, {
+          method: "HEAD",
           mode: "cors",
-          signal: ctrl.signal,
-          headers: {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": "Bearer " + SUPABASE_ANON_KEY
-          }
+          cache: "no-store",
+          signal: ctrl.signal
         });
 
         clearTimeout(t);
-
-        // حتى لو رجع 404/401 المهم أنه وصل للسيرفر
-        const ok = !!r;
-        _NET_CACHE = { ok, ts: now };
-        return ok;
+        return true;
       }catch{
-        _NET_CACHE = { ok:false, ts: now };
         return false;
       }
     }
 
+    async function refreshNetState(force=false){
+      const now = Date.now();
+      if(!force && (now - NET_LAST) < 2500) return NET_OK;
+      if(NET_INFLIGHT) return NET_OK;
+
+      NET_INFLIGHT = true;
+      try{
+        const ok = await isNetOK();
+        NET_OK = !!ok;
+        NET_LAST = now;
+        return NET_OK;
+      }finally{
+        NET_INFLIGHT = false;
+      }
+    }
+
+    function netNow(){
+      // قرار سريع بدون انتظار: يستخدم آخر نتيجة
+      return !!NET_OK;
+    }
+
+    // شغّل فحص الشبكة بشكل ذكي
+    async function kickNet(){
+      await refreshNetState(true);
+    }
+    window.addEventListener("online",  ()=>{ kickNet(); qSyncSilently(); syncDeviceIdIfNeeded(); });
+    window.addEventListener("focus",   ()=>{ kickNet(); qSyncSilently(); syncDeviceIdIfNeeded(); });
+    document.addEventListener("visibilitychange", ()=>{
+      if(!document.hidden){ kickNet(); qSyncSilently(); syncDeviceIdIfNeeded(); }
+    });
+    setInterval(()=>{ refreshNetState(false); qSyncSilently(); }, 8000);
+
     // =========================
-    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently)
+    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently) - FINAL FIX
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
     function qRead(){
-      try{
-        const v = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]");
-        return Array.isArray(v) ? v : [];
-      }catch{ return []; }
+      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
+      catch{ return []; }
     }
     function qWrite(arr){
-      try{
-        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
-      }catch{}
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
     }
     function qAdd(payload){
       const arr = qRead();
@@ -483,23 +501,20 @@
       qWrite(filtered);
     }
 
-    let _SYNC_RUNNING = false;
+    let __syncing = false;
     async function qSyncSilently(){
-      if(_SYNC_RUNNING) return;
-      if(!USER?.id) return;
-
-      const net = await isNetOK();
-      if(!net) return;
-
+      if(__syncing) return;
       const arr = qRead();
       if(!arr.length) return;
 
-      _SYNC_RUNNING = true;
+      await refreshNetState(false);
+      if(!netNow()) return;
+
+      __syncing = true;
       try{
         const keep = [];
         for(const payload of arr){
           try{
-            payload.owner_id = payload.owner_id || USER.id;
             const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
             if(error) keep.push(payload);
           }catch{
@@ -508,12 +523,9 @@
         }
         qWrite(keep);
       }finally{
-        _SYNC_RUNNING = false;
+        __syncing = false;
       }
     }
-
-    window.addEventListener("online", ()=>{ qSyncSilently(); });
-    setInterval(()=>{ qSyncSilently(); }, 15000);
 
     // =========================
     // ✅ Offline Login Cache (آخر مستخدم سجّل دخول على نفس الجهاز)
@@ -660,10 +672,9 @@
     async function enforceDeviceLockForUserRow(u){
       const deviceId = getOrCreateDeviceId();
 
-      const net = await isNetOK();
-
-      // ✅ Offline: نتحقق محلياً فقط (آخر مستخدم)
-      if(!net){
+      // Offline: تحقق محلياً فقط
+      await refreshNetState(false);
+      if(!netNow()){
         if(!u.device_id){
           u.device_id = deviceId;
           saveOfflineUser(u);
@@ -675,7 +686,7 @@
         return u;
       }
 
-      // Online: نفس منطقك الأصلي (ثابت)
+      // Online: ثبت device_id مرة واحدة فقط
       if(!u.device_id){
         const { error: uerr } = await supabase
           .from(USERS_TABLE)
@@ -704,8 +715,8 @@
     }
 
     async function syncDeviceIdIfNeeded(){
-      const net = await isNetOK();
-      if(!net) return;
+      await refreshNetState(false);
+      if(!netNow()) return;
 
       try{
         if(!USER?.id) return;
@@ -717,6 +728,7 @@
             .update({ device_id: deviceId })
             .eq("id", USER.id)
             .is("device_id", null);
+
           if(!error){
             USER.device_id = deviceId;
             saveOfflineUser(USER);
@@ -724,8 +736,6 @@
         }
       }catch{}
     }
-
-    window.addEventListener("online", ()=>{ syncDeviceIdIfNeeded(); });
 
     // =========================
     // ✅ ذاكرة النص التنبؤي (اقتراحات)
@@ -799,10 +809,10 @@
         closed_at: status === "closed" ? new Date().toISOString() : null
       };
 
-      const net = await isNetOK();
+      await refreshNetState(false);
 
-      // ✅ Offline: خزّن مباشرة وارجع OK
-      if(!net){
+      // Offline: خزّن مباشرة
+      if(!netNow()){
         qAdd(payload);
         return { ok:true, id: invoiceId, queued:true };
       }
@@ -846,10 +856,11 @@
         return;
       }
 
-      const net = await isNetOK();
+      // ✅ قرار الشبكة الحقيقي
+      await refreshNetState(true);
 
       // ✅ Offline login (آخر مستخدم فقط)
-      if(!net){
+      if(!netNow()){
         const cached = readOfflineUser();
         if(!cached){
           showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
@@ -922,6 +933,7 @@
 
         renderSug();
 
+        // ✅ مزامنة خلفية فورية
         qSyncSilently();
         syncDeviceIdIfNeeded();
       }catch(e){
@@ -934,9 +946,10 @@
         const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
         if(!s?.id) return;
 
-        const net = await isNetOK();
+        await refreshNetState(true);
 
-        if(!net){
+        // ✅ إذا أوفلاين: حاول من الكاش المحلي
+        if(!netNow()){
           const cached = readOfflineUser();
           if(!cached || cached.id !== s.id) return;
           if(cached.is_blocked){
@@ -967,6 +980,7 @@
           return;
         }
 
+        // ✅ Online restore
         const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(error) return;
         if(!data?.length) return;
@@ -1167,6 +1181,9 @@
       if(!r.ok){
         showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
       }
+
+      // مزامنة صامتة إذا رجع النت
+      qSyncSilently();
     }
 
     async function clearOperations(){
@@ -1183,6 +1200,7 @@
         if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
       }
       toast("تم المسح ✅");
+      qSyncSilently();
     }
 
     function buildPrintArea(){
@@ -1279,6 +1297,7 @@
       toast("تم تنزيل PDF ✅");
       resetAll(false);
 
+      // ✅ بعد التصدير: حاول مزامنة خلفية (لو رجع النت فعلاً)
       qSyncSilently();
     }
 
@@ -1305,7 +1324,9 @@
 
     setTab("calc");
 
+    // أول تشغيل
     renderSug();
+    refreshNetState(true).then(()=>{ qSyncSilently(); });
     restoreSession();
 
     // ✅ Register Service Worker (if file exists)
