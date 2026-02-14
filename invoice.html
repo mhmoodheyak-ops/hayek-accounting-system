@@ -34,11 +34,29 @@
       background: linear-gradient(180deg, rgba(14,27,38,.95) 0%, rgba(10,20,30,.92) 100%);
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
-    .hint{color:var(--muted); font-size:12px; line-height:1.6}
-    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
+
+    /* ✅ تكبير النص التعريفي */
+    .hint{
+      color:#dbe8ff;
+      font-size:14px;
+      line-height:1.9;
+      font-weight:900;
+    }
+
+    /* ✅ تكبير العناوين */
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin:10px 0 6px;
+      font-weight:800;
+    }
+
     input{
       width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
       background: rgba(0,0,0,.18); color:var(--txt); outline:none;
+      font-size:14px;
+      font-weight:800;
     }
     input:focus{border-color:rgba(31,91,216,.55); box-shadow:0 0 0 4px rgba(31,91,216,.18)}
     .row{display:flex; gap:10px}
@@ -46,6 +64,7 @@
     .btn{
       width:100%; padding:12px 12px; border-radius:16px; border:1px solid var(--line);
       background: rgba(255,255,255,.06); color:var(--txt); font-weight:900; cursor:pointer; transition:.15s;
+      font-size:14px;
     }
     .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .btn.blue{background:var(--blue); border-color:rgba(31,91,216,.2)}
@@ -67,21 +86,66 @@
     .tab{
       flex:1; padding:10px 10px; border-radius:999px; border:1px solid var(--line);
       background:rgba(255,255,255,.05); color:var(--txt); font-weight:900; cursor:pointer;
+      font-size:13px;
     }
     .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
-    .exprTitle{font-size:12px; color:var(--muted); margin-bottom:8px}
-    .expr{
-      width:100%; border:1px solid var(--line); background:rgba(0,0,0,.18); border-radius:16px;
-      padding:12px; text-align:right; min-height:46px; display:flex; align-items:center; justify-content:flex-end;
-      white-space:nowrap; overflow:auto; font-weight:800;
+
+    /* ✅ تكبير عنوان العملية */
+    .exprTitle{
+      font-size:14px;
+      color:#cfe0ff;
+      margin-bottom:8px;
+      font-weight:900;
     }
-    .resLine{margin-top:10px; display:flex; justify-content:flex-end; gap:8px; color:var(--muted); font-size:12px}
-    .resLine b{font-size:14px; color:var(--txt)}
+
+    /* ✅ العملية الحسابية: أسود + خط ثخين + خلفية بيضاء */
+    .expr{
+      width:100%;
+      border:2px solid rgba(0,0,0,.16);
+      background:#ffffff;
+      color:#000000;
+      border-radius:16px;
+      padding:12px;
+      text-align:right;
+      min-height:52px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      white-space:nowrap;
+      overflow:auto;
+      font-weight:1000;
+      font-size:20px;
+    }
+
+    .resLine{
+      margin-top:10px;
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:900;
+    }
+
+    /* ✅ النتيجة: أسود وثخين داخل كبسولة */
+    .resLine b{
+      color:#000;
+      font-size:18px;
+      font-weight:1000;
+      background:#fff;
+      border:2px solid rgba(0,0,0,.12);
+      padding:6px 10px;
+      border-radius:12px;
+      min-width:70px;
+      text-align:center;
+      display:inline-block;
+    }
+
     .keys{margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
     .key{
       border:0; border-radius:14px; background:rgba(255,255,255,.10);
-      color:var(--txt); padding:14px 0; font-size:16px; font-weight:900; cursor:pointer;
+      color:var(--txt); padding:14px 0; font-size:18px; font-weight:900; cursor:pointer;
     }
     .key:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
     .key.op{background:rgba(255,255,255,.12)}
@@ -89,7 +153,17 @@
     .key.eq:hover{background:var(--blue2)}
     .key.back{grid-column:3 / span 2}
     .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
-    .footerNote{margin-top:10px; text-align:center; font-size:11px; color:var(--muted); line-height:1.6}
+
+    /* ✅ النص السفلي أكبر وأوضح */
+    .footerNote{
+      margin-top:10px;
+      text-align:center;
+      font-size:12px;
+      color:#cfe0ff;
+      line-height:1.8;
+      font-weight:900;
+    }
+
     .logTable{margin-top:10px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(0,0,0,.10)}
     table{width:100%; border-collapse:collapse}
     th,td{padding:10px 10px; border-bottom:1px solid var(--line); font-size:12px; text-align:right; vertical-align:top}
