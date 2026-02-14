@@ -13,9 +13,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- ✅ Supabase (UMD) IMPORTANT -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <!-- PDF -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -372,13 +369,12 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <script>
-    // =========================
-    // ✅ Supabase (UMD)
-    // =========================
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0aWR3cXZ5cmp5ZG1lZ2p6dXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTAyNzQsImV4cCI6MjA4NTk4NjI3NH0.N1X39yfO6CLYu8UpbZsmlkIUELN_mmAzxUCQBCV7O8g";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
 
@@ -416,114 +412,79 @@
       setTimeout(()=> toastEl.style.display="none", 1400);
     }
     function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
-    function isOnline(){ return navigator.onLine === true; }
+
+    function escapeHtml(s){
+      return String(s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
     // =========================
-    // ✅ OFFLINE: Local invoices + silent sync queue (FINAL)
+    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently)
     // =========================
-    const OFF_INVOICES_KEY = "HAYEK_LOCAL_INVOICES_V1";
-    const OFF_QUEUE_KEY    = "HAYEK_SYNC_QUEUE_V1";
-    const USER_CACHE_KEY   = "HAYEK_USER_CACHE_V1";
-    const SYNC_LOCK_KEY    = "HAYEK_SYNC_LOCK_V1";
+    const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
-    function readJSON(key, fallback){
-      try{
-        const v = JSON.parse(localStorage.getItem(key) || "null");
-        return (v === null || v === undefined) ? fallback : v;
-      }catch{ return fallback; }
+    function qRead(){
+      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
+      catch{ return []; }
     }
-    function writeJSON(key, val){
-      localStorage.setItem(key, JSON.stringify(val));
+    function qWrite(arr){
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
     }
+    function qAdd(payload){
+      const arr = qRead();
+      const filtered = arr.filter(x => x?.id !== payload?.id);
+      filtered.push({ ...payload, __queued_at: new Date().toISOString() });
+      qWrite(filtered);
+    }
+    async function qSyncSilently(){
+      if(!navigator.onLine) return;
+      const arr = qRead();
+      if(!arr.length) return;
 
-    function getUserCache(){ return readJSON(USER_CACHE_KEY, { byUsername:{}, byId:{} }); }
-    function setUserCache(username, userObj, plainPass){
-      const cache = getUserCache();
-      const safe = {
-        id: userObj.id,
-        username: userObj.username,
-        full_name: userObj.full_name || null,
-        is_blocked: !!userObj.is_blocked,
-        device_id: userObj.device_id || null,
-        password: plainPass
-      };
-      cache.byUsername[String(username)] = safe;
-      if(safe.id) cache.byId[String(safe.id)] = safe;
-      writeJSON(USER_CACHE_KEY, cache);
-    }
-    function findCachedUserByUsername(username){
-      const cache = getUserCache();
-      return cache.byUsername[String(username)] || null;
-    }
-    function findCachedUserById(id){
-      const cache = getUserCache();
-      return cache.byId[String(id)] || null;
-    }
-
-    function readLocalInvoices(){
-      const arr = readJSON(OFF_INVOICES_KEY, []);
-      return Array.isArray(arr) ? arr : [];
-    }
-    function writeLocalInvoices(arr){ writeJSON(OFF_INVOICES_KEY, Array.isArray(arr)?arr:[]); }
-    function upsertLocalInvoice(inv){
-      const arr = readLocalInvoices();
-      const i = arr.findIndex(x => x && x.id === inv.id);
-      if(i >= 0) arr[i] = inv; else arr.unshift(inv);
-      writeLocalInvoices(arr);
-    }
-
-    function readQueue(){
-      const arr = readJSON(OFF_QUEUE_KEY, []);
-      return Array.isArray(arr) ? arr : [];
-    }
-    function writeQueue(arr){ writeJSON(OFF_QUEUE_KEY, Array.isArray(arr)?arr:[]); }
-    function queueClosedInvoice(inv){
-      const q = readQueue();
-      if(!q.some(x => x && x.id === inv.id)) q.unshift(inv);
-      writeQueue(q);
-    }
-    function removeFromQueue(id){
-      writeQueue(readQueue().filter(x => x && x.id !== id));
-    }
-
-    async function silentSync(){
-      try{
-        if(!isOnline()) return;
-        if(localStorage.getItem(SYNC_LOCK_KEY) === "1") return;
-        localStorage.setItem(SYNC_LOCK_KEY, "1");
-
-        const q = readQueue();
-        if(!q.length) return;
-
-        for(const inv of q){
-          try{
-            if(!inv?.owner_id) continue;
-
-            const { error } = await supabase
-              .from(INVOICE_TABLE)
-              .upsert({
-                id: inv.id,
-                owner_id: inv.owner_id,
-                customer_name: inv.customer_name || null,
-                rows: inv.rows,
-                total: inv.total,
-                status: inv.status,
-                closed_at: inv.closed_at || null
-              }, { onConflict: "id" });
-
-            if(!error){
-              inv.__synced = true;
-              inv.__synced_at = new Date().toISOString();
-              upsertLocalInvoice(inv);
-              removeFromQueue(inv.id);
-            }
-          }catch(e){}
+      const keep = [];
+      for(const payload of arr){
+        try{
+          const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
+          if(error) keep.push(payload);
+        }catch{
+          keep.push(payload);
         }
-      } finally {
-        localStorage.setItem(SYNC_LOCK_KEY, "0");
       }
+      qWrite(keep);
     }
-    window.addEventListener("online", ()=>{ silentSync(); });
+
+    window.addEventListener("online", ()=>{ qSyncSilently(); });
+    setInterval(()=>{ qSyncSilently(); }, 15000);
+
+    // =========================
+    // ✅ Offline Login Cache (آخر مستخدم سجّل دخول على نفس الجهاز)
+    // =========================
+    const OFFLINE_USER_KEY = "HAYEK_OFFLINE_LAST_USER_V1";
+    function saveOfflineUser(u){
+      try{
+        const slim = {
+          id: u?.id || null,
+          username: u?.username || "",
+          password: u?.password || "",
+          full_name: u?.full_name || "",
+          is_blocked: !!u?.is_blocked,
+          device_id: u?.device_id || null,
+          saved_at: new Date().toISOString()
+        };
+        localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(slim));
+      }catch{}
+    }
+    function readOfflineUser(){
+      try{
+        const v = JSON.parse(localStorage.getItem(OFFLINE_USER_KEY) || "null");
+        if(!v || typeof v !== "object") return null;
+        return v;
+      }catch{ return null; }
+    }
 
     // =========================
     // ✅ قفل جهاز واحد + قفل تبويب واحد (ثابت)
@@ -644,12 +605,22 @@
     async function enforceDeviceLockForUserRow(u){
       const deviceId = getOrCreateDeviceId();
 
-      // أول مرة: لازم Online لتثبيت device_id
-      if(!u.device_id){
-        if(!isOnline()){
-          throw new Error("❌ أول دخول لازم يكون مع إنترنت لتثبيت الجهاز مرة واحدة.\nبعدها يشتغل Offline طبيعي.");
+      // ✅ Offline: نتحقق محلياً فقط (آخر مستخدم)
+      if(!navigator.onLine){
+        if(!u.device_id){
+          // أول مرة محلياً
+          u.device_id = deviceId;
+          saveOfflineUser(u);
+          return u;
         }
+        if(u.device_id !== deviceId){
+          throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
+        }
+        return u;
+      }
 
+      // Online: نفس منطقك الأصلي (ثابت)
+      if(!u.device_id){
         const { error: uerr } = await supabase
           .from(USERS_TABLE)
           .update({ device_id: deviceId })
@@ -675,6 +646,29 @@
 
       return u;
     }
+
+    async function syncDeviceIdIfNeeded(){
+      if(!navigator.onLine) return;
+      try{
+        if(!USER?.id) return;
+        const deviceId = getOrCreateDeviceId();
+
+        // إذا عندنا USER بدون device_id محلياً، حاول ثبته على السيرفر (مرة واحدة)
+        if(!USER.device_id){
+          const { error } = await supabase
+            .from(USERS_TABLE)
+            .update({ device_id: deviceId })
+            .eq("id", USER.id)
+            .is("device_id", null);
+          if(!error){
+            USER.device_id = deviceId;
+            saveOfflineUser(USER);
+          }
+        }
+      }catch{}
+    }
+
+    window.addEventListener("online", ()=>{ syncDeviceIdIfNeeded(); });
 
     // =========================
     // ✅ ذاكرة النص التنبؤي (اقتراحات)
@@ -723,15 +717,6 @@
       });
     }
 
-    function escapeHtml(s){
-      return String(s||"")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
     // ------- STATE -------
     let USER = null;
     let invoiceId = null;
@@ -741,7 +726,48 @@
     let expr = "";
     let lastResult = 0;
 
-    // ------- SAVE (ONLINE/OFFLINE) -------
+    // ------- SUPABASE SAVE -------
+    async function saveInvoice(status){
+      if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
+
+      const customer = custInput.value.trim();
+      const total = calcTotal();
+
+      const payload = {
+        id: invoiceId,
+        owner_id: USER.id,
+        rows: buildRowsWithMeta(customer),
+        total: total,
+        status: status,
+        closed_at: status === "closed" ? new Date().toISOString() : null
+      };
+
+      // ✅ Offline: خزّن مباشرة وارجع OK
+      if(!navigator.onLine){
+        qAdd(payload);
+        return { ok:true, id: invoiceId, queued:true };
+      }
+
+      try{
+        const { data, error } = await supabase
+          .from(INVOICE_TABLE)
+          .upsert(payload, { onConflict: "id" })
+          .select("id")
+          .limit(1);
+
+        if(error){
+          // ✅ إذا فشل الشبكة/السيرفر: خزّن محلياً
+          qAdd(payload);
+          return { ok:true, id: invoiceId, queued:true };
+        }
+        return { ok:true, id: (data?.[0]?.id || invoiceId) };
+      }catch(e){
+        // ✅ أي استثناء: خزّن محلياً
+        qAdd(payload);
+        return { ok:true, id: invoiceId, queued:true };
+      }
+    }
+
     function buildRowsWithMeta(customer){
       const meta = {
         __meta: true,
@@ -750,80 +776,6 @@
         saved_at: new Date().toISOString()
       };
       return [meta, ...ops];
-    }
-
-    function calcTotal(){
-      let t = 0;
-      for(const o of ops){
-        const n = Number(o.result);
-        if(Number.isFinite(n)) t += n;
-      }
-      if(!ops.length && Number.isFinite(lastResult)) t = lastResult;
-      return Math.round(t*100)/100;
-    }
-
-    function buildOfflinePayload(status){
-      const customer = custInput.value.trim();
-      return {
-        id: invoiceId,
-        owner_id: USER?.id || null,
-        customer_name: customer || null,
-        rows: buildRowsWithMeta(customer),
-        total: calcTotal(),
-        status,
-        closed_at: status === "closed" ? new Date().toISOString() : null,
-        created_at: new Date().toISOString(),
-        __offline: true,
-        __synced: false
-      };
-    }
-
-    async function saveInvoice(status){
-      if(!invoiceId || !USER?.id){
-        // حتى لو ما في owner (مثلاً قبل تسجيل)، لا نكسر
-        return { ok:false, msg:"no-invoice" };
-      }
-
-      // ✅ دائماً خزّن محلياً
-      const off = buildOfflinePayload(status);
-      upsertLocalInvoice(off);
-      if(status === "closed") queueClosedInvoice(off);
-
-      // ✅ Offline: لا توقف المستخدم
-      if(!isOnline()){
-        return { ok:true, offline:true };
-      }
-
-      // ✅ Online: ارفع للسيرفر
-      const customer = custInput.value.trim();
-      const payload = {
-        id: invoiceId,
-        owner_id: USER.id,
-        customer_name: customer || null,
-        rows: buildRowsWithMeta(customer),
-        total: calcTotal(),
-        status,
-        closed_at: status === "closed" ? new Date().toISOString() : null
-      };
-
-      const { error } = await supabase
-        .from(INVOICE_TABLE)
-        .upsert(payload, { onConflict: "id" });
-
-      if(error){
-        return { ok:false, msg:(error.message || JSON.stringify(error)) };
-      }
-
-      if(status === "closed"){
-        removeFromQueue(invoiceId);
-        off.__synced = true;
-        off.__synced_at = new Date().toISOString();
-        upsertLocalInvoice(off);
-      }
-
-      // مزامنة صامتة لاحقاً (لو في طابور)
-      silentSync();
-      return { ok:true };
     }
 
     // ------- LOGIN -------
@@ -837,67 +789,94 @@
         return;
       }
 
-      // ✅ Offline login من الكاش
-      if(!isOnline()){
-        const cu = findCachedUserByUsername(username);
-        if(!cu){
-          showErr(loginErr, "❌ أول مرة لازم إنترنت.\nسجّل دخول مرة واحدة مع إنترنت ثم يعمل Offline.");
+      // ✅ Offline login (آخر مستخدم فقط)
+      if(!navigator.onLine){
+        const cached = readOfflineUser();
+        if(!cached){
+          showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
           return;
         }
-        if(cu.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
-        if(cu.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
+        if(cached.is_blocked){
+          showErr(loginErr, "هذا الحساب محظور.");
+          return;
+        }
+        if(cached.username !== username || cached.password !== password){
+          showErr(loginErr, "❌ لا يمكن التحقق بدون إنترنت.\nأدخل بيانات آخر حساب سجّل دخول على هذا الجهاز.");
+          return;
+        }
 
-        startSingleTabGuard(cu.username);
-        if(TAB_BLOCKED) return;
+        let u = cached;
 
-        USER = cu;
-        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id: cu.id }));
+        // ✅ قفل جهاز واحد (محلي)
+        try{
+          u = await enforceDeviceLockForUserRow(u);
+        }catch(e){
+          showErr(loginErr, e?.message || "تم منع الدخول");
+          return;
+        }
+
+        // ✅ قفل تبويب واحد
+        startSingleTabGuard(u.username);
+        if(TAB_BLOCKED){
+          return;
+        }
+
+        USER = u;
+        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:true }));
 
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
         subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${cu.username}</b>`;
+        pill.innerHTML = `<b>${u.username}</b>`;
         resetAll(true);
 
         renderSug();
+        toast("وضع أوفلاين ✅");
         return;
       }
 
-      // ✅ Online login من Supabase
-      const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
-      if(error){ showErr(loginErr, "خطأ اتصال:\n" + (error.message||"")); return; }
-      if(!data?.length){ showErr(loginErr, "المستخدم غير موجود."); return; }
-
-      let u = data[0];
-      if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
-      if(u.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
-
-      // ✅ قفل جهاز واحد
+      // ✅ Online login (أصلي)
       try{
-        u = await enforceDeviceLockForUserRow(u);
+        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
+        if(error){ showErr(loginErr, "خطأ اتصال:\n" + (error.message||"")); return; }
+        if(!data?.length){ showErr(loginErr, "المستخدم غير موجود."); return; }
+
+        let u = data[0];
+        if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
+        if(u.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
+
+        // ✅ قفل جهاز واحد
+        try{
+          u = await enforceDeviceLockForUserRow(u);
+        }catch(e){
+          showErr(loginErr, e?.message || "تم منع الدخول");
+          return;
+        }
+
+        // ✅ قفل تبويب واحد
+        startSingleTabGuard(u.username);
+        if(TAB_BLOCKED){
+          return;
+        }
+
+        USER = u;
+        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:false }));
+        saveOfflineUser(u);
+
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = "فاتورة المستخدم";
+        pill.innerHTML = `<b>${u.username}</b>`;
+        resetAll(true);
+
+        renderSug();
+
+        // ✅ Sync أي فواتير معلّقة
+        qSyncSilently();
+        syncDeviceIdIfNeeded();
       }catch(e){
-        showErr(loginErr, e?.message || "تم منع الدخول");
-        return;
+        showErr(loginErr, "خطأ غير متوقع:\n" + (e?.message || String(e)));
       }
-
-      // ✅ قفل تبويب واحد
-      startSingleTabGuard(u.username);
-      if(TAB_BLOCKED) return;
-
-      USER = u;
-      // ✅ خزّن المستخدم للكاش حتى يعمل Offline لاحقاً
-      setUserCache(username, u, password);
-
-      localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id }));
-
-      loginCard.classList.add("hide");
-      appCard.classList.remove("hide");
-      subtitle.textContent = "فاتورة المستخدم";
-      pill.innerHTML = `<b>${u.username}</b>`;
-      resetAll(true);
-
-      renderSug();
-      silentSync();
     }
 
     async function restoreSession(){
@@ -905,25 +884,39 @@
         const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
         if(!s?.id) return;
 
-        // ✅ Offline restore من الكاش
-        if(!isOnline()){
-          const cu = findCachedUserById(s.id);
-          if(!cu) return;
+        // ✅ إذا أوفلاين: حاول من الكاش المحلي
+        if(!navigator.onLine){
+          const cached = readOfflineUser();
+          if(!cached || cached.id !== s.id) return;
+          if(cached.is_blocked){
+            localStorage.removeItem("HAYEK_USER_SESSION");
+            return;
+          }
 
-          startSingleTabGuard(cu.username);
+          let u = cached;
+
+          try{
+            u = await enforceDeviceLockForUserRow(u);
+          }catch(e){
+            localStorage.removeItem("HAYEK_USER_SESSION");
+            showErr(loginErr, e?.message || "تم منع الدخول");
+            return;
+          }
+
+          startSingleTabGuard(u.username);
           if(TAB_BLOCKED) return;
 
-          USER = cu;
+          USER = u;
           loginCard.classList.add("hide");
           appCard.classList.remove("hide");
           subtitle.textContent = "فاتورة المستخدم";
-          pill.innerHTML = `<b>${cu.username}</b>`;
+          pill.innerHTML = `<b>${USER.username}</b>`;
           resetAll(true);
           renderSug();
           return;
         }
 
-        // ✅ Online restore من Supabase
+        // ✅ Online restore (أصلي)
         const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(error) return;
         if(!data?.length) return;
@@ -946,6 +939,8 @@
         if(TAB_BLOCKED) return;
 
         USER = u;
+        saveOfflineUser(u);
+
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
         subtitle.textContent = "فاتورة المستخدم";
@@ -953,7 +948,8 @@
         resetAll(true);
         renderSug();
 
-        silentSync();
+        qSyncSilently();
+        syncDeviceIdIfNeeded();
       }catch{}
     }
 
@@ -1020,20 +1016,22 @@
       invoiceId = uuid();
       invoiceOpen = true;
 
-      // ✅ افتح فاتورة: Online يرسل / Offline يحفظ محلياً فقط
-      if(isOnline()){
-        const r = await saveInvoice("open");
-        if(!r.ok){
-          showErr(appErr, "فشل الحفظ (open):\n" + r.msg + "\n\n✅ تأكد أن عمود id Primary Key في Supabase.");
-          return false;
-        }
-      } else {
-        // Offline: خزّن snapshot أولي بدون ما نكسر
-        const off = buildOfflinePayload("open");
-        upsertLocalInvoice(off);
+      const r = await saveInvoice("open");
+      if(!r.ok){
+        showErr(appErr, "فشل الحفظ (open):\n" + r.msg + "\n\n✅ تأكد أن عمود id Primary Key في Supabase.");
+        return false;
       }
-
       return true;
+    }
+
+    function calcTotal(){
+      let t = 0;
+      for(const o of ops){
+        const n = Number(o.result);
+        if(Number.isFinite(n)) t += n;
+      }
+      if(!ops.length && Number.isFinite(lastResult)) t = lastResult;
+      return Math.round(t*100)/100;
     }
 
     function sanitizeForEval(s){
@@ -1115,15 +1113,9 @@
       setExpr("");
       toast("تمت الإضافة ✅");
 
-      // ✅ حفظ (Online/Offline)
-      if(isOnline()){
-        const r = await saveInvoice("open");
-        if(!r.ok){
-          showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
-        }
-      } else {
-        const off = buildOfflinePayload("open");
-        upsertLocalInvoice(off);
+      const r = await saveInvoice("open");
+      if(!r.ok){
+        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
       }
     }
 
@@ -1137,15 +1129,9 @@
       renderLog();
 
       if(invoiceOpen){
-        if(isOnline()){
-          const r = await saveInvoice("open");
-          if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
-        } else {
-          const off = buildOfflinePayload("open");
-          upsertLocalInvoice(off);
-        }
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
       }
-
       toast("تم المسح ✅");
     }
 
@@ -1204,7 +1190,14 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      // ✅ PDF دائماً
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        return;
+      }
+
+      addSug(SUG_CUSTOMERS_KEY, customer);
+
       const pa = buildPrintArea();
       const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
       const imgData = canvas.toDataURL("image/png");
@@ -1233,25 +1226,11 @@
       const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}.pdf`);
 
-      // ✅ إغلاق + حفظ: Online يرفع / Offline يضيف للطابور
-      if(isOnline()){
-        const r = await saveInvoice("closed");
-        if(!r.ok){
-          showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
-          return;
-        }
-      } else {
-        // Offline: خزّن كـ closed + queued
-        const off = buildOfflinePayload("closed");
-        upsertLocalInvoice(off);
-        queueClosedInvoice(off);
-      }
-
       toast("تم تنزيل PDF ✅");
       resetAll(false);
 
-      // لو النت رجع بعد التصدير مباشرة
-      silentSync();
+      // ✅ بعد التصدير: حاول مزامنة خلفية (لو كان في نت)
+      qSyncSilently();
     }
 
     // ------- binds -------
@@ -1276,6 +1255,7 @@
     $("btnClearOps").addEventListener("click", clearOperations);
 
     setTab("calc");
+
     renderSug();
     restoreSession();
 
@@ -1285,9 +1265,6 @@
         navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
       }
     }catch{}
-
-    // ✅ مزامنة صامتة دورية بدون إشعارات
-    setInterval(()=>{ silentSync(); }, 30000);
   </script>
 </body>
 </html>
