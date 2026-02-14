@@ -11,10 +11,14 @@ export const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
 
 // 🔐 Publishable Key فقط — ممنوع secret
 export const SUPABASE_ANON_KEY =
-  "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_"; // ضع المفتاح كاملاً كما هو عندك
+  "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
+
+// 🔗 Edge Function URL (المزامنة الخلفية)
+export const HAYEK_SYNC_URL =
+  "https://itidwqvyrjydmegjzuvn.supabase.co/functions/v1/hayek-sync";
 
 // ==================================================
-// Singleton (على مستوى المتصفح) — حتى مع تعدد الاستيراد أو اختلاف ?v=
+// Singleton (على مستوى المتصفح)
 // ==================================================
 const GLOBAL_KEY = "__HAYEK_SUPABASE_SINGLETON__";
 
@@ -37,8 +41,6 @@ if (!g[GLOBAL_KEY]) {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
-
-      // ✅ مفتاح تخزين ثابت لتجنب تضارب بين نسخ متعددة
       storageKey: "HAYEK_SPOT_AUTH"
     }
   });
