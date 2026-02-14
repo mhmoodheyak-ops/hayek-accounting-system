@@ -30,6 +30,7 @@
       --radius:18px;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
@@ -41,10 +42,15 @@
       min-height:100vh;
       display:flex;
       justify-content:center;
-      padding:14px;
+      padding: clamp(10px, 2vw, 16px);
     }
 
-    .wrap{width:100%; max-width:1500px; margin:0 auto;}
+    /* ✅ الصفحة بالمنتصف + عرض 100% */
+    .wrap{
+      width:100%;
+      max-width: 1400px;
+      margin:0 auto;
+    }
 
     .topbar{
       display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -84,6 +90,7 @@
       transition:.15s;
       user-select:none;
       white-space:nowrap;
+      flex: 0 0 auto;
     }
     .btn:hover{transform:translateY(-1px); background:var(--btn2);}
     .btn.primary{background:var(--blue); border-color:rgba(29,78,216,.55)}
@@ -124,8 +131,18 @@
     }
     label{display:block; color:var(--muted); font-size:12px; margin:10px 0 6px}
 
-    .grid{display:grid; gap:14px;}
-    @media(min-width:980px){ .grid{grid-template-columns: 420px 1fr;} }
+    /* ✅ GRID: بالداشبورد يصير عمود واحد حتى ما يترك فراغ */
+    .grid{display:grid; gap:14px; grid-template-columns: 1fr;}
+    .mode-login .grid{
+      grid-template-columns: 1fr;
+    }
+    @media(min-width:980px){
+      .mode-login .grid{grid-template-columns: 420px 1fr;}
+    }
+    .mode-dash .grid{
+      grid-template-columns: 1fr !important;
+    }
+    .mode-dash #dashCard{grid-column:1 / -1;}
 
     .searchBox input{
       border-radius:18px;
@@ -160,14 +177,20 @@
     .chip.active{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
     .dateRow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
+    /* ✅ جدول عرض 100% + سكرول أفقي عند الحاجة */
     .tableWrap{
       margin-top:14px;
       border:1px solid var(--line2);
       border-radius:18px;
-      overflow:hidden;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
       background: rgba(0,0,0,.12);
     }
-    table{width:100%; border-collapse:collapse; table-layout:fixed;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 760px; /* ليظهر سكرول بالموبايل بدل ما تخرب الأعمدة */
+    }
     th,td{
       padding:12px 12px;
       border-bottom:1px solid var(--line2);
@@ -175,13 +198,9 @@
       text-align:right;
       vertical-align:middle;
       white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
     }
     th{color:var(--muted); background: rgba(255,255,255,.05); font-weight:900;}
     tr:last-child td{border-bottom:0}
-
-    td.actionsCell{white-space:normal; overflow:visible; text-overflow:clip;}
 
     .statusPill{
       display:inline-flex; align-items:center; justify-content:center;
@@ -209,28 +228,21 @@
       min-width:62px;
     }
 
-    /* ✅ المطلوب: سطر واحد + سكرول عند الحاجة + مسافة 5% */
+    /* ✅ الأزرار: سطر واحد + سكرول تحتها + مسافة "تقريباً 5% من عرض الشاشة" (5vw لكن بدون مبالغة) */
     .actionsCol{
       display:flex;
-      flex-direction:row;
-      flex-wrap:nowrap;
-      gap:5vw;                 /* 5% من عرض الشاشة */
       align-items:center;
       justify-content:flex-start;
+      flex-wrap:nowrap;
       overflow-x:auto;
       overflow-y:hidden;
-      padding-bottom:6px;
+      gap: clamp(8px, 5vw, 18px); /* 5% من عرض الشاشة مع حد أعلى */
+      padding: 2px 2px 10px;
       scrollbar-width:thin;
     }
-    .actionsCol .btn{flex:0 0 auto; white-space:nowrap;}
-    .actionsCol::-webkit-scrollbar{height:6px}
+    .actionsCol::-webkit-scrollbar{height:10px}
     .actionsCol::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:999px}
-
-    @media (max-width: 680px){
-      th:nth-child(4), td:nth-child(4){display:none;} /* نشط منذ */
-      th,td{font-size:12px; padding:10px;}
-      .actionsCol{gap:5vw;}
-    }
+    .actionsCol::-webkit-scrollbar-track{background:rgba(255,255,255,.06); border-radius:999px}
 
     .reportBar{
       margin-top:12px;
@@ -316,7 +328,7 @@
     }
     .invOps table{min-width: 720px;}
     .invOps table th{background: rgba(255,255,255,.05)}
-    .invBtns{display:flex; gap:8px; flex-wrap:wrap}
+    .invBtns{display:flex; gap:10px; flex-wrap:wrap}
 
     #printArea{
       position: fixed;
@@ -355,7 +367,7 @@
   </style>
 </head>
 
-<body>
+<body class="mode-login">
   <div class="wrap">
     <div class="topbar">
       <div class="brand">
@@ -454,7 +466,7 @@
                 <th>عدد الفواتير</th>
                 <th>الحالة</th>
                 <th>نشط منذ</th>
-                <th>إجراءات</th>
+                <th>إجراءات (سكرول)</th>
               </tr>
             </thead>
             <tbody id="usersTbody">
@@ -601,16 +613,21 @@
 
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
-
     const OPS_COL_CANDIDATES = ["rows","lines","ops","items","details"];
+
     let ADMIN = null;
+
+    function setMode(mode){
+      document.body.classList.remove("mode-login","mode-dash");
+      document.body.classList.add(mode === "dash" ? "mode-dash" : "mode-login");
+    }
 
     function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
     function showOk(box, msg){ box.style.display="block"; box.textContent = msg; setTimeout(()=>box.style.display="none", 2200); }
     function clearBox(box){ box.style.display="none"; box.textContent=""; }
 
     function setSessionPill(){
-      sessionPill.innerHTML = ADMIN ? `<b>${ADMIN.username}</b> — أدمن` : "<b>غير مسجل</b>";
+      sessionPill.innerHTML = ADMIN ? `<b>${escHtml(ADMIN.username)}</b> — أدمن` : "<b>غير مسجل</b>";
     }
 
     function safeText(v){ return (v===null || v===undefined) ? "" : String(v); }
@@ -624,6 +641,9 @@
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
+
+    function encId(v){ return encodeURIComponent(String(v ?? "")); }
+    function decId(v){ try{ return decodeURIComponent(String(v ?? "")); }catch{ return String(v ?? ""); } }
 
     function fmtRelTime(dateIso){
       if(!dateIso) return "—";
@@ -686,15 +706,36 @@
       return [];
     }
 
-    // ✅ اسم الزبون (بدال رقم الفاتورة)
+    /* ✅ اسم الزبون: نبحث في أكثر من مكان (عشان ما يطلع "بدون اسم") */
     function getCustomerName(inv){
-      const direct = safeText(inv.customer_name || inv.customer || "").trim();
-      if(direct) return direct;
+      const candidates = [
+        inv?.customer_name, inv?.customer, inv?.customerName,
+        inv?.client_name, inv?.client, inv?.name
+      ];
 
-      // fallback (إذا مخزن ضمن rows)
+      for(const v of candidates){
+        if(typeof v === "string" && v.trim()) return v.trim();
+        if(v && typeof v === "object"){
+          const s = safeText(v.name || v.customer_name || v.customer || v.client_name || v.client).trim();
+          if(s) return s;
+        }
+      }
+
+      const meta = inv?.meta || inv?.metadata;
+      if(meta){
+        const s = safeText(meta.customer_name || meta.customer || meta.customerName || meta.client_name || meta.client || meta.name).trim();
+        if(s) return s;
+      }
+
       const ops = pickOps(inv);
-      const meta = ops?.[0];
-      if(meta && meta.__meta && meta.__meta.customer) return safeText(meta.__meta.customer).trim();
+      for(const o of (ops||[])){
+        const s = safeText(o?.customer_name || o?.customer || o?.customerName || o?.client_name || o?.client || o?.name).trim();
+        if(s) return s;
+        if(o?.__meta){
+          const s2 = safeText(o.__meta.customer || o.__meta.customer_name || o.__meta.name).trim();
+          if(s2) return s2;
+        }
+      }
 
       return "";
     }
@@ -798,11 +839,9 @@
       usersTbody.innerHTML = users.map(u=>{
         const c = counts[u.id] || 0;
         const blocked = !!u.is_blocked;
-
         const statusHtml = blocked
           ? `<span class="statusPill blocked">محظور</span>`
           : `<span class="statusPill">نشط</span>`;
-
         const activeText = fmtRelTime(lastActive[u.id] || u.created_at || u.updated_at);
 
         const full = safeText(u.full_name || "").trim();
@@ -816,23 +855,23 @@
             <td><span class="countPill">${c}</span></td>
             <td>${statusHtml}</td>
             <td class="muted">${escHtml(activeText)}</td>
-            <td class="actionsCell">
+            <td>
               <div class="actionsCol">
-                <button class="btn small primary" data-act="invoices" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">الفواتير</button>
-                <button class="btn small soft" data-act="wipeDevice" data-id="${escHtml(u.id)}">مسح الجهاز</button>
+                <button class="btn small primary" data-act="invoices" data-id="${encId(u.id)}" data-name="${escHtml(u.username)}">الفواتير</button>
+                <button class="btn small soft" data-act="wipeDevice" data-id="${encId(u.id)}">مسح الجهاز</button>
 
                 ${
                   blocked
-                    ? `<button class="btn small" data-act="unblock" data-id="${escHtml(u.id)}">فك الحظر</button>`
-                    : `<button class="btn small warn" data-act="block" data-id="${escHtml(u.id)}">حظر</button>`
+                    ? `<button class="btn small" data-act="unblock" data-id="${encId(u.id)}">فك الحظر</button>`
+                    : `<button class="btn small warn" data-act="block" data-id="${encId(u.id)}">حظر</button>`
                 }
 
-                <button class="btn small danger" data-act="del" data-id="${escHtml(u.id)}" data-name="${escHtml(u.username)}">حذف</button>
+                <button class="btn small danger" data-act="del" data-id="${encId(u.id)}" data-name="${escHtml(u.username)}">حذف</button>
 
                 ${
                   (!u.is_admin)
-                    ? `<button class="btn small" data-act="makeAdmin" data-id="${escHtml(u.id)}">جعله أدمن</button>`
-                    : `<button class="btn small" data-act="makeUser" data-id="${escHtml(u.id)}">جعله مستخدم</button>`
+                    ? `<button class="btn small" data-act="makeAdmin" data-id="${encId(u.id)}">جعله أدمن</button>`
+                    : `<button class="btn small" data-act="makeUser" data-id="${encId(u.id)}">جعله مستخدم</button>`
                 }
               </div>
             </td>
@@ -865,7 +904,7 @@
         const custName = getCustomerName(inv) || "بدون اسم";
 
         return `
-          <div class="invItem" data-last-inv-id="${escHtml(inv.id)}">
+          <div class="invItem" data-last-inv-id="${encId(inv.id)}">
             <div class="invTop">
               <div>
                 <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
@@ -1096,7 +1135,7 @@
         const custName = getCustomerName(inv) || "بدون اسم";
 
         return `
-          <div class="invItem" data-inv-id="${escHtml(inv.id)}">
+          <div class="invItem" data-inv-id="${encId(inv.id)}">
             <div class="invTop">
               <div>
                 <div class="invTitle">${escHtml(custName)} — <span class="muted">${escHtml(status)}</span></div>
@@ -1151,7 +1190,7 @@
       const wrap = b.closest(".invItem");
       if(!wrap) return;
 
-      const invId = wrap.getAttribute("data-inv-id");
+      const invId = decId(wrap.getAttribute("data-inv-id"));
       const inv = (CURRENT_INV_CACHE||[]).find(x => String(x.id) === String(invId));
       if(!inv) return;
 
@@ -1177,7 +1216,7 @@
       const item = b.closest(".invItem");
       if(!item) return;
 
-      const invId = item.getAttribute("data-last-inv-id");
+      const invId = decId(item.getAttribute("data-last-inv-id"));
       const inv = (LAST_INVS_CACHE||[]).find(x => String(x.id) === String(invId));
       if(!inv) return;
 
@@ -1218,6 +1257,8 @@
       localStorage.setItem("HAYEK_ADMIN_SESSION", JSON.stringify({ id:u.id }));
       loginCard.classList.add("hide");
       dashCard.classList.remove("hide");
+      setMode("dash");
+
       subTitle.textContent = "لوحة الإدارة";
       btnOpenAdd.classList.remove("hide");
       btnRefresh.classList.remove("hide");
@@ -1232,6 +1273,8 @@
       localStorage.removeItem("HAYEK_ADMIN_SESSION");
       dashCard.classList.add("hide");
       loginCard.classList.remove("hide");
+      setMode("login");
+
       subTitle.textContent = "تسجيل دخول الأدمن";
       btnOpenAdd.classList.add("hide");
       btnRefresh.classList.add("hide");
@@ -1242,20 +1285,26 @@
     async function restoreSession(){
       try{
         const s = JSON.parse(localStorage.getItem("HAYEK_ADMIN_SESSION") || "null");
-        if(!s?.id) return;
+        if(!s?.id) { setMode("login"); return; }
         const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(data?.length && data[0].is_admin && !data[0].is_blocked){
           ADMIN = data[0];
           loginCard.classList.add("hide");
           dashCard.classList.remove("hide");
+          setMode("dash");
+
           subTitle.textContent = "لوحة الإدارة";
           btnOpenAdd.classList.remove("hide");
           btnRefresh.classList.remove("hide");
           btnLogoutTop.classList.remove("hide");
           setSessionPill();
           await applyAndRender();
+        }else{
+          setMode("login");
         }
-      }catch{}
+      }catch{
+        setMode("login");
+      }
     }
 
     // ---------- Add user modal ----------
@@ -1304,7 +1353,7 @@
       if(!b) return;
 
       const act = b.dataset.act;
-      const id  = b.dataset.id;
+      const id  = decId(b.dataset.id || "");
       const name = b.dataset.name || "";
 
       clearBox(dashErr); clearBox(dashOk);
@@ -1396,6 +1445,7 @@
       clearBox(loginErr); clearBox(loginOk);
     });
 
+    // Init
     setSessionPill();
     restoreSession();
   </script>
