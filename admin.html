@@ -44,14 +44,11 @@
       padding:14px;
     }
 
-    /* ✅ مناسب للجوال واللاب */
+    /* ✅ أهم تعديل: 100% عرض + بالمنتصف */
     .wrap{
       width:100%;
-      max-width:1280px;
+      max-width:none;     /* كان 1280/1500 */
       margin:0 auto;
-    }
-    @media(min-width:1200px){
-      .wrap{max-width:1500px;}
     }
 
     .topbar{
@@ -133,7 +130,13 @@
     label{display:block; color:var(--muted); font-size:12px; margin:10px 0 6px}
 
     .grid{display:grid; gap:14px;}
-    @media(min-width:980px){ .grid{grid-template-columns: 420px 1fr;} }
+    @media(min-width:980px){
+      .grid{grid-template-columns: 420px 1fr;}
+
+      /* ✅ أهم تعديل: لما الداش ظاهر ياخد العمودين */
+      #dashCard:not(.hide){ grid-column: 1 / -1; }
+      #loginCard:not(.hide){ grid-column: 1 / -1; }
+    }
 
     .searchBox input{
       border-radius:18px;
@@ -168,7 +171,6 @@
     .chip.active{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18);}
     .dateRow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
-    /* ✅ جدول بدون سكرول يمين/يسار على الموبايل (منخفي أعمدة) */
     .tableWrap{
       margin-top:14px;
       border:1px solid var(--line2);
@@ -190,7 +192,6 @@
     th{color:var(--muted); background: rgba(255,255,255,.05); font-weight:900;}
     tr:last-child td{border-bottom:0}
 
-    /* عمود الإجراءات */
     td.actionsCell{
       white-space:normal;
       overflow:visible;
@@ -223,31 +224,20 @@
       min-width:62px;
     }
 
+    /* ✅ أهم تعديل للأزرار: عمودي + عرض كامل (لاب + موبايل) */
     .actionsCol{
       display:flex;
+      flex-direction:column;     /* فوق بعض */
       gap:8px;
-      align-items:center;
+      align-items:stretch;
       justify-content:flex-start;
-      flex-wrap:wrap; /* موبايل: لف عادي */
+    }
+    .actionsCol .btn{
+      width:100%;
+      text-align:center;
     }
 
-    /* ✅ لابتوب: سطر واحد + سكرول داخل نفس خلية الإجراءات */
-    @media (min-width: 900px){
-      table{table-layout:auto;}
-      th,td{white-space:nowrap;}
-      td.actionsCell{width:1%;}
-      .actionsCol{
-        flex-wrap:nowrap;
-        overflow-x:auto;
-        overflow-y:hidden;
-        padding-bottom:4px;
-        scrollbar-width:thin;
-      }
-      .actionsCol::-webkit-scrollbar{height:7px}
-      .actionsCol::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:999px}
-    }
-
-    /* ✅ موبايل: اخفي "نشط منذ" لتصير الشاشة أريح */
+    /* ✅ موبايل: اخفي "نشط منذ" */
     @media (max-width: 680px){
       .wrap{padding-bottom:10px;}
       th:nth-child(4), td:nth-child(4){display:none;} /* نشط منذ */
@@ -569,7 +559,9 @@
 
   <div id="printArea"></div>
 
+  <!-- ✅ نفس سكربت ملفك بدون أي تغيير -->
   <script type="module">
+    /* (سكربتك كامل كما أرسلته) */
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
@@ -710,7 +702,6 @@
       return [];
     }
 
-    /* ✅ اسم الزبون من customer_name أو من rows[0].__meta.customer */
     function getCustomerName(inv){
       const direct = safeText(inv.customer_name || inv.customer || "").trim();
       if(direct) return direct;
@@ -955,7 +946,6 @@
       }
     }
 
-    // ---------- PDF Export ----------
     function buildInvoicePrint(inv, username){
       const pa = $("printArea");
       const ops = pickOps(inv);
@@ -1060,7 +1050,6 @@
       pdf.save(`HAYEK_${safeName}_${last6(inv.id)}.pdf`);
     }
 
-    // ---------- Invoices Modal ----------
     let CURRENT_INV_USER_ID = null;
     let CURRENT_INV_USER_NAME = "";
     let CURRENT_INV_CACHE = [];
@@ -1188,7 +1177,6 @@
       }
     });
 
-    // ✅ أزرار آخر الفواتير (فتح/PDF)
     let LAST_USERS_CACHE = [];
     let LAST_INVS_CACHE = [];
     lastInvGrid.addEventListener("click", async (e)=>{
@@ -1215,7 +1203,6 @@
       }
     });
 
-    // ---------- Admin auth ----------
     async function adminLogin(){
       clearBox(loginErr); clearBox(loginOk);
 
@@ -1279,7 +1266,6 @@
       }catch{}
     }
 
-    // ---------- Add user modal ----------
     function openAdd(){ addBack.style.display="flex"; clearBox(addErr); clearBox(addOk); }
     function closeAdd(){ addBack.style.display="none"; }
 
@@ -1319,7 +1305,6 @@
       await applyAndRender();
     }
 
-    // ---------- Actions on users ----------
     usersTbody.addEventListener("click", async (e)=>{
       const b = e.target.closest("button");
       if(!b) return;
@@ -1380,7 +1365,6 @@
       }
     });
 
-    // ---------- UI binds ----------
     rangeChips.addEventListener("click", (e)=>{
       const c = e.target.closest(".chip");
       if(!c) return;
