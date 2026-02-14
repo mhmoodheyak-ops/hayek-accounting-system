@@ -427,11 +427,10 @@
         const ctrl = new AbortController();
         const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
-        // ✅ GET حقيقي + headers صحيحة (يحل CORS على الموبايل)
         const url =
           `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
 
-        await fetch(url, {
+        const res = await fetch(url, {
           method: "GET",
           mode: "cors",
           cache: "no-store",
@@ -443,6 +442,10 @@
         });
 
         clearTimeout(t);
+
+        // ✅ أهم تعديل: لازم نتأكد response.ok
+        if(!res || !res.ok) return false;
+
         return true;
       }catch{
         return false;
@@ -473,18 +476,42 @@
       await refreshNetState(true);
     }
 
-    // ✅ اجعل الأحداث تنتظر تحديث NET_OK ثم تزامن
-    window.addEventListener("online", async ()=>{ await kickNet(); await qSyncSilently(); await syncDeviceIdIfNeeded(); });
-    window.addEventListener("focus",  async ()=>{ await kickNet(); await qSyncSilently(); await syncDeviceIdIfNeeded(); });
-    document.addEventListener("visibilitychange", async ()=>{
-      if(!document.hidden){ await kickNet(); await qSyncSilently(); await syncDeviceIdIfNeeded(); }
+    // ✅ أحداث رجوع الاتصال — الآن نعمل SYNC "إجباري" حتى لو NET_OK ما تحدّث
+    window.addEventListener("online", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
     });
 
-    // ✅ مؤقت: يحدّث حالة الشبكة ثم يزامن (بدون race)
-    setInterval(async ()=>{ await refreshNetState(false); await qSyncSilently(); }, 8000);
+    window.addEventListener("focus", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
+
+    document.addEventListener("visibilitychange", async ()=>{
+      if(!document.hidden){
+        await kickNet();
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
+      }
+    });
+
+    // ✅ صفحات PWA أحياناً ما بتطلق focus/online — pageshow أقوى
+    window.addEventListener("pageshow", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
+
+    // ✅ مؤقت تزامن دوري (هاد يضمن رجوع النت حتى لو ما وصل event)
+    setInterval(async ()=>{
+      await refreshNetState(false);
+      await qSyncSilently(false);
+    }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently)
+    // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently) — FIXED (NO DEPEND ON NET_OK)
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -503,20 +530,31 @@
     }
 
     let __syncing = false;
-    async function qSyncSilently(){
+
+    // ✅ أهم تعديل جذري:
+    // - ما عاد نوقف المزامنة بسبب NET_OK
+    // - إذا force=true منجرب فوراً
+    // - إذا فشل upsert لأي سبب منخلي العنصر بالطابور
+    async function qSyncSilently(force=false){
       if(__syncing) return;
+
       const arr = qRead();
       if(!arr.length) return;
 
-      await refreshNetState(false);
-      if(!netNow()) return;
+      if(!force){
+        await refreshNetState(false);
+        if(!netNow()) return;
+      }
 
       __syncing = true;
       try{
         const keep = [];
         for(const payload of arr){
           try{
-            const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
+            const { error } = await supabase
+              .from(INVOICE_TABLE)
+              .upsert(payload, { onConflict: "id" });
+
             if(error) keep.push(payload);
           }catch{
             keep.push(payload);
@@ -928,8 +966,8 @@
 
         renderSug();
 
-        qSyncSilently();
-        syncDeviceIdIfNeeded();
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
       }catch(e){
         showErr(loginErr, "خطأ غير متوقع:\n" + (e?.message || String(e)));
       }
@@ -1004,8 +1042,8 @@
         resetAll(true);
         renderSug();
 
-        qSyncSilently();
-        syncDeviceIdIfNeeded();
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
       }catch{}
     }
 
@@ -1174,7 +1212,7 @@
         showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
       }
 
-      qSyncSilently();
+      await qSyncSilently(false);
     }
 
     async function clearOperations(){
@@ -1191,7 +1229,7 @@
         if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
       }
       toast("تم المسح ✅");
-      qSyncSilently();
+      await qSyncSilently(false);
     }
 
     function buildPrintArea(){
@@ -1288,7 +1326,7 @@
       toast("تم تنزيل PDF ✅");
       resetAll(false);
 
-      qSyncSilently();
+      await qSyncSilently(false);
     }
 
     // ------- binds -------
@@ -1315,7 +1353,7 @@
     setTab("calc");
 
     renderSug();
-    refreshNetState(true).then(()=>{ qSyncSilently(); });
+    refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
     restoreSession();
 
     try{
