@@ -261,7 +261,7 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* PDF */
+    /* PDF STYLE */
     #printArea{
       position: fixed;
       left:-9999px;
@@ -273,24 +273,145 @@
       direction: rtl;
       font-family: Arial, "Segoe UI", Tahoma, sans-serif;
     }
-    .p-box{border:2px solid #111;border-radius:16px;padding:14px 16px;margin-bottom:14px;}
-    .p-header{text-align:center;padding:18px 16px;}
-    .p-title{font-weight:900;font-size:18px;margin:0;}
-    .p-subtitle{margin-top:6px;font-size:12px;color:#0a7a55;font-weight:800;letter-spacing:.2px;}
-    .p-chiprow{margin-top:12px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
-    .p-chip{border:1px solid #111;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800;background:#fff;}
-    .p-field{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:2px solid #111;border-radius:14px;margin-bottom:10px;}
-    .p-field .k{font-size:12px;font-weight:900;color:#111;white-space:nowrap;}
-    .p-field .v{font-size:12px;font-weight:800;color:#111;word-break:break-all;text-align:left;direction:ltr;}
-    .p-tableWrap{border:2px solid #111;border-radius:16px;overflow:hidden;}
-    #printArea table{width:100%;border-collapse:collapse;background:#fff;}
-    #printArea thead th{font-size:12px;font-weight:900;color:#111;padding:10px;border-bottom:2px solid #111;background:#fff;}
-    #printArea tbody td{font-size:12px;padding:10px;border-bottom:1px solid #111;background:#fff;}
-    #printArea tbody tr:last-child td{border-bottom:0;}
-    .p-totalBox{border:2px dashed #111;border-radius:16px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-weight:900;}
-    .p-foot{border:2px solid #111;border-radius:16px;padding:14px 16px;margin-top:14px;text-align:center;}
-    .p-foot .small{font-size:12px;color:#555;font-weight:800;line-height:1.8;}
-    .p-phone{display:inline-block;margin-top:10px;border:2px solid #0a7a55;color:#0a7a55;border-radius:999px;padding:10px 18px;font-weight:900;font-size:16px;}
+
+    .p-box{
+      border:2px solid #111;
+      border-radius:16px;
+      padding:14px 16px;
+      margin-bottom:14px;
+    }
+
+    .p-header{
+      text-align:center;
+      padding:18px 16px;
+    }
+
+    .p-title{
+      font-weight:900;
+      font-size:18px;
+      margin:0;
+    }
+
+    .p-subtitle{
+      margin-top:6px;
+      font-size:12px;
+      color:#0a7a55;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .p-chiprow{
+      margin-top:12px;
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .p-chip{
+      border:1px solid #111;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:800;
+      background:#fff;
+    }
+
+    .p-field{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:2px solid #111;
+      border-radius:14px;
+      margin-bottom:10px;
+    }
+
+    .p-field .k{
+      font-size:12px;
+      font-weight:900;
+      color:#111;
+      white-space:nowrap;
+    }
+
+    .p-field .v{
+      font-size:12px;
+      font-weight:800;
+      color:#111;
+      word-break:break-all;
+      text-align:left;
+      direction:ltr;
+    }
+
+    .p-tableWrap{
+      border:2px solid #111;
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    #printArea table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+    }
+
+    #printArea thead th{
+      font-size:12px;
+      font-weight:900;
+      color:#111;
+      padding:10px;
+      border-bottom:2px solid #111;
+      background:#fff;
+    }
+
+    #printArea tbody td{
+      font-size:12px;
+      padding:10px;
+      border-bottom:1px solid #111;
+      background:#fff;
+    }
+
+    #printArea tbody tr:last-child td{
+      border-bottom:0;
+    }
+
+    .p-totalBox{
+      border:2px dashed #111;
+      border-radius:16px;
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:12px;
+      font-weight:900;
+    }
+
+    .p-foot{
+      border:2px solid #111;
+      border-radius:16px;
+      padding:14px 16px;
+      margin-top:14px;
+      text-align:center;
+    }
+
+    .p-foot .small{
+      font-size:12px;
+      color:#555;
+      font-weight:800;
+      line-height:1.8;
+    }
+
+    .p-phone{
+      display:inline-block;
+      margin-top:10px;
+      border:2px solid #0a7a55;
+      color:#0a7a55;
+      border-radius:999px;
+      padding:10px 18px;
+      font-weight:900;
+      font-size:16px;
+    }
   </style>
 </head>
 
@@ -494,11 +615,15 @@
       renderDatalist(itemList, loadMem(MEM_ITEM_KEY));
     }
 
-    // ---------- Tables (MATCH YOUR DB) ----------
+    // ---------- Tables ----------
     const INVOICE_TABLE = "app_invoices";
     const USERS_TABLE   = "app_users";
-    // ✅ عندك عمود rows (jsonb)
-    const OPS_COL_CANDIDATES = ["rows"];
+
+    // ✅ عندك في الجدول rows jsonb
+    const OPS_COL_CANDIDATES = ["rows","lines","ops","items","details"];
+
+    // ✅ عندك في الجدول owner_id uuid
+    const OWNER_COL = "owner_id";
 
     // ---------- Offline Sync Queue (idempotent) ----------
     const QUEUE_KEY = "HAYEK_SYNC_QUEUE_V3";
@@ -727,13 +852,13 @@
       invoiceId = uuid();
       invoiceOpen = true;
 
-      // ✅ MATCH DB: owner_id + customer + rows
+      // ✅ أهم تعديل: owner_id بدل user_id
       qUpsertInvoice({
         id: invoiceId,
-        owner_id: USER.id,
-        customer: customer,
-        total: 0,
-        status: "open"
+        [OWNER_COL]: USER.id,
+        customer_name: customer,
+        status: "open",
+        total: 0
       }, ops);
 
       flushQueue();
@@ -756,13 +881,13 @@
       const customer = custInput.value.trim();
       const total = calcTotal();
 
-      // ✅ MATCH DB: owner_id + customer + rows
+      // ✅ owner_id بدل user_id
       qUpsertInvoice({
         id: invoiceId,
-        owner_id: USER.id,
-        customer: customer,
-        total,
-        status: "open"
+        [OWNER_COL]: USER.id,
+        customer_name: customer,
+        status: "open",
+        total
       }, ops);
 
       flushQueue();
@@ -903,7 +1028,7 @@
       const dateText = new Date().toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
       const total = calcTotal();
 
-      const rows = ops.slice().reverse().map(o=>`
+      const rows = ops.slice().reverse().map((o,i)=>`
         <tr>
           <td style="width:24%">${escapeHtml(o.time || "")}</td>
           <td style="width:34%">${escapeHtml(o.label || "")}</td>
@@ -979,13 +1104,13 @@
       const customer = custInput.value.trim();
       const total = calcTotal();
 
-      // ✅ MATCH DB: owner_id + customer + rows
+      // ✅ owner_id بدل user_id
       qUpsertInvoice({
         id: invoiceId,
-        owner_id: USER.id,
-        customer: customer,
-        total,
-        status: "closed"
+        [OWNER_COL]: USER.id,
+        customer_name: customer,
+        status: "closed",
+        total
       }, ops);
 
       invoiceOpen = false;
@@ -1060,11 +1185,13 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
+    // Initial
     setTab("calc");
     exprView.textContent = "";
     resView.textContent = "0";
     refreshDatalists();
     restoreSession();
+
     flushQueue();
   </script>
 </body>
