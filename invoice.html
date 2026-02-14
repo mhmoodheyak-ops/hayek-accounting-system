@@ -1,4 +1,5 @@
 <!doctype html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
@@ -423,16 +424,57 @@
     }
 
     // =========================
+    // ✅ NET CHECK (REAL) — لا تعتمد على navigator.onLine
+    // =========================
+    let _NET_CACHE = { ok:null, ts:0 };
+    async function isNetOK(){
+      const now = Date.now();
+      if(_NET_CACHE.ok !== null && (now - _NET_CACHE.ts) < 5000) return _NET_CACHE.ok;
+
+      // لو المتصفح يقول offline غالباً صحيح، بس نتحقق سريعاً
+      // (مهم للموبايل/PWA لأنه أحياناً يعطي false غلط)
+      try{
+        const ctrl = new AbortController();
+        const t = setTimeout(()=>ctrl.abort(), 2500);
+
+        // Ping خفيف على Supabase (لا يحتاج صلاحيات خاصة، المهم وصول الشبكة)
+        const r = await fetch(SUPABASE_URL + "/rest/v1/", {
+          method: "GET",
+          mode: "cors",
+          signal: ctrl.signal,
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + SUPABASE_ANON_KEY
+          }
+        });
+
+        clearTimeout(t);
+
+        // حتى لو رجع 404/401 المهم أنه وصل للسيرفر
+        const ok = !!r;
+        _NET_CACHE = { ok, ts: now };
+        return ok;
+      }catch{
+        _NET_CACHE = { ok:false, ts: now };
+        return false;
+      }
+    }
+
+    // =========================
     // ✅ OFFLINE QUEUE (Local Save + Auto Sync silently)
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
     function qRead(){
-      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
-      catch{ return []; }
+      try{
+        const v = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]");
+        return Array.isArray(v) ? v : [];
+      }catch{ return []; }
     }
     function qWrite(arr){
-      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
+      try{
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
+      }catch{}
     }
     function qAdd(payload){
       const arr = qRead();
@@ -440,21 +482,34 @@
       filtered.push({ ...payload, __queued_at: new Date().toISOString() });
       qWrite(filtered);
     }
+
+    let _SYNC_RUNNING = false;
     async function qSyncSilently(){
-      if(!navigator.onLine) return;
+      if(_SYNC_RUNNING) return;
+      if(!USER?.id) return;
+
+      const net = await isNetOK();
+      if(!net) return;
+
       const arr = qRead();
       if(!arr.length) return;
 
-      const keep = [];
-      for(const payload of arr){
-        try{
-          const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
-          if(error) keep.push(payload);
-        }catch{
-          keep.push(payload);
+      _SYNC_RUNNING = true;
+      try{
+        const keep = [];
+        for(const payload of arr){
+          try{
+            payload.owner_id = payload.owner_id || USER.id;
+            const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
+            if(error) keep.push(payload);
+          }catch{
+            keep.push(payload);
+          }
         }
+        qWrite(keep);
+      }finally{
+        _SYNC_RUNNING = false;
       }
-      qWrite(keep);
     }
 
     window.addEventListener("online", ()=>{ qSyncSilently(); });
@@ -605,10 +660,11 @@
     async function enforceDeviceLockForUserRow(u){
       const deviceId = getOrCreateDeviceId();
 
+      const net = await isNetOK();
+
       // ✅ Offline: نتحقق محلياً فقط (آخر مستخدم)
-      if(!navigator.onLine){
+      if(!net){
         if(!u.device_id){
-          // أول مرة محلياً
           u.device_id = deviceId;
           saveOfflineUser(u);
           return u;
@@ -648,12 +704,13 @@
     }
 
     async function syncDeviceIdIfNeeded(){
-      if(!navigator.onLine) return;
+      const net = await isNetOK();
+      if(!net) return;
+
       try{
         if(!USER?.id) return;
         const deviceId = getOrCreateDeviceId();
 
-        // إذا عندنا USER بدون device_id محلياً، حاول ثبته على السيرفر (مرة واحدة)
         if(!USER.device_id){
           const { error } = await supabase
             .from(USERS_TABLE)
@@ -742,8 +799,10 @@
         closed_at: status === "closed" ? new Date().toISOString() : null
       };
 
+      const net = await isNetOK();
+
       // ✅ Offline: خزّن مباشرة وارجع OK
-      if(!navigator.onLine){
+      if(!net){
         qAdd(payload);
         return { ok:true, id: invoiceId, queued:true };
       }
@@ -756,13 +815,11 @@
           .limit(1);
 
         if(error){
-          // ✅ إذا فشل الشبكة/السيرفر: خزّن محلياً
           qAdd(payload);
           return { ok:true, id: invoiceId, queued:true };
         }
         return { ok:true, id: (data?.[0]?.id || invoiceId) };
-      }catch(e){
-        // ✅ أي استثناء: خزّن محلياً
+      }catch{
         qAdd(payload);
         return { ok:true, id: invoiceId, queued:true };
       }
@@ -789,8 +846,10 @@
         return;
       }
 
+      const net = await isNetOK();
+
       // ✅ Offline login (آخر مستخدم فقط)
-      if(!navigator.onLine){
+      if(!net){
         const cached = readOfflineUser();
         if(!cached){
           showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
@@ -807,7 +866,6 @@
 
         let u = cached;
 
-        // ✅ قفل جهاز واحد (محلي)
         try{
           u = await enforceDeviceLockForUserRow(u);
         }catch(e){
@@ -815,11 +873,8 @@
           return;
         }
 
-        // ✅ قفل تبويب واحد
         startSingleTabGuard(u.username);
-        if(TAB_BLOCKED){
-          return;
-        }
+        if(TAB_BLOCKED) return;
 
         USER = u;
         localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:true }));
@@ -835,7 +890,7 @@
         return;
       }
 
-      // ✅ Online login (أصلي)
+      // ✅ Online login
       try{
         const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("username", username).limit(1);
         if(error){ showErr(loginErr, "خطأ اتصال:\n" + (error.message||"")); return; }
@@ -845,7 +900,6 @@
         if(u.password !== password){ showErr(loginErr, "كلمة السر غير صحيحة."); return; }
         if(u.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
 
-        // ✅ قفل جهاز واحد
         try{
           u = await enforceDeviceLockForUserRow(u);
         }catch(e){
@@ -853,11 +907,8 @@
           return;
         }
 
-        // ✅ قفل تبويب واحد
         startSingleTabGuard(u.username);
-        if(TAB_BLOCKED){
-          return;
-        }
+        if(TAB_BLOCKED) return;
 
         USER = u;
         localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:false }));
@@ -871,7 +922,6 @@
 
         renderSug();
 
-        // ✅ Sync أي فواتير معلّقة
         qSyncSilently();
         syncDeviceIdIfNeeded();
       }catch(e){
@@ -884,8 +934,9 @@
         const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
         if(!s?.id) return;
 
-        // ✅ إذا أوفلاين: حاول من الكاش المحلي
-        if(!navigator.onLine){
+        const net = await isNetOK();
+
+        if(!net){
           const cached = readOfflineUser();
           if(!cached || cached.id !== s.id) return;
           if(cached.is_blocked){
@@ -916,7 +967,6 @@
           return;
         }
 
-        // ✅ Online restore (أصلي)
         const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
         if(error) return;
         if(!data?.length) return;
@@ -1229,7 +1279,6 @@
       toast("تم تنزيل PDF ✅");
       resetAll(false);
 
-      // ✅ بعد التصدير: حاول مزامنة خلفية (لو كان في نت)
       qSyncSilently();
     }
 
