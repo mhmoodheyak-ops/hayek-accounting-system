@@ -1,12 +1,14 @@
-/* service-worker.js (OFFLINE-FIRST V10)
-   - يدعم Offline للصفحات + مكتبات CDN الأساسية (html2canvas / jsPDF / supabase esm)
-   - لا يتدخل مع أي طلبات أخرى غير ضرورية
+/* service-worker.js (OFFLINE SAFE V11)
+   - صفحات: Network-first مع fallback
+   - ملفات نفس الدومين: Cache-first
+   - CDN Scripts الأساسية (UMD): Cache-first (no-cors) لتعمل Offline
+   - لا يلمس أي API/Supabase domain requests (يتركها طبيعي)
 */
 
-const CACHE_NAME = "hayek-cache-v10";
+const CACHE_NAME = "hayek-cache-v11";
+const OFFLINE_FALLBACK = "./index.html";
 
-// صفحات + ملفات محلية آمنة
-const PRECACHE_LOCAL = [
+const PRECACHE = [
   "./",
   "./index.html",
   "./invoice.html",
@@ -16,28 +18,25 @@ const PRECACHE_LOCAL = [
   "./icons/icon-512.png"
 ];
 
-// مكتبات لازم تكون متاحة Offline
-const PRECACHE_CDN = [
+// CDN scripts (UMD) — آمنة للتخزين offline
+const CDN_CACHE_LIST = [
   "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js",
   "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
-  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ];
 
-function isCdnWeNeed(url) {
-  return PRECACHE_CDN.some((x) => url.href === x);
+function isCdnTarget(url) {
+  return CDN_CACHE_LIST.includes(url.href);
 }
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(PRECACHE);
 
-    // 1) خزّن المحلي
-    await cache.addAll(PRECACHE_LOCAL);
-
-    // 2) خزّن الـ CDN (Best effort) حتى لو opaque
-    for (const u of PRECACHE_CDN) {
+    // Best effort: خزّن CDN scripts
+    for (const u of CDN_CACHE_LIST) {
       try {
-        // no-cors لتخزين الـ CDN حتى بدون CORS
         const req = new Request(u, { mode: "no-cors" });
         const res = await fetch(req);
         await cache.put(req, res);
@@ -60,7 +59,7 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // ✅ 1) صفحات التنقل: Network أولاً ثم Cache fallback
+  // ✅ 1) صفحات التنقل
   if (req.mode === "navigate") {
     event.respondWith((async () => {
       try {
@@ -70,31 +69,32 @@ self.addEventListener("fetch", (event) => {
         return fresh;
       } catch (e) {
         const cache = await caches.open(CACHE_NAME);
-        return (await cache.match(req)) || (await cache.match("./invoice.html")) || (await cache.match("./index.html"));
+        return (await cache.match(req)) || (await cache.match(OFFLINE_FALLBACK)) || Response.error();
       }
     })());
     return;
   }
 
-  // ✅ 2) CDN الضروري: Cache-first (حتى يشتغل Offline)
-  if (isCdnWeNeed(url)) {
+  // ✅ 2) CDN scripts الأساسية: Cache-first
+  if (isCdnTarget(url)) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(new Request(url.href, { mode: "no-cors" }));
+      const key = new Request(url.href, { mode: "no-cors" });
+      const cached = await cache.match(key);
       if (cached) return cached;
+
       try {
-        const res = await fetch(new Request(url.href, { mode: "no-cors" }));
-        await cache.put(new Request(url.href, { mode: "no-cors" }), res.clone());
+        const res = await fetch(key);
+        await cache.put(key, res.clone());
         return res;
       } catch (e) {
-        // آخر حل: ارجع cached لو موجود
-        return cached;
+        return cached || Response.error();
       }
     })());
     return;
   }
 
-  // ✅ 3) نفس الدومين للملفات المحلية: Cache-first
+  // ✅ 3) نفس الدومين (ملفاتنا): Cache-first
   if (url.origin === self.location.origin) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE_NAME);
@@ -106,11 +106,11 @@ self.addEventListener("fetch", (event) => {
         cache.put(req, fresh.clone());
         return fresh;
       } catch (e) {
-        return cached;
+        return cached || Response.error();
       }
     })());
     return;
   }
 
-  // ✅ غير ذلك: اتركه طبيعي
+  // ✅ 4) أي شيء خارجي ثاني (Supabase API وغيره): لا تتدخل
 });
