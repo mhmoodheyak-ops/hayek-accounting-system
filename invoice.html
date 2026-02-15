@@ -247,6 +247,22 @@
       font-weight:1000;
       font-size:22px;
     }
+
+    /* ✅ ADD ONLY: Voice mic button */
+    .hayekMicWrap{display:flex; gap:10px; align-items:center}
+    .hayekMicBtn{
+      width:46px; min-width:46px; height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      font-weight:1000;
+      cursor:pointer;
+      transition:.15s;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
+    .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
   </style>
 </head>
 
@@ -286,11 +302,23 @@
       <div class="sep"></div>
 
       <label>اسم الزبون (إجباري)</label>
-      <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
+
+      <!-- ✅ ADD ONLY: mic next to customerName -->
+      <div class="hayekMicWrap">
+        <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
+        <button class="hayekMicBtn" id="hayekMicCustomer" type="button" title="تسجيل صوت لاسم الزبون">🎤</button>
+      </div>
+
       <datalist id="custList"></datalist>
 
       <label>اسم المنتج / البيان (اختياري)</label>
-      <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
+
+      <!-- ✅ ADD ONLY: mic next to itemName -->
+      <div class="hayekMicWrap">
+        <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
+        <button class="hayekMicBtn" id="hayekMicItem" type="button" title="تسجيل صوت لاسم المنتج">🎤</button>
+      </div>
+
       <datalist id="itemList"></datalist>
 
       <div class="tabs">
@@ -361,6 +389,78 @@
     <div id="printArea"></div>
     <div class="toast" id="toast"></div>
   </div>
+
+  <!-- ✅ ADD ONLY: Voice-to-text (Web Speech API) -->
+  <script>
+  (function(){
+    const HAYEK_SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function HAYEK_attachMic(btnId, inputId, lang){
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      if(!btn || !input) return;
+
+      if(!HAYEK_SpeechRecognition){
+        btn.style.opacity = "0.6";
+        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
+        return;
+      }
+
+      const rec = new HAYEK_SpeechRecognition();
+      rec.lang = lang || "ar-SA";
+      rec.interimResults = true;
+      rec.continuous = false;
+
+      let listening = false;
+
+      function setOff(){
+        listening = false;
+        btn.classList.remove("on");
+        btn.textContent = "🎤";
+      }
+      function setOn(){
+        listening = true;
+        btn.classList.add("on");
+        btn.textContent = "⏹";
+      }
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        const text = (finalText || interim).trim();
+        if(text){
+          input.value = text;
+          input.dispatchEvent(new Event("input", { bubbles:true }));
+          input.dispatchEvent(new Event("change", { bubbles:true })); // حتى يقترح/يحفظ
+        }
+      };
+
+      rec.onend = setOff;
+      rec.onerror = setOff;
+
+      btn.addEventListener("click", ()=>{
+        try{
+          if(listening){ rec.stop(); return; }
+          setOn();
+          rec.start();
+        }catch{
+          setOff();
+          alert("❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.");
+        }
+      });
+    }
+
+    // اربط الأزرار بالحقول المطلوبة
+    HAYEK_attachMic("hayekMicCustomer", "customerName", "ar-SA");
+    HAYEK_attachMic("hayekMicItem", "itemName", "ar-SA");
+  })();
+  </script>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -731,7 +831,7 @@
         }
         if(u.device_id !== deviceId){
           throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
-        }
+          }
         return u;
       }
 
