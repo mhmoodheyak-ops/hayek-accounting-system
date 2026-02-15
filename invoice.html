@@ -248,7 +248,7 @@
       font-size:22px;
     }
 
-    /* ✅ ADD ONLY: Voice mic button + wrap */
+    /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
       width:46px; min-width:46px; height:46px;
@@ -301,7 +301,7 @@
 
       <div class="sep"></div>
 
-      <!-- ✅ ADD ONLY: Voice language toggle -->
+      <!-- ✅ Voice language toggle -->
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
@@ -309,7 +309,6 @@
       </div>
 
       <label>اسم الزبون (إجباري)</label>
-      <!-- ✅ ADD ONLY: mic next to customerName -->
       <div class="hayekMicWrap">
         <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicCustomer" type="button" title="تسجيل صوت لاسم الزبون">🎤</button>
@@ -317,12 +316,16 @@
       <datalist id="custList"></datalist>
 
       <label>اسم المنتج / البيان (اختياري)</label>
-      <!-- ✅ ADD ONLY: mic next to itemName -->
       <div class="hayekMicWrap">
         <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicItem" type="button" title="تسجيل صوت لاسم المنتج">🎤</button>
       </div>
       <datalist id="itemList"></datalist>
+
+      <!-- ✅ NEW: Smart voice add -->
+      <div style="margin-top:10px">
+        <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
+      </div>
 
       <div class="tabs">
         <button class="tab active" id="tabCalc" type="button">الحاسبة</button>
@@ -393,52 +396,47 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- ✅ ADD ONLY: Voice-to-text (Arabic + Turkish) -->
+  <!-- ✅ Voice-to-text (Arabic + Turkish) + Smart Add -->
   <script>
   (function(){
-    const HAYEK_SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    const HAYEK_VOICE_LANG_KEY = "HAYEK_VOICE_LANG_V1";
-    function HAYEK_getVoiceLang(){
-      return localStorage.getItem(HAYEK_VOICE_LANG_KEY) || "ar-SA";
-    }
-    function HAYEK_setVoiceLang(v){
-      localStorage.setItem(HAYEK_VOICE_LANG_KEY, v);
-      HAYEK_refreshLangUI();
-    }
-    function HAYEK_refreshLangUI(){
+    const LANG_KEY = "HAYEK_VOICE_LANG_V1";
+    function getLang(){ return localStorage.getItem(LANG_KEY) || "ar-SA"; }
+    function setLang(v){ localStorage.setItem(LANG_KEY, v); refreshLangUI(); }
+    function refreshLangUI(){
       const arBtn = document.getElementById("hayekLangAR");
       const trBtn = document.getElementById("hayekLangTR");
       if(!arBtn || !trBtn) return;
-      const v = HAYEK_getVoiceLang();
+      const v = getLang();
       arBtn.style.opacity = (v === "ar-SA") ? "1" : "0.65";
       trBtn.style.opacity = (v === "tr-TR") ? "1" : "0.65";
     }
 
-    function HAYEK_attachMic(btnId, inputId){
+    function attachMic(btnId, inputId){
       const btn = document.getElementById(btnId);
       const input = document.getElementById(inputId);
       if(!btn || !input) return;
 
-      if(!HAYEK_SpeechRecognition){
+      if(!SR){
         btn.style.opacity = "0.6";
         btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
         btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
 
-      const rec = new HAYEK_SpeechRecognition();
+      const rec = new SR();
       rec.interimResults = true;
       rec.continuous = false;
 
       let listening = false;
 
-      function setOff(){
+      function off(){
         listening = false;
         btn.classList.remove("on");
         btn.textContent = "🎤";
       }
-      function setOn(){
+      function on(){
         listening = true;
         btn.classList.add("on");
         btn.textContent = "⏹";
@@ -460,31 +458,142 @@
         }
       };
 
-      rec.onend = setOff;
-      rec.onerror = setOff;
+      rec.onend = off;
+      rec.onerror = off;
 
       btn.addEventListener("click", ()=>{
         try{
           if(listening){ rec.stop(); return; }
-          rec.lang = HAYEK_getVoiceLang(); // ✅ Arabic/Turkish based on toggle
-          setOn();
+          rec.lang = getLang();
+          on();
           rec.start();
         }catch{
-          setOff();
+          off();
           alert("❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.");
         }
       });
     }
 
-    HAYEK_attachMic("hayekMicCustomer", "customerName");
-    HAYEK_attachMic("hayekMicItem", "itemName");
+    // --- helpers for smart parse ---
+    const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+    function toLatinDigits(s){
+      return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d);
+    }
+    function normalizeExpr(s){
+      let x = toLatinDigits(s);
+      x = x.replace(/\s+/g,"");
+      x = x.replaceAll("_","-");
+      x = x.replaceAll("×","×");
+      x = x.replace(/[xX*]/g,"×");
+      x = x.replace(/\//g,"÷");
+      x = x.replace(/−/g,"-");
+      return x;
+    }
+    function parseSmart(text){
+      const t0 = toLatinDigits(String(text||"")).trim();
+      if(!t0) return null;
 
+      // find first digit index
+      const m = t0.match(/[0-9]/);
+      if(!m || m.index == null) return null;
+
+      const idx = m.index;
+      const item = t0.slice(0, idx).trim();
+      const exprRaw = t0.slice(idx).trim();
+      const expr = normalizeExpr(exprRaw);
+
+      if(!expr) return null;
+      return { item, expr };
+    }
+
+    function attachSmart(btnId){
+      const btn = document.getElementById(btnId);
+      if(!btn) return;
+
+      if(!SR){
+        btn.style.opacity = "0.6";
+        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
+        return;
+      }
+
+      const rec = new SR();
+      rec.interimResults = true;
+      rec.continuous = false;
+
+      let listening = false;
+
+      function off(){
+        listening = false;
+        btn.classList.remove("on");
+        btn.textContent = "🎙️ إضافة بالصوت (اسم + عملية)";
+      }
+      function on(){
+        listening = true;
+        btn.classList.add("on");
+        btn.textContent = "⏹ إيقاف التسجيل";
+      }
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        const text = (finalText || interim).trim();
+        if(!text) return;
+
+        // only act on final
+        if(finalText && finalText.trim()){
+          const parsed = parseSmart(finalText);
+          if(!parsed){
+            alert("❌ ما قدرت أفهم الصيغة.\nمثال: علبة شامبو 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
+            return;
+          }
+
+          const item = (parsed.item || "").trim();
+          const expr = (parsed.expr || "").trim();
+
+          if(!window.HAYEK_VOICE_ADD_LINE){
+            alert("❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى.");
+            return;
+          }
+          window.HAYEK_VOICE_ADD_LINE(item, expr);
+        }
+      };
+
+      rec.onend = off;
+      rec.onerror = off;
+
+      btn.addEventListener("click", ()=>{
+        try{
+          if(listening){ rec.stop(); return; }
+          rec.lang = getLang();
+          on();
+          rec.start();
+        }catch{
+          off();
+          alert("❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.");
+        }
+      });
+    }
+
+    // bind inputs mics
+    attachMic("hayekMicCustomer", "customerName");
+    attachMic("hayekMicItem", "itemName");
+
+    // bind lang
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
-    if(arBtn) arBtn.addEventListener("click", ()=> HAYEK_setVoiceLang("ar-SA"));
-    if(trBtn) trBtn.addEventListener("click", ()=> HAYEK_setVoiceLang("tr-TR"));
+    if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
+    if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
 
-    HAYEK_refreshLangUI();
+    // bind smart
+    attachSmart("hayekSmartAdd");
+
+    refreshLangUI();
   })();
   </script>
 
@@ -592,13 +701,9 @@
       }
     }
 
-    function netNow(){
-      return !!NET_OK;
-    }
+    function netNow(){ return !!NET_OK; }
 
-    async function kickNet(){
-      await refreshNetState(true);
-    }
+    async function kickNet(){ await refreshNetState(true); }
 
     window.addEventListener("online", async ()=>{
       await kickNet();
@@ -1514,8 +1619,40 @@
       await qSyncSilently(false);
     }
 
+    // ✅ EXPOSE: Smart voice add line
+    window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
+      try{
+        const c = custInput.value.trim();
+        if(!c){
+          showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
+          custInput.focus();
+          return;
+        }
+        clearErr(appErr);
+
+        if(item && String(item).trim()){
+          itemInput.value = String(item).trim();
+          itemInput.dispatchEvent(new Event("input", { bubbles:true }));
+          itemInput.dispatchEvent(new Event("change", { bubbles:true }));
+        }
+
+        const exprNorm = String(expression||"").trim();
+        if(!exprNorm){
+          showErr(appErr, "لم يتم العثور على عملية حسابية.");
+          return;
+        }
+
+        // دعم: 10_3 -> 10-3
+        const finalExpr = exprNorm.replaceAll("_","-");
+
+        setExpr(finalExpr);
+        await equalsAndLog();
+      }catch(e){
+        showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
+      }
+    };
+
     // ------- binds -------
-    // ✅ FIX: submit form حتى حفظ كلمة المرور
     document.getElementById("loginCard").addEventListener("submit", (e)=>{
       e.preventDefault();
       login();
