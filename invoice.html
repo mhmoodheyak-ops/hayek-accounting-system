@@ -248,7 +248,7 @@
       font-size:22px;
     }
 
-    /* ✅ ADD ONLY: Voice mic button */
+    /* ✅ ADD ONLY: Voice mic button + wrap */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
       width:46px; min-width:46px; height:46px;
@@ -301,24 +301,27 @@
 
       <div class="sep"></div>
 
-      <label>اسم الزبون (إجباري)</label>
+      <!-- ✅ ADD ONLY: Voice language toggle -->
+      <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
+        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
+        <button class="btn small" id="hayekLangAR" type="button">عربي</button>
+        <button class="btn small" id="hayekLangTR" type="button">Türkçe</button>
+      </div>
 
+      <label>اسم الزبون (إجباري)</label>
       <!-- ✅ ADD ONLY: mic next to customerName -->
       <div class="hayekMicWrap">
         <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicCustomer" type="button" title="تسجيل صوت لاسم الزبون">🎤</button>
       </div>
-
       <datalist id="custList"></datalist>
 
       <label>اسم المنتج / البيان (اختياري)</label>
-
       <!-- ✅ ADD ONLY: mic next to itemName -->
       <div class="hayekMicWrap">
         <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicItem" type="button" title="تسجيل صوت لاسم المنتج">🎤</button>
       </div>
-
       <datalist id="itemList"></datalist>
 
       <div class="tabs">
@@ -390,12 +393,29 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- ✅ ADD ONLY: Voice-to-text (Web Speech API) -->
+  <!-- ✅ ADD ONLY: Voice-to-text (Arabic + Turkish) -->
   <script>
   (function(){
     const HAYEK_SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    function HAYEK_attachMic(btnId, inputId, lang){
+    const HAYEK_VOICE_LANG_KEY = "HAYEK_VOICE_LANG_V1";
+    function HAYEK_getVoiceLang(){
+      return localStorage.getItem(HAYEK_VOICE_LANG_KEY) || "ar-SA";
+    }
+    function HAYEK_setVoiceLang(v){
+      localStorage.setItem(HAYEK_VOICE_LANG_KEY, v);
+      HAYEK_refreshLangUI();
+    }
+    function HAYEK_refreshLangUI(){
+      const arBtn = document.getElementById("hayekLangAR");
+      const trBtn = document.getElementById("hayekLangTR");
+      if(!arBtn || !trBtn) return;
+      const v = HAYEK_getVoiceLang();
+      arBtn.style.opacity = (v === "ar-SA") ? "1" : "0.65";
+      trBtn.style.opacity = (v === "tr-TR") ? "1" : "0.65";
+    }
+
+    function HAYEK_attachMic(btnId, inputId){
       const btn = document.getElementById(btnId);
       const input = document.getElementById(inputId);
       if(!btn || !input) return;
@@ -408,7 +428,6 @@
       }
 
       const rec = new HAYEK_SpeechRecognition();
-      rec.lang = lang || "ar-SA";
       rec.interimResults = true;
       rec.continuous = false;
 
@@ -437,7 +456,7 @@
         if(text){
           input.value = text;
           input.dispatchEvent(new Event("input", { bubbles:true }));
-          input.dispatchEvent(new Event("change", { bubbles:true })); // حتى يقترح/يحفظ
+          input.dispatchEvent(new Event("change", { bubbles:true }));
         }
       };
 
@@ -447,6 +466,7 @@
       btn.addEventListener("click", ()=>{
         try{
           if(listening){ rec.stop(); return; }
+          rec.lang = HAYEK_getVoiceLang(); // ✅ Arabic/Turkish based on toggle
           setOn();
           rec.start();
         }catch{
@@ -456,9 +476,15 @@
       });
     }
 
-    // اربط الأزرار بالحقول المطلوبة
-    HAYEK_attachMic("hayekMicCustomer", "customerName", "ar-SA");
-    HAYEK_attachMic("hayekMicItem", "itemName", "ar-SA");
+    HAYEK_attachMic("hayekMicCustomer", "customerName");
+    HAYEK_attachMic("hayekMicItem", "itemName");
+
+    const arBtn = document.getElementById("hayekLangAR");
+    const trBtn = document.getElementById("hayekLangTR");
+    if(arBtn) arBtn.addEventListener("click", ()=> HAYEK_setVoiceLang("ar-SA"));
+    if(trBtn) trBtn.addEventListener("click", ()=> HAYEK_setVoiceLang("tr-TR"));
+
+    HAYEK_refreshLangUI();
   })();
   </script>
 
@@ -831,7 +857,7 @@
         }
         if(u.device_id !== deviceId){
           throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
-          }
+        }
         return u;
       }
 
