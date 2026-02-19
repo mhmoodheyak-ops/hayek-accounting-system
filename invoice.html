@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PDF -->
+  <!-- PDF + Raster -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -22,6 +22,7 @@
       --bg:#071018; --panel:#0e1b26; --line:rgba(255,255,255,.08);
       --txt:#e9f1ff; --muted:#98a8c2; --blue:#1f5bd8; --blue2:#2967ee;
       --shadow:0 12px 35px rgba(0,0,0,.35); --radius:22px;
+      --green:#22c55e;
     }
     *{box-sizing:border-box}
     body{
@@ -34,7 +35,7 @@
     .wrap{width:100%; max-width:420px}
     .top{display:flex; align-items:center; justify-content:space-between; padding:10px 10px 14px}
     .brand{display:flex; align-items:center; gap:10px}
-    .dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12)}
+    .dot{width:12px;height:12px;border-radius:999px;background:var(--green);box-shadow:0 0 0 6px rgba(34,197,94,.12)}
     .ttl{font-weight:900}
     .sub{font-size:12px;color:var(--muted);margin-top:2px}
     .pill{border:1px solid var(--line); background:rgba(255,255,255,.04); padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
@@ -43,13 +44,26 @@
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
 
-    .hint{ color:#dbe8ff; font-size:14px; line-height:1.9; font-weight:900; }
-    label{ display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; font-weight:800; }
+    .hint{
+      color:#dbe8ff;
+      font-size:14px;
+      line-height:1.9;
+      font-weight:900;
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin:10px 0 6px;
+      font-weight:800;
+    }
 
     input{
       width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
       background: rgba(0,0,0,.18); color:var(--txt); outline:none;
-      font-size:14px; font-weight:800;
+      font-size:14px;
+      font-weight:800;
     }
     input:focus{border-color:rgba(31,91,216,.55); box-shadow:0 0 0 4px rgba(31,91,216,.18)}
     .row{display:flex; gap:10px}
@@ -63,6 +77,8 @@
     .btn.blue{background:var(--blue); border-color:rgba(31,91,216,.2)}
     .btn.blue:hover{background:var(--blue2)}
     .btn.small{width:auto; padding:9px 12px; border-radius:14px; font-size:12px}
+    .btn.green{background:rgba(34,197,94,.22); border-color:rgba(34,197,94,.25)}
+    .btn.green:hover{background:rgba(34,197,94,.30)}
     .sep{height:1px; background:var(--line); margin:12px 0}
     .error{
       margin-top:10px; display:none; padding:10px; border-radius:14px;
@@ -70,13 +86,12 @@
       color:#ffd6d6; white-space:pre-wrap; font-size:12px;
     }
 
-    /* ✅ TOAST من الأعلى */
+    /* ✅ Toast TOP (بدل تحت) */
     .toast{
-      position:fixed; left:50%; transform:translateX(-50%); top:16px;
-      background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.10);
+      position:fixed; left:50%; transform:translateX(-50%); top:14px;
+      background:rgba(0,0,0,.82); border:1px solid rgba(255,255,255,.10);
       padding:10px 12px; border-radius:999px; color:#eaf2ff; font-size:12px; display:none; z-index:9999;
       max-width:92vw; text-align:center;
-      box-shadow:0 14px 28px rgba(0,0,0,.35);
     }
 
     .tabs{display:flex; gap:10px; margin-top:8px; margin-bottom:10px}
@@ -88,7 +103,13 @@
     .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
 
-    .exprTitle{ font-size:14px; color:#cfe0ff; margin-bottom:8px; font-weight:900; }
+    .exprTitle{
+      font-size:14px;
+      color:#cfe0ff;
+      margin-bottom:8px;
+      font-weight:900;
+    }
+
     .expr{
       width:100%;
       border:2px solid rgba(0,0,0,.16);
@@ -106,6 +127,7 @@
       font-weight:1000;
       font-size:20px;
     }
+
     .resLine{
       margin-top:10px;
       display:flex;
@@ -115,6 +137,7 @@
       font-size:13px;
       font-weight:900;
     }
+
     .resLine b{
       color:#000;
       font-size:18px;
@@ -157,8 +180,24 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* PDF printable A4 */
-    #printArea{
+    /* ✅ زر حذف السطر */
+    .delBtn{
+      width:32px; height:32px; min-width:32px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,77,77,.12);
+      color:#ffd6d6;
+      cursor:pointer;
+      font-weight:1000;
+    }
+    .delBtn:hover{background:rgba(255,77,77,.18); transform:translateY(-1px)}
+
+    /* =========================
+       ✅ Print Areas (PDF A4 + Receipt 80mm)
+       ========================= */
+
+    /* A4 area for PDF (نفس نظامك) */
+    #printAreaA4{
       position:fixed; left:-9999px; top:0;
       width:794px;
       background:#fff;
@@ -167,87 +206,124 @@
       direction:rtl;
       font-family:Arial,"Segoe UI",Tahoma,sans-serif;
     }
-
     .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
     .p-header{text-align:center; padding:18px 16px;}
     .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
-
     .p-field{
       display:flex; justify-content:space-between; gap:10px;
       padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
     }
     .p-field .k{font-size:20px; font-weight:900; color:#000;}
     .p-field .v{font-size:20px; font-weight:900; color:#000;}
-
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
-    #printArea table{width:100%; border-collapse:collapse; background:#fff;}
-    #printArea thead th{
-      font-size:18px; font-weight:1000; padding:12px 10px; border-bottom:2px solid #111; background:#fff; color:#000;
+    #printAreaA4 table{width:100%; border-collapse:collapse; background:#fff;}
+    #printAreaA4 thead th{
+      font-size:18px; font-weight:1000; padding:12px 10px; border-bottom:2px solid #111;
+      background:#fff; color:#000;
     }
-    #printArea tbody td{
-      font-size:16px; font-weight:1000; padding:12px 10px; border-bottom:1px solid #111; background:#fff; color:#000;
+    #printAreaA4 tbody td{
+      font-size:16px; font-weight:1000; padding:12px 10px; border-bottom:1px solid #111;
+      background:#fff; color:#000;
     }
-    #printArea tbody tr:last-child td{border-bottom:0;}
-
+    #printAreaA4 tbody tr:last-child td{border-bottom:0;}
     .p-totalBox{
-      border:2px dashed #111; border-radius:16px;
-      padding:14px 16px; display:flex; justify-content:space-between; margin-top:12px;
+      border:2px dashed #111; border-radius:16px; padding:14px 16px;
+      display:flex; justify-content:space-between; margin-top:12px;
       font-weight:1000; font-size:20px; color:#000;
     }
-
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
     .p-phone{
-      display:inline-block; margin-top:12px; border:2px solid #0a7a55; color:#0a7a55;
-      border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
+      display:inline-block; margin-top:12px;
+      border:2px solid #0a7a55; color:#0a7a55;
+      border-radius:999px; padding:12px 20px;
+      font-weight:1000; font-size:22px;
     }
 
+    /* ✅ Receipt 80mm (صغير ويستهلك ورق أقل) */
+    #printArea80{
+      position:fixed; left:-9999px; top:0;
+      width:302px; /* ~80mm at 96dpi */
+      background:#fff;
+      color:#000;
+      padding:10px 10px 12px;
+      font-family:Arial, Tahoma, "Segoe UI", sans-serif;
+      direction:rtl;
+    }
+    .r-head{
+      text-align:center;
+      padding:4px 0 8px;
+      border-bottom:1px dashed #000;
+      margin-bottom:8px;
+    }
+    .r-head .a{font-weight:900; font-size:16px; margin:0}
+    .r-head .b{font-weight:900; font-size:12px; margin-top:4px; color:#0a7a55}
+    .r-meta{
+      font-size:11px;
+      line-height:1.55;
+      margin-bottom:8px;
+    }
+    .r-meta .rowm{
+      display:flex; justify-content:space-between; gap:8px;
+      border-bottom:1px dotted rgba(0,0,0,.25);
+      padding:3px 0;
+    }
+    .r-meta .k{font-weight:900}
+    .r-meta .v{font-weight:900}
+    .r-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:11px;
+      margin-top:6px;
+    }
+    .r-table th{
+      text-align:right;
+      font-weight:900;
+      border-bottom:1px solid #000;
+      padding:4px 2px;
+    }
+    .r-table td{
+      border-bottom:1px dotted rgba(0,0,0,.25);
+      padding:4px 2px;
+      vertical-align:top;
+      font-weight:800;
+      word-break:break-word;
+    }
+    .r-total{
+      margin-top:8px;
+      border-top:1px dashed #000;
+      padding-top:8px;
+      display:flex;
+      justify-content:space-between;
+      font-weight:900;
+      font-size:12px;
+    }
+    .r-foot{
+      margin-top:8px;
+      text-align:center;
+      font-size:10px;
+      line-height:1.5;
+      border-top:1px dashed #000;
+      padding-top:8px;
+      font-weight:900;
+    }
+
+    /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
-      width:46px; min-width:46px; height:46px; border-radius:14px;
-      border:1px solid var(--line); background: rgba(255,255,255,.06); color: var(--txt);
-      font-weight:1000; cursor:pointer; transition:.15s;
+      width:46px; min-width:46px; height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      font-weight:1000;
+      cursor:pointer;
+      transition:.15s;
       display:flex; align-items:center; justify-content:center;
     }
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
-
-    .delBtn{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,77,77,.12);
-      color:#ffd6d6;
-      width:34px; height:34px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:1000;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      transition:.15s;
-    }
-    .delBtn:hover{transform:translateY(-1px); background:rgba(255,77,77,.18)}
-    .delCell{width:44px; text-align:center; vertical-align:middle}
-
-    /* hidden receipt render area for 80mm bitmap */
-    #receipt80{
-      position:fixed; left:-99999px; top:0;
-      width:576px; /* 80mm typical pixels at 203dpi-ish */
-      background:#fff; color:#000;
-      padding:16px;
-      direction:rtl;
-      font-family:Arial,"Segoe UI",Tahoma,sans-serif;
-    }
-    #receipt80 .rTitle{font-size:28px;font-weight:1000;text-align:center;margin:0}
-    #receipt80 .rSub{font-size:18px;font-weight:1000;text-align:center;margin-top:6px;color:#0a7a55}
-    #receipt80 .rLine{border-top:2px dashed #000; margin:12px 0}
-    #receipt80 .rKV{display:flex; justify-content:space-between; gap:10px; font-size:18px; font-weight:900; margin:8px 0}
-    #receipt80 table{width:100%; border-collapse:collapse}
-    #receipt80 th,#receipt80 td{border-bottom:2px solid #000; padding:10px 6px; font-size:16px; font-weight:900; vertical-align:top}
-    #receipt80 th{background:#fff}
-    #receipt80 tr:last-child td{border-bottom:0}
-    #receipt80 .rTotal{display:flex; justify-content:space-between; font-size:20px; font-weight:1000; margin-top:12px}
-    #receipt80 .rFoot{margin-top:10px; text-align:center; font-size:16px; font-weight:900; line-height:1.6}
   </style>
 </head>
 
@@ -257,69 +333,80 @@
       <div class="brand">
         <div class="dot"></div>
         <div>
-          <div class="ttl">HAYEK — نظام الفاتورة</div>
-          <div class="sub" id="subtitle">تسجيل دخول المستخدم</div>
+          <div class="ttl" data-i18n="appTitle">HAYEK — نظام الفاتورة</div>
+          <div class="sub" id="subtitle" data-i18n="loginSubtitle">تسجيل دخول المستخدم</div>
         </div>
       </div>
-      <div class="pill" id="pill"><b>غير مسجل</b></div>
+      <div class="pill" id="pill"><b data-i18n="notLogged">غير مسجل</b></div>
     </div>
 
+    <!-- ✅ Login FORM -->
     <form class="card" id="loginCard" autocomplete="on">
-      <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
-      <label>اسم المستخدم</label>
+      <div class="hint" data-i18n="loginHint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
+
+      <!-- ✅ UI Language -->
+      <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;" data-i18n="uiLang">لغة النظام:</div>
+        <button class="btn small" id="uiLangAR" type="button">عربي</button>
+        <button class="btn small" id="uiLangTR" type="button">Türkçe</button>
+      </div>
+
+      <label data-i18n="username">اسم المستخدم</label>
       <input id="loginUser" autocomplete="username" name="username" />
-      <label>كلمة السر</label>
+
+      <label data-i18n="password">كلمة السر</label>
       <input id="loginPass" type="password" autocomplete="current-password" name="password" />
+
       <div class="row" style="margin-top:12px">
-        <button class="btn blue" type="submit">دخول</button>
-        <button class="btn" id="btnClear" type="button">تفريغ</button>
+        <button class="btn blue" type="submit" data-i18n="loginBtn">دخول</button>
+        <button class="btn" id="btnClear" type="button" data-i18n="clearBtn">تفريغ</button>
       </div>
       <div class="error" id="loginErr"></div>
     </form>
 
     <div class="card hide" id="appCard">
-      <div class="row" style="align-items:center; gap:10px">
-        <button class="btn small" id="btnLogout" type="button">خروج</button>
-        <div style="flex:1"></div>
-        <button class="btn small" id="btnBtConnect" type="button">🔵 ربط الطابعة</button>
+      <div class="row" style="align-items:center">
+        <button class="btn small" id="btnLogout" data-i18n="logout">خروج</button>
       </div>
 
       <div class="sep"></div>
 
+      <!-- ✅ Voice language toggle -->
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
-        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
+        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;" data-i18n="voiceLang">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
         <button class="btn small" id="hayekLangTR" type="button">Türkçe</button>
       </div>
 
-      <label>اسم الزبون (إجباري)</label>
+      <label data-i18n="customerName">اسم الزبون (إجباري)</label>
       <div class="hayekMicWrap">
         <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicCustomer" type="button" title="تسجيل صوت لاسم الزبون">🎤</button>
       </div>
       <datalist id="custList"></datalist>
 
-      <label>اسم المنتج / البيان (اختياري)</label>
+      <label data-i18n="itemName">اسم المنتج / البيان (اختياري)</label>
       <div class="hayekMicWrap">
         <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicItem" type="button" title="تسجيل صوت لاسم المنتج">🎤</button>
       </div>
       <datalist id="itemList"></datalist>
 
+      <!-- ✅ Smart voice add -->
       <div style="margin-top:10px">
-        <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
+        <button class="btn" id="hayekSmartAdd" type="button" data-i18n="smartAdd">🎙️ إضافة بالصوت (اسم + عملية)</button>
       </div>
 
       <div class="tabs">
-        <button class="tab active" id="tabCalc" type="button">الحاسبة</button>
-        <button class="tab" id="tabLog" type="button">سجل العمليات</button>
+        <button class="tab active" id="tabCalc" type="button" data-i18n="tabCalc">الحاسبة</button>
+        <button class="tab" id="tabLog" type="button" data-i18n="tabLog">سجل العمليات</button>
       </div>
 
       <div id="viewCalc">
         <div class="calcBox">
-          <div class="exprTitle">العملية الحسابية (من أزرار الشاشة)</div>
+          <div class="exprTitle" data-i18n="exprTitle">العملية الحسابية (من أزرار الشاشة)</div>
           <div class="expr" id="exprView"></div>
-          <div class="resLine"><span>النتيجة:</span> <b id="resView">0</b></div>
+          <div class="resLine"><span data-i18n="result">النتيجة:</span> <b id="resView">0</b></div>
 
           <div class="keys" id="keys">
             <button class="key op" data-k="÷" type="button">÷</button>
@@ -347,12 +434,14 @@
           </div>
 
           <div class="actions2">
-            <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
-            <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
-            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (Bluetooth Raster)</button>
+            <button class="btn" id="btnClearOps" type="button" data-i18n="clearOps">مسح العمليات</button>
+            <button class="btn blue" id="btnPDF" type="button" data-i18n="exportPDF">تصدير PDF</button>
+            <button class="btn green" id="btnPrint80" type="button" data-i18n="print80">🖨️ طباعة 80mm</button>
           </div>
 
-          <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
+          <div class="footerNote" data-i18n="footer">
+            تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية
+          </div>
         </div>
       </div>
 
@@ -361,14 +450,13 @@
           <table>
             <thead>
               <tr>
-                <th class="delCell">حذف</th>
-                <th style="width:46%">البيان</th>
-                <th style="width:32%">العملية</th>
-                <th style="width:22%">الوقت</th>
+                <th style="width:58%" data-i18n="colDesc">البيان</th>
+                <th style="width:28%" data-i18n="colOp">العملية</th>
+                <th style="width:14%" data-i18n="colTime">الوقت</th>
               </tr>
             </thead>
             <tbody id="logBody">
-              <tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>
+              <tr><td colspan="3" class="muted" data-i18n="noOps">لا يوجد عمليات بعد.</td></tr>
             </tbody>
           </table>
         </div>
@@ -377,15 +465,18 @@
       <div class="error" id="appErr"></div>
     </div>
 
-    <div id="printArea"></div>
-    <div id="receipt80"></div>
+    <!-- hidden print areas -->
+    <div id="printAreaA4"></div>
+    <div id="printArea80"></div>
+
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- ✅ Voice-to-text -->
+  <!-- ✅ Voice-to-text (Arabic + Turkish) + Smart Add -->
   <script>
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
     const LANG_KEY = "HAYEK_VOICE_LANG_V1";
     function getLang(){ return localStorage.getItem(LANG_KEY) || "ar-SA"; }
     function setLang(v){ localStorage.setItem(LANG_KEY, v); refreshLangUI(); }
@@ -415,8 +506,17 @@
       rec.continuous = false;
 
       let listening = false;
-      function off(){ listening=false; btn.classList.remove("on"); btn.textContent="🎤"; }
-      function on(){ listening=true; btn.classList.add("on"); btn.textContent="⏹"; }
+
+      function off(){
+        listening = false;
+        btn.classList.remove("on");
+        btn.textContent = "🎤";
+      }
+      function on(){
+        listening = true;
+        btn.classList.add("on");
+        btn.textContent = "⏹";
+      }
 
       rec.onresult = (e) => {
         let finalText = "";
@@ -433,6 +533,7 @@
           input.dispatchEvent(new Event("change", { bubbles:true }));
         }
       };
+
       rec.onend = off;
       rec.onerror = off;
 
@@ -449,6 +550,7 @@
       });
     }
 
+    // --- helpers for smart parse ---
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
     function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
     function normalizeExpr(s){
@@ -489,14 +591,25 @@
       rec.continuous = false;
 
       let listening = false;
-      function off(){ listening=false; btn.classList.remove("on"); btn.textContent="🎙️ إضافة بالصوت (اسم + عملية)"; }
-      function on(){ listening=true; btn.classList.add("on"); btn.textContent="⏹ إيقاف التسجيل"; }
+
+      function off(){
+        listening = false;
+        btn.classList.remove("on");
+        btn.textContent = btn.getAttribute("data-label") || "🎙️ إضافة بالصوت (اسم + عملية)";
+      }
+      function on(){
+        listening = true;
+        btn.classList.add("on");
+        btn.textContent = "⏹";
+      }
 
       rec.onresult = (e) => {
         let finalText = "";
+        let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const t = e.results[i][0].transcript;
           if (e.results[i].isFinal) finalText += t;
+          else interim += t;
         }
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
@@ -511,13 +624,14 @@
           window.HAYEK_VOICE_ADD_LINE((parsed.item||""), (parsed.expr||""));
         }
       };
+
       rec.onend = off;
       rec.onerror = off;
 
       btn.addEventListener("click", ()=>{
         try{
           if(listening){ rec.stop(); return; }
-          rec.lang = localStorage.getItem("HAYEK_VOICE_LANG_V1") || "ar-SA";
+          rec.lang = getLang();
           on();
           rec.start();
         }catch{
@@ -529,12 +643,13 @@
 
     attachMic("hayekMicCustomer", "customerName");
     attachMic("hayekMicItem", "itemName");
-    attachSmart("hayekSmartAdd");
 
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
     if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
     if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
+
+    attachSmart("hayekSmartAdd");
     refreshLangUI();
   })();
   </script>
@@ -550,6 +665,130 @@
 
     const $ = (id)=>document.getElementById(id);
 
+    // =========================
+    // ✅ i18n (Arabic / Turkish)
+    // =========================
+    const UI_LANG_KEY = "HAYEK_UI_LANG_V1"; // "ar" | "tr"
+    const i18n = {
+      ar: {
+        appTitle: "HAYEK — نظام الفاتورة",
+        loginSubtitle: "تسجيل دخول المستخدم",
+        notLogged: "غير مسجل",
+        loginHint: "ادخل اسم المستخدم وكلمة السر (من الأدمن).",
+        uiLang: "لغة النظام:",
+        username: "اسم المستخدم",
+        password: "كلمة السر",
+        loginBtn: "دخول",
+        clearBtn: "تفريغ",
+        logout: "خروج",
+        voiceLang: "لغة الصوت:",
+        customerName: "اسم الزبون (إجباري)",
+        itemName: "اسم المنتج / البيان (اختياري)",
+        smartAdd: "🎙️ إضافة بالصوت (اسم + عملية)",
+        tabCalc: "الحاسبة",
+        tabLog: "سجل العمليات",
+        exprTitle: "العملية الحسابية (من أزرار الشاشة)",
+        result: "النتيجة:",
+        clearOps: "مسح العمليات",
+        exportPDF: "تصدير PDF",
+        print80: "🖨️ طباعة 80mm",
+        footer: "تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية",
+        colDesc: "البيان",
+        colOp: "العملية",
+        colTime: "الوقت",
+        noOps: "لا يوجد عمليات بعد.",
+        needCustomer: "اكتب اسم الزبون أولاً (إجباري).",
+        badExpr: "صيغة العملية غير صحيحة.",
+        added: "تمت الإضافة ✅",
+        cleared: "تم المسح ✅",
+        pdfDone: "تم تنزيل PDF ✅",
+        printOpen: "✅ اختر الطابعة واطبع",
+        popupBlocked: "❌ افتح السماح للـ Pop-ups ثم أعد المحاولة."
+      },
+      tr: {
+        appTitle: "HAYEK — Fatura Sistemi",
+        loginSubtitle: "Kullanıcı girişi",
+        notLogged: "Giriş yok",
+        loginHint: "Kullanıcı adı ve şifreyi gir (admin verir).",
+        uiLang: "Dil:",
+        username: "Kullanıcı adı",
+        password: "Şifre",
+        loginBtn: "Giriş",
+        clearBtn: "Temizle",
+        logout: "Çıkış",
+        voiceLang: "Ses dili:",
+        customerName: "Müşteri adı (zorunlu)",
+        itemName: "Ürün / açıklama (opsiyonel)",
+        smartAdd: "🎙️ Sesle ekle (isim + işlem)",
+        tabCalc: "Hesap",
+        tabLog: "İşlem listesi",
+        exprTitle: "İşlem (tuşlarla)",
+        result: "Sonuç:",
+        clearOps: "İşlemleri sil",
+        exportPDF: "PDF indir",
+        print80: "🖨️ 80mm yazdır",
+        footer: "Bu sistem HAYEK Dijital Çözümler tarafından geliştirilmiştir",
+        colDesc: "Açıklama",
+        colOp: "İşlem",
+        colTime: "Saat",
+        noOps: "Henüz işlem yok.",
+        needCustomer: "Önce müşteri adı yaz (zorunlu).",
+        badExpr: "İşlem formatı hatalı.",
+        added: "Eklendi ✅",
+        cleared: "Silindi ✅",
+        pdfDone: "PDF indirildi ✅",
+        printOpen: "✅ Yazıcıyı seçip yazdır",
+        popupBlocked: "❌ Pop-up izni verip tekrar dene."
+      }
+    };
+
+    function getUILang(){ return localStorage.getItem(UI_LANG_KEY) || "ar"; }
+    function setUILang(v){
+      localStorage.setItem(UI_LANG_KEY, v);
+      applyUILang();
+    }
+    function t(key){
+      const lang = getUILang();
+      return (i18n[lang] && i18n[lang][key]) || i18n.ar[key] || key;
+    }
+    function applyUILang(){
+      const lang = getUILang();
+      // update html lang/dir
+      document.documentElement.lang = (lang === "tr") ? "tr" : "ar";
+      document.documentElement.dir  = (lang === "tr") ? "ltr" : "rtl";
+
+      // reflect buttons
+      const arBtn = $("uiLangAR");
+      const trBtn = $("uiLangTR");
+      if(arBtn && trBtn){
+        arBtn.style.opacity = (lang === "ar") ? "1" : "0.65";
+        trBtn.style.opacity = (lang === "tr") ? "1" : "0.65";
+      }
+
+      // translate
+      document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const k = el.getAttribute("data-i18n");
+        if(!k) return;
+        el.textContent = t(k);
+      });
+
+      // placeholders
+      const cust = $("customerName");
+      const item = $("itemName");
+      if(cust) cust.placeholder = (lang === "tr") ? "Örn: Ahmet" : "مثال: أبو أحمد";
+      if(item) item.placeholder = (lang === "tr") ? "Örn: Çakmak" : "مثال: قداحة";
+
+      // smart button label stash (for voice script)
+      const smartBtn = $("hayekSmartAdd");
+      if(smartBtn){
+        smartBtn.setAttribute("data-label", t("smartAdd"));
+        if(!smartBtn.classList.contains("on")) smartBtn.textContent = t("smartAdd");
+      }
+    }
+
+    // =========================
+    // DOM
+    // =========================
     const loginCard = $("loginCard");
     const appCard   = $("appCard");
     const loginErr  = $("loginErr");
@@ -582,10 +821,15 @@
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1600);
+      clearTimeout(toastEl.__t);
+      toastEl.__t = setTimeout(()=> toastEl.style.display="none", 1400);
     }
 
-    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
+    function nowTime(){
+      const lang = getUILang();
+      return new Date().toLocaleTimeString(lang === "tr" ? "tr" : "ar", { hour:"2-digit", minute:"2-digit" });
+    }
+
     function escapeHtml(s){
       return String(s||"")
         .replaceAll("&","&amp;")
@@ -596,7 +840,7 @@
     }
 
     // =========================
-    // ✅ Net Check
+    // ✅ Net Check (كما عندك)
     // =========================
     let NET_OK = false;
     let NET_LAST = 0;
@@ -605,20 +849,23 @@
     async function isNetOK(timeoutMs = 4500){
       try{
         const ctrl = new AbortController();
-        const t = setTimeout(()=>ctrl.abort(), timeoutMs);
+        const tt = setTimeout(()=>ctrl.abort(), timeoutMs);
 
         const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
-
         const res = await fetch(url, {
           method: "GET",
           mode: "cors",
           cache: "no-store",
           signal: ctrl.signal,
-          headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + SUPABASE_ANON_KEY
+          }
         });
 
-        clearTimeout(t);
-        return !!(res && res.ok);
+        clearTimeout(tt);
+        if(!res || !res.ok) return false;
+        return true;
       }catch{
         return false;
       }
@@ -639,31 +886,40 @@
         NET_INFLIGHT = false;
       }
     }
-
     function netNow(){ return !!NET_OK; }
     async function kickNet(){ await refreshNetState(true); }
 
-    window.addEventListener("online", async ()=>{ await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded(); });
-    window.addEventListener("focus",  async ()=>{ await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded(); });
-
+    window.addEventListener("online", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
+    window.addEventListener("focus", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
     document.addEventListener("visibilitychange", async ()=>{
       if(!document.hidden){
-        await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded();
+        await kickNet();
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
       }
     });
-
-    window.addEventListener("pageshow", async ()=>{ await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded(); });
-
+    window.addEventListener("pageshow", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
     setInterval(async ()=>{
       await refreshNetState(false);
       await qSyncSilently(false);
     }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE
+    // ✅ Offline Queue
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
-
     function qRead(){
       try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
       catch{ return []; }
@@ -677,13 +933,10 @@
       filtered.push({ ...payload, __queued_at: new Date().toISOString() });
       qWrite(filtered);
     }
-
     function cleanInvoicePayload(p){
       if(!p || typeof p !== "object") return null;
       const out = { ...p };
-      delete out.__queued_at;
-      delete out.__meta;
-      delete out.__local;
+      delete out.__queued_at; delete out.__meta; delete out.__local;
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
@@ -691,10 +944,8 @@
     }
 
     let __syncing = false;
-
     async function qSyncSilently(force=false){
       if(__syncing) return;
-
       const arr = qRead();
       if(!arr.length) return;
 
@@ -764,7 +1015,6 @@
       }
       return v;
     }
-
     function getOrCreateTabId(){
       const KEY = "HAYEK_TAB_ID_V1";
       let v = sessionStorage.getItem(KEY);
@@ -791,21 +1041,18 @@
         return obj;
       }catch{ return null; }
     }
-
     function writeLock(username, objOrNull){
       try{
         if(!objOrNull) localStorage.removeItem(lockKeyFor(username));
         else localStorage.setItem(lockKeyFor(username), JSON.stringify(objOrNull));
       }catch{}
     }
-
     function stopSingleTabGuard(){
       if(TAB_TIMER) clearInterval(TAB_TIMER);
       TAB_TIMER = null;
       TAB_BLOCKED = false;
       TAB_USERNAME = null;
     }
-
     function startSingleTabGuard(username){
       stopSingleTabGuard();
       TAB_USERNAME = username;
@@ -818,20 +1065,17 @@
         if(!lock?.ts) return true;
         return (nowMs() - Number(lock.ts)) > TTL;
       }
-
       function tryAcquire(){
         const lock = readLock(username);
-
         if(!lock || isStale(lock) || lock.tabId === tabId){
           writeLock(username, { tabId, ts: nowMs() });
           TAB_BLOCKED = false;
           return true;
         }
-
         TAB_BLOCKED = true;
         if(!sessionStorage.getItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`)){
           sessionStorage.setItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`, "1");
-          showErr(loginErr, "❌ هذا الحساب مفتوح بالفعل في تبويب آخر.\nأغلق التبويب الآخر للمتابعة.");
+          showErr(loginErr, (getUILang()==="tr") ? "❌ Bu hesap başka sekmede açık.\nDiğer sekmeyi kapat." : "❌ هذا الحساب مفتوح بالفعل في تبويب آخر.\nأغلق التبويب الآخر للمتابعة.");
         }
         return false;
       }
@@ -840,22 +1084,17 @@
 
       TAB_TIMER = setInterval(()=>{
         if(!TAB_USERNAME) return;
-
         const lock = readLock(username);
-
         if(lock && lock.tabId === tabId){
           writeLock(username, { tabId, ts: nowMs() });
           TAB_BLOCKED = false;
           return;
         }
-
         tryAcquire();
       }, HEARTBEAT);
 
       window.addEventListener("storage", (e)=>{
-        if(e.key === lockKeyFor(username)){
-          tryAcquire();
-        }
+        if(e.key === lockKeyFor(username)) tryAcquire();
       });
 
       window.addEventListener("beforeunload", ()=>{
@@ -879,7 +1118,7 @@
           return u;
         }
         if(u.device_id !== deviceId){
-          throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
+          throw new Error((getUILang()==="tr") ? "❌ Bu hesap başka cihazda kayıtlı.\nAdmin ile görüş." : "❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
         }
         return u;
       }
@@ -891,7 +1130,7 @@
           .eq("id", u.id)
           .is("device_id", null);
 
-        if(uerr) throw new Error(uerr.message || "فشل تحديث device_id");
+        if(uerr) throw new Error(uerr.message || "device_id update failed");
 
         const { data, error } = await supabase
           .from(USERS_TABLE)
@@ -899,13 +1138,13 @@
           .eq("id", u.id)
           .limit(1);
 
-        if(error) throw new Error(error.message || "فشل قراءة المستخدم بعد التحديث");
-        if(!data?.length) throw new Error("المستخدم غير موجود بعد التحديث");
+        if(error) throw new Error(error.message || "read user failed");
+        if(!data?.length) throw new Error("user not found");
         u = data[0];
       }
 
       if(u.device_id !== deviceId){
-        throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
+        throw new Error((getUILang()==="tr") ? "❌ Bu hesap başka cihazda kayıtlı.\nAdmin ile görüş." : "❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
       }
 
       return u;
@@ -969,7 +1208,6 @@
       renderDatalist(custList, readSug(SUG_CUSTOMERS_KEY));
       renderDatalist(itemList, readSug(SUG_ITEMS_KEY));
     }
-
     custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
     itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
 
@@ -990,7 +1228,7 @@
     let expr = "";
     let lastResult = 0;
 
-    // ------- SUPABASE SAVE -------
+    // ------- SAVE -------
     async function saveInvoice(status){
       if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
 
@@ -1044,7 +1282,7 @@
     }
 
     // =========================
-    // ✅ LOGIN عبر Edge Function
+    // ✅ LOGIN via Edge Function
     // =========================
     async function apiLoginViaEdge(username, password){
       const deviceId = getOrCreateDeviceId();
@@ -1070,11 +1308,12 @@
 
     function mapEdgeError(err){
       const e = String(err||"");
-      if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
-      if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
-      if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
-      if(e === "Missing headers") return "مشكلة في الطلب (headers).";
-      return "فشل تسجيل الدخول:\n" + e;
+      const lang = getUILang();
+      if(e === "USER_NOT_FOUND") return (lang==="tr") ? "Kullanıcı yok." : "المستخدم غير موجود.";
+      if(e === "BAD_PASSWORD") return (lang==="tr") ? "Şifre yanlış." : "كلمة السر غير صحيحة.";
+      if(e === "USER_BLOCKED") return (lang==="tr") ? "Hesap engelli." : "هذا الحساب محظور.";
+      if(e === "Missing headers") return (lang==="tr") ? "İstek hatası (headers)." : "مشكلة في الطلب (headers).";
+      return (lang==="tr") ? ("Giriş başarısız:\n" + e) : ("فشل تسجيل الدخول:\n" + e);
     }
 
     async function login(){
@@ -1083,7 +1322,7 @@
       const password = $("loginPass").value.trim();
 
       if(!username || !password){
-        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
+        showErr(loginErr, (getUILang()==="tr") ? "Kullanıcı adı ve şifre yaz." : "اكتب اسم المستخدم وكلمة السر.");
         return;
       }
 
@@ -1092,22 +1331,26 @@
       if(!netNow()){
         const cached = readOfflineUser();
         if(!cached){
-          showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
+          showErr(loginErr, (getUILang()==="tr")
+            ? "❌ Bu cihazda kayıtlı giriş yok.\nÖnce internetle bir kez giriş yap."
+            : "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
           return;
         }
         if(cached.is_blocked){
-          showErr(loginErr, "هذا الحساب محظور.");
+          showErr(loginErr, (getUILang()==="tr") ? "Hesap engelli." : "هذا الحساب محظور.");
           return;
         }
         if(cached.username !== username || cached.password !== password){
-          showErr(loginErr, "❌ لا يمكن التحقق بدون إنترنت.\nأدخل بيانات آخر حساب سجّل دخول على هذا الجهاز.");
+          showErr(loginErr, (getUILang()==="tr")
+            ? "❌ İnternetsiz doğrulanamaz.\nBu cihazda en son giriş yapılan hesabı gir."
+            : "❌ لا يمكن التحقق بدون إنترنت.\nأدخل بيانات آخر حساب سجّل دخول على هذا الجهاز.");
           return;
         }
 
         let u = cached;
 
         try{ u = await enforceDeviceLockForUserRow(u); }
-        catch(e){ showErr(loginErr, e?.message || "تم منع الدخول"); return; }
+        catch(e){ showErr(loginErr, e?.message || "blocked"); return; }
 
         startSingleTabGuard(u.username);
         if(TAB_BLOCKED) return;
@@ -1117,12 +1360,12 @@
 
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${u.username}</b>`;
+        subtitle.textContent = (getUILang()==="tr") ? "Fatura ekranı" : "فاتورة المستخدم";
+        pill.innerHTML = `<b>${escapeHtml(u.username)}</b>`;
         resetAll(true);
 
         renderSug();
-        toast("وضع أوفلاين ✅");
+        toast((getUILang()==="tr") ? "Offline ✅" : "وضع أوفلاين ✅");
         return;
       }
 
@@ -1139,12 +1382,12 @@
         };
 
         if(u.is_blocked){
-          showErr(loginErr, "هذا الحساب محظور.");
+          showErr(loginErr, (getUILang()==="tr") ? "Hesap engelli." : "هذا الحساب محظور.");
           return;
         }
 
         try{ u = await enforceDeviceLockForUserRow(u); }
-        catch(e){ showErr(loginErr, e?.message || "تم منع الدخول"); return; }
+        catch(e){ showErr(loginErr, e?.message || "blocked"); return; }
 
         startSingleTabGuard(u.username);
         if(TAB_BLOCKED) return;
@@ -1155,11 +1398,12 @@
 
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${u.username}</b>`;
+        subtitle.textContent = (getUILang()==="tr") ? "Fatura ekranı" : "فاتورة المستخدم";
+        pill.innerHTML = `<b>${escapeHtml(u.username)}</b>`;
         resetAll(true);
 
         renderSug();
+
         await qSyncSilently(true);
         await syncDeviceIdIfNeeded();
       }catch(e){
@@ -1183,11 +1427,10 @@
           }
 
           let u = cached;
-
           try{ u = await enforceDeviceLockForUserRow(u); }
           catch(e){
             localStorage.removeItem("HAYEK_USER_SESSION");
-            showErr(loginErr, e?.message || "تم منع الدخول");
+            showErr(loginErr, e?.message || "blocked");
             return;
           }
 
@@ -1197,16 +1440,49 @@
           USER = u;
           loginCard.classList.add("hide");
           appCard.classList.remove("hide");
-          subtitle.textContent = "فاتورة المستخدم";
-          pill.innerHTML = `<b>${USER.username}</b>`;
+          subtitle.textContent = (getUILang()==="tr") ? "Fatura ekranı" : "فاتورة المستخدم";
+          pill.innerHTML = `<b>${escapeHtml(USER.username)}</b>`;
           resetAll(true);
           renderSug();
-          toast("تمت استعادة الجلسة (أوفلاين) ✅");
           return;
         }
 
-        // لو أونلاين: نكتفي بالسيشن الموجودة (لأن الدخول الأساسي عندك Edge login)
-        // والهدف: ما نقطع المستخدم.
+        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
+        if(error) return;
+        if(!data?.length) return;
+
+        let u = data[0];
+        if(u.is_blocked){
+          localStorage.removeItem("HAYEK_USER_SESSION");
+          return;
+        }
+
+        const cached = readOfflineUser();
+        const pass = cached?.password || "";
+        u = { ...u, password: pass };
+
+        try{ u = await enforceDeviceLockForUserRow(u); }
+        catch(e){
+          localStorage.removeItem("HAYEK_USER_SESSION");
+          showErr(loginErr, e?.message || "blocked");
+          return;
+        }
+
+        startSingleTabGuard(u.username);
+        if(TAB_BLOCKED) return;
+
+        USER = u;
+        saveOfflineUser(u);
+
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = (getUILang()==="tr") ? "Fatura ekranı" : "فاتورة المستخدم";
+        pill.innerHTML = `<b>${escapeHtml(USER.username)}</b>`;
+        resetAll(true);
+        renderSug();
+
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
       }catch{}
     }
 
@@ -1217,11 +1493,13 @@
 
       loginCard.classList.remove("hide");
       appCard.classList.add("hide");
-      subtitle.textContent = "تسجيل دخول المستخدم";
-      pill.innerHTML = "<b>غير مسجل</b>";
-      toast("تم تسجيل الخروج");
+      subtitle.textContent = t("loginSubtitle");
+      pill.innerHTML = `<b>${t("notLogged")}</b>`;
     }
 
+    // =========================
+    // UI / Calc
+    // =========================
     function setTab(which){
       if(which==="calc"){
         tabCalc.classList.add("active");
@@ -1255,7 +1533,7 @@
     function requireCustomer(){
       const c = custInput.value.trim();
       if(!c){
-        showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
+        showErr(appErr, t("needCustomer"));
         custInput.focus();
         return null;
       }
@@ -1274,7 +1552,9 @@
 
       const r = await saveInvoice("open");
       if(!r.ok){
-        showErr(appErr, "فشل الحفظ (open):\n" + r.msg + "\n\n✅ تأكد أن عمود id Primary Key في Supabase.");
+        showErr(appErr, (getUILang()==="tr")
+          ? "Kaydetme hatası (open).\nSupabase'de app_invoices tablosunda id Primary Key olmalı."
+          : "فشل الحفظ (open).\n✅ تأكد أن عمود id Primary Key في Supabase.");
         return false;
       }
       return true;
@@ -1308,18 +1588,15 @@
       try{ resView.textContent = String(safeEval(expr)); }
       catch{ resView.textContent = "0"; }
     }
-
     function setExpr(v){
       expr = v;
       exprView.textContent = expr || "";
       updatePreview();
     }
-
     function press(k){
       setExpr(expr + String(k));
       if(navigator.vibrate) navigator.vibrate(10);
     }
-
     function backspace(){
       if(!expr) return;
       setExpr(expr.slice(0,-1));
@@ -1328,20 +1605,25 @@
 
     function renderLog(){
       if(!ops.length){
-        logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
+        logBody.innerHTML = `<tr><td colspan="3" class="muted">${escapeHtml(t("noOps"))}</td></tr>`;
         return;
       }
       logBody.innerHTML = ops.map((o, idx)=>{
-        const t = o.time || nowTime();
+        const tm = o.time || nowTime();
         const exp = (o.expr ? `${o.expr} = ${o.result}` : `${o.result}`);
         return `
           <tr>
-            <td class="delCell">
-              <button class="delBtn" type="button" data-del="${idx}" title="حذف السطر">🗑️</button>
+            <td>
+              <div style="display:flex; gap:8px; align-items:flex-start; justify-content:space-between">
+                <div style="flex:1; min-width:0">
+                  <b>${escapeHtml(o.label||"—")}</b>
+                  <div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div>
+                </div>
+                <button class="delBtn" title="حذف" data-del="${idx}">✕</button>
+              </div>
             </td>
-            <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
             <td>${escapeHtml(exp)}</td>
-            <td>${escapeHtml(t)}</td>
+            <td>${escapeHtml(tm)}</td>
           </tr>
         `;
       }).join("");
@@ -1357,12 +1639,12 @@
 
       let result = 0;
       try{ result = safeEval(expr); }
-      catch{ showErr(appErr, "صيغة العملية غير صحيحة."); return; }
+      catch{ showErr(appErr, t("badExpr")); return; }
 
       lastResult = result;
 
       const item = itemInput.value.trim();
-      const label = item || "عملية";
+      const label = item || ((getUILang()==="tr") ? "İşlem" : "عملية");
       if(item) addSug(SUG_ITEMS_KEY, item);
 
       ops.unshift({
@@ -1375,14 +1657,27 @@
 
       renderLog();
       setExpr("");
-      toast("تمت الإضافة ✅");
+      toast(t("added"));
 
       const r = await saveInvoice("open");
       if(!r.ok){
-        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
+        showErr(appErr, (getUILang()==="tr")
+          ? "Kaydetme hatası.\nSupabase'de id Primary Key olmalı."
+          : "فشل الحفظ بعد إضافة العملية.\n✅ غالباً id ليس Primary Key.");
       }
 
       await qSyncSilently(false);
+    }
+
+    async function deleteOp(idx){
+      const i = Number(idx);
+      if(!Number.isFinite(i) || i < 0 || i >= ops.length) return;
+      ops.splice(i, 1);
+      renderLog();
+      if(invoiceOpen){
+        await saveInvoice("open");
+        await qSyncSilently(false);
+      }
     }
 
     async function clearOperations(){
@@ -1396,33 +1691,21 @@
 
       if(invoiceOpen){
         const r = await saveInvoice("open");
-        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
+        if(!r.ok) showErr(appErr, "Save error:\n" + r.msg);
       }
-      toast("تم المسح ✅");
+      toast(t("cleared"));
       await qSyncSilently(false);
     }
 
-    async function deleteOp(index){
-      const i = Number(index);
-      if(!Number.isFinite(i) || i < 0 || i >= ops.length) return;
-      ops.splice(i,1);
-      renderLog();
-      toast("تم حذف السطر ✅");
-      if(invoiceOpen){
-        await saveInvoice("open");
-      }
-      await qSyncSilently(false);
-    }
-
-    /* =========================
-       ✅ PDF EXPORT (Small size)
-    ========================= */
-    function buildPrintArea(){
-      const pa = $("printArea");
+    // =========================
+    // ✅ Build A4 Print Area (PDF)
+    // =========================
+    function buildPrintAreaA4(){
+      const pa = $("printAreaA4");
       const customer = (custInput.value.trim() || "—");
       const user = (USER?.full_name || USER?.username || "—");
       const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const dateText = new Date().toLocaleString(getUILang()==="tr" ? "tr" : "ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
       const total = calcTotal();
 
       const rows = ops.slice().reverse().map(o=>`
@@ -1440,22 +1723,22 @@
           <div class="p-subtitle">HAYEK SPOT</div>
         </div>
 
-        <div class="p-field"><div class="k">اسم المستخدم</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
-        <div class="p-field"><div class="k">اسم العميل</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
-        <div class="p-field"><div class="k">رقم الفاتورة</div><div class="v">${escapeHtml(invId)}</div></div>
-        <div class="p-field"><div class="k">التاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
+        <div class="p-field"><div class="k">${escapeHtml(getUILang()==="tr" ? "Kullanıcı" : "اسم المستخدم")}</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
+        <div class="p-field"><div class="k">${escapeHtml(getUILang()==="tr" ? "Müşteri" : "اسم العميل")}</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
+        <div class="p-field"><div class="k">${escapeHtml(getUILang()==="tr" ? "Fatura No" : "رقم الفاتورة")}</div><div class="v">${escapeHtml(invId)}</div></div>
+        <div class="p-field"><div class="k">${escapeHtml(getUILang()==="tr" ? "Tarih" : "التاريخ")}</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
 
         <div class="p-tableWrap">
           <table>
-            <thead><tr><th>الوقت</th><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}</tbody>
+            <thead><tr><th>${escapeHtml(getUILang()==="tr" ? "Saat" : "الوقت")}</th><th>${escapeHtml(getUILang()==="tr" ? "Açıklama" : "البيان")}</th><th>${escapeHtml(getUILang()==="tr" ? "İşlem" : "العملية")}</th><th>${escapeHtml(getUILang()==="tr" ? "Sonuç" : "النتيجة")}</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">${escapeHtml(getUILang()==="tr" ? "İşlem yok" : "لا يوجد عمليات")}</td></tr>`}</tbody>
           </table>
         </div>
 
-        <div class="p-totalBox"><div>إجمالي الكشف:</div><div>${escapeHtml(total)}</div></div>
+        <div class="p-totalBox"><div>${escapeHtml(getUILang()==="tr" ? "Toplam:" : "إجمالي الكشف:")}</div><div>${escapeHtml(total)}</div></div>
 
         <div class="p-foot">
-          <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="small">${escapeHtml(getUILang()==="tr" ? "HAYEK tarafından geliştirildi" : "تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك")}</div>
           <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
           <div class="p-phone">05510217646</div>
         </div>
@@ -1463,6 +1746,75 @@
       return pa;
     }
 
+    // =========================
+    // ✅ Build 80mm Receipt Area (compact)
+    // =========================
+    function buildReceipt80(){
+      const pa = $("printArea80");
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const invId = String(invoiceId || "—");
+      const dateText = new Date().toLocaleString(getUILang()==="tr" ? "tr" : "ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
+
+      const rows = ops.slice().reverse().map(o=>{
+        const label = escapeHtml(o.label || "");
+        const ex = escapeHtml(o.expr || "");
+        const rs = escapeHtml(String(o.result ?? ""));
+        const tm = escapeHtml(o.time || "");
+        return `
+          <tr>
+            <td style="width:16%">${tm}</td>
+            <td style="width:44%">${label}</td>
+            <td style="width:26%">${ex}</td>
+            <td style="width:14%">${rs}</td>
+          </tr>
+        `;
+      }).join("");
+
+      pa.innerHTML = `
+        <div class="r-head">
+          <div class="a">HAYEK</div>
+          <div class="b">HAYEK SPOT</div>
+        </div>
+
+        <div class="r-meta">
+          <div class="rowm"><div class="k">${escapeHtml(getUILang()==="tr" ? "Kullanıcı" : "المستخدم")}</div><div class="v">${escapeHtml(user)}</div></div>
+          <div class="rowm"><div class="k">${escapeHtml(getUILang()==="tr" ? "Müşteri" : "الزبون")}</div><div class="v">${escapeHtml(customer)}</div></div>
+          <div class="rowm"><div class="k">${escapeHtml(getUILang()==="tr" ? "No" : "رقم")}</div><div class="v" style="direction:ltr">${escapeHtml(invId)}</div></div>
+          <div class="rowm"><div class="k">${escapeHtml(getUILang()==="tr" ? "Tarih" : "تاريخ")}</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
+        </div>
+
+        <table class="r-table">
+          <thead>
+            <tr>
+              <th>${escapeHtml(getUILang()==="tr" ? "Saat" : "وقت")}</th>
+              <th>${escapeHtml(getUILang()==="tr" ? "Açıklama" : "بيان")}</th>
+              <th>${escapeHtml(getUILang()==="tr" ? "İşlem" : "عملية")}</th>
+              <th>${escapeHtml(getUILang()==="tr" ? "Sonuç" : "ناتج")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="4" style="padding:8px 2px; font-weight:900">${escapeHtml(getUILang()==="tr" ? "İşlem yok" : "لا يوجد عمليات")}</td></tr>`}
+          </tbody>
+        </table>
+
+        <div class="r-total">
+          <div>${escapeHtml(getUILang()==="tr" ? "Toplam" : "الإجمالي")}</div>
+          <div style="direction:ltr">${escapeHtml(total)}</div>
+        </div>
+
+        <div class="r-foot">
+          <div>${escapeHtml(getUILang()==="tr" ? "HAYEK Dijital Çözümler" : "شركة الحايك للحلول الرقمية")}</div>
+          <div>05510217646</div>
+        </div>
+      `;
+      return pa;
+    }
+
+    // =========================
+    // ✅ PDF Export (مثل عندك)
+    // =========================
     async function exportPDF(){
       clearErr(appErr);
 
@@ -1472,27 +1824,19 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      // نحفظ كـ closed قبل التصدير
       const r = await saveInvoice("closed");
       if(!r.ok){
-        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        showErr(appErr, (getUILang()==="tr")
+          ? "Fatura kapatma/kaydetme hatası.\nSupabase'de id Primary Key olmalı."
+          : "فشل إغلاق/حفظ الفاتورة.\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
         return;
       }
 
       addSug(SUG_CUSTOMERS_KEY, customer);
 
-      const pa = buildPrintArea();
-
-      // scale أقل حتى يصير الملف أصغر (ومع JPEG)
-      const canvas = await html2canvas(pa, {
-        scale: 1.6,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false
-      });
-
-      // JPEG يقلل الحجم كثير
-      const imgData = canvas.toDataURL("image/jpeg", 0.82);
+      const pa = buildPrintAreaA4();
+      const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
+      const imgData = canvas.toDataURL("image/png");
 
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF("p","mm","a4");
@@ -1504,12 +1848,12 @@
       const imgH = canvas.height * (imgW / canvas.width);
 
       if(imgH <= pageH){
-        pdf.addImage(imgData,"JPEG",0,0,imgW,imgH);
+        pdf.addImage(imgData,"PNG",0,0,imgW,imgH);
       }else{
         let remaining = imgH;
         let position = 0;
         while(remaining > 0){
-          pdf.addImage(imgData,"JPEG",0,position,imgW,imgH);
+          pdf.addImage(imgData,"PNG",0,position,imgW,imgH);
           remaining -= pageH;
           if(remaining > 0){ pdf.addPage(); position -= pageH; }
         }
@@ -1518,240 +1862,34 @@
       const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}.pdf`);
 
-      toast("تم تنزيل PDF ✅");
-
-      // خيارك 2: لا نمسح البيانات بعد PDF؟ أنت سابقاً كنت بدك Reset بعد PDF.
-      // نخلي نفس سلوكك القديم (Reset) لأنه بيعطي “فاتورة جديدة” مباشرة:
+      toast(t("pdfDone"));
       resetAll(false);
 
       await qSyncSilently(false);
     }
 
-    /* =========================
-       ✅ Bluetooth 80mm Raster Print
-       - يفتح البلوتوث من كروم
-       - يطبع صورة (عربي مضبوط)
-       - ما يعمل Reset (خيار 2)
-    ========================= */
-    const BT_STATE_KEY = "HAYEK_BT_LAST_DEVICE_NAME_V1";
-    let btDevice = null;
-    let btServer = null;
-    let btChar = null;
-
-    const UUIDS = {
-      FFE0: "0000ffe0-0000-1000-8000-00805f9b34fb",
-      FFE1: "0000ffe1-0000-1000-8000-00805f9b34fb",
-      FF00: "0000ff00-0000-1000-8000-00805f9b34fb",
-      FF01: "0000ff01-0000-1000-8000-00805f9b34fb",
-      FFC0: "0000ffc0-0000-1000-8000-00805f9b34fb",
-      FFC1: "0000ffc1-0000-1000-8000-00805f9b34fb",
-      SPP:  "00001101-0000-1000-8000-00805f9b34fb", /* not real GATT, but keep optional list harmless */
-      PRN1: "000018f0-0000-1000-8000-00805f9b34fb",
-      PRN2: "00002af1-0000-1000-8000-00805f9b34fb",
-      AE00: "0000ae00-0000-1000-8000-00805f9b34fb",
-      AE01: "0000ae01-0000-1000-8000-00805f9b34fb"
-    };
-
-    function u8(arr){ return new Uint8Array(arr); }
-    const sleep = (ms)=> new Promise(r=>setTimeout(r, ms));
-
-    function escposInit(){
-      return u8([0x1B,0x40]); // ESC @
-    }
-    function escposAlignCenter(){ return u8([0x1B,0x61,0x01]); }
-    function escposAlignLeft(){ return u8([0x1B,0x61,0x00]); }
-    function escposFeed(n=3){ return u8([0x1B,0x64, n & 0xFF]); } // ESC d n
-    function escposCut(){
-      // partial cut
-      return u8([0x1D,0x56,0x42,0x00]); // GS V B 0
-    }
-
-    async function btWrite(data){
-      if(!btChar) throw new Error("NO_PRINTER");
-      const CHUNK = 180; // safer for many printers
-      for(let i=0;i<data.length;i+=CHUNK){
-        const chunk = data.slice(i, i+CHUNK);
-        await btChar.writeValue(chunk);
-        await sleep(8);
-      }
-    }
-
-    async function connectPrinter(){
-      clearErr(appErr);
-
-      if(!navigator.bluetooth){
-        showErr(appErr, "❌ متصفحك لا يدعم Bluetooth Web.\nجرّب Chrome على Android أو Desktop.");
-        return;
-      }
-
-      try{
-        toast("افتح البلوتوث… واختر الطابعة ✅");
-
-        const optionalServices = [
-          UUIDS.FFE0, UUIDS.FF00, UUIDS.FFC0, UUIDS.PRN1, UUIDS.AE00,
-          "battery_service", "device_information"
-        ];
-
-        btDevice = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices
-        });
-
-        if(!btDevice) throw new Error("NO_DEVICE");
-        localStorage.setItem(BT_STATE_KEY, btDevice.name || "Printer");
-
-        btDevice.addEventListener("gattserverdisconnected", ()=>{
-          btServer = null; btChar = null;
-          toast("تم فصل الطابعة");
-        });
-
-        btServer = await btDevice.gatt.connect();
-
-        // Try to find a writable characteristic in common services
-        const services = await btServer.getPrimaryServices();
-        let found = null;
-
-        for(const s of services){
-          try{
-            const chars = await s.getCharacteristics();
-            for(const c of chars){
-              if(c.properties.write || c.properties.writeWithoutResponse){
-                found = c;
-                break;
-              }
-            }
-          }catch{}
-          if(found) break;
-        }
-
-        if(!found){
-          // Try known pairs
-          try{
-            const s1 = await btServer.getPrimaryService(UUIDS.FFE0);
-            const c1 = await s1.getCharacteristic(UUIDS.FFE1);
-            found = c1;
-          }catch{}
-        }
-
-        if(!found){
-          showErr(appErr, "❌ لم أجد قناة كتابة للطابعة.\nهذه الطابعة قد تحتاج UUID خاص.");
-          return;
-        }
-
-        btChar = found;
-
-        toast("تم ربط الطابعة ✅");
-      }catch(e){
-        showErr(appErr, "فشل ربط الطابعة:\n" + (e?.message || e));
-      }
-    }
-
-    function buildReceipt80DOM(){
-      const el = $("receipt80");
-      const customer = (custInput.value.trim() || "—");
-      const user = (USER?.full_name || USER?.username || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-      const total = calcTotal();
-
-      const rows = ops.slice().reverse().map(o=>{
-        const label = escapeHtml(o.label || "");
-        const ex = escapeHtml(o.expr || "");
-        const rs = escapeHtml(String(o.result ?? ""));
-        const tm = escapeHtml(o.time || "");
-        return `
-          <tr>
-            <td style="width:20%; direction:ltr; text-align:left">${tm}</td>
-            <td style="width:55%">${label}<div style="font-size:12px;color:#333;margin-top:4px;direction:ltr;text-align:left">${ex}</div></td>
-            <td style="width:25%; direction:ltr; text-align:left; font-weight:1000">${rs}</td>
-          </tr>
-        `;
-      }).join("");
-
-      el.innerHTML = `
-        <div style="text-align:center">
-          <div class="rTitle">شركة الحايك</div>
-          <div class="rSub">HAYEK SPOT</div>
-        </div>
-
-        <div class="rLine"></div>
-
-        <div class="rKV"><div>المستخدم</div><div>${escapeHtml(user)}</div></div>
-        <div class="rKV"><div>العميل</div><div>${escapeHtml(customer)}</div></div>
-        <div class="rKV"><div>التاريخ</div><div style="direction:ltr">${escapeHtml(dateText)}</div></div>
-
-        <div class="rLine"></div>
-
-        <table>
-          <thead>
-            <tr>
-              <th style="width:20%; direction:ltr; text-align:left">وقت</th>
-              <th style="width:55%">بيان</th>
-              <th style="width:25%; direction:ltr; text-align:left">نتيجة</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="3" style="padding:14px;font-weight:1000">لا يوجد عمليات</td></tr>`}
-          </tbody>
-        </table>
-
-        <div class="rLine"></div>
-
-        <div class="rTotal"><div>الإجمالي</div><div style="direction:ltr">${escapeHtml(String(total))}</div></div>
-
-        <div class="rLine"></div>
-
-        <div class="rFoot">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-        <div class="rFoot">05510217646</div>
-      `;
-      return el;
-    }
-
-    function canvasToMonoRaster(canvas, threshold=190){
-      const w = canvas.width;
-      const h = canvas.height;
+    // =========================
+    // ✅ Print 80mm as RASTER Image (Option 2: لا يمسح البيانات)
+    // =========================
+    function bwDither(canvas){
+      // سريع + مناسب للطباعة: grayscale + threshold
       const ctx = canvas.getContext("2d", { willReadFrequently:true });
-      const img = ctx.getImageData(0,0,w,h);
-      const data = img.data;
-
-      // convert to grayscale + threshold
-      // produce bytes per row (w bits)
-      const bytesPerRow = Math.ceil(w / 8);
-      const out = new Uint8Array(bytesPerRow * h);
-
-      for(let y=0;y<h;y++){
-        for(let x=0;x<w;x++){
-          const i = (y*w + x) * 4;
-          const r = data[i], g = data[i+1], b = data[i+2];
-          // luminance
-          const lum = (0.299*r + 0.587*g + 0.114*b);
-          const isBlack = lum < threshold; // true => black pixel
-          const byteIndex = y*bytesPerRow + (x >> 3);
-          const bit = 7 - (x & 7);
-          if(isBlack){
-            out[byteIndex] |= (1 << bit);
-          }
-        }
+      const img = ctx.getImageData(0,0,canvas.width, canvas.height);
+      const d = img.data;
+      for(let i=0;i<d.length;i+=4){
+        const r = d[i], g = d[i+1], b = d[i+2];
+        // grayscale
+        const y = (0.299*r + 0.587*g + 0.114*b);
+        // threshold
+        const v = (y > 210) ? 255 : 0;
+        d[i]=d[i+1]=d[i+2]=v;
+        d[i+3]=255;
       }
-      return { w, h, bytesPerRow, bytes: out };
+      ctx.putImageData(img,0,0);
+      return canvas;
     }
 
-    function escposRasterGSv0(mono){
-      // GS v 0
-      // [1D 76 30 m xL xH yL yH] + data
-      const { w, h, bytesPerRow, bytes } = mono;
-      const xL = bytesPerRow & 0xFF;
-      const xH = (bytesPerRow >> 8) & 0xFF;
-      const yL = h & 0xFF;
-      const yH = (h >> 8) & 0xFF;
-
-      const header = u8([0x1D,0x76,0x30,0x00, xL,xH, yL,yH]);
-      const out = new Uint8Array(header.length + bytes.length);
-      out.set(header,0);
-      out.set(bytes, header.length);
-      return out;
-    }
-
-    async function print80mmBluetooth(){
+    async function print80mm(){
       clearErr(appErr);
 
       const customer = requireCustomer();
@@ -1760,52 +1898,85 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      // نحفظ closed قبل الطباعة
+      // نحافظ على البيانات (الخيار 2)، بس نحفظ closed بالـ DB لتحصل عند الأدمن
       const r = await saveInvoice("closed");
       if(!r.ok){
-        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        showErr(appErr, (getUILang()==="tr")
+          ? "Fatura kapatma/kaydetme hatası."
+          : "فشل إغلاق/حفظ الفاتورة.");
         return;
       }
 
       addSug(SUG_CUSTOMERS_KEY, customer);
 
-      // ensure connected
-      if(!btChar){
-        await connectPrinter();
-        if(!btChar) return;
+      // نبني الريسيبت الصغير
+      const pa = buildReceipt80();
+
+      // Raster سريع (scale صغير حتى السرعة تتحسن)
+      let canvas = await html2canvas(pa, {
+        scale: 1.25,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false
+      });
+
+      // تحويل أبيض/أسود للطابعة
+      canvas = bwDither(canvas);
+
+      const imgData = canvas.toDataURL("image/png");
+
+      // نافذة طباعة (أي طابعة / أي ماركة)
+      const w = window.open("", "_blank");
+      if(!w){
+        showErr(appErr, t("popupBlocked"));
+        return;
       }
 
-      try{
-        toast("جارٍ تجهيز الطباعة…");
+      const html = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Print 80mm</title>
+  <style>
+    @page { size: 80mm auto; margin: 0; }
+    html,body{ margin:0; padding:0; background:#fff; }
+    .paper{
+      width:80mm;
+      margin:0;
+      padding:0;
+    }
+    img{
+      width:80mm;
+      height:auto;
+      display:block;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+  <div class="paper">
+    <img src="${imgData}" alt="receipt" />
+  </div>
+  <script>
+    window.onload = () => {
+      setTimeout(() => {
+        window.focus();
+        window.print();
+      }, 120);
+    };
+  </script>
+</body>
+</html>`;
 
-        const el = buildReceipt80DOM();
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
 
-        // Render to canvas (high quality)
-        const canvas = await html2canvas(el, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: false
-        });
-
-        // make monochrome
-        const mono = canvasToMonoRaster(canvas, 190);
-        const raster = escposRasterGSv0(mono);
-
-        // send to printer
-        await btWrite(escposInit());
-        await btWrite(escposAlignLeft());
-        await btWrite(raster);
-        await btWrite(escposFeed(4));
-        await btWrite(escposCut());
-
-        toast("تمت الطباعة ✅");
-
-        // خيارك 2: لا نمسح البيانات بعد الطباعة
-        await qSyncSilently(false);
-      }catch(e){
-        showErr(appErr, "فشل الطباعة:\n" + (e?.message || e));
-      }
+      toast(t("printOpen"));
+      await qSyncSilently(false);
     }
 
     // ✅ EXPOSE: Smart voice add line
@@ -1813,7 +1984,7 @@
       try{
         const c = custInput.value.trim();
         if(!c){
-          showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
+          showErr(appErr, t("needCustomer"));
           custInput.focus();
           return;
         }
@@ -1827,7 +1998,7 @@
 
         const exprNorm = String(expression||"").trim();
         if(!exprNorm){
-          showErr(appErr, "لم يتم العثور على عملية حسابية.");
+          showErr(appErr, (getUILang()==="tr") ? "İşlem bulunamadı." : "لم يتم العثور على عملية حسابية.");
           return;
         }
 
@@ -1835,12 +2006,21 @@
         setExpr(finalExpr);
         await equalsAndLog();
       }catch(e){
-        showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
+        showErr(appErr, (getUILang()==="tr") ? ("Sesle ekleme hatası:\n"+(e?.message||e)) : ("فشل إضافة بالصوت:\n" + (e?.message || e)));
       }
     };
 
-    // ------- binds -------
-    $("loginCard").addEventListener("submit", (e)=>{ e.preventDefault(); login(); });
+    // =========================
+    // binds
+    // =========================
+    // UI language buttons
+    $("uiLangAR").addEventListener("click", ()=> setUILang("ar"));
+    $("uiLangTR").addEventListener("click", ()=> setUILang("tr"));
+
+    document.getElementById("loginCard").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      login();
+    });
 
     $("btnClear").addEventListener("click", ()=>{
       $("loginUser").value="";
@@ -1863,22 +2043,23 @@
 
     $("btnBack").addEventListener("click", backspace);
     $("btnEq").addEventListener("click", equalsAndLog);
+    $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
+    $("btnPrint80").addEventListener("click", print80mm);
 
+    // delete row (in log)
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button");
       if(!btn) return;
       const idx = btn.getAttribute("data-del");
-      if(idx != null) deleteOp(idx);
+      if(idx !== null) deleteOp(idx);
     });
 
-    $("btnPDF").addEventListener("click", exportPDF);
-
-    $("btnBtConnect").addEventListener("click", connectPrinter);
-    $("btnPrint80").addEventListener("click", print80mmBluetooth);
-
+    // init
     setTab("calc");
+    applyUILang();
     renderSug();
+
     refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
     restoreSession();
 
