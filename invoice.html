@@ -44,7 +44,6 @@
     }
 
     .hint{ color:#dbe8ff; font-size:14px; line-height:1.9; font-weight:900; }
-
     label{ display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; font-weight:800; }
 
     input{
@@ -86,7 +85,6 @@
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
 
     .exprTitle{ font-size:14px; color:#cfe0ff; margin-bottom:8px; font-weight:900; }
-
     .expr{
       width:100%;
       border:2px solid rgba(0,0,0,.16);
@@ -104,7 +102,6 @@
       font-weight:1000;
       font-size:20px;
     }
-
     .resLine{
       margin-top:10px;
       display:flex;
@@ -156,7 +153,6 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* PDF printArea (A4) */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -173,13 +169,8 @@
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
 
     .p-field{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px 14px;
-      border:2px solid #111;
-      border-radius:14px;
-      margin-bottom:10px;
+      display:flex; justify-content:space-between; gap:10px;
+      padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
     }
     .p-field .k{font-size:20px; font-weight:900; color:#000;}
     .p-field .v{font-size:20px; font-weight:900; color:#000;}
@@ -187,57 +178,37 @@
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
     #printArea table{width:100%; border-collapse:collapse; background:#fff;}
     #printArea thead th{
-      font-size:18px; font-weight:1000; padding:12px 10px;
-      border-bottom:2px solid #111; background:#fff; color:#000;
+      font-size:18px; font-weight:1000; padding:12px 10px; border-bottom:2px solid #111; background:#fff; color:#000;
     }
     #printArea tbody td{
-      font-size:16px; font-weight:1000; padding:12px 10px;
-      border-bottom:1px solid #111; background:#fff; color:#000;
+      font-size:16px; font-weight:1000; padding:12px 10px; border-bottom:1px solid #111; background:#fff; color:#000;
     }
     #printArea tbody tr:last-child td{border-bottom:0;}
 
     .p-totalBox{
-      border:2px dashed #111;
-      border-radius:16px;
-      padding:14px 16px;
-      display:flex;
-      justify-content:space-between;
-      margin-top:12px;
-      font-weight:1000;
-      font-size:20px;
-      color:#000;
+      border:2px dashed #111; border-radius:16px;
+      padding:14px 16px; display:flex; justify-content:space-between; margin-top:12px;
+      font-weight:1000; font-size:20px; color:#000;
     }
 
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
     .p-phone{
-      display:inline-block;
-      margin-top:12px;
-      border:2px solid #0a7a55;
-      color:#0a7a55;
-      border-radius:999px;
-      padding:12px 20px;
-      font-weight:1000;
-      font-size:22px;
+      display:inline-block; margin-top:12px; border:2px solid #0a7a55; color:#0a7a55;
+      border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
     }
 
-    /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
-      width:46px; min-width:46px; height:46px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--txt);
-      font-weight:1000;
-      cursor:pointer;
-      transition:.15s;
+      width:46px; min-width:46px; height:46px; border-radius:14px;
+      border:1px solid var(--line); background: rgba(255,255,255,.06); color: var(--txt);
+      font-weight:1000; cursor:pointer; transition:.15s;
       display:flex; align-items:center; justify-content:center;
     }
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
 
-    /* ✅ delete row button (log) */
+    /* ✅ زر حذف سطر */
     .delBtn{
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,77,77,.12);
@@ -269,7 +240,6 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- ✅ loginCard FORM -->
     <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
@@ -290,7 +260,6 @@
 
       <div class="sep"></div>
 
-      <!-- ✅ Voice language toggle -->
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
@@ -311,7 +280,6 @@
       </div>
       <datalist id="itemList"></datalist>
 
-      <!-- ✅ Smart voice add -->
       <div style="margin-top:10px">
         <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
       </div>
@@ -355,8 +323,6 @@
           <div class="actions2">
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
             <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
-
-            <!-- ✅ NEW: 80mm print (Raster via system print) -->
             <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (Raster)</button>
           </div>
 
@@ -389,7 +355,7 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- ✅ Voice-to-text (Arabic + Turkish) + Smart Add -->
+  <!-- ✅ Voice-to-text -->
   <script>
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -414,7 +380,7 @@
       if(!SR){
         btn.style.opacity = "0.6";
         btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
-        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome.")); 
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
 
@@ -467,11 +433,8 @@
       });
     }
 
-    // --- helpers for smart parse ---
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-    function toLatinDigits(s){
-      return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d);
-    }
+    function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
     function normalizeExpr(s){
       let x = toLatinDigits(s);
       x = x.replace(/\s+/g,"");
@@ -484,15 +447,12 @@
     function parseSmart(text){
       const t0 = toLatinDigits(String(text||"")).trim();
       if(!t0) return null;
-
       const m = t0.match(/[0-9]/);
       if(!m || m.index == null) return null;
-
       const idx = m.index;
       const item = t0.slice(0, idx).trim();
       const exprRaw = t0.slice(idx).trim();
       const expr = normalizeExpr(exprRaw);
-
       if(!expr) return null;
       return { item, expr };
     }
@@ -527,11 +487,9 @@
 
       rec.onresult = (e) => {
         let finalText = "";
-        let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const t = e.results[i][0].transcript;
           if (e.results[i].isFinal) finalText += t;
-          else interim += t;
         }
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
@@ -569,8 +527,8 @@
 
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
-    if(arBtn) arBtn.addEventListener("click", ()=> { localStorage.setItem("HAYEK_VOICE_LANG_V1","ar-SA"); refreshLangUI(); });
-    if(trBtn) trBtn.addEventListener("click", ()=> { localStorage.setItem("HAYEK_VOICE_LANG_V1","tr-TR"); refreshLangUI(); });
+    if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
+    if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
 
     refreshLangUI();
   })();
@@ -718,14 +676,14 @@
     // =========================
     // ✅ OFFLINE QUEUE
     // =========================
-    const OFFLINE_QUEUE_KEY_V1 = "HAYEK_OFFLINE_INVOICES_V1";
+    const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
     function qRead(){
-      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY_V1) || "[]"); }
+      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
       catch{ return []; }
     }
     function qWrite(arr){
-      localStorage.setItem(OFFLINE_QUEUE_KEY_V1, JSON.stringify(Array.isArray(arr)?arr:[]));
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
     }
     function qAdd(payload){
       const arr = qRead();
@@ -1100,7 +1058,7 @@
     }
 
     // =========================
-    // ✅ LOGIN عبر Edge Function (hayek-sync)
+    // ✅ LOGIN عبر Edge Function
     // =========================
     async function apiLoginViaEdge(username, password){
       const deviceId = getOrCreateDeviceId();
@@ -1410,7 +1368,6 @@
       if(navigator.vibrate) navigator.vibrate(10);
     }
 
-    /* ✅ render log with delete button */
     function renderLog(){
       if(!ops.length){
         logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
@@ -1596,11 +1553,11 @@
       await qSyncSilently(false);
     }
 
-    /* =========================================================
-       ✅ NEW: 80mm PRINT (Raster via browser print dialog)
-       - نفتح نافذة فيها إيصال بعرض 80mm
-       - ثم window.print() => النظام يحولها Raster للطابعة => عربي مضبوط
-    ========================================================= */
+    /* =========================
+       ✅ 80mm PRINT (Raster via system print)
+       ✅ خيار 2: بعد الطباعة لا نعمل Reset
+       ✅ إصلاح نهائي: لا نكتب </script> بشكل مباشر داخل string
+    ========================= */
     function buildReceipt80HTML(){
       const customer = (custInput.value.trim() || "—");
       const user = (USER?.full_name || USER?.username || "—");
@@ -1621,19 +1578,20 @@
         `;
       }).join("");
 
-      return `
-<!doctype html>
+      const openScript = "<scr" + "ipt>";
+      const closeScript = "</scr" + "ipt>";
+
+      return `<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HAYEK 80mm</title>
 <style>
-  /* 80mm receipt - print */
   @page { size: 80mm auto; margin: 3mm; }
   html,body{ margin:0; padding:0; }
   body{
-    width:74mm; /* داخل الهوامش */
+    width:74mm;
     font-family: Arial, "Segoe UI", Tahoma, sans-serif;
     direction:rtl;
     color:#000;
@@ -1644,8 +1602,6 @@
   .sub{font-size:12px;font-weight:900; margin-top:1mm}
   .hr{border-top:1px dashed #000; margin:2.5mm 0}
   .row{display:flex; justify-content:space-between; gap:6px; font-size:12px; font-weight:800}
-  .k{color:#000}
-  .v{color:#000}
   table{width:100%; border-collapse:collapse; font-size:12px}
   th,td{padding:2mm 0; border-bottom:1px solid #000; vertical-align:top}
   th{font-weight:900}
@@ -1653,7 +1609,6 @@
   .total{display:flex; justify-content:space-between; font-size:14px; font-weight:900; margin-top:2mm}
   .foot{margin-top:2mm; font-size:11px; font-weight:900; text-align:center}
   .muted{font-size:10px; color:#222; font-weight:800}
-  /* تحسين للطباعة الحرارية */
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 </style>
 </head>
@@ -1665,9 +1620,9 @@
 
   <div class="hr"></div>
 
-  <div class="row"><div class="k">المستخدم</div><div class="v">${escapeHtml(user)}</div></div>
-  <div class="row"><div class="k">العميل</div><div class="v">${escapeHtml(customer)}</div></div>
-  <div class="row"><div class="k">التاريخ</div><div class="v" style="direction:ltr;text-align:left">${escapeHtml(dateText)}</div></div>
+  <div class="row"><div>المستخدم</div><div>${escapeHtml(user)}</div></div>
+  <div class="row"><div>العميل</div><div>${escapeHtml(customer)}</div></div>
+  <div class="row"><div>التاريخ</div><div style="direction:ltr;text-align:left">${escapeHtml(dateText)}</div></div>
 
   <div class="hr"></div>
 
@@ -1685,20 +1640,15 @@
   </table>
 
   <div class="hr"></div>
-
   <div class="total"><div>الإجمالي</div><div style="direction:ltr;text-align:left">${escapeHtml(String(total))}</div></div>
 
   <div class="hr"></div>
-
   <div class="foot">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
   <div class="foot muted">05510217646</div>
 
-<script>
-  // اطبع بعد التحميل
-  window.onload = () => {
-    setTimeout(() => { window.print(); }, 250);
-  };
-</script>
+  ${openScript}
+    window.onload = () => { setTimeout(() => window.print(), 250); };
+  ${closeScript}
 </body>
 </html>`;
     }
@@ -1712,7 +1662,6 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      // حفظ كـ closed اختياري — خليته مثل PDF حتى تكون الفاتورة “مقفولة”
       const r = await saveInvoice("closed");
       if(!r.ok){
         showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
@@ -1731,14 +1680,11 @@
       w.document.write(html);
       w.document.close();
 
-      toast("افتح نافذة الطباعة واختر الطابعة ✅");
-
-      // لا نمسح البيانات مباشرة — نخليها مثل PDF (بعد نجاح المستخدم يقدر يمسح)
-      // إذا بدك نفس سلوك PDF (يمسح بعد الطباعة) قلّي.
+      toast("اختر الطابعة من نافذة الطباعة ✅");
       await qSyncSilently(false);
     }
 
-    // ✅ Smart voice add line
+    // ✅ EXPOSE: Smart voice add line
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
@@ -1780,6 +1726,7 @@
       $("loginPass").value="";
       clearErr(loginErr);
     });
+
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
@@ -1798,17 +1745,13 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
-    /* ✅ delete row click */
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button");
       if(!btn) return;
       const idx = btn.getAttribute("data-del");
-      if(idx != null){
-        deleteOp(idx);
-      }
+      if(idx != null) deleteOp(idx);
     });
 
-    /* ✅ NEW: print 80mm */
     $("btnPrint80").addEventListener("click", print80mm);
 
     setTab("calc");
