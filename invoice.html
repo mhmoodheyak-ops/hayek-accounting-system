@@ -43,26 +43,12 @@
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
 
-    .hint{
-      color:#dbe8ff;
-      font-size:14px;
-      line-height:1.9;
-      font-weight:900;
-    }
-
-    label{
-      display:block;
-      font-size:13px;
-      color:var(--muted);
-      margin:10px 0 6px;
-      font-weight:800;
-    }
-
+    .hint{color:#dbe8ff;font-size:14px;line-height:1.9;font-weight:900;}
+    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px;font-weight:800;}
     input{
       width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
       background: rgba(0,0,0,.18); color:var(--txt); outline:none;
-      font-size:14px;
-      font-weight:800;
+      font-size:14px; font-weight:800;
     }
     input:focus{border-color:rgba(31,91,216,.55); box-shadow:0 0 0 4px rgba(31,91,216,.18)}
     .row{display:flex; gap:10px}
@@ -97,13 +83,7 @@
     .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
 
-    .exprTitle{
-      font-size:14px;
-      color:#cfe0ff;
-      margin-bottom:8px;
-      font-weight:900;
-    }
-
+    .exprTitle{font-size:14px;color:#cfe0ff;margin-bottom:8px;font-weight:900;}
     .expr{
       width:100%;
       border:2px solid rgba(0,0,0,.16);
@@ -121,17 +101,7 @@
       font-weight:1000;
       font-size:20px;
     }
-
-    .resLine{
-      margin-top:10px;
-      display:flex;
-      justify-content:flex-end;
-      gap:8px;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:900;
-    }
-
+    .resLine{margin-top:10px;display:flex;justify-content:flex-end;gap:8px;color:var(--muted);font-size:13px;font-weight:900;}
     .resLine b{
       color:#000;
       font-size:18px;
@@ -146,10 +116,7 @@
     }
 
     .keys{margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
-    .key{
-      border:0; border-radius:14px; background:rgba(255,255,255,.10);
-      color:var(--txt); padding:14px 0; font-size:18px; font-weight:900; cursor:pointer;
-    }
+    .key{border:0;border-radius:14px;background:rgba(255,255,255,.10);color:var(--txt);padding:14px 0;font-size:18px;font-weight:900;cursor:pointer;}
     .key:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
     .key.op{background:rgba(255,255,255,.12)}
     .key.eq{grid-column:1 / span 2; background:var(--blue)}
@@ -157,14 +124,7 @@
     .key.back{grid-column:3 / span 2}
     .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
 
-    .footerNote{
-      margin-top:10px;
-      text-align:center;
-      font-size:12px;
-      color:#cfe0ff;
-      line-height:1.8;
-      font-weight:900;
-    }
+    .footerNote{margin-top:10px;text-align:center;font-size:12px;color:#cfe0ff;line-height:1.8;font-weight:900;}
 
     .logTable{margin-top:10px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(0,0,0,.10)}
     table{width:100%; border-collapse:collapse}
@@ -203,41 +163,20 @@
 
     .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
     .p-header{text-align:center; padding:18px 16px;}
-
     .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
 
     .p-field{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px 14px;
-      border:2px solid #111;
-      border-radius:14px;
-      margin-bottom:10px;
+      display:flex; justify-content:space-between; gap:10px;
+      padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
     }
     .p-field .k{font-size:20px; font-weight:900; color:#000;}
     .p-field .v{font-size:20px; font-weight:900; color:#000;}
 
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
     #printArea table{width:100%; border-collapse:collapse; background:#fff;}
-
-    #printArea thead th{
-      font-size:18px;
-      font-weight:1000;
-      padding:12px 10px;
-      border-bottom:2px solid #111;
-      background:#fff;
-      color:#000;
-    }
-    #printArea tbody td{
-      font-size:16px;
-      font-weight:1000;
-      padding:12px 10px;
-      border-bottom:1px solid #111;
-      background:#fff;
-      color:#000;
-    }
+    #printArea thead th{font-size:18px;font-weight:1000;padding:12px 10px;border-bottom:2px solid #111;background:#fff;color:#000;}
+    #printArea tbody td{font-size:16px;font-weight:1000;padding:12px 10px;border-bottom:1px solid #111;background:#fff;color:#000;}
     #printArea tbody tr:last-child td{border-bottom:0;}
 
     .p-totalBox{
@@ -296,7 +235,6 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- ✅ FIX: loginCard صار FORM حتى المتصفح يحفظ كلمة السر -->
     <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
@@ -304,7 +242,6 @@
       <label>كلمة السر</label>
       <input id="loginPass" type="password" autocomplete="current-password" name="password" />
       <div class="row" style="margin-top:12px">
-        <!-- ✅ FIX: submit -->
         <button class="btn blue" type="submit">دخول</button>
         <button class="btn" id="btnClear" type="button">تفريغ</button>
       </div>
@@ -318,7 +255,6 @@
 
       <div class="sep"></div>
 
-      <!-- ✅ Voice language toggle -->
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
@@ -339,7 +275,6 @@
       </div>
       <datalist id="itemList"></datalist>
 
-      <!-- ✅ NEW: Smart voice add -->
       <div style="margin-top:10px">
         <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
       </div>
@@ -492,16 +427,12 @@
       });
     }
 
-    // --- helpers for smart parse ---
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-    function toLatinDigits(s){
-      return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d);
-    }
+    function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
     function normalizeExpr(s){
       let x = toLatinDigits(s);
       x = x.replace(/\s+/g,"");
       x = x.replaceAll("_","-");
-      x = x.replaceAll("×","×");
       x = x.replace(/[xX*]/g,"×");
       x = x.replace(/\//g,"÷");
       x = x.replace(/−/g,"-");
@@ -510,15 +441,12 @@
     function parseSmart(text){
       const t0 = toLatinDigits(String(text||"")).trim();
       if(!t0) return null;
-
       const m = t0.match(/[0-9]/);
       if(!m || m.index == null) return null;
-
       const idx = m.index;
       const item = t0.slice(0, idx).trim();
       const exprRaw = t0.slice(idx).trim();
       const expr = normalizeExpr(exprRaw);
-
       if(!expr) return null;
       return { item, expr };
     }
@@ -559,24 +487,17 @@
           if (e.results[i].isFinal) finalText += t;
           else interim += t;
         }
-        const text = (finalText || interim).trim();
-        if(!text) return;
-
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
           if(!parsed){
             alert("❌ ما قدرت أفهم الصيغة.\nمثال: علبة شامبو 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
             return;
           }
-
-          const item = (parsed.item || "").trim();
-          const expr = (parsed.expr || "").trim();
-
           if(!window.HAYEK_VOICE_ADD_LINE){
             alert("❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى.");
             return;
           }
-          window.HAYEK_VOICE_ADD_LINE(item, expr);
+          window.HAYEK_VOICE_ADD_LINE((parsed.item||"").trim(), (parsed.expr||"").trim());
         }
       };
 
@@ -749,7 +670,7 @@
     }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE
+    // ✅ OFFLINE QUEUE (مرة واحدة فقط ✅)
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -801,9 +722,7 @@
         for(const raw of arr){
           try{
             const payload = cleanInvoicePayload(raw);
-            if(!payload?.id){
-              continue;
-            }
+            if(!payload?.id) continue;
 
             const { error } = await supabase
               .from(INVOICE_TABLE)
@@ -1138,65 +1057,6 @@
     }
 
     // =========================
-    // ✅ OFFLINE QUEUE (functions)
-    // =========================
-    const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
-    function qRead(){ try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }catch{ return []; } }
-    function qWrite(arr){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[])); }
-    function qAdd(payload){
-      const arr = qRead();
-      const filtered = arr.filter(x => x?.id !== payload?.id);
-      filtered.push({ ...payload, __queued_at: new Date().toISOString() });
-      qWrite(filtered);
-    }
-
-    function cleanInvoicePayload(p){
-      if(!p || typeof p !== "object") return null;
-      const out = { ...p };
-      delete out.__queued_at;
-      delete out.__meta;
-      delete out.__local;
-      for(const k of Object.keys(out)){
-        if(out[k] === undefined) delete out[k];
-      }
-      return out;
-    }
-
-    let __syncing = false;
-    async function qSyncSilently(force=false){
-      if(__syncing) return;
-      const arr = qRead();
-      if(!arr.length) return;
-
-      if(!force){
-        await refreshNetState(false);
-        if(!netNow()) return;
-      }
-
-      __syncing = true;
-      try{
-        const keep = [];
-        for(const raw of arr){
-          try{
-            const payload = cleanInvoicePayload(raw);
-            if(!payload?.id) continue;
-
-            const { error } = await supabase
-              .from(INVOICE_TABLE)
-              .upsert(payload, { onConflict: "id" });
-
-            if(error) keep.push(raw);
-          }catch{
-            keep.push(raw);
-          }
-        }
-        qWrite(keep);
-      }finally{
-        __syncing = false;
-      }
-    }
-
-    // =========================
     // ✅ LOGIN عبر Edge Function (hayek-sync)
     // =========================
     async function apiLoginViaEdge(username, password){
@@ -1230,7 +1090,6 @@
       return "فشل تسجيل الدخول:\n" + e;
     }
 
-    // ------- LOGIN -------
     async function login(){
       clearErr(loginErr);
       const username = $("loginUser").value.trim();
@@ -1524,19 +1383,15 @@
         logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
         return;
       }
-
       logBody.innerHTML = ops.map((o, idx)=>{
         const t = o.time || nowTime();
         const exp = (o.expr ? `${o.expr} = ${o.result}` : `${o.result}`);
         return `
-          <tr data-i="${idx}">
+          <tr>
             <td class="delCell">
               <button class="delBtn" type="button" data-del="${idx}" title="حذف السطر">🗑️</button>
             </td>
-            <td>
-              <b>${escapeHtml(o.label||"عملية")}</b>
-              <div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div>
-            </td>
+            <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
             <td>${escapeHtml(exp)}</td>
             <td>${escapeHtml(t)}</td>
           </tr>
@@ -1545,7 +1400,6 @@
     }
 
     async function deleteOpByIndex(i){
-      clearErr(appErr);
       const idx = Number(i);
       if(!Number.isFinite(idx)) return;
       if(idx < 0 || idx >= ops.length) return;
@@ -1682,21 +1536,11 @@
 
       const pa = buildPrintArea();
 
-      /* ✅ ضغط الملف لأقل حجم ممكن مع الحفاظ على وضوح القراءة:
-         - scale أقل (بدل 2)
-         - استخدام JPEG بدل PNG
-         - تفعيل ضغط jsPDF
-         - ضغط صورة FAST
-      */
-      const SCALE = 1.35;           // وضوح ممتاز + حجم أقل
-      const JPEG_Q = 0.72;          // جودة مناسبة + حجم أقل
+      // ✅ ضغط قوي مع بقاء القراءة واضحة
+      const SCALE = 1.35;
+      const JPEG_Q = 0.72;
 
-      const canvas = await html2canvas(pa,{
-        scale: SCALE,
-        useCORS:true,
-        backgroundColor:"#ffffff"
-      });
-
+      const canvas = await html2canvas(pa,{scale:SCALE,useCORS:true,backgroundColor:"#ffffff"});
       const imgData = canvas.toDataURL("image/jpeg", JPEG_Q);
 
       const { jsPDF } = window.jspdf;
@@ -1729,7 +1573,6 @@
       await qSyncSilently(false);
     }
 
-    // ✅ EXPOSE: Smart voice add line
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
@@ -1753,7 +1596,6 @@
         }
 
         const finalExpr = exprNorm.replaceAll("_","-");
-
         setExpr(finalExpr);
         await equalsAndLog();
       }catch(e){
@@ -1772,6 +1614,7 @@
       $("loginPass").value="";
       clearErr(loginErr);
     });
+
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
@@ -1790,15 +1633,15 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
-    /* ✅ التقاط ضغط زر الحذف من جدول السجل */
+    // ✅ حذف سطر
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-del]");
       if(!btn) return;
-      const i = btn.getAttribute("data-del");
-      deleteOpByIndex(i);
+      deleteOpByIndex(btn.getAttribute("data-del"));
     });
 
-    setTab("calc");
+    function setTabInit(){ setTab("calc"); }
+    setTabInit();
 
     renderSug();
     refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
