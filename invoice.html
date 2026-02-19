@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PDF -->
+  <!-- PDF + Canvas -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -151,6 +151,7 @@
     .delBtn:hover{transform:translateY(-1px); background:rgba(255,77,77,.18)}
     .delCell{width:44px; text-align:center; vertical-align:middle}
 
+    /* ===== A4 Print Area (PDF) ===== */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -160,49 +161,55 @@
       direction:rtl;
       font-family:Arial,"Segoe UI",Tahoma,sans-serif;
     }
-
     .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
     .p-header{text-align:center; padding:18px 16px;}
     .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
-
     .p-field{
       display:flex; justify-content:space-between; gap:10px;
       padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
     }
     .p-field .k{font-size:20px; font-weight:900; color:#000;}
     .p-field .v{font-size:20px; font-weight:900; color:#000;}
-
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
     #printArea table{width:100%; border-collapse:collapse; background:#fff;}
     #printArea thead th{font-size:18px;font-weight:1000;padding:12px 10px;border-bottom:2px solid #111;background:#fff;color:#000;}
     #printArea tbody td{font-size:16px;font-weight:1000;padding:12px 10px;border-bottom:1px solid #111;background:#fff;color:#000;}
     #printArea tbody tr:last-child td{border-bottom:0;}
-
     .p-totalBox{
-      border:2px dashed #111;
-      border-radius:16px;
-      padding:14px 16px;
-      display:flex;
-      justify-content:space-between;
-      margin-top:12px;
-      font-weight:1000;
-      font-size:20px;
-      color:#000;
+      border:2px dashed #111; border-radius:16px; padding:14px 16px;
+      display:flex; justify-content:space-between; margin-top:12px;
+      font-weight:1000; font-size:20px; color:#000;
     }
-
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
     .p-phone{
-      display:inline-block;
-      margin-top:12px;
-      border:2px solid #0a7a55;
-      color:#0a7a55;
-      border-radius:999px;
-      padding:12px 20px;
-      font-weight:1000;
-      font-size:22px;
+      display:inline-block; margin-top:12px; border:2px solid #0a7a55;
+      color:#0a7a55; border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
     }
+
+    /* ===== 80mm Receipt Area (for Bluetooth print) =====
+       نستخدمه فقط لتحويله لصورة ثم إرسال ESC/POS */
+    #receiptArea{
+      position:fixed; left:-9999px; top:0;
+      width:576px; /* 80mm at 203dpi تقريباً */
+      background:#fff;
+      color:#000;
+      padding:14px 16px;
+      direction:rtl;
+      font-family: Arial, "Segoe UI", Tahoma, sans-serif;
+    }
+    .r-title{font-size:30px; font-weight:900; text-align:center; margin:0}
+    .r-sub{font-size:18px; font-weight:900; text-align:center; margin:6px 0 10px; color:#0a7a55}
+    .r-line{border-top:2px dashed #000; margin:10px 0}
+    .r-row{display:flex; justify-content:space-between; gap:12px; font-size:18px; font-weight:900; margin:6px 0}
+    .r-row .k{opacity:.85}
+    .r-table{width:100%; border-collapse:collapse; margin-top:10px}
+    .r-table th{font-size:16px; font-weight:1000; border-bottom:2px solid #000; padding:8px 6px; text-align:right}
+    .r-table td{font-size:16px; font-weight:900; border-bottom:1px solid #000; padding:8px 6px; text-align:right; vertical-align:top}
+    .r-total{font-size:22px; font-weight:1000; display:flex; justify-content:space-between; margin-top:10px}
+    .r-foot{margin-top:10px; text-align:center; font-size:16px; font-weight:900; line-height:1.8}
+    .r-phone{display:inline-block; margin-top:8px; border:2px solid #0a7a55; color:#0a7a55; border-radius:999px; padding:8px 14px; font-weight:1000; font-size:18px}
 
     /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
@@ -317,6 +324,7 @@
 
           <div class="actions2">
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
+            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm</button>
             <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
           </div>
 
@@ -346,6 +354,7 @@
     </div>
 
     <div id="printArea"></div>
+    <div id="receiptArea"></div>
     <div class="toast" id="toast"></div>
   </div>
 
@@ -572,7 +581,7 @@
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1400);
+      setTimeout(()=> toastEl.style.display="none", 1600);
     }
     function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
 
@@ -670,7 +679,7 @@
     }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE (مرة واحدة فقط ✅)
+    // ✅ OFFLINE QUEUE
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -1057,7 +1066,7 @@
     }
 
     // =========================
-    // ✅ LOGIN عبر Edge Function (hayek-sync)
+    // ✅ LOGIN via Edge Function
     // =========================
     async function apiLoginViaEdge(username, password){
       const deviceId = getOrCreateDeviceId();
@@ -1517,6 +1526,56 @@
       return pa;
     }
 
+    function buildReceiptArea(){
+      const ra = $("receiptArea");
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const invId = String(invoiceId || "—");
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
+
+      const rows = ops.slice().reverse().map(o=>`
+        <tr>
+          <td style="width:18%">${escapeHtml(o.time || "")}</td>
+          <td style="width:34%">${escapeHtml(o.label || "")}</td>
+          <td style="width:30%">${escapeHtml(o.expr || "")}</td>
+          <td style="width:18%">${escapeHtml(o.result)}</td>
+        </tr>
+      `).join("");
+
+      ra.innerHTML = `
+        <div class="r-title">شركة الحايك</div>
+        <div class="r-sub">HAYEK SPOT</div>
+
+        <div class="r-line"></div>
+
+        <div class="r-row"><div class="k">المستخدم</div><div class="v">${escapeHtml(user)}</div></div>
+        <div class="r-row"><div class="k">العميل</div><div class="v">${escapeHtml(customer)}</div></div>
+        <div class="r-row"><div class="k">رقم</div><div class="v">${escapeHtml(invId)}</div></div>
+        <div class="r-row"><div class="k">تاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
+
+        <div class="r-line"></div>
+
+        <table class="r-table">
+          <thead><tr><th>وقت</th><th>بيان</th><th>عملية</th><th>نتيجة</th></tr></thead>
+          <tbody>
+            ${rows || `<tr><td colspan="4" style="padding:10px;font-weight:900">لا يوجد عمليات</td></tr>`}
+          </tbody>
+        </table>
+
+        <div class="r-total"><div>الإجمالي</div><div>${escapeHtml(total)}</div></div>
+
+        <div class="r-line"></div>
+
+        <div class="r-foot">
+          تم تطوير هذه الحاسبة من قبل شركة الحايك<br/>
+          تجارة عامة / دعاية و اعلان / حلول رقمية<br/>
+          <span class="r-phone">05510217646</span>
+        </div>
+      `;
+      return ra;
+    }
+
     async function exportPDF(){
       clearErr(appErr);
 
@@ -1536,7 +1595,6 @@
 
       const pa = buildPrintArea();
 
-      // ✅ ضغط قوي مع بقاء القراءة واضحة
       const SCALE = 1.35;
       const JPEG_Q = 0.72;
 
@@ -1573,6 +1631,7 @@
       await qSyncSilently(false);
     }
 
+    // ✅ EXPOSE: Smart voice add line
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
@@ -1602,6 +1661,170 @@
         showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
       }
     };
+
+    // =========================
+    // ✅ Bluetooth 80mm Printing (BLE + ESC/POS raster image)
+    // =========================
+    let BT = { device:null, server:null, ch:null, name:"" };
+
+    function u8(...arr){ return new Uint8Array(arr); }
+
+    async function findWritableCharacteristic(server){
+      const services = await server.getPrimaryServices();
+      for(const svc of services){
+        const chars = await svc.getCharacteristics();
+        for(const ch of chars){
+          const p = ch.properties;
+          if(p.write || p.writeWithoutResponse){
+            return ch;
+          }
+        }
+      }
+      return null;
+    }
+
+    async function ensurePrinterConnected(){
+      if(!("bluetooth" in navigator)){
+        throw new Error("❌ المتصفح لا يدعم Bluetooth للطباعة.\nاستخدم Chrome على Android.");
+      }
+      if(BT.ch && BT.device && BT.device.gatt?.connected){
+        return BT;
+      }
+
+      // خدمات شائعة لطابعات BLE (قد تختلف حسب الموديل)
+      const optionalServices = [
+        "0000ffe0-0000-1000-8000-00805f9b34fb",
+        "0000ff00-0000-1000-8000-00805f9b34fb",
+        "0000180a-0000-1000-8000-00805f9b34fb",
+        "0000180f-0000-1000-8000-00805f9b34fb"
+      ];
+
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices
+      });
+
+      device.addEventListener("gattserverdisconnected", ()=>{
+        BT = { device:null, server:null, ch:null, name:"" };
+      });
+
+      const server = await device.gatt.connect();
+      const ch = await findWritableCharacteristic(server);
+
+      if(!ch){
+        throw new Error("❌ لم أجد قناة كتابة للطابعة.\nقد تكون الطابعة Bluetooth Classic وليست BLE.");
+      }
+
+      BT = { device, server, ch, name: device.name || "Printer" };
+      return BT;
+    }
+
+    async function writeChunks(ch, bytes){
+      const MAX = 180; // آمن لـ BLE
+      for(let i=0; i<bytes.length; i+=MAX){
+        const slice = bytes.slice(i, i+MAX);
+        if(ch.properties.writeWithoutResponse){
+          await ch.writeValueWithoutResponse(slice);
+        }else{
+          await ch.writeValue(slice);
+        }
+        await new Promise(r=>setTimeout(r, 8));
+      }
+    }
+
+    function canvasToEscposRaster(canvas){
+      // GS v 0  (raster bit image)
+      // Width must be multiple of 8 pixels
+      const w0 = canvas.width;
+      const h0 = canvas.height;
+      const w = w0 - (w0 % 8);
+      const h = h0;
+
+      const ctx = canvas.getContext("2d");
+      const img = ctx.getImageData(0, 0, w, h).data;
+
+      const bytesPerRow = w / 8;
+      const data = new Uint8Array(bytesPerRow * h);
+
+      // تحويل إلى أسود/أبيض (عتبة بسيطة)
+      for(let y=0; y<h; y++){
+        for(let x=0; x<w; x++){
+          const i = (y*w + x) * 4;
+          const r = img[i], g = img[i+1], b = img[i+2], a = img[i+3];
+          const lum = (0.299*r + 0.587*g + 0.114*b);
+          const isBlack = (a > 10) && (lum < 200); // عتبة قابلة للتعديل
+          if(isBlack){
+            const byteIndex = y*bytesPerRow + (x >> 3);
+            data[byteIndex] |= (0x80 >> (x & 7));
+          }
+        }
+      }
+
+      const xL = bytesPerRow & 0xFF;
+      const xH = (bytesPerRow >> 8) & 0xFF;
+      const yL = h & 0xFF;
+      const yH = (h >> 8) & 0xFF;
+
+      const header = u8(0x1D,0x76,0x30,0x00, xL,xH, yL,yH);
+
+      // init + align center
+      const init = u8(0x1B,0x40);
+      const center = u8(0x1B,0x61,0x01);
+      const left = u8(0x1B,0x61,0x00);
+
+      // feed + cut (قد تختلف، بعض الطابعات بدون قاطع تتجاهله)
+      const feed = u8(0x1B,0x64,0x05);
+      const cut  = u8(0x1D,0x56,0x41,0x10);
+
+      // دمج كل شيء
+      const out = new Uint8Array(init.length + center.length + header.length + data.length + left.length + feed.length + cut.length);
+      let p=0;
+      out.set(init, p); p+=init.length;
+      out.set(center, p); p+=center.length;
+      out.set(header, p); p+=header.length;
+      out.set(data, p); p+=data.length;
+      out.set(left, p); p+=left.length;
+      out.set(feed, p); p+=feed.length;
+      out.set(cut, p); p+=cut.length;
+
+      return out;
+    }
+
+    async function print80mm(){
+      clearErr(appErr);
+
+      const customer = requireCustomer();
+      if(!customer) return;
+
+      const ok = await ensureInvoiceOpened();
+      if(!ok) return;
+
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg);
+        return;
+      }
+
+      // بناء إيصال 80mm
+      const ra = buildReceiptArea();
+
+      // render to canvas
+      toast("جاري تجهيز الطباعة…");
+      const canvas = await html2canvas(ra, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
+
+      // اتصال بالطابعة
+      toast("اختر الطابعة من القائمة…");
+      const { ch, name } = await ensurePrinterConnected();
+
+      // تحويل لصيغة ESC/POS وإرسال
+      toast("طباعة إلى: " + name);
+      const bytes = canvasToEscposRaster(canvas);
+      await writeChunks(ch, bytes);
+
+      toast("تمت الطباعة ✅");
+      resetAll(false);
+      await qSyncSilently(false);
+    }
 
     // ------- binds -------
     document.getElementById("loginCard").addEventListener("submit", (e)=>{
@@ -1633,6 +1856,23 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
+    // ✅ طباعة 80mm
+    $("btnPrint80").addEventListener("click", async ()=>{
+      try{
+        await print80mm();
+      }catch(e){
+        const msg = (e?.message || e || "").toString();
+        showErr(appErr,
+          "❌ فشل الطباعة 80mm.\n" +
+          msg + "\n\n" +
+          "ملاحظات مهمة:\n" +
+          "1) افتح الصفحة على HTTPS (GitHub Pages ✅)\n" +
+          "2) استخدم Chrome Android\n" +
+          "3) الطابعة يجب أن تكون BLE (بعض الطابعات Classic فقط)"
+        );
+      }
+    });
+
     // ✅ حذف سطر
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-del]");
@@ -1640,8 +1880,7 @@
       deleteOpByIndex(btn.getAttribute("data-del"));
     });
 
-    function setTabInit(){ setTab("calc"); }
-    setTabInit();
+    setTab("calc");
 
     renderSug();
     refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
