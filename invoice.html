@@ -157,6 +157,7 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
+    /* PDF printable A4 */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -227,6 +228,26 @@
     }
     .delBtn:hover{transform:translateY(-1px); background:rgba(255,77,77,.18)}
     .delCell{width:44px; text-align:center; vertical-align:middle}
+
+    /* hidden receipt render area for 80mm bitmap */
+    #receipt80{
+      position:fixed; left:-99999px; top:0;
+      width:576px; /* 80mm typical pixels at 203dpi-ish */
+      background:#fff; color:#000;
+      padding:16px;
+      direction:rtl;
+      font-family:Arial,"Segoe UI",Tahoma,sans-serif;
+    }
+    #receipt80 .rTitle{font-size:28px;font-weight:1000;text-align:center;margin:0}
+    #receipt80 .rSub{font-size:18px;font-weight:1000;text-align:center;margin-top:6px;color:#0a7a55}
+    #receipt80 .rLine{border-top:2px dashed #000; margin:12px 0}
+    #receipt80 .rKV{display:flex; justify-content:space-between; gap:10px; font-size:18px; font-weight:900; margin:8px 0}
+    #receipt80 table{width:100%; border-collapse:collapse}
+    #receipt80 th,#receipt80 td{border-bottom:2px solid #000; padding:10px 6px; font-size:16px; font-weight:900; vertical-align:top}
+    #receipt80 th{background:#fff}
+    #receipt80 tr:last-child td{border-bottom:0}
+    #receipt80 .rTotal{display:flex; justify-content:space-between; font-size:20px; font-weight:1000; margin-top:12px}
+    #receipt80 .rFoot{margin-top:10px; text-align:center; font-size:16px; font-weight:900; line-height:1.6}
   </style>
 </head>
 
@@ -257,8 +278,10 @@
     </form>
 
     <div class="card hide" id="appCard">
-      <div class="row" style="align-items:center">
+      <div class="row" style="align-items:center; gap:10px">
         <button class="btn small" id="btnLogout" type="button">خروج</button>
+        <div style="flex:1"></div>
+        <button class="btn small" id="btnBtConnect" type="button">🔵 ربط الطابعة</button>
       </div>
 
       <div class="sep"></div>
@@ -326,7 +349,7 @@
           <div class="actions2">
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
             <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
-            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (صورة/شكل ثابت)</button>
+            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (Bluetooth Raster)</button>
           </div>
 
           <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
@@ -355,6 +378,7 @@
     </div>
 
     <div id="printArea"></div>
+    <div id="receipt80"></div>
     <div class="toast" id="toast"></div>
   </div>
 
@@ -558,7 +582,7 @@
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1400);
+      setTimeout(()=> toastEl.style.display="none", 1600);
     }
 
     function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
@@ -590,15 +614,11 @@
           mode: "cors",
           cache: "no-store",
           signal: ctrl.signal,
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: "Bearer " + SUPABASE_ANON_KEY
-          }
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
         });
 
         clearTimeout(t);
-        if(!res || !res.ok) return false;
-        return true;
+        return !!(res && res.ok);
       }catch{
         return false;
       }
@@ -623,31 +643,16 @@
     function netNow(){ return !!NET_OK; }
     async function kickNet(){ await refreshNetState(true); }
 
-    window.addEventListener("online", async ()=>{
-      await kickNet();
-      await qSyncSilently(true);
-      await syncDeviceIdIfNeeded();
-    });
-
-    window.addEventListener("focus", async ()=>{
-      await kickNet();
-      await qSyncSilently(true);
-      await syncDeviceIdIfNeeded();
-    });
+    window.addEventListener("online", async ()=>{ await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded(); });
+    window.addEventListener("focus",  async ()=>{ await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded(); });
 
     document.addEventListener("visibilitychange", async ()=>{
       if(!document.hidden){
-        await kickNet();
-        await qSyncSilently(true);
-        await syncDeviceIdIfNeeded();
+        await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded();
       }
     });
 
-    window.addEventListener("pageshow", async ()=>{
-      await kickNet();
-      await qSyncSilently(true);
-      await syncDeviceIdIfNeeded();
-    });
+    window.addEventListener("pageshow", async ()=>{ await kickNet(); await qSyncSilently(true); await syncDeviceIdIfNeeded(); });
 
     setInterval(async ()=>{
       await refreshNetState(false);
@@ -881,7 +886,7 @@
 
       if(!u.device_id){
         const { error: uerr } = await supabase
-          .from("app_users")
+          .from(USERS_TABLE)
           .update({ device_id: deviceId })
           .eq("id", u.id)
           .is("device_id", null);
@@ -889,7 +894,7 @@
         if(uerr) throw new Error(uerr.message || "فشل تحديث device_id");
 
         const { data, error } = await supabase
-          .from("app_users")
+          .from(USERS_TABLE)
           .select("*")
           .eq("id", u.id)
           .limit(1);
@@ -916,7 +921,7 @@
 
         if(!USER.device_id){
           const { error } = await supabase
-            .from("app_users")
+            .from(USERS_TABLE)
             .update({ device_id: deviceId })
             .eq("id", USER.id)
             .is("device_id", null);
@@ -1196,8 +1201,12 @@
           pill.innerHTML = `<b>${USER.username}</b>`;
           resetAll(true);
           renderSug();
+          toast("تمت استعادة الجلسة (أوفلاين) ✅");
           return;
         }
+
+        // لو أونلاين: نكتفي بالسيشن الموجودة (لأن الدخول الأساسي عندك Edge login)
+        // والهدف: ما نقطع المستخدم.
       }catch{}
     }
 
@@ -1210,6 +1219,7 @@
       appCard.classList.add("hide");
       subtitle.textContent = "تسجيل دخول المستخدم";
       pill.innerHTML = "<b>غير مسجل</b>";
+      toast("تم تسجيل الخروج");
     }
 
     function setTab(which){
@@ -1293,19 +1303,23 @@
       if(!Number.isFinite(val)) return 0;
       return Math.round(val*100)/100;
     }
+
     function updatePreview(){
       try{ resView.textContent = String(safeEval(expr)); }
       catch{ resView.textContent = "0"; }
     }
+
     function setExpr(v){
       expr = v;
       exprView.textContent = expr || "";
       updatePreview();
     }
+
     function press(k){
       setExpr(expr + String(k));
       if(navigator.vibrate) navigator.vibrate(10);
     }
+
     function backspace(){
       if(!expr) return;
       setExpr(expr.slice(0,-1));
@@ -1401,11 +1415,239 @@
     }
 
     /* =========================
-       ✅ 80mm PRINT (بدون أي <script> داخل الـ HTML)
-       ✅ خيار 2: بعد الطباعة لا Reset
-       ✅ يطبع الشكل ثابت (يشبه PDF) ويتجنب كسر الصفحة نهائياً
+       ✅ PDF EXPORT (Small size)
     ========================= */
-    function buildReceipt80HTML(){
+    function buildPrintArea(){
+      const pa = $("printArea");
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const invId = String(invoiceId || "—");
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
+
+      const rows = ops.slice().reverse().map(o=>`
+        <tr>
+          <td style="width:24%">${escapeHtml(o.time || "")}</td>
+          <td style="width:34%">${escapeHtml(o.label || "")}</td>
+          <td style="width:26%">${escapeHtml(o.expr || "")}</td>
+          <td style="width:16%">${escapeHtml(o.result)}</td>
+        </tr>
+      `).join("");
+
+      pa.innerHTML = `
+        <div class="p-box p-header">
+          <div class="p-title">شركة الحايك</div>
+          <div class="p-subtitle">HAYEK SPOT</div>
+        </div>
+
+        <div class="p-field"><div class="k">اسم المستخدم</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
+        <div class="p-field"><div class="k">اسم العميل</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
+        <div class="p-field"><div class="k">رقم الفاتورة</div><div class="v">${escapeHtml(invId)}</div></div>
+        <div class="p-field"><div class="k">التاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
+
+        <div class="p-tableWrap">
+          <table>
+            <thead><tr><th>الوقت</th><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}</tbody>
+          </table>
+        </div>
+
+        <div class="p-totalBox"><div>إجمالي الكشف:</div><div>${escapeHtml(total)}</div></div>
+
+        <div class="p-foot">
+          <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
+          <div class="p-phone">05510217646</div>
+        </div>
+      `;
+      return pa;
+    }
+
+    async function exportPDF(){
+      clearErr(appErr);
+
+      const customer = requireCustomer();
+      if(!customer) return;
+
+      const ok = await ensureInvoiceOpened();
+      if(!ok) return;
+
+      // نحفظ كـ closed قبل التصدير
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        return;
+      }
+
+      addSug(SUG_CUSTOMERS_KEY, customer);
+
+      const pa = buildPrintArea();
+
+      // scale أقل حتى يصير الملف أصغر (ومع JPEG)
+      const canvas = await html2canvas(pa, {
+        scale: 1.6,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false
+      });
+
+      // JPEG يقلل الحجم كثير
+      const imgData = canvas.toDataURL("image/jpeg", 0.82);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p","mm","a4");
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      const imgW = pageW;
+      const imgH = canvas.height * (imgW / canvas.width);
+
+      if(imgH <= pageH){
+        pdf.addImage(imgData,"JPEG",0,0,imgW,imgH);
+      }else{
+        let remaining = imgH;
+        let position = 0;
+        while(remaining > 0){
+          pdf.addImage(imgData,"JPEG",0,position,imgW,imgH);
+          remaining -= pageH;
+          if(remaining > 0){ pdf.addPage(); position -= pageH; }
+        }
+      }
+
+      const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
+      pdf.save(`HAYEK_${safeName}.pdf`);
+
+      toast("تم تنزيل PDF ✅");
+
+      // خيارك 2: لا نمسح البيانات بعد PDF؟ أنت سابقاً كنت بدك Reset بعد PDF.
+      // نخلي نفس سلوكك القديم (Reset) لأنه بيعطي “فاتورة جديدة” مباشرة:
+      resetAll(false);
+
+      await qSyncSilently(false);
+    }
+
+    /* =========================
+       ✅ Bluetooth 80mm Raster Print
+       - يفتح البلوتوث من كروم
+       - يطبع صورة (عربي مضبوط)
+       - ما يعمل Reset (خيار 2)
+    ========================= */
+    const BT_STATE_KEY = "HAYEK_BT_LAST_DEVICE_NAME_V1";
+    let btDevice = null;
+    let btServer = null;
+    let btChar = null;
+
+    const UUIDS = {
+      FFE0: "0000ffe0-0000-1000-8000-00805f9b34fb",
+      FFE1: "0000ffe1-0000-1000-8000-00805f9b34fb",
+      FF00: "0000ff00-0000-1000-8000-00805f9b34fb",
+      FF01: "0000ff01-0000-1000-8000-00805f9b34fb",
+      FFC0: "0000ffc0-0000-1000-8000-00805f9b34fb",
+      FFC1: "0000ffc1-0000-1000-8000-00805f9b34fb",
+      SPP:  "00001101-0000-1000-8000-00805f9b34fb", /* not real GATT, but keep optional list harmless */
+      PRN1: "000018f0-0000-1000-8000-00805f9b34fb",
+      PRN2: "00002af1-0000-1000-8000-00805f9b34fb",
+      AE00: "0000ae00-0000-1000-8000-00805f9b34fb",
+      AE01: "0000ae01-0000-1000-8000-00805f9b34fb"
+    };
+
+    function u8(arr){ return new Uint8Array(arr); }
+    const sleep = (ms)=> new Promise(r=>setTimeout(r, ms));
+
+    function escposInit(){
+      return u8([0x1B,0x40]); // ESC @
+    }
+    function escposAlignCenter(){ return u8([0x1B,0x61,0x01]); }
+    function escposAlignLeft(){ return u8([0x1B,0x61,0x00]); }
+    function escposFeed(n=3){ return u8([0x1B,0x64, n & 0xFF]); } // ESC d n
+    function escposCut(){
+      // partial cut
+      return u8([0x1D,0x56,0x42,0x00]); // GS V B 0
+    }
+
+    async function btWrite(data){
+      if(!btChar) throw new Error("NO_PRINTER");
+      const CHUNK = 180; // safer for many printers
+      for(let i=0;i<data.length;i+=CHUNK){
+        const chunk = data.slice(i, i+CHUNK);
+        await btChar.writeValue(chunk);
+        await sleep(8);
+      }
+    }
+
+    async function connectPrinter(){
+      clearErr(appErr);
+
+      if(!navigator.bluetooth){
+        showErr(appErr, "❌ متصفحك لا يدعم Bluetooth Web.\nجرّب Chrome على Android أو Desktop.");
+        return;
+      }
+
+      try{
+        toast("افتح البلوتوث… واختر الطابعة ✅");
+
+        const optionalServices = [
+          UUIDS.FFE0, UUIDS.FF00, UUIDS.FFC0, UUIDS.PRN1, UUIDS.AE00,
+          "battery_service", "device_information"
+        ];
+
+        btDevice = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices
+        });
+
+        if(!btDevice) throw new Error("NO_DEVICE");
+        localStorage.setItem(BT_STATE_KEY, btDevice.name || "Printer");
+
+        btDevice.addEventListener("gattserverdisconnected", ()=>{
+          btServer = null; btChar = null;
+          toast("تم فصل الطابعة");
+        });
+
+        btServer = await btDevice.gatt.connect();
+
+        // Try to find a writable characteristic in common services
+        const services = await btServer.getPrimaryServices();
+        let found = null;
+
+        for(const s of services){
+          try{
+            const chars = await s.getCharacteristics();
+            for(const c of chars){
+              if(c.properties.write || c.properties.writeWithoutResponse){
+                found = c;
+                break;
+              }
+            }
+          }catch{}
+          if(found) break;
+        }
+
+        if(!found){
+          // Try known pairs
+          try{
+            const s1 = await btServer.getPrimaryService(UUIDS.FFE0);
+            const c1 = await s1.getCharacteristic(UUIDS.FFE1);
+            found = c1;
+          }catch{}
+        }
+
+        if(!found){
+          showErr(appErr, "❌ لم أجد قناة كتابة للطابعة.\nهذه الطابعة قد تحتاج UUID خاص.");
+          return;
+        }
+
+        btChar = found;
+
+        toast("تم ربط الطابعة ✅");
+      }catch(e){
+        showErr(appErr, "فشل ربط الطابعة:\n" + (e?.message || e));
+      }
+    }
+
+    function buildReceipt80DOM(){
+      const el = $("receipt80");
       const customer = (custInput.value.trim() || "—");
       const user = (USER?.full_name || USER?.username || "—");
       const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
@@ -1418,83 +1660,98 @@
         const tm = escapeHtml(o.time || "");
         return `
           <tr>
-            <td style="width:18%;text-align:left;direction:ltr">${tm}</td>
-            <td style="width:52%">${label}<div style="font-size:10px;color:#444;margin-top:2px">${ex}</div></td>
-            <td style="width:30%;text-align:left;direction:ltr;font-weight:900">${rs}</td>
+            <td style="width:20%; direction:ltr; text-align:left">${tm}</td>
+            <td style="width:55%">${label}<div style="font-size:12px;color:#333;margin-top:4px;direction:ltr;text-align:left">${ex}</div></td>
+            <td style="width:25%; direction:ltr; text-align:left; font-weight:1000">${rs}</td>
           </tr>
         `;
       }).join("");
 
-      return `<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HAYEK 80mm</title>
-<style>
-  @page { size: 80mm auto; margin: 3mm; }
-  html,body{ margin:0; padding:0; }
-  body{
-    width:74mm;
-    font-family: Arial, "Segoe UI", Tahoma, sans-serif;
-    direction:rtl;
-    color:#000;
-    background:#fff;
-  }
-  .center{text-align:center}
-  .title{font-size:18px;font-weight:900; margin-top:2mm}
-  .sub{font-size:12px;font-weight:900; margin-top:1mm}
-  .hr{border-top:1px dashed #000; margin:2.5mm 0}
-  .row{display:flex; justify-content:space-between; gap:6px; font-size:12px; font-weight:800}
-  table{width:100%; border-collapse:collapse; font-size:12px}
-  th,td{padding:2mm 0; border-bottom:1px solid #000; vertical-align:top}
-  th{font-weight:900}
-  tr:last-child td{border-bottom:0}
-  .total{display:flex; justify-content:space-between; font-size:14px; font-weight:900; margin-top:2mm}
-  .foot{margin-top:2mm; font-size:11px; font-weight:900; text-align:center}
-  .muted{font-size:10px; color:#222; font-weight:800}
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-</style>
-</head>
+      el.innerHTML = `
+        <div style="text-align:center">
+          <div class="rTitle">شركة الحايك</div>
+          <div class="rSub">HAYEK SPOT</div>
+        </div>
 
-<body onload="setTimeout(function(){ window.print(); }, 250);">
-  <div class="center">
-    <div class="title">شركة الحايك</div>
-    <div class="sub">HAYEK SPOT</div>
-  </div>
+        <div class="rLine"></div>
 
-  <div class="hr"></div>
+        <div class="rKV"><div>المستخدم</div><div>${escapeHtml(user)}</div></div>
+        <div class="rKV"><div>العميل</div><div>${escapeHtml(customer)}</div></div>
+        <div class="rKV"><div>التاريخ</div><div style="direction:ltr">${escapeHtml(dateText)}</div></div>
 
-  <div class="row"><div>المستخدم</div><div>${escapeHtml(user)}</div></div>
-  <div class="row"><div>العميل</div><div>${escapeHtml(customer)}</div></div>
-  <div class="row"><div>التاريخ</div><div style="direction:ltr;text-align:left">${escapeHtml(dateText)}</div></div>
+        <div class="rLine"></div>
 
-  <div class="hr"></div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:20%; direction:ltr; text-align:left">وقت</th>
+              <th style="width:55%">بيان</th>
+              <th style="width:25%; direction:ltr; text-align:left">نتيجة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="3" style="padding:14px;font-weight:1000">لا يوجد عمليات</td></tr>`}
+          </tbody>
+        </table>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width:18%;text-align:left;direction:ltr">وقت</th>
-        <th style="width:52%">بيان</th>
-        <th style="width:30%;text-align:left;direction:ltr">نتيجة</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows || `<tr><td colspan="3" style="padding:3mm 0;font-weight:900">لا يوجد عمليات</td></tr>`}
-    </tbody>
-  </table>
+        <div class="rLine"></div>
 
-  <div class="hr"></div>
-  <div class="total"><div>الإجمالي</div><div style="direction:ltr;text-align:left">${escapeHtml(String(total))}</div></div>
+        <div class="rTotal"><div>الإجمالي</div><div style="direction:ltr">${escapeHtml(String(total))}</div></div>
 
-  <div class="hr"></div>
-  <div class="foot">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-  <div class="foot muted">05510217646</div>
-</body>
-</html>`;
+        <div class="rLine"></div>
+
+        <div class="rFoot">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+        <div class="rFoot">05510217646</div>
+      `;
+      return el;
     }
 
-    async function print80mm(){
+    function canvasToMonoRaster(canvas, threshold=190){
+      const w = canvas.width;
+      const h = canvas.height;
+      const ctx = canvas.getContext("2d", { willReadFrequently:true });
+      const img = ctx.getImageData(0,0,w,h);
+      const data = img.data;
+
+      // convert to grayscale + threshold
+      // produce bytes per row (w bits)
+      const bytesPerRow = Math.ceil(w / 8);
+      const out = new Uint8Array(bytesPerRow * h);
+
+      for(let y=0;y<h;y++){
+        for(let x=0;x<w;x++){
+          const i = (y*w + x) * 4;
+          const r = data[i], g = data[i+1], b = data[i+2];
+          // luminance
+          const lum = (0.299*r + 0.587*g + 0.114*b);
+          const isBlack = lum < threshold; // true => black pixel
+          const byteIndex = y*bytesPerRow + (x >> 3);
+          const bit = 7 - (x & 7);
+          if(isBlack){
+            out[byteIndex] |= (1 << bit);
+          }
+        }
+      }
+      return { w, h, bytesPerRow, bytes: out };
+    }
+
+    function escposRasterGSv0(mono){
+      // GS v 0
+      // [1D 76 30 m xL xH yL yH] + data
+      const { w, h, bytesPerRow, bytes } = mono;
+      const xL = bytesPerRow & 0xFF;
+      const xH = (bytesPerRow >> 8) & 0xFF;
+      const yL = h & 0xFF;
+      const yH = (h >> 8) & 0xFF;
+
+      const header = u8([0x1D,0x76,0x30,0x00, xL,xH, yL,yH]);
+      const out = new Uint8Array(header.length + bytes.length);
+      out.set(header,0);
+      out.set(bytes, header.length);
+      return out;
+    }
+
+    async function print80mmBluetooth(){
       clearErr(appErr);
 
       const customer = requireCustomer();
@@ -1503,6 +1760,7 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
+      // نحفظ closed قبل الطباعة
       const r = await saveInvoice("closed");
       if(!r.ok){
         showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
@@ -1511,18 +1769,43 @@
 
       addSug(SUG_CUSTOMERS_KEY, customer);
 
-      const html = buildReceipt80HTML();
-      const w = window.open("", "_blank");
-      if(!w){
-        showErr(appErr, "❌ المتصفح منع فتح نافذة الطباعة.\nافتح السماح Pop-ups ثم أعد المحاولة.");
-        return;
+      // ensure connected
+      if(!btChar){
+        await connectPrinter();
+        if(!btChar) return;
       }
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
 
-      toast("اختر الطابعة من نافذة الطباعة ✅");
-      await qSyncSilently(false);
+      try{
+        toast("جارٍ تجهيز الطباعة…");
+
+        const el = buildReceipt80DOM();
+
+        // Render to canvas (high quality)
+        const canvas = await html2canvas(el, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false
+        });
+
+        // make monochrome
+        const mono = canvasToMonoRaster(canvas, 190);
+        const raster = escposRasterGSv0(mono);
+
+        // send to printer
+        await btWrite(escposInit());
+        await btWrite(escposAlignLeft());
+        await btWrite(raster);
+        await btWrite(escposFeed(4));
+        await btWrite(escposCut());
+
+        toast("تمت الطباعة ✅");
+
+        // خيارك 2: لا نمسح البيانات بعد الطباعة
+        await qSyncSilently(false);
+      }catch(e){
+        showErr(appErr, "فشل الطباعة:\n" + (e?.message || e));
+      }
     }
 
     // ✅ EXPOSE: Smart voice add line
@@ -1589,7 +1872,10 @@
       if(idx != null) deleteOp(idx);
     });
 
-    $("btnPrint80").addEventListener("click", print80mm);
+    $("btnPDF").addEventListener("click", exportPDF);
+
+    $("btnBtConnect").addEventListener("click", connectPrinter);
+    $("btnPrint80").addEventListener("click", print80mmBluetooth);
 
     setTab("calc");
     renderSug();
