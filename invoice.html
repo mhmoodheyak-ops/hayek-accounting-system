@@ -13,17 +13,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PDF (نُبقيها كما هي حتى لا نكسر شيء) -->
+  <!-- PDF (AR as IMAGE but SMALL) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <!-- ✅ NEW: AutoTable لعمل PDF نصي خفيف جداً -->
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     :root{
       --bg:#071018; --panel:#0e1b26; --line:rgba(255,255,255,.08);
       --txt:#e9f1ff; --muted:#98a8c2; --blue:#1f5bd8; --blue2:#2967ee;
       --shadow:0 12px 35px rgba(0,0,0,.35); --radius:22px;
+      --green:#22c55e; --red:#ff4d4d;
     }
     *{box-sizing:border-box}
     body{
@@ -43,29 +42,14 @@
     .card{
       background: linear-gradient(180deg, rgba(14,27,38,.95) 0%, rgba(10,20,30,.92) 100%);
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
-      position:relative;
     }
 
-    .hint{
-      color:#dbe8ff;
-      font-size:14px;
-      line-height:1.9;
-      font-weight:900;
-    }
-
-    label{
-      display:block;
-      font-size:13px;
-      color:var(--muted);
-      margin:10px 0 6px;
-      font-weight:800;
-    }
-
+    .hint{color:#dbe8ff; font-size:14px; line-height:1.9; font-weight:900;}
+    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; font-weight:800;}
     input{
       width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
       background: rgba(0,0,0,.18); color:var(--txt); outline:none;
-      font-size:14px;
-      font-weight:800;
+      font-size:14px; font-weight:800;
     }
     input:focus{border-color:rgba(31,91,216,.55); box-shadow:0 0 0 4px rgba(31,91,216,.18)}
     .row{display:flex; gap:10px}
@@ -78,9 +62,11 @@
     .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .btn.blue{background:var(--blue); border-color:rgba(31,91,216,.2)}
     .btn.blue:hover{background:var(--blue2)}
+    .btn.green{background:rgba(34,197,94,.22); border-color:rgba(34,197,94,.35)}
+    .btn.green:hover{background:rgba(34,197,94,.30)}
+    .btn.red{background:rgba(255,77,77,.18); border-color:rgba(255,77,77,.25)}
+    .btn.red:hover{background:rgba(255,77,77,.24)}
     .btn.small{width:auto; padding:9px 12px; border-radius:14px; font-size:12px}
-    .btn.danger{background:rgba(255,77,77,.14); border-color:rgba(255,77,77,.25)}
-    .btn.danger:hover{background:rgba(255,77,77,.20)}
     .sep{height:1px; background:var(--line); margin:12px 0}
     .error{
       margin-top:10px; display:none; padding:10px; border-radius:14px;
@@ -102,13 +88,7 @@
     .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
 
-    .exprTitle{
-      font-size:14px;
-      color:#cfe0ff;
-      margin-bottom:8px;
-      font-weight:900;
-    }
-
+    .exprTitle{font-size:14px; color:#cfe0ff; margin-bottom:8px; font-weight:900;}
     .expr{
       width:100%;
       border:2px solid rgba(0,0,0,.16);
@@ -136,7 +116,6 @@
       font-size:13px;
       font-weight:900;
     }
-
     .resLine b{
       color:#000;
       font-size:18px;
@@ -160,10 +139,7 @@
     .key.eq{grid-column:1 / span 2; background:var(--blue)}
     .key.eq:hover{background:var(--blue2)}
     .key.back{grid-column:3 / span 2}
-
-    /* ✅ NEW: أزرار متعددة */
-    .actions2{margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .actions2 .full{grid-column:1 / span 2}
+    .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
 
     .footerNote{
       margin-top:10px;
@@ -182,7 +158,6 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* area used سابقاً للصور - نتركه */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -191,6 +166,44 @@
       padding:22px;
       direction:rtl;
       font-family:Arial,"Segoe UI",Tahoma,sans-serif;
+    }
+
+    .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
+    .p-header{text-align:center; padding:18px 16px;}
+    .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
+    .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
+
+    .p-field{
+      display:flex; justify-content:space-between; gap:10px;
+      padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
+    }
+    .p-field .k{font-size:20px; font-weight:900; color:#000;}
+    .p-field .v{font-size:20px; font-weight:900; color:#000;}
+
+    .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
+    #printArea table{width:100%; border-collapse:collapse; background:#fff;}
+
+    #printArea thead th{
+      font-size:18px; font-weight:1000; padding:12px 10px;
+      border-bottom:2px solid #111; background:#fff; color:#000;
+    }
+    #printArea tbody td{
+      font-size:16px; font-weight:1000; padding:12px 10px;
+      border-bottom:1px solid #111; background:#fff; color:#000;
+    }
+    #printArea tbody tr:last-child td{border-bottom:0;}
+
+    .p-totalBox{
+      border:2px dashed #111; border-radius:16px; padding:14px 16px;
+      display:flex; justify-content:space-between; margin-top:12px;
+      font-weight:1000; font-size:20px; color:#000;
+    }
+
+    .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
+    .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
+    .p-phone{
+      display:inline-block; margin-top:12px; border:2px solid #0a7a55; color:#0a7a55;
+      border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
     }
 
     /* ✅ Voice mic buttons */
@@ -209,96 +222,102 @@
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
 
-    /* ✅ NEW: AI Panel (حايك) */
-    .aiFab{
+    /* ✅ Assistant (HAYEK) */
+    .fab{
       position:fixed;
       right:16px;
       bottom:78px;
-      width:56px; height:56px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(31,91,216,.35);
-      box-shadow: 0 16px 40px rgba(0,0,0,.35);
-      display:none;
       z-index:9998;
+      width:58px;height:58px;border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(31,91,216,.35);
+      box-shadow:0 12px 35px rgba(0,0,0,.40);
+      display:none;
       cursor:pointer;
       color:#fff;
       font-weight:1000;
+      font-size:18px;
     }
-    .aiFab:hover{transform:translateY(-1px); background:rgba(31,91,216,.45)}
-    .aiPanel{
+    .fab:hover{transform:translateY(-1px); background:rgba(31,91,216,.45)}
+    .assistant{
       position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:140px;
-      width:min(520px, 94vw);
-      max-height:60vh;
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(10,20,30,.96);
-      box-shadow: 0 20px 70px rgba(0,0,0,.45);
+      inset:auto 14px 14px 14px;
+      max-width:420px;
+      margin:0 auto;
       z-index:9999;
       display:none;
-      overflow:hidden;
     }
-    .aiHead{
-      display:flex; align-items:center; justify-content:space-between;
-      padding:12px 12px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-    }
-    .aiTitle{
-      display:flex; align-items:center; gap:10px;
-      font-weight:1000;
-    }
-    .aiBadge{
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(34,197,94,.30);
-      background: rgba(34,197,94,.14);
-      font-size:12px;
-      color:#d9ffe9;
-      font-weight:900;
-    }
-    .aiBody{
+    .assistantCard{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(14,27,38,.98) 0%, rgba(10,20,30,.96) 100%);
+      border-radius:22px;
+      box-shadow:0 12px 35px rgba(0,0,0,.45);
       padding:12px;
-      overflow:auto;
-      max-height:44vh;
     }
-    .aiMsg{
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      padding:10px 12px;
-      border-radius:16px;
+    .assistantTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
       margin-bottom:10px;
-      line-height:1.75;
-      font-weight:800;
-      font-size:13px;
     }
-    .aiMsg.me{background: rgba(31,91,216,.10); border-color: rgba(31,91,216,.18)}
-    .aiMsg.hayek{background: rgba(34,197,94,.10); border-color: rgba(34,197,94,.18)}
-    .aiFoot{
-      display:flex; gap:10px; padding:12px;
-      border-top:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.12);
-    }
-    .aiFoot input{
-      flex:1;
-      margin:0;
-      border-radius:16px;
-    }
-    .aiMiniBtns{display:flex; gap:8px}
-    .aiMiniBtn{
-      width:auto; padding:10px 10px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color:#fff;
-      cursor:pointer;
+    .assistantName{
       font-weight:1000;
+      color:#eaf2ff;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .assistantDot{
+      width:10px;height:10px;border-radius:999px;
+      background:var(--green);
+      box-shadow:0 0 0 6px rgba(34,197,94,.12);
+    }
+    .assistantSmall{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      line-height:1.6;
+      margin-top:2px;
+    }
+    .assistantLog{
+      max-height:170px;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(0,0,0,.14);
+      padding:10px;
+      font-size:12px;
+      line-height:1.7;
+    }
+    .msgU{color:#dbe8ff; font-weight:900; margin-top:6px}
+    .msgA{color:#fff; font-weight:900; margin-top:6px}
+    .assistantInputRow{display:flex; gap:8px; margin-top:10px; align-items:center}
+    .assistantInputRow input{flex:1}
+    .assistantHint{
+      font-size:11px;
+      color:#cfe0ff;
+      opacity:.95;
+      margin-top:8px;
+      font-weight:900;
+      line-height:1.7;
+      text-align:center;
+    }
+    .miniBtn{
+      width:auto;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--txt);
+      font-weight:1000;
+      cursor:pointer;
       font-size:12px;
       white-space:nowrap;
     }
-    .aiMiniBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.10)}
+    .miniBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
+    .miniBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
+    .miniBtn.red{background:rgba(255,77,77,.16); border-color:rgba(255,77,77,.25)}
   </style>
 </head>
 
@@ -315,7 +334,7 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- ✅ FIX: loginCard صار FORM حتى المتصفح يحفظ كلمة السر -->
+    <!-- ✅ loginCard FORM -->
     <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
@@ -330,16 +349,14 @@
     </form>
 
     <div class="card hide" id="appCard">
-      <div class="row" style="align-items:center; justify-content:space-between">
-        <button class="btn small" id="btnLogout" type="button">خروج</button>
-        <!-- ✅ NEW: تشغيل/إيقاف استماع "حايك" -->
-        <button class="btn small" id="btnWake" type="button">🎧 حايك: إيقاف</button>
+      <div class="row" style="align-items:center">
+        <button class="btn small" id="btnLogout">خروج</button>
       </div>
 
       <div class="sep"></div>
 
       <!-- ✅ Voice language toggle -->
-      <div class="hayekMicLang" id="voiceLangRow" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
+      <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
         <button class="btn small" id="hayekLangTR" type="button">Türkçe</button>
@@ -360,7 +377,7 @@
       <datalist id="itemList"></datalist>
 
       <!-- ✅ Smart voice add -->
-      <div style="margin-top:10px" id="smartVoiceRow">
+      <div style="margin-top:10px">
         <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
       </div>
 
@@ -400,15 +417,11 @@
             <button class="key back" id="btnBack" type="button">⌫</button>
           </div>
 
-          <!-- ✅ NEW: أزرار إضافية -->
           <div class="actions2">
+            <button class="btn red" id="btnDelLast" type="button">🗑️ حذف آخر سطر</button>
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
-            <button class="btn danger" id="btnDelLast" type="button">حذف آخر سطر</button>
-
-            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80مم</button>
-            <button class="btn blue" id="btnPDF" type="button">تصدير PDF (خفيف)</button>
-
-            <button class="btn full" id="btnOpenAI" type="button">🤖 افتح المساعد (حايك)</button>
+            <button class="btn green" id="btnPrint80" type="button">🖨️ طباعة 80مم</button>
+            <button class="btn blue" id="btnPDF" type="button">تصدير PDF (عربي + حجم صغير)</button>
           </div>
 
           <div class="footerNote" id="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
@@ -422,18 +435,14 @@
               <tr>
                 <th style="width:44%">البيان</th>
                 <th style="width:26%">العملية</th>
-                <th style="width:20%">الوقت</th>
-                <th style="width:10%">حذف</th>
+                <th style="width:18%">الوقت</th>
+                <th style="width:12%">حذف</th>
               </tr>
             </thead>
             <tbody id="logBody">
               <tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>
             </tbody>
           </table>
-        </div>
-
-        <div style="margin-top:10px">
-          <button class="btn danger" id="btnClearLogAll" type="button">حذف كل السجل</button>
         </div>
       </div>
 
@@ -444,29 +453,41 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- ✅ NEW: زر عائم + لوحة "حايك" -->
-  <button class="aiFab" id="aiFab" type="button" title="حايك">ح</button>
+  <!-- ✅ Floating assistant button -->
+  <button class="fab" id="fabHayek" type="button" title="مساعد حايك">ح</button>
 
-  <div class="aiPanel" id="aiPanel">
-    <div class="aiHead">
-      <div class="aiTitle">
-        <span>🤖</span>
-        <span id="aiName">حايك</span>
-        <span class="aiBadge" id="aiBadge">جاهز</span>
+  <!-- ✅ Assistant Panel -->
+  <div class="assistant" id="assistantPanel">
+    <div class="assistantCard">
+      <div class="assistantTop">
+        <div>
+          <div class="assistantName"><span class="assistantDot"></span> <span id="assistantName">حايك</span></div>
+          <div class="assistantSmall" id="assistantSub">قل: "حايك" ثم الأمر (أو اكتب الأمر هنا).</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="miniBtn" id="btnWake" type="button" title="تشغيل/إيقاف الاستماع">🎧 استماع</button>
+          <button class="miniBtn red" id="btnCloseAssistant" type="button">إغلاق</button>
+        </div>
       </div>
-      <div class="aiMiniBtns">
-        <button class="aiMiniBtn" id="aiHelp" type="button">مساعدة</button>
-        <button class="aiMiniBtn" id="aiClose" type="button">إغلاق</button>
+
+      <div class="assistantLog" id="assistantLog">
+        <div class="msgA">أنا <b>حايك</b> ✅</div>
+        <div class="msgA">أوامر سريعة: <span style="opacity:.9">pdf / طباعة / احذف آخر سطر / مسح / سجل</span></div>
       </div>
-    </div>
-    <div class="aiBody" id="aiBody"></div>
-    <div class="aiFoot">
-      <input id="aiInput" placeholder="اكتب: حايك صدّر pdf / احذف آخر سطر / اطبع 80مم / أضف بطاطا 5x6.5" autocomplete="off" />
-      <button class="aiMiniBtn" id="aiSend" type="button">إرسال</button>
+
+      <div class="assistantInputRow">
+        <input id="assistantInput" placeholder='اكتب: حايك صدّر pdf' autocomplete="off" />
+        <button class="miniBtn" id="btnSendAssistant" type="button">إرسال</button>
+        <button class="miniBtn" id="btnMicAssistant" type="button" title="تسجيل أمر بالصوت">🎤</button>
+      </div>
+
+      <div class="assistantHint">
+        ملاحظة: الاستماع الصوتي يحتاج Chrome + سماح المايك + HTTPS (أو تطبيق مثبت).
+      </div>
     </div>
   </div>
 
-  <!-- ✅ Voice-to-text (Arabic + Turkish) + Smart Add -->
+  <!-- ✅ Voice-to-text (Arabic + Turkish) + Smart Add + HAYEK Wake Word -->
   <script>
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -610,8 +631,6 @@
           if (e.results[i].isFinal) finalText += t;
           else interim += t;
         }
-        const text = (finalText || interim).trim();
-        if(!text) return;
 
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
@@ -647,18 +666,151 @@
       });
     }
 
+    // ✅ Assistant single-shot mic (command)
+    function attachAssistantMic(btnId, inputId){
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      if(!btn || !input) return;
+
+      if(!SR){
+        btn.style.opacity = "0.6";
+        btn.title = "غير مدعوم";
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
+        return;
+      }
+
+      const rec = new SR();
+      rec.interimResults = true;
+      rec.continuous = false;
+
+      let listening = false;
+
+      function off(){
+        listening = false;
+        btn.classList.remove("on");
+        btn.textContent = "🎤";
+      }
+      function on(){
+        listening = true;
+        btn.classList.add("on");
+        btn.textContent = "⏹";
+      }
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        const text = (finalText || interim).trim();
+        if(text){
+          input.value = text;
+          input.dispatchEvent(new Event("input", { bubbles:true }));
+        }
+        if(finalText && finalText.trim()){
+          // auto send
+          if(window.HAYEK_AI_SUBMIT) window.HAYEK_AI_SUBMIT(finalText.trim());
+        }
+      };
+
+      rec.onend = off;
+      rec.onerror = off;
+
+      btn.addEventListener("click", ()=>{
+        try{
+          if(listening){ rec.stop(); return; }
+          rec.lang = getLang();
+          on();
+          rec.start();
+        }catch{
+          off();
+          alert("❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.");
+        }
+      });
+    }
+
+    // ✅ Wake word: "حايك" / "hayek" (continuous + restart)
+    let WAKE_ON = false;
+    let WAKE_REC = null;
+
+    function startWake(){
+      if(!SR) return false;
+      try{ if(WAKE_REC) WAKE_REC.stop(); }catch{}
+      WAKE_REC = new SR();
+      WAKE_REC.lang = getLang();
+      WAKE_REC.continuous = true;
+      WAKE_REC.interimResults = true;
+
+      WAKE_REC.onresult = (e) => {
+        let txt = "";
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          txt += e.results[i][0].transcript + " ";
+        }
+        txt = (txt||"").trim().replace(/\s+/g," ");
+
+        // normalize common variations
+        const t = txt.toLowerCase();
+
+        const hasHayekAR = txt.startsWith("حايك");
+        const hasHayekEN = t.startsWith("hayek");
+
+        if(hasHayekAR || hasHayekEN){
+          const cmd = hasHayekAR ? txt.replace(/^حايك\s*/,"").trim()
+                                 : txt.replace(/^hayek\s*/i,"").trim();
+          if(cmd && window.HAYEK_AI_RUN){
+            window.HAYEK_AI_OPEN?.();
+            window.HAYEK_AI_RUN(cmd, true);
+          }
+        }
+      };
+
+      WAKE_REC.onend = () => {
+        if(WAKE_ON){
+          setTimeout(()=>{ try{ WAKE_REC.start(); }catch{} }, 350);
+        }
+      };
+      WAKE_REC.onerror = () => {
+        if(WAKE_ON){
+          setTimeout(()=>{ try{ WAKE_REC.start(); }catch{} }, 600);
+        }
+      };
+
+      try{ WAKE_REC.start(); return true; }catch{ return false; }
+    }
+
+    window.HAYEK_WAKE_TOGGLE = function(){
+      if(!SR){
+        alert("❌ متصفحك لا يدعم الاستماع الصوتي.\nجرّب Google Chrome.");
+        return false;
+      }
+      WAKE_ON = !WAKE_ON;
+      if(WAKE_ON){
+        const ok = startWake();
+        if(!ok){
+          WAKE_ON = false;
+          alert("❌ لم يتم تشغيل الاستماع.\nتأكد من سماح المايك للصفحة.");
+          return false;
+        }
+        return true;
+      }else{
+        try{ WAKE_REC && WAKE_REC.stop(); }catch{}
+        return true;
+      }
+    };
+
     // bind inputs mics
     attachMic("hayekMicCustomer", "customerName");
     attachMic("hayekMicItem", "itemName");
+    attachSmart("hayekSmartAdd");
+    attachAssistantMic("btnMicAssistant","assistantInput");
 
     // bind lang
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
     if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
     if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
-
-    // bind smart
-    attachSmart("hayekSmartAdd");
 
     refreshLangUI();
   })();
@@ -698,26 +850,16 @@
     const logBody   = $("logBody");
     const toastEl   = $("toast");
 
-    // NEW UI
-    const btnDelLast = $("btnDelLast");
-    const btnPrint80 = $("btnPrint80");
-    const btnOpenAI  = $("btnOpenAI");
-    const btnClearLogAll = $("btnClearLogAll");
-
-    const aiFab   = $("aiFab");
-    const aiPanel = $("aiPanel");
-    const aiBody  = $("aiBody");
-    const aiInput = $("aiInput");
-    const aiSend  = $("aiSend");
-    const aiClose = $("aiClose");
-    const aiHelp  = $("aiHelp");
-    const aiNameEl= $("aiName");
-    const aiBadge = $("aiBadge");
+    const fabHayek  = $("fabHayek");
+    const assistantPanel = $("assistantPanel");
+    const assistantNameEl = $("assistantName");
+    const assistantSubEl  = $("assistantSub");
+    const assistantLogEl  = $("assistantLog");
+    const assistantInput  = $("assistantInput");
+    const btnSendAssistant= $("btnSendAssistant");
+    const btnCloseAssistant= $("btnCloseAssistant");
     const btnWake = $("btnWake");
-
     const footerNote = $("footerNote");
-    const voiceLangRow = $("voiceLangRow");
-    const smartVoiceRow = $("smartVoiceRow");
 
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
@@ -738,42 +880,6 @@
         .replaceAll(">","&gt;")
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
-    }
-
-    // =========================
-    // ✅ Features + Assistant name (من الأدمن)
-    // =========================
-    const DEFAULT_ASSISTANT_NAME = "حايك";
-    let ASSISTANT_NAME = DEFAULT_ASSISTANT_NAME;
-
-    // flags افتراضية (إذا الأعمدة غير موجودة، ما يصير مشكلة)
-    let FEATURES = {
-      footer_enabled: true,
-      ai_enabled: true,
-      print80_enabled: true,
-      voice_enabled: true
-    };
-
-    function applyFeatures(){
-      // footer
-      if(footerNote) footerNote.style.display = FEATURES.footer_enabled ? "" : "none";
-
-      // AI
-      const aiOn = !!FEATURES.ai_enabled;
-      if(btnOpenAI) btnOpenAI.style.display = aiOn ? "" : "none";
-      if(aiFab) aiFab.style.display = (aiOn && USER) ? "block" : "none";
-      if(!aiOn) closeAI();
-
-      // print80
-      if(btnPrint80) btnPrint80.style.display = FEATURES.print80_enabled ? "" : "none";
-
-      // voice
-      const vOn = !!FEATURES.voice_enabled;
-      if(voiceLangRow) voiceLangRow.style.display = vOn ? "flex" : "none";
-      if(smartVoiceRow) smartVoiceRow.style.display = vOn ? "" : "none";
-
-      // assistant name
-      if(aiNameEl) aiNameEl.textContent = ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME;
     }
 
     // =========================
@@ -832,14 +938,12 @@
       await kickNet();
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
-      await refreshUserFeatures();
     });
 
     window.addEventListener("focus", async ()=>{
       await kickNet();
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
-      await refreshUserFeatures();
     });
 
     document.addEventListener("visibilitychange", async ()=>{
@@ -847,7 +951,6 @@
         await kickNet();
         await qSyncSilently(true);
         await syncDeviceIdIfNeeded();
-        await refreshUserFeatures();
       }
     });
 
@@ -855,7 +958,6 @@
       await kickNet();
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
-      await refreshUserFeatures();
     });
 
     setInterval(async ()=>{
@@ -884,12 +986,10 @@
 
     function cleanInvoicePayload(p){
       if(!p || typeof p !== "object") return null;
-
       const out = { ...p };
       delete out.__queued_at;
       delete out.__meta;
       delete out.__local;
-
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
@@ -915,9 +1015,7 @@
         for(const raw of arr){
           try{
             const payload = cleanInvoicePayload(raw);
-            if(!payload?.id){
-              continue;
-            }
+            if(!payload?.id) continue;
 
             const { error } = await supabase
               .from(INVOICE_TABLE)
@@ -947,9 +1045,6 @@
           full_name: u?.full_name || "",
           is_blocked: !!u?.is_blocked,
           device_id: u?.device_id || null,
-          // ✅ NEW: حفظ الميزات واسم المساعد للأوفلاين
-          features: u?.features || FEATURES,
-          assistant_name: u?.assistant_name || ASSISTANT_NAME,
           saved_at: new Date().toISOString()
         };
         localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(slim));
@@ -1201,6 +1296,72 @@
     let expr = "";
     let lastResult = 0;
 
+    // =========================
+    // ✅ Feature Flags (optional columns)
+    // =========================
+    const DEFAULT_FLAGS = {
+      assistant_name: "حايك",
+      ai_enabled: true,
+      voice_enabled: true,
+      print80_enabled: true,
+      footer_enabled: true
+    };
+    let FLAGS = { ...DEFAULT_FLAGS };
+
+    function normalizeBool(v, fallback){
+      if(v === true || v === false) return v;
+      if(v == null) return fallback;
+      if(typeof v === "number") return v !== 0;
+      if(typeof v === "string"){
+        const s = v.trim().toLowerCase();
+        if(["true","1","yes","y","on","enabled"].includes(s)) return true;
+        if(["false","0","no","n","off","disabled"].includes(s)) return false;
+      }
+      return fallback;
+    }
+
+    function applyFlagsFromUserRow(row){
+      const r = row || {};
+      FLAGS.assistant_name = (r.assistant_name || DEFAULT_FLAGS.assistant_name || "حايك");
+      FLAGS.ai_enabled = normalizeBool(r.ai_enabled, DEFAULT_FLAGS.ai_enabled);
+      FLAGS.voice_enabled = normalizeBool(r.voice_enabled, DEFAULT_FLAGS.voice_enabled);
+      FLAGS.print80_enabled = normalizeBool(r.print80_enabled, DEFAULT_FLAGS.print80_enabled);
+      FLAGS.footer_enabled = normalizeBool(r.footer_enabled, DEFAULT_FLAGS.footer_enabled);
+
+      assistantNameEl.textContent = FLAGS.assistant_name || "حايك";
+
+      // hide/show assistant
+      fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
+      if(!FLAGS.ai_enabled) assistantPanel.style.display = "none";
+
+      // hide footer
+      footerNote.style.display = FLAGS.footer_enabled ? "block" : "none";
+
+      // disable print80
+      $("btnPrint80").disabled = !FLAGS.print80_enabled;
+      $("btnPrint80").style.opacity = FLAGS.print80_enabled ? "1" : "0.55";
+
+      // disable voice
+      const voiceEls = [
+        $("hayekMicCustomer"), $("hayekMicItem"), $("hayekSmartAdd"),
+        $("btnMicAssistant"), $("btnWake"),
+        $("hayekLangAR"), $("hayekLangTR"),
+      ].filter(Boolean);
+
+      voiceEls.forEach(el=>{
+        el.disabled = !FLAGS.voice_enabled;
+        el.style.opacity = FLAGS.voice_enabled ? "1" : "0.55";
+      });
+
+      assistantSubEl.textContent = FLAGS.voice_enabled
+        ? `قل: "${FLAGS.assistant_name}" ثم الأمر (أو اكتب الأمر هنا).`
+        : "الصوت غير مفعل لهذا الحساب. استخدم الكتابة بالأوامر.";
+
+      // wake button state reset
+      btnWake.classList.remove("on");
+      btnWake.textContent = "🎧 استماع";
+    }
+
     // ------- SUPABASE SAVE -------
     async function saveInvoice(status){
       if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
@@ -1288,58 +1449,6 @@
       return "فشل تسجيل الدخول:\n" + e;
     }
 
-    // ✅ NEW: قراءة ميزات المستخدم من جدول app_users (إذا الأعمدة موجودة)
-    async function refreshUserFeatures(){
-      try{
-        if(!USER?.id) return;
-
-        await refreshNetState(false);
-        if(!netNow()){
-          // offline: من الكاش
-          const cached = readOfflineUser();
-          if(cached?.id === USER.id){
-            FEATURES = { ...FEATURES, ...(cached.features || {}) };
-            ASSISTANT_NAME = cached.assistant_name || ASSISTANT_NAME;
-            applyFeatures();
-          }
-          return;
-        }
-
-        // نقرأ بشكل مرن (لو الأعمدة غير موجودة، Supabase قد يرجّع error)
-        const { data, error } = await supabase
-          .from(USERS_TABLE)
-          .select("id, assistant_name, footer_enabled, ai_enabled, print80_enabled, voice_enabled")
-          .eq("id", USER.id)
-          .limit(1);
-
-        if(error || !data?.length){
-          applyFeatures();
-          return;
-        }
-
-        const row = data[0] || {};
-        ASSISTANT_NAME = (row.assistant_name || ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME);
-
-        // إذا الأعمدة null/undefined نترك الافتراضي
-        const next = { ...FEATURES };
-        if(typeof row.footer_enabled === "boolean") next.footer_enabled = row.footer_enabled;
-        if(typeof row.ai_enabled === "boolean") next.ai_enabled = row.ai_enabled;
-        if(typeof row.print80_enabled === "boolean") next.print80_enabled = row.print80_enabled;
-        if(typeof row.voice_enabled === "boolean") next.voice_enabled = row.voice_enabled;
-
-        FEATURES = next;
-
-        // احفظ ضمن USER للكاش
-        USER.features = FEATURES;
-        USER.assistant_name = ASSISTANT_NAME;
-        saveOfflineUser(USER);
-
-        applyFeatures();
-      }catch{
-        applyFeatures();
-      }
-    }
-
     // ------- LOGIN -------
     async function login(){
       clearErr(loginErr);
@@ -1381,11 +1490,6 @@
         if(TAB_BLOCKED) return;
 
         USER = u;
-        // restore features/name from cached
-        FEATURES = { ...FEATURES, ...(u.features || {}) };
-        ASSISTANT_NAME = u.assistant_name || ASSISTANT_NAME;
-        applyFeatures();
-
         localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:true }));
 
         loginCard.classList.add("hide");
@@ -1394,9 +1498,12 @@
         pill.innerHTML = `<b>${u.username}</b>`;
         resetAll(true);
 
+        // apply flags (offline: use defaults)
+        applyFlagsFromUserRow(u);
+
         renderSug();
+        fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
         toast("وضع أوفلاين ✅");
-        aiFab.style.display = (FEATURES.ai_enabled ? "block" : "none");
         return;
       }
 
@@ -1409,7 +1516,14 @@
           full_name: edgeUser.full_name || "",
           device_id: edgeUser.device_id || null,
           is_blocked: !!edgeUser.is_blocked,
-          password: password
+          password: password,
+
+          // optional flags from edge (if exists)
+          assistant_name: edgeUser.assistant_name,
+          ai_enabled: edgeUser.ai_enabled,
+          voice_enabled: edgeUser.voice_enabled,
+          print80_enabled: edgeUser.print80_enabled,
+          footer_enabled: edgeUser.footer_enabled
         };
 
         if(u.is_blocked){
@@ -1439,10 +1553,18 @@
 
         renderSug();
 
+        // try to refresh row to get flags if edge doesn't include them
+        try{
+          const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", u.id).limit(1);
+          if(data?.length){
+            USER = { ...USER, ...data[0], password };
+          }
+        }catch{}
+
+        applyFlagsFromUserRow(USER);
+
         await qSyncSilently(true);
         await syncDeviceIdIfNeeded();
-
-        await refreshUserFeatures();
       }catch(e){
         showErr(loginErr, mapEdgeError(e?.message || e));
       }
@@ -1477,10 +1599,6 @@
           if(TAB_BLOCKED) return;
 
           USER = u;
-          FEATURES = { ...FEATURES, ...(u.features || {}) };
-          ASSISTANT_NAME = u.assistant_name || ASSISTANT_NAME;
-          applyFeatures();
-
           loginCard.classList.add("hide");
           appCard.classList.remove("hide");
           subtitle.textContent = "فاتورة المستخدم";
@@ -1488,7 +1606,8 @@
           resetAll(true);
           renderSug();
 
-          aiFab.style.display = (FEATURES.ai_enabled ? "block" : "none");
+          applyFlagsFromUserRow(USER);
+          fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
           return;
         }
 
@@ -1528,10 +1647,10 @@
         resetAll(true);
         renderSug();
 
+        applyFlagsFromUserRow(USER);
+
         await qSyncSilently(true);
         await syncDeviceIdIfNeeded();
-
-        await refreshUserFeatures();
       }catch{}
     }
 
@@ -1540,8 +1659,15 @@
       localStorage.removeItem("HAYEK_USER_SESSION");
       stopSingleTabGuard();
 
-      closeAI();
-      if(aiFab) aiFab.style.display = "none";
+      // stop wake if on
+      try{
+        if(window.HAYEK_WAKE_TOGGLE && btnWake.classList.contains("on")){
+          window.HAYEK_WAKE_TOGGLE();
+        }
+      }catch{}
+
+      assistantPanel.style.display = "none";
+      fabHayek.style.display = "none";
 
       loginCard.classList.remove("hide");
       appCard.classList.add("hide");
@@ -1649,32 +1775,6 @@
       if(navigator.vibrate) navigator.vibrate(10);
     }
 
-    // ✅ NEW: حذف سطر/أسطر
-    async function deleteOpAt(index){
-      try{
-        if(index < 0 || index >= ops.length) return;
-        ops.splice(index, 1);
-        renderLog();
-        toast("تم حذف السطر ✅");
-
-        if(invoiceOpen){
-          const r = await saveInvoice("open");
-          if(!r.ok) showErr(appErr, "فشل الحفظ بعد الحذف:\n" + r.msg);
-        }
-        await qSyncSilently(false);
-      }catch(e){
-        showErr(appErr, "فشل حذف السطر:\n" + (e?.message || e));
-      }
-    }
-
-    async function deleteLastOp(){
-      if(!ops.length){
-        toast("لا يوجد سطور للحذف");
-        return;
-      }
-      await deleteOpAt(0); // لأن ops.unshift => آخر إضافة في index 0
-    }
-
     function renderLog(){
       if(!ops.length){
         logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
@@ -1689,7 +1789,7 @@
             <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
             <td>${escapeHtml(exp)}</td>
             <td>${escapeHtml(t)}</td>
-            <td><button class="btn small danger" data-del="${idx}" type="button" style="padding:8px 10px;border-radius:12px">🗑</button></td>
+            <td><button class="btn small red" data-del="${idx}" type="button">🗑</button></td>
           </tr>
         `;
       }).join("");
@@ -1750,21 +1850,85 @@
       await qSyncSilently(false);
     }
 
-    // =========================
-    // ✅ PDF خفيف (نصي) بدل الصور — لتخفيف الحجم
-    // =========================
-    function buildPdfRows(){
-      // نرتب من الأقدم للأحدث
-      const rows = ops.slice().reverse().map(o=>{
-        const label = o.label || "";
-        const ex = o.expr || "";
-        const res = (o.result ?? "");
-        const tm = o.time || "";
-        return [tm, label, ex, String(res)];
-      });
-      return rows;
+    async function deleteLastLine(){
+      clearErr(appErr);
+      if(!ops.length){
+        toast("لا يوجد سطور");
+        return;
+      }
+      ops.shift();
+      renderLog();
+
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
+      }
+      toast("تم حذف آخر سطر ✅");
+      await qSyncSilently(false);
     }
 
+    async function deleteLineAt(idx){
+      clearErr(appErr);
+      const i = Number(idx);
+      if(!Number.isFinite(i) || i < 0 || i >= ops.length) return;
+      ops.splice(i, 1);
+      renderLog();
+
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
+      }
+      toast("تم حذف السطر ✅");
+      await qSyncSilently(false);
+    }
+
+    function buildPrintArea(){
+      const pa = $("printArea");
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const invId = String(invoiceId || "—");
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
+
+      const rows = ops.slice().reverse().map(o=>`
+        <tr>
+          <td style="width:24%">${escapeHtml(o.time || "")}</td>
+          <td style="width:34%">${escapeHtml(o.label || "")}</td>
+          <td style="width:26%">${escapeHtml(o.expr || "")}</td>
+          <td style="width:16%">${escapeHtml(o.result)}</td>
+        </tr>
+      `).join("");
+
+      pa.innerHTML = `
+        <div class="p-box p-header">
+          <div class="p-title">شركة الحايك</div>
+          <div class="p-subtitle">HAYEK SPOT</div>
+        </div>
+
+        <div class="p-field"><div class="k">اسم المستخدم</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
+        <div class="p-field"><div class="k">اسم العميل</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
+        <div class="p-field"><div class="k">رقم الفاتورة</div><div class="v">${escapeHtml(invId)}</div></div>
+        <div class="p-field"><div class="k">التاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
+
+        <div class="p-tableWrap">
+          <table>
+            <thead><tr><th>الوقت</th><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}</tbody>
+          </table>
+        </div>
+
+        <div class="p-totalBox"><div>إجمالي الكشف:</div><div>${escapeHtml(total)}</div></div>
+
+        <div class="p-foot">
+          <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+          <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
+          <div class="p-phone">05510217646</div>
+        </div>
+      `;
+      return pa;
+    }
+
+    // ✅ PDF: Arabic correct + SMALL (JPEG compressed)
     async function exportPDF(){
       clearErr(appErr);
 
@@ -1782,483 +1946,109 @@
 
       addSug(SUG_CUSTOMERS_KEY, customer);
 
+      const pa = buildPrintArea();
+
+      // ✅ keep Arabic + reduce size
+      const canvas = await html2canvas(pa,{
+        scale: 1.15,
+        useCORS: true,
+        backgroundColor:"#ffffff"
+      });
+
+      // JPEG compression => small file
+      const imgData = canvas.toDataURL("image/jpeg", 0.60);
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF("p","mm","a4");
 
-      const user = (USER?.full_name || USER?.username || "—");
-      const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-      const total = calcTotal();
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
 
-      // Header
-      pdf.setFont("helvetica","bold");
-      pdf.setFontSize(16);
-      pdf.text("HAYEK SPOT", 105, 14, { align:"center" });
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica","normal");
-      pdf.text(`المستخدم: ${user}`, 14, 24);
-      pdf.text(`العميل: ${customer}`, 14, 30);
-      pdf.text(`رقم الفاتورة: ${invId}`, 14, 36);
-      pdf.text(`التاريخ: ${dateText}`, 14, 42);
-      pdf.text(`الإجمالي: ${String(total)}`, 14, 48);
+      const imgW = pageW;
+      const imgH = canvas.height * (imgW / canvas.width);
 
-      // Table (نصي)
-      const rows = buildPdfRows();
-      const head = [["الوقت","البيان","العملية","النتيجة"]];
-      pdf.autoTable({
-        head,
-        body: rows.length ? rows : [["—","لا يوجد عمليات","—","—"]],
-        startY: 54,
-        styles: { fontSize: 9, cellPadding: 2.2 },
-        headStyles: { fontStyle:"bold" },
-        margin: { left: 12, right: 12 }
-      });
-
-      // Footer
-      const yEnd = pdf.lastAutoTable?.finalY ? (pdf.lastAutoTable.finalY + 10) : 270;
-      pdf.setFontSize(9);
-      pdf.text("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك", 105, Math.min(yEnd, 285), { align:"center" });
+      if(imgH <= pageH){
+        pdf.addImage(imgData,"JPEG",0,0,imgW,imgH, undefined, "FAST");
+      }else{
+        let remaining = imgH;
+        let position = 0;
+        while(remaining > 0){
+          pdf.addImage(imgData,"JPEG",0,position,imgW,imgH, undefined, "FAST");
+          remaining -= pageH;
+          if(remaining > 0){ pdf.addPage(); position -= pageH; }
+        }
+      }
 
       const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}.pdf`);
 
-      toast("تم تنزيل PDF ✅ (خفيف)");
+      toast("تم تنزيل PDF ✅ (حجم صغير)");
       resetAll(false);
 
       await qSyncSilently(false);
     }
 
-    // =========================
-    // ✅ طباعة 80مم Bluetooth (ESC/POS)
-    // =========================
-    function build80mmText(){
-      const customer = (custInput.value.trim() || "—");
-      const user = (USER?.full_name || USER?.username || "—");
-      const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-      const total = calcTotal();
-
-      const lines = [];
-      lines.push("================================");
-      lines.push("            HAYEK SPOT           ");
-      lines.push("================================");
-      lines.push(`المستخدم: ${user}`);
-      lines.push(`العميل: ${customer}`);
-      lines.push(`فاتورة: ${invId}`);
-      lines.push(`التاريخ: ${dateText}`);
-      lines.push("--------------------------------");
-
-      const rows = ops.slice().reverse();
-      if(!rows.length){
-        lines.push("لا يوجد عمليات");
-      }else{
-        for(const o of rows){
-          const tm = o.time || "";
-          const lbl = o.label || "";
-          const ex  = o.expr || "";
-          const res = String(o.result ?? "");
-          lines.push(`${tm} | ${lbl}`);
-          if(ex) lines.push(`  ${ex} = ${res}`);
-          else lines.push(`  = ${res}`);
-          lines.push("--------------------------------");
-        }
-      }
-
-      lines.push(`الإجمالي: ${String(total)}`);
-      lines.push("================================");
-      lines.push("تم تطويره من قبل شركة الحايك");
-      lines.push("05510217646");
-      lines.push("\n\n");
-      return lines.join("\n");
-    }
-
-    async function print80mm(){
+    // ✅ Print 80mm (works via Android Print Service / window.print)
+    function print80mm(){
       clearErr(appErr);
 
-      if(!FEATURES.print80_enabled){
-        showErr(appErr, "ميزة الطباعة 80مم غير مفعلة لهذا المستخدم.");
+      const customer = custInput.value.trim();
+      if(!customer){
+        showErr(appErr, "اكتب اسم الزبون أولاً (إجباري) قبل الطباعة.");
+        custInput.focus();
         return;
       }
 
-      const customer = requireCustomer();
-      if(!customer) return;
+      // Build same invoice view
+      const pa = buildPrintArea();
+      const html = pa.innerHTML;
 
-      const ok = await ensureInvoiceOpened();
-      if(!ok) return;
-
-      // حفظ open قبل الطباعة
-      await saveInvoice("open");
-
-      if(!("bluetooth" in navigator)){
-        showErr(appErr, "❌ هذا الجهاز/المتصفح لا يدعم Bluetooth.\nجرّب Google Chrome على Android.");
+      const w = window.open("", "_blank");
+      if(!w){
+        alert("❌ المتصفح منع فتح نافذة جديدة. فعّل Popups ثم جرّب.");
         return;
       }
 
-      try{
-        toast("اختيار الطابعة...");
-        // كثير من طابعات ESC/POS تستخدم خدمات مختلفة.
-        // نضع أكثر UUID شائعة (FFE0/FFE1) + fallback.
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: [
-            0xFFE0,
-            "0000ffe0-0000-1000-8000-00805f9b34fb",
-            "0000fff0-0000-1000-8000-00805f9b34fb",
-            0xFFF0
-          ]
-        });
+      w.document.open();
+      w.document.write(`
+        <!doctype html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>طباعة 80مم</title>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            body{ margin:0; padding:0; direction:rtl; font-family: Arial, Tahoma, sans-serif; background:#fff; }
+            .paper{ width:80mm; padding:6mm; box-sizing:border-box; }
+            table{ width:100%; border-collapse:collapse; }
+            th,td{ border-bottom:1px solid #000; padding:6px 4px; font-size:12px; font-weight:700; }
+            .p-box,.p-field,.p-tableWrap,.p-foot{ border:0 !important; }
+            .p-title{ font-size:18px !important; font-weight:900; text-align:center; margin:0 0 6px; }
+            .p-subtitle{ font-size:12px !important; font-weight:900; text-align:center; margin:0 0 10px; color:#0a7a55; }
+            .p-totalBox{ margin-top:10px; font-size:14px; font-weight:900; display:flex; justify-content:space-between; }
+            .small{ font-size:11px; font-weight:800; text-align:center; margin-top:10px; }
+            .p-phone{ display:none; }
+          </style>
+        </head>
+        <body>
+          <div class="paper">
+            ${html}
+          </div>
+          <script>
+            window.onload = () => {
+              setTimeout(() => { window.print(); }, 250);
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      w.document.close();
 
-        const server = await device.gatt.connect();
-
-        let service = null;
-        const tryServices = [
-          "0000ffe0-0000-1000-8000-00805f9b34fb",
-          "0000fff0-0000-1000-8000-00805f9b34fb"
-        ];
-
-        for(const suuid of tryServices){
-          try{
-            service = await server.getPrimaryService(suuid);
-            if(service) break;
-          }catch{}
-        }
-
-        if(!service){
-          // آخر محاولة: أول Service متاح
-          const services = await server.getPrimaryServices().catch(()=>[]);
-          service = services?.[0] || null;
-        }
-
-        if(!service){
-          throw new Error("لم أجد Service للطابعة.");
-        }
-
-        let ch = null;
-        const tryChars = [
-          "0000ffe1-0000-1000-8000-00805f9b34fb",
-          "0000fff1-0000-1000-8000-00805f9b34fb"
-        ];
-
-        for(const cuuid of tryChars){
-          try{
-            ch = await service.getCharacteristic(cuuid);
-            if(ch) break;
-          }catch{}
-        }
-
-        if(!ch){
-          // fallback: أول Characteristic قابل للكتابة
-          const chars = await service.getCharacteristics().catch(()=>[]);
-          ch = chars?.[0] || null;
-        }
-
-        if(!ch){
-          throw new Error("لم أجد Characteristic للكتابة.");
-        }
-
-        const text = build80mmText();
-
-        const encoder = new TextEncoder(); // UTF-8
-        // بعض الطابعات لا تحب UTF-8 للعربي، لكن كثير منها يطبع عربي كصورة.
-        // هنا طباعة نصية - إذا الطابعة لا تدعم العربي ستظهر رموز.
-        // (يمكن لاحقاً إضافة طباعة صورة، لكن هذا يزيد حجم/تعقيد.)
-        const data = encoder.encode(text);
-
-        // ESC/POS: init + cut (قد لا تعمل على كل الأجهزة)
-        const init = new Uint8Array([0x1B,0x40]);         // ESC @
-        const cut  = new Uint8Array([0x1D,0x56,0x00]);    // GS V 0 (قص)
-
-        // إرسال على دفعات
-        async function writeChunk(u8){
-          // بعض الأجهزة تحتاج writeValueWithoutResponse
-          if(ch.writeValueWithoutResponse){
-            await ch.writeValueWithoutResponse(u8);
-          }else{
-            await ch.writeValue(u8);
-          }
-        }
-
-        await writeChunk(init);
-
-        const CHUNK = 180; // آمن للبلوتوث
-        for(let i=0;i<data.length;i+=CHUNK){
-          await writeChunk(data.slice(i, i+CHUNK));
-          await new Promise(r=>setTimeout(r, 30));
-        }
-
-        await writeChunk(cut).catch(()=>{});
-
-        toast("تم إرسال الطباعة ✅");
-      }catch(e){
-        showErr(appErr, "❌ فشل الطباعة Bluetooth:\n" + (e?.message || e));
-      }
+      toast("اختر الطابعة من نافذة الطباعة ✅");
     }
 
-    // =========================
-    // ✅ AI "حايك" (محلي) ينفذ أوامر بدل المستخدم
-    // =========================
-    function openAI(){
-      if(!FEATURES.ai_enabled){
-        toast("الميزة غير مفعلة");
-        return;
-      }
-      aiPanel.style.display = "block";
-      aiFab.style.display = "block";
-      aiInput.focus();
-      aiBadge.textContent = netNow() ? "أونلاين" : "أوفلاين";
-      aiNameEl.textContent = ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME;
-      if(!aiBody.dataset.welcomed){
-        aiBody.dataset.welcomed = "1";
-        addHayekMsg(`أهلاً! أنا ${aiNameEl.textContent}. قل: "${aiNameEl.textContent} مساعدة" أو جرّب: "${aiNameEl.textContent} صدّر pdf".`);
-      }
-    }
-    function closeAI(){
-      aiPanel.style.display = "none";
-    }
-    function addMsg(text, who){
-      const div = document.createElement("div");
-      div.className = "aiMsg " + (who === "me" ? "me" : "hayek");
-      div.textContent = String(text || "");
-      aiBody.appendChild(div);
-      aiBody.scrollTop = aiBody.scrollHeight;
-    }
-    function addMeMsg(t){ addMsg(t, "me"); }
-    function addHayekMsg(t){ addMsg(t, "hayek"); }
-
-    function normCmd(s){
-      return String(s||"").trim().replace(/\s+/g," ");
-    }
-
-    function stripWake(text){
-      // يقبل: حايك ... / hayek ... / هيك ... (أحياناً)
-      const t = normCmd(text);
-      const n = (ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME).trim();
-      const low = t.toLowerCase();
-
-      const candidates = [
-        n,
-        "حايك",
-        "hayek",
-        "هيك"
-      ];
-
-      for(const c of candidates){
-        if(!c) continue;
-        const cLow = c.toLowerCase();
-        if(low === cLow) return "";
-        if(low.startsWith(cLow + " ")) return t.slice(c.length).trim();
-      }
-      return t;
-    }
-
-    function parseAddLine(text){
-      // مثال: "أضف بطاطا 5x6.5" / "اضف قداحة 10-3" / "أضف 5x6.5"
-      const t = text.trim();
-      const m = t.match(/^(أضف|اضف|ضيف|سجل)\s+/);
-      if(!m) return null;
-
-      const rest = t.replace(m[0], "").trim();
-      if(!rest) return null;
-
-      // أول رقم
-      const firstDigit = rest.match(/[0-9٠-٩]/);
-      if(!firstDigit || firstDigit.index == null) return { item: rest, expr: "" };
-
-      const idx = firstDigit.index;
-      const item = rest.slice(0, idx).trim();
-      const expr = rest.slice(idx).trim();
-
-      return { item, expr };
-    }
-
-    async function runHayekCommand(rawText){
-      if(!USER){
-        addHayekMsg("سجّل دخول أولاً.");
-        return;
-      }
-
-      // لازم اسم زبون لأغلب الأوامر
-      const cmd = stripWake(rawText);
-      const c = cmd.trim();
-
-      if(!c){
-        addHayekMsg("نعم؟ قل الأمر الآن.");
-        return;
-      }
-
-      const lc = c.toLowerCase();
-
-      if(lc.includes("مساعدة") || lc === "help"){
-        addHayekMsg(
-          `أوامري:\n`+
-          `- ${aiNameEl.textContent} صدّر pdf\n`+
-          `- ${aiNameEl.textContent} اطبع 80مم\n`+
-          `- ${aiNameEl.textContent} احذف آخر سطر\n`+
-          `- ${aiNameEl.textContent} مسح العمليات\n`+
-          `- ${aiNameEl.textContent} افتح السجل\n`+
-          `- ${aiNameEl.textContent} افتح الحاسبة\n`+
-          `- ${aiNameEl.textContent} أضف بطاطا 5x6.5`
-        );
-        return;
-      }
-
-      if(lc.includes("افتح السجل") || lc.includes("السجل") || lc.includes("سجل")){
-        setTab("log");
-        addHayekMsg("تم فتح سجل العمليات ✅");
-        return;
-      }
-
-      if(lc.includes("افتح الحاسبة") || lc.includes("الحاسبة")){
-        setTab("calc");
-        addHayekMsg("تم فتح الحاسبة ✅");
-        return;
-      }
-
-      if(lc.includes("مسح العمليات") || lc.includes("امسح العمليات") || lc.includes("تفريغ العمليات")){
-        await clearOperations();
-        addHayekMsg("تم مسح العمليات ✅");
-        return;
-      }
-
-      if(lc.includes("احذف اخر سطر") || lc.includes("احذف آخر سطر") || lc.includes("حذف اخر سطر") || lc.includes("حذف آخر سطر")){
-        await deleteLastOp();
-        addHayekMsg("تم حذف آخر سطر ✅");
-        return;
-      }
-
-      if(lc.includes("صدّر") || lc.includes("تصدير") || lc.includes("pdf")){
-        await exportPDF();
-        addHayekMsg("تم ✅ (إذا لم يظهر الملف: تأكد من السماح للتنزيلات).");
-        return;
-      }
-
-      if(lc.includes("اطبع") || lc.includes("طباعة") || lc.includes("80") || lc.includes("٨٠")){
-        await print80mm();
-        addHayekMsg("حاولت إرسال الطباعة ✅ (إذا فشلت: جرّب Chrome Android + طابعة تدعم BLE).");
-        return;
-      }
-
-      const add = parseAddLine(c);
-      if(add){
-        const item = add.item || "";
-        const expr = add.expr || "";
-        if(item && itemInput){
-          itemInput.value = item;
-          itemInput.dispatchEvent(new Event("change", { bubbles:true }));
-        }
-        if(expr){
-          // نستخدم نفس مسار Smart Add
-          if(window.HAYEK_VOICE_ADD_LINE){
-            await window.HAYEK_VOICE_ADD_LINE(item, expr);
-            addHayekMsg("تمت الإضافة ✅");
-            return;
-          }
-        }
-        addHayekMsg("اكتب العملية بهذه الصيغة: أضف بطاطا 5x6.5");
-        return;
-      }
-
-      addHayekMsg("لم أفهم الأمر. قل: حايك مساعدة");
-    }
-
-    // =========================
-    // ✅ Wake word listening ("حايك")
-    // =========================
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let wakeRec = null;
-    let WAKE_ON = false;
-
-    function setWakeBtn(){
-      btnWake.textContent = `🎧 ${ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME}: ` + (WAKE_ON ? "تشغيل" : "إيقاف");
-    }
-
-    function startWake(){
-      if(!SR){
-        toast("الصوت غير مدعوم (جرّب Chrome)");
-        WAKE_ON = false;
-        setWakeBtn();
-        return;
-      }
-      if(wakeRec) return;
-
-      wakeRec = new SR();
-      wakeRec.lang = (localStorage.getItem("HAYEK_VOICE_LANG_V1") || "ar-SA");
-      wakeRec.continuous = true;
-      wakeRec.interimResults = true;
-
-      let lastFinal = "";
-
-      wakeRec.onresult = async (e)=>{
-        let finalText = "";
-        let interim = "";
-        for(let i=e.resultIndex;i<e.results.length;i++){
-          const t = e.results[i][0].transcript;
-          if(e.results[i].isFinal) finalText += t;
-          else interim += t;
-        }
-
-        const text = (finalText || interim || "").trim();
-        if(!text) return;
-
-        // لا ننفذ إلا على final لتفادي التكرار
-        if(finalText && finalText.trim()){
-          const t = finalText.trim();
-          if(t === lastFinal) return;
-          lastFinal = t;
-
-          // إذا نادى "حايك" ضمن الجملة
-          const name = (ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME).trim();
-          const hasWake = t.includes(name) || t.toLowerCase().includes("hayek") || t.includes("حايك") || t.includes("هيك");
-          if(hasWake){
-            openAI();
-            addMeMsg(t);
-            await runHayekCommand(t);
-          }
-        }
-      };
-
-      wakeRec.onerror = ()=>{
-        // لا نزعج المستخدم
-      };
-      wakeRec.onend = ()=>{
-        // إذا WAKE_ON رجّع تشغيل تلقائي
-        if(WAKE_ON){
-          try{ wakeRec.start(); }catch{}
-        }
-      };
-
-      try{
-        wakeRec.start();
-        WAKE_ON = true;
-        setWakeBtn();
-        toast(`استماع ${ASSISTANT_NAME || DEFAULT_ASSISTANT_NAME} ✅`);
-      }catch{
-        WAKE_ON = false;
-        setWakeBtn();
-      }
-    }
-
-    function stopWake(){
-      WAKE_ON = false;
-      setWakeBtn();
-      try{
-        if(wakeRec){
-          wakeRec.onend = null;
-          wakeRec.stop();
-        }
-      }catch{}
-      wakeRec = null;
-      toast(`تم إيقاف الاستماع`);
-    }
-
-    function toggleWake(){
-      if(WAKE_ON) stopWake();
-      else startWake();
-    }
-
-    // =========================
     // ✅ EXPOSE: Smart voice add line
-    // =========================
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
@@ -2291,6 +2081,144 @@
     };
 
     // =========================
+    // ✅ Assistant "حايك"
+    // =========================
+    function aiLogUser(t){
+      assistantLogEl.insertAdjacentHTML("beforeend", `<div class="msgU">👤 ${escapeHtml(t)}</div>`);
+      assistantLogEl.scrollTop = assistantLogEl.scrollHeight;
+    }
+    function aiLogHayek(t){
+      assistantLogEl.insertAdjacentHTML("beforeend", `<div class="msgA">🤖 ${escapeHtml(t)}</div>`);
+      assistantLogEl.scrollTop = assistantLogEl.scrollHeight;
+    }
+
+    function aiNormalizeCommand(raw){
+      let s = String(raw||"").trim();
+      if(!s) return "";
+
+      // remove wake name if present
+      const name = (FLAGS.assistant_name || "حايك").trim();
+      if(name && s.startsWith(name)){
+        s = s.slice(name.length).trim();
+      }
+      // also allow "hayek"
+      if(/^hayek/i.test(s)) s = s.replace(/^hayek/i,"").trim();
+
+      // normalize Arabic punctuation/spaces
+      s = s.replace(/[؟]/g,"?").replace(/\s+/g," ").trim();
+      return s;
+    }
+
+    async function aiRun(raw, fromWake=false){
+      if(!FLAGS.ai_enabled){
+        if(!fromWake) aiLogHayek("الميزة غير مفعلة لهذا الحساب.");
+        return;
+      }
+
+      const cmd = aiNormalizeCommand(raw);
+      if(!cmd){
+        if(!fromWake) aiLogHayek("اكتب أمرًا. مثال: pdf / طباعة / احذف آخر سطر / مسح / سجل");
+        return;
+      }
+
+      // Friendly mapping
+      const c = cmd.toLowerCase();
+
+      try{
+        if(c.includes("مساعدة") || c === "help" || c.includes("اوامر") || c.includes("أوامر")){
+          aiLogHayek("الأوامر المتاحة: pdf ، طباعة 80 ، احذف آخر سطر ، مسح العمليات ، افتح السجل ، افتح الحاسبة.");
+          return;
+        }
+
+        if(c.includes("pdf") || c.includes("تصدير") || c.includes("تنزيل")){
+          aiLogHayek("تمام ✅ سأصدر PDF الآن.");
+          await exportPDF();
+          return;
+        }
+
+        if(c.includes("طباعة") || c.includes("print") || c.includes("80")){
+          if(!FLAGS.print80_enabled){
+            aiLogHayek("الطباعة 80مم غير مفعلة لهذا الحساب.");
+            return;
+          }
+          aiLogHayek("تمام ✅ سأفتح نافذة الطباعة 80مم.");
+          print80mm();
+          return;
+        }
+
+        if(c.includes("احذف") && (c.includes("آخر") || c.includes("اخر") || c.includes("last"))){
+          aiLogHayek("تم ✅ سأحذف آخر سطر.");
+          await deleteLastLine();
+          return;
+        }
+
+        if(c.includes("مسح") || c.includes("clear")){
+          aiLogHayek("تم ✅ سأمسح العمليات.");
+          await clearOperations();
+          return;
+        }
+
+        if(c.includes("سجل") || c.includes("log")){
+          setTab("log");
+          aiLogHayek("فتحت سجل العمليات ✅");
+          return;
+        }
+
+        if(c.includes("حاسبة") || c.includes("calc")){
+          setTab("calc");
+          aiLogHayek("فتحت الحاسبة ✅");
+          return;
+        }
+
+        // set customer: "العميل أبو أحمد" / "زبون ..."
+        if(c.startsWith("العميل ") || c.startsWith("زبون ") || c.startsWith("customer ")){
+          const v = cmd.replace(/^العميل\s+/,"").replace(/^زبون\s+/,"").replace(/^customer\s+/i,"").trim();
+          if(v){
+            custInput.value = v;
+            custInput.dispatchEvent(new Event("change",{bubbles:true}));
+            aiLogHayek("تمام ✅ تم وضع اسم الزبون.");
+            return;
+          }
+        }
+
+        // set item: "البيان ..." / "منتج ..."
+        if(c.startsWith("البيان ") || c.startsWith("منتج ") || c.startsWith("item ")){
+          const v = cmd.replace(/^البيان\s+/,"").replace(/^منتج\s+/,"").replace(/^item\s+/i,"").trim();
+          if(v){
+            itemInput.value = v;
+            itemInput.dispatchEvent(new Event("change",{bubbles:true}));
+            aiLogHayek("تمام ✅ تم وضع البيان.");
+            return;
+          }
+        }
+
+        aiLogHayek("ما فهمت الأمر. جرّب: pdf / طباعة 80 / احذف آخر سطر / مسح / سجل");
+      }catch(e){
+        if(!fromWake) aiLogHayek("حدث خطأ: " + (e?.message || e));
+      }
+    }
+
+    window.HAYEK_AI_RUN = aiRun;
+
+    window.HAYEK_AI_OPEN = function(){
+      if(!FLAGS.ai_enabled) return;
+      assistantPanel.style.display = "block";
+      fabHayek.style.display = "block";
+      setTimeout(()=> assistantInput.focus(), 50);
+    };
+
+    window.HAYEK_AI_SUBMIT = function(text){
+      const t = String(text||"").trim();
+      if(!t) return;
+      aiLogUser(t);
+      aiRun(t, false);
+    };
+
+    function closeAssistant(){
+      assistantPanel.style.display = "none";
+    }
+
+    // =========================
     // ✅ binds
     // =========================
     document.getElementById("loginCard").addEventListener("submit", (e)=>{
@@ -2303,6 +2231,7 @@
       $("loginPass").value="";
       clearErr(loginErr);
     });
+
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
@@ -2320,63 +2249,57 @@
     $("btnEq").addEventListener("click", equalsAndLog);
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
+    $("btnDelLast").addEventListener("click", deleteLastLine);
+    $("btnPrint80").addEventListener("click", print80mm);
 
-    // NEW buttons
-    btnDelLast.addEventListener("click", deleteLastOp);
-    btnPrint80.addEventListener("click", print80mm);
-    btnOpenAI.addEventListener("click", openAI);
-    btnClearLogAll.addEventListener("click", clearOperations);
-
-    // delete row buttons (delegation)
+    // delete row in log (event delegation)
     logBody.addEventListener("click", (e)=>{
       const b = e.target.closest("button[data-del]");
       if(!b) return;
-      const idx = Number(b.dataset.del);
-      if(Number.isFinite(idx)) deleteOpAt(idx);
+      const idx = b.getAttribute("data-del");
+      deleteLineAt(idx);
     });
 
-    // AI UI binds
-    aiFab.addEventListener("click", openAI);
-    aiClose.addEventListener("click", closeAI);
-    aiHelp.addEventListener("click", ()=>{
-      openAI();
-      addMeMsg(`${aiNameEl.textContent} مساعدة`);
-      runHayekCommand(`${aiNameEl.textContent} مساعدة`);
-    });
-    aiSend.addEventListener("click", async ()=>{
-      const t = aiInput.value.trim();
-      if(!t) return;
-      aiInput.value = "";
-      openAI();
-      addMeMsg(t);
-      await runHayekCommand(t);
-    });
-    aiInput.addEventListener("keydown", async (e)=>{
+    // assistant UI
+    fabHayek.addEventListener("click", ()=> window.HAYEK_AI_OPEN());
+    btnCloseAssistant.addEventListener("click", closeAssistant);
+    btnSendAssistant.addEventListener("click", ()=> window.HAYEK_AI_SUBMIT(assistantInput.value));
+    assistantInput.addEventListener("keydown", (e)=>{
       if(e.key === "Enter"){
         e.preventDefault();
-        aiSend.click();
+        window.HAYEK_AI_SUBMIT(assistantInput.value);
+        assistantInput.value = "";
       }
     });
 
-    // Wake toggle
-    btnWake.addEventListener("click", toggleWake);
+    // wake toggle
+    btnWake.addEventListener("click", ()=>{
+      if(!FLAGS.voice_enabled){
+        aiLogHayek("الصوت غير مفعّل لهذا الحساب.");
+        return;
+      }
+      const ok = window.HAYEK_WAKE_TOGGLE?.();
+      if(ok){
+        if(btnWake.classList.contains("on")){
+          btnWake.classList.remove("on");
+          btnWake.textContent = "🎧 استماع";
+          aiLogHayek("تم إيقاف الاستماع.");
+        }else{
+          btnWake.classList.add("on");
+          btnWake.textContent = "🎧 استماع (شغال)";
+          aiLogHayek(`تم تشغيل الاستماع ✅ قل: "${FLAGS.assistant_name} ..."`);
 
+          // important hint if browser blocks
+          aiLogHayek("إذا ما استجاب: افتح إعدادات الموقع → Microphone → Allow ثم أعد تحميل الصفحة.");
+        }
+      }
+    });
+
+    // initial
     setTab("calc");
     renderSug();
-
-    // init features display (before login)
-    applyFeatures();
-    setWakeBtn();
-
-    refreshNetState(true).then(async ()=>{
-      await qSyncSilently(false);
-    });
-
-    restoreSession().then(()=>{
-      // بعد restoreSession: إظهار الزر العائم حسب الميزات
-      if(aiFab) aiFab.style.display = (FEATURES.ai_enabled && USER) ? "block" : "none";
-      applyFeatures();
-    });
+    refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
+    restoreSession();
 
     try{
       if("serviceWorker" in navigator){
