@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK — نظام الفاتورة</title>
 
-  <!-- ✅ PWA / ICON (FINAL) -->
+  <!-- ✅ PWA / ICON -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PDF (AR as IMAGE but SMALL) -->
+  <!-- ✅ PDF -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -43,7 +43,6 @@
       background: linear-gradient(180deg, rgba(14,27,38,.95) 0%, rgba(10,20,30,.92) 100%);
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
-
     .hint{color:#dbe8ff; font-size:14px; line-height:1.9; font-weight:900;}
     label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; font-weight:800;}
     input{
@@ -106,7 +105,6 @@
       font-weight:1000;
       font-size:20px;
     }
-
     .resLine{
       margin-top:10px;
       display:flex;
@@ -128,7 +126,6 @@
       text-align:center;
       display:inline-block;
     }
-
     .keys{margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
     .key{
       border:0; border-radius:14px; background:rgba(255,255,255,.10);
@@ -140,7 +137,6 @@
     .key.eq:hover{background:var(--blue2)}
     .key.back{grid-column:3 / span 2}
     .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
-
     .footerNote{
       margin-top:10px;
       text-align:center;
@@ -149,7 +145,6 @@
       line-height:1.8;
       font-weight:900;
     }
-
     .logTable{margin-top:10px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(0,0,0,.10)}
     table{width:100%; border-collapse:collapse}
     th,td{padding:10px 10px; border-bottom:1px solid var(--line); font-size:12px; text-align:right; vertical-align:top}
@@ -158,6 +153,7 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
+    /* PDF hidden area */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -167,22 +163,18 @@
       direction:rtl;
       font-family:Arial,"Segoe UI",Tahoma,sans-serif;
     }
-
     .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
     .p-header{text-align:center; padding:18px 16px;}
     .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
-
     .p-field{
       display:flex; justify-content:space-between; gap:10px;
       padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
     }
     .p-field .k{font-size:20px; font-weight:900; color:#000;}
     .p-field .v{font-size:20px; font-weight:900; color:#000;}
-
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
     #printArea table{width:100%; border-collapse:collapse; background:#fff;}
-
     #printArea thead th{
       font-size:18px; font-weight:1000; padding:12px 10px;
       border-bottom:2px solid #111; background:#fff; color:#000;
@@ -192,13 +184,11 @@
       border-bottom:1px solid #111; background:#fff; color:#000;
     }
     #printArea tbody tr:last-child td{border-bottom:0;}
-
     .p-totalBox{
       border:2px dashed #111; border-radius:16px; padding:14px 16px;
       display:flex; justify-content:space-between; margin-top:12px;
       font-weight:1000; font-size:20px; color:#000;
     }
-
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
     .p-phone{
@@ -206,7 +196,7 @@
       border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
     }
 
-    /* ✅ Voice mic buttons */
+    /* Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
       width:46px; min-width:46px; height:46px;
@@ -222,7 +212,7 @@
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
 
-    /* ✅ Assistant (HAYEK) */
+    /* Assistant */
     .fab{
       position:fixed;
       right:16px;
@@ -334,7 +324,7 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- ✅ loginCard FORM -->
+    <!-- LOGIN -->
     <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
@@ -348,15 +338,15 @@
       <div class="error" id="loginErr"></div>
     </form>
 
+    <!-- APP -->
     <div class="card hide" id="appCard">
       <div class="row" style="align-items:center">
-        <button class="btn small" id="btnLogout">خروج</button>
+        <button class="btn small" id="btnLogout" type="button">خروج</button>
       </div>
 
       <div class="sep"></div>
 
-      <!-- ✅ Voice language toggle -->
-      <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
+      <div style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
         <button class="btn small" id="hayekLangTR" type="button">Türkçe</button>
@@ -376,7 +366,6 @@
       </div>
       <datalist id="itemList"></datalist>
 
-      <!-- ✅ Smart voice add -->
       <div style="margin-top:10px">
         <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
       </div>
@@ -453,10 +442,10 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- ✅ Floating assistant button -->
+  <!-- Assistant button -->
   <button class="fab" id="fabHayek" type="button" title="مساعد حايك">ح</button>
 
-  <!-- ✅ Assistant Panel -->
+  <!-- Assistant panel -->
   <div class="assistant" id="assistantPanel">
     <div class="assistantCard">
       <div class="assistantTop">
@@ -482,12 +471,12 @@
       </div>
 
       <div class="assistantHint">
-        ملاحظة: الاستماع الصوتي يحتاج Chrome + سماح المايك + HTTPS (أو تطبيق مثبت).
+        ملاحظة: الصوت يحتاج Chrome + سماح المايك + HTTPS (أو تطبيق مثبت).
       </div>
     </div>
   </div>
 
-  <!-- ✅ Voice-to-text (Arabic + Turkish) + Smart Add + HAYEK Wake Word -->
+  <!-- ✅ VOICE / WAKE WORD (غير module) -->
   <script>
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -511,7 +500,6 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
-        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
         btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
@@ -565,11 +553,8 @@
       });
     }
 
-    // --- helpers for smart parse ---
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-    function toLatinDigits(s){
-      return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d);
-    }
+    function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
     function normalizeExpr(s){
       let x = toLatinDigits(s);
       x = x.replace(/\s+/g,"");
@@ -582,15 +567,12 @@
     function parseSmart(text){
       const t0 = toLatinDigits(String(text||"")).trim();
       if(!t0) return null;
-
       const m = t0.match(/[0-9]/);
       if(!m || m.index == null) return null;
-
       const idx = m.index;
       const item = t0.slice(0, idx).trim();
       const exprRaw = t0.slice(idx).trim();
       const expr = normalizeExpr(exprRaw);
-
       if(!expr) return null;
       return { item, expr };
     }
@@ -601,7 +583,6 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
-        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
         btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
@@ -611,7 +592,6 @@
       rec.continuous = false;
 
       let listening = false;
-
       function off(){
         listening = false;
         btn.classList.remove("on");
@@ -635,18 +615,14 @@
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
           if(!parsed){
-            alert("❌ ما قدرت أفهم الصيغة.\nمثال: علبة شامبو 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
+            alert("❌ ما قدرت أفهم الصيغة.\nمثال: بطاطا 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
             return;
           }
-
-          const item = (parsed.item || "").trim();
-          const expr = (parsed.expr || "").trim();
-
-          if(!window.HAYEK_VOICE_ADD_LINE){
-            alert("❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى.");
+          if(typeof window.HAYEK_VOICE_ADD_LINE !== "function"){
+            alert("❌ النظام غير جاهز. حدّث الصفحة.");
             return;
           }
-          window.HAYEK_VOICE_ADD_LINE(item, expr);
+          window.HAYEK_VOICE_ADD_LINE((parsed.item||""), (parsed.expr||""));
         }
       };
 
@@ -666,7 +642,7 @@
       });
     }
 
-    // ✅ Assistant single-shot mic (command)
+    // assistant mic one-shot
     function attachAssistantMic(btnId, inputId){
       const btn = document.getElementById(btnId);
       const input = document.getElementById(inputId);
@@ -674,7 +650,6 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
-        btn.title = "غير مدعوم";
         btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
@@ -684,7 +659,6 @@
       rec.continuous = false;
 
       let listening = false;
-
       function off(){
         listening = false;
         btn.classList.remove("on");
@@ -710,8 +684,7 @@
           input.dispatchEvent(new Event("input", { bubbles:true }));
         }
         if(finalText && finalText.trim()){
-          // auto send
-          if(window.HAYEK_AI_SUBMIT) window.HAYEK_AI_SUBMIT(finalText.trim());
+          if(typeof window.HAYEK_AI_SUBMIT === "function") window.HAYEK_AI_SUBMIT(finalText.trim());
         }
       };
 
@@ -731,7 +704,7 @@
       });
     }
 
-    // ✅ Wake word: "حايك" / "hayek" (continuous + restart)
+    // wake word continuous
     let WAKE_ON = false;
     let WAKE_REC = null;
 
@@ -746,21 +719,20 @@
       WAKE_REC.onresult = (e) => {
         let txt = "";
         for(let i=e.resultIndex;i<e.results.length;i++){
-          txt += e.results[i][0].transcript + " ";
+          txt += (e.results[i][0].transcript || "") + " ";
         }
         txt = (txt||"").trim().replace(/\s+/g," ");
+        if(!txt) return;
 
-        // normalize common variations
-        const t = txt.toLowerCase();
+        const lower = txt.toLowerCase();
+        const startsAR = txt.startsWith("حايك");
+        const startsEN = lower.startsWith("hayek");
 
-        const hasHayekAR = txt.startsWith("حايك");
-        const hasHayekEN = t.startsWith("hayek");
-
-        if(hasHayekAR || hasHayekEN){
-          const cmd = hasHayekAR ? txt.replace(/^حايك\s*/,"").trim()
-                                 : txt.replace(/^hayek\s*/i,"").trim();
-          if(cmd && window.HAYEK_AI_RUN){
-            window.HAYEK_AI_OPEN?.();
+        if(startsAR || startsEN){
+          const cmd = startsAR ? txt.replace(/^حايك\s*/,"").trim()
+                               : txt.replace(/^hayek\s*/i,"").trim();
+          if(cmd && typeof window.HAYEK_AI_RUN === "function"){
+            if(typeof window.HAYEK_AI_OPEN === "function") window.HAYEK_AI_OPEN();
             window.HAYEK_AI_RUN(cmd, true);
           }
         }
@@ -800,13 +772,12 @@
       }
     };
 
-    // bind inputs mics
-    attachMic("hayekMicCustomer", "customerName");
-    attachMic("hayekMicItem", "itemName");
+    // bind
+    attachMic("hayekMicCustomer","customerName");
+    attachMic("hayekMicItem","itemName");
     attachSmart("hayekSmartAdd");
     attachAssistantMic("btnMicAssistant","assistantInput");
 
-    // bind lang
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
     if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
@@ -816,6 +787,7 @@
   })();
   </script>
 
+  <!-- ✅ MAIN APP (module) -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -883,7 +855,7 @@
     }
 
     // =========================
-    // ✅ Net Check
+    // Net Check (simple)
     // =========================
     let NET_OK = false;
     let NET_LAST = 0;
@@ -895,21 +867,15 @@
         const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
         const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
-
         const res = await fetch(url, {
           method: "GET",
           mode: "cors",
           cache: "no-store",
           signal: ctrl.signal,
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: "Bearer " + SUPABASE_ANON_KEY
-          }
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
         });
-
         clearTimeout(t);
-        if(!res || !res.ok) return false;
-        return true;
+        return !!(res && res.ok);
       }catch{
         return false;
       }
@@ -919,11 +885,9 @@
       const now = Date.now();
       if(!force && (now - NET_LAST) < 2500) return NET_OK;
       if(NET_INFLIGHT) return NET_OK;
-
       NET_INFLIGHT = true;
       try{
-        const ok = await isNetOK();
-        NET_OK = !!ok;
+        NET_OK = await isNetOK();
         NET_LAST = now;
         return NET_OK;
       }finally{
@@ -931,42 +895,11 @@
       }
     }
 
-    function netNow(){ return !!NET_OK; }
-    async function kickNet(){ await refreshNetState(true); }
-
-    window.addEventListener("online", async ()=>{
-      await kickNet();
-      await qSyncSilently(true);
-      await syncDeviceIdIfNeeded();
-    });
-
-    window.addEventListener("focus", async ()=>{
-      await kickNet();
-      await qSyncSilently(true);
-      await syncDeviceIdIfNeeded();
-    });
-
-    document.addEventListener("visibilitychange", async ()=>{
-      if(!document.hidden){
-        await kickNet();
-        await qSyncSilently(true);
-        await syncDeviceIdIfNeeded();
-      }
-    });
-
-    window.addEventListener("pageshow", async ()=>{
-      await kickNet();
-      await qSyncSilently(true);
-      await syncDeviceIdIfNeeded();
-    });
-
-    setInterval(async ()=>{
-      await refreshNetState(false);
-      await qSyncSilently(false);
-    }, 8000);
+    window.addEventListener("online", ()=> refreshNetState(true));
+    window.addEventListener("focus", ()=> refreshNetState(false));
 
     // =========================
-    // ✅ OFFLINE QUEUE
+    // Offline queue
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -984,43 +917,23 @@
       qWrite(filtered);
     }
 
-    function cleanInvoicePayload(p){
-      if(!p || typeof p !== "object") return null;
-      const out = { ...p };
-      delete out.__queued_at;
-      delete out.__meta;
-      delete out.__local;
-      for(const k of Object.keys(out)){
-        if(out[k] === undefined) delete out[k];
-      }
-      return out;
-    }
-
     let __syncing = false;
-
-    async function qSyncSilently(force=false){
+    async function qSyncSilently(){
       if(__syncing) return;
-
       const arr = qRead();
       if(!arr.length) return;
 
-      if(!force){
-        await refreshNetState(false);
-        if(!netNow()) return;
-      }
+      await refreshNetState(false);
+      if(!NET_OK) return;
 
       __syncing = true;
       try{
         const keep = [];
         for(const raw of arr){
           try{
-            const payload = cleanInvoicePayload(raw);
-            if(!payload?.id) continue;
-
-            const { error } = await supabase
-              .from(INVOICE_TABLE)
-              .upsert(payload, { onConflict: "id" });
-
+            const payload = { ...raw };
+            delete payload.__queued_at;
+            const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
             if(error) keep.push(raw);
           }catch{
             keep.push(raw);
@@ -1032,8 +945,10 @@
       }
     }
 
+    setInterval(qSyncSilently, 8000);
+
     // =========================
-    // ✅ Offline Login Cache
+    // Offline user cache
     // =========================
     const OFFLINE_USER_KEY = "HAYEK_OFFLINE_LAST_USER_V1";
     function saveOfflineUser(u){
@@ -1044,8 +959,7 @@
           password: u?.password || "",
           full_name: u?.full_name || "",
           is_blocked: !!u?.is_blocked,
-          device_id: u?.device_id || null,
-          saved_at: new Date().toISOString()
+          device_id: u?.device_id || null
         };
         localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(slim));
       }catch{}
@@ -1053,13 +967,12 @@
     function readOfflineUser(){
       try{
         const v = JSON.parse(localStorage.getItem(OFFLINE_USER_KEY) || "null");
-        if(!v || typeof v !== "object") return null;
-        return v;
+        return (v && typeof v === "object") ? v : null;
       }catch{ return null; }
     }
 
     // =========================
-    // ✅ Device/Tab Locks
+    // IDs
     // =========================
     function getOrCreateDeviceId(){
       const KEY = "HAYEK_DEVICE_ID_V1";
@@ -1070,215 +983,6 @@
       }
       return v;
     }
-
-    function getOrCreateTabId(){
-      const KEY = "HAYEK_TAB_ID_V1";
-      let v = sessionStorage.getItem(KEY);
-      if(!v){
-        v = (crypto?.randomUUID?.() || ("tab_" + Math.random().toString(16).slice(2) + Date.now()));
-        sessionStorage.setItem(KEY, v);
-      }
-      return v;
-    }
-
-    let TAB_BLOCKED = false;
-    let TAB_TIMER = null;
-    let TAB_USERNAME = null;
-
-    function lockKeyFor(username){ return `HAYEK_ACTIVE_TAB_LOCK::${username}`; }
-    function nowMs(){ return Date.now(); }
-
-    function readLock(username){
-      try{
-        const raw = localStorage.getItem(lockKeyFor(username));
-        if(!raw) return null;
-        const obj = JSON.parse(raw);
-        if(!obj || typeof obj !== "object") return null;
-        return obj;
-      }catch{ return null; }
-    }
-
-    function writeLock(username, objOrNull){
-      try{
-        if(!objOrNull) localStorage.removeItem(lockKeyFor(username));
-        else localStorage.setItem(lockKeyFor(username), JSON.stringify(objOrNull));
-      }catch{}
-    }
-
-    function stopSingleTabGuard(){
-      if(TAB_TIMER) clearInterval(TAB_TIMER);
-      TAB_TIMER = null;
-      TAB_BLOCKED = false;
-      TAB_USERNAME = null;
-    }
-
-    function startSingleTabGuard(username){
-      stopSingleTabGuard();
-      TAB_USERNAME = username;
-
-      const tabId = getOrCreateTabId();
-      const TTL = 12000;
-      const HEARTBEAT = 4000;
-
-      function isStale(lock){
-        if(!lock?.ts) return true;
-        return (nowMs() - Number(lock.ts)) > TTL;
-      }
-
-      function tryAcquire(){
-        const lock = readLock(username);
-
-        if(!lock || isStale(lock) || lock.tabId === tabId){
-          writeLock(username, { tabId, ts: nowMs() });
-          TAB_BLOCKED = false;
-          return true;
-        }
-
-        TAB_BLOCKED = true;
-        if(!sessionStorage.getItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`)){
-          sessionStorage.setItem(`HAYEK_TAB_BLOCKED_SHOWN::${username}`, "1");
-          showErr(loginErr, "❌ هذا الحساب مفتوح بالفعل في تبويب آخر.\nأغلق التبويب الآخر للمتابعة.");
-        }
-        return false;
-      }
-
-      tryAcquire();
-
-      TAB_TIMER = setInterval(()=>{
-        if(!TAB_USERNAME) return;
-
-        const lock = readLock(username);
-
-        if(lock && lock.tabId === tabId){
-          writeLock(username, { tabId, ts: nowMs() });
-          TAB_BLOCKED = false;
-          return;
-        }
-
-        tryAcquire();
-      }, HEARTBEAT);
-
-      window.addEventListener("storage", (e)=>{
-        if(e.key === lockKeyFor(username)){
-          tryAcquire();
-        }
-      });
-
-      window.addEventListener("beforeunload", ()=>{
-        try{
-          const lock = readLock(username);
-          if(lock && lock.tabId === tabId){
-            writeLock(username, null);
-          }
-        }catch{}
-      });
-    }
-
-    async function enforceDeviceLockForUserRow(u){
-      const deviceId = getOrCreateDeviceId();
-
-      await refreshNetState(false);
-      if(!netNow()){
-        if(!u.device_id){
-          u.device_id = deviceId;
-          saveOfflineUser(u);
-          return u;
-        }
-        if(u.device_id !== deviceId){
-          throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
-        }
-        return u;
-      }
-
-      if(!u.device_id){
-        const { error: uerr } = await supabase
-          .from(USERS_TABLE)
-          .update({ device_id: deviceId })
-          .eq("id", u.id)
-          .is("device_id", null);
-
-        if(uerr) throw new Error(uerr.message || "فشل تحديث device_id");
-
-        const { data, error } = await supabase
-          .from(USERS_TABLE)
-          .select("*")
-          .eq("id", u.id)
-          .limit(1);
-
-        if(error) throw new Error(error.message || "فشل قراءة المستخدم بعد التحديث");
-        if(!data?.length) throw new Error("المستخدم غير موجود بعد التحديث");
-        u = data[0];
-      }
-
-      if(u.device_id !== deviceId){
-        throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
-      }
-
-      return u;
-    }
-
-    async function syncDeviceIdIfNeeded(){
-      await refreshNetState(false);
-      if(!netNow()) return;
-
-      try{
-        if(!USER?.id) return;
-        const deviceId = getOrCreateDeviceId();
-
-        if(!USER.device_id){
-          const { error } = await supabase
-            .from(USERS_TABLE)
-            .update({ device_id: deviceId })
-            .eq("id", USER.id)
-            .is("device_id", null);
-
-          if(!error){
-            USER.device_id = deviceId;
-            saveOfflineUser(USER);
-          }
-        }
-      }catch{}
-    }
-
-    // =========================
-    // ✅ Suggestions
-    // =========================
-    const SUG_CUSTOMERS_KEY = "HAYEK_SUG_CUSTOMERS";
-    const SUG_ITEMS_KEY     = "HAYEK_SUG_ITEMS";
-    const MAX_SUG = 60;
-
-    function readSug(key){
-      try{
-        const arr = JSON.parse(localStorage.getItem(key) || "[]");
-        return Array.isArray(arr) ? arr.filter(Boolean) : [];
-      }catch{ return []; }
-    }
-    function writeSug(key, arr){
-      localStorage.setItem(key, JSON.stringify(arr.slice(0, MAX_SUG)));
-    }
-    function addSug(key, value){
-      const v = String(value || "").trim();
-      if(!v) return;
-
-      const arr = readSug(key);
-      const norm = v.toLowerCase();
-
-      const filtered = arr.filter(x => String(x).toLowerCase() !== norm);
-      filtered.unshift(v);
-      writeSug(key, filtered);
-      renderSug();
-    }
-    function renderDatalist(el, values){
-      el.innerHTML = values.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
-    }
-    function renderSug(){
-      renderDatalist(custList, readSug(SUG_CUSTOMERS_KEY));
-      renderDatalist(itemList, readSug(SUG_ITEMS_KEY));
-    }
-
-    custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
-    itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
-
     function uuid(){
       if(window.crypto?.randomUUID) return crypto.randomUUID();
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c=>{
@@ -1287,17 +991,18 @@
       });
     }
 
-    // ------- STATE -------
+    // =========================
+    // State
+    // =========================
     let USER = null;
     let invoiceId = null;
     let invoiceOpen = false;
-
     let ops = [];
     let expr = "";
     let lastResult = 0;
 
     // =========================
-    // ✅ Feature Flags (optional columns)
+    // Feature flags (safe defaults)
     // =========================
     const DEFAULT_FLAGS = {
       assistant_name: "حايك",
@@ -1330,18 +1035,14 @@
 
       assistantNameEl.textContent = FLAGS.assistant_name || "حايك";
 
-      // hide/show assistant
       fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
       if(!FLAGS.ai_enabled) assistantPanel.style.display = "none";
 
-      // hide footer
       footerNote.style.display = FLAGS.footer_enabled ? "block" : "none";
 
-      // disable print80
       $("btnPrint80").disabled = !FLAGS.print80_enabled;
       $("btnPrint80").style.opacity = FLAGS.print80_enabled ? "1" : "0.55";
 
-      // disable voice
       const voiceEls = [
         $("hayekMicCustomer"), $("hayekMicItem"), $("hayekSmartAdd"),
         $("btnMicAssistant"), $("btnWake"),
@@ -1356,325 +1057,11 @@
       assistantSubEl.textContent = FLAGS.voice_enabled
         ? `قل: "${FLAGS.assistant_name}" ثم الأمر (أو اكتب الأمر هنا).`
         : "الصوت غير مفعل لهذا الحساب. استخدم الكتابة بالأوامر.";
-
-      // wake button state reset
-      btnWake.classList.remove("on");
-      btnWake.textContent = "🎧 استماع";
-    }
-
-    // ------- SUPABASE SAVE -------
-    async function saveInvoice(status){
-      if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
-
-      const customer = custInput.value.trim();
-      const total = calcTotal();
-
-      const payload = {
-        id: invoiceId,
-        owner_id: USER.id,
-        customer_name: customer || null,
-        customer: customer || null,
-        rows: buildRowsWithMeta(customer),
-        total: total,
-        status: status,
-        closed_at: status === "closed" ? new Date().toISOString() : null
-      };
-
-      await refreshNetState(false);
-
-      if(!netNow()){
-        qAdd(payload);
-        return { ok:true, id: invoiceId, queued:true };
-      }
-
-      try{
-        const { data, error } = await supabase
-          .from(INVOICE_TABLE)
-          .upsert(payload, { onConflict: "id" })
-          .select("id")
-          .limit(1);
-
-        if(error){
-          qAdd(payload);
-          return { ok:true, id: invoiceId, queued:true };
-        }
-        return { ok:true, id: (data?.[0]?.id || invoiceId) };
-      }catch{
-        qAdd(payload);
-        return { ok:true, id: invoiceId, queued:true };
-      }
-    }
-
-    function buildRowsWithMeta(customer){
-      const meta = {
-        __meta: true,
-        customer: customer || "",
-        user: USER?.username || "",
-        saved_at: new Date().toISOString()
-      };
-      return [meta, ...ops];
     }
 
     // =========================
-    // ✅ LOGIN عبر Edge Function (hayek-sync)
+    // Helpers
     // =========================
-    async function apiLoginViaEdge(username, password){
-      const deviceId = getOrCreateDeviceId();
-
-      const res = await fetch(HAYEK_SYNC_URL, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-hayek-device": deviceId,
-          "x-hayek-user": String(username||""),
-          "x-hayek-pass": String(password||"")
-        },
-        body: JSON.stringify({ action: "login" })
-      });
-
-      const data = await res.json().catch(()=>null);
-      if(!res.ok || !data?.ok){
-        const err = data?.error || ("HTTP_" + res.status);
-        throw new Error(err);
-      }
-      return data.user;
-    }
-
-    function mapEdgeError(err){
-      const e = String(err||"");
-      if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
-      if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
-      if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
-      if(e === "Missing headers") return "مشكلة في الطلب (headers).";
-      return "فشل تسجيل الدخول:\n" + e;
-    }
-
-    // ------- LOGIN -------
-    async function login(){
-      clearErr(loginErr);
-      const username = $("loginUser").value.trim();
-      const password = $("loginPass").value.trim();
-
-      if(!username || !password){
-        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
-        return;
-      }
-
-      await refreshNetState(true);
-
-      if(!netNow()){
-        const cached = readOfflineUser();
-        if(!cached){
-          showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
-          return;
-        }
-        if(cached.is_blocked){
-          showErr(loginErr, "هذا الحساب محظور.");
-          return;
-        }
-        if(cached.username !== username || cached.password !== password){
-          showErr(loginErr, "❌ لا يمكن التحقق بدون إنترنت.\nأدخل بيانات آخر حساب سجّل دخول على هذا الجهاز.");
-          return;
-        }
-
-        let u = cached;
-
-        try{
-          u = await enforceDeviceLockForUserRow(u);
-        }catch(e){
-          showErr(loginErr, e?.message || "تم منع الدخول");
-          return;
-        }
-
-        startSingleTabGuard(u.username);
-        if(TAB_BLOCKED) return;
-
-        USER = u;
-        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:true }));
-
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${u.username}</b>`;
-        resetAll(true);
-
-        // apply flags (offline: use defaults)
-        applyFlagsFromUserRow(u);
-
-        renderSug();
-        fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
-        toast("وضع أوفلاين ✅");
-        return;
-      }
-
-      try{
-        const edgeUser = await apiLoginViaEdge(username, password);
-
-        let u = {
-          id: edgeUser.id,
-          username: edgeUser.username,
-          full_name: edgeUser.full_name || "",
-          device_id: edgeUser.device_id || null,
-          is_blocked: !!edgeUser.is_blocked,
-          password: password,
-
-          // optional flags from edge (if exists)
-          assistant_name: edgeUser.assistant_name,
-          ai_enabled: edgeUser.ai_enabled,
-          voice_enabled: edgeUser.voice_enabled,
-          print80_enabled: edgeUser.print80_enabled,
-          footer_enabled: edgeUser.footer_enabled
-        };
-
-        if(u.is_blocked){
-          showErr(loginErr, "هذا الحساب محظور.");
-          return;
-        }
-
-        try{
-          u = await enforceDeviceLockForUserRow(u);
-        }catch(e){
-          showErr(loginErr, e?.message || "تم منع الدخول");
-          return;
-        }
-
-        startSingleTabGuard(u.username);
-        if(TAB_BLOCKED) return;
-
-        USER = u;
-        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:false }));
-        saveOfflineUser(u);
-
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${u.username}</b>`;
-        resetAll(true);
-
-        renderSug();
-
-        // try to refresh row to get flags if edge doesn't include them
-        try{
-          const { data } = await supabase.from(USERS_TABLE).select("*").eq("id", u.id).limit(1);
-          if(data?.length){
-            USER = { ...USER, ...data[0], password };
-          }
-        }catch{}
-
-        applyFlagsFromUserRow(USER);
-
-        await qSyncSilently(true);
-        await syncDeviceIdIfNeeded();
-      }catch(e){
-        showErr(loginErr, mapEdgeError(e?.message || e));
-      }
-    }
-
-    async function restoreSession(){
-      try{
-        const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
-        if(!s?.id) return;
-
-        await refreshNetState(true);
-
-        if(!netNow()){
-          const cached = readOfflineUser();
-          if(!cached || cached.id !== s.id) return;
-          if(cached.is_blocked){
-            localStorage.removeItem("HAYEK_USER_SESSION");
-            return;
-          }
-
-          let u = cached;
-
-          try{
-            u = await enforceDeviceLockForUserRow(u);
-          }catch(e){
-            localStorage.removeItem("HAYEK_USER_SESSION");
-            showErr(loginErr, e?.message || "تم منع الدخول");
-            return;
-          }
-
-          startSingleTabGuard(u.username);
-          if(TAB_BLOCKED) return;
-
-          USER = u;
-          loginCard.classList.add("hide");
-          appCard.classList.remove("hide");
-          subtitle.textContent = "فاتورة المستخدم";
-          pill.innerHTML = `<b>${USER.username}</b>`;
-          resetAll(true);
-          renderSug();
-
-          applyFlagsFromUserRow(USER);
-          fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
-          return;
-        }
-
-        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
-        if(error) return;
-        if(!data?.length) return;
-
-        let u = data[0];
-        if(u.is_blocked){
-          localStorage.removeItem("HAYEK_USER_SESSION");
-          return;
-        }
-
-        const cached = readOfflineUser();
-        const pass = cached?.password || "";
-
-        u = { ...u, password: pass };
-
-        try{
-          u = await enforceDeviceLockForUserRow(u);
-        }catch(e){
-          localStorage.removeItem("HAYEK_USER_SESSION");
-          showErr(loginErr, e?.message || "تم منع الدخول");
-          return;
-        }
-
-        startSingleTabGuard(u.username);
-        if(TAB_BLOCKED) return;
-
-        USER = u;
-        saveOfflineUser(u);
-
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${USER.username}</b>`;
-        resetAll(true);
-        renderSug();
-
-        applyFlagsFromUserRow(USER);
-
-        await qSyncSilently(true);
-        await syncDeviceIdIfNeeded();
-      }catch{}
-    }
-
-    function logout(){
-      USER = null;
-      localStorage.removeItem("HAYEK_USER_SESSION");
-      stopSingleTabGuard();
-
-      // stop wake if on
-      try{
-        if(window.HAYEK_WAKE_TOGGLE && btnWake.classList.contains("on")){
-          window.HAYEK_WAKE_TOGGLE();
-        }
-      }catch{}
-
-      assistantPanel.style.display = "none";
-      fabHayek.style.display = "none";
-
-      loginCard.classList.remove("hide");
-      appCard.classList.add("hide");
-      subtitle.textContent = "تسجيل دخول المستخدم";
-      pill.innerHTML = "<b>غير مسجل</b>";
-    }
-
     function setTab(which){
       if(which==="calc"){
         tabCalc.classList.add("active");
@@ -1717,22 +1104,46 @@
       return c;
     }
 
-    async function ensureInvoiceOpened(){
-      const customer = requireCustomer();
-      if(!customer) return false;
-      if(invoiceOpen) return true;
+    // =========================
+    // Suggestions
+    // =========================
+    const SUG_CUSTOMERS_KEY = "HAYEK_SUG_CUSTOMERS";
+    const SUG_ITEMS_KEY     = "HAYEK_SUG_ITEMS";
+    const MAX_SUG = 60;
 
-      invoiceId = uuid();
-      invoiceOpen = true;
-
-      const r = await saveInvoice("open");
-      if(!r.ok){
-        showErr(appErr, "فشل الحفظ (open):\n" + r.msg + "\n\n✅ تأكد أن عمود id Primary Key في Supabase.");
-        return false;
-      }
-      return true;
+    function readSug(key){
+      try{
+        const arr = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(arr) ? arr.filter(Boolean) : [];
+      }catch{ return []; }
+    }
+    function writeSug(key, arr){
+      localStorage.setItem(key, JSON.stringify(arr.slice(0, MAX_SUG)));
+    }
+    function addSug(key, value){
+      const v = String(value || "").trim();
+      if(!v) return;
+      const arr = readSug(key);
+      const norm = v.toLowerCase();
+      const filtered = arr.filter(x => String(x).toLowerCase() !== norm);
+      filtered.unshift(v);
+      writeSug(key, filtered);
+      renderSug();
+    }
+    function renderDatalist(el, values){
+      el.innerHTML = values.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
+    }
+    function renderSug(){
+      renderDatalist(custList, readSug(SUG_CUSTOMERS_KEY));
+      renderDatalist(itemList, readSug(SUG_ITEMS_KEY));
     }
 
+    custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
+    itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
+
+    // =========================
+    // Invoice save
+    // =========================
     function calcTotal(){
       let t = 0;
       for(const o of ops){
@@ -1743,6 +1154,66 @@
       return Math.round(t*100)/100;
     }
 
+    function buildRowsWithMeta(customer){
+      const meta = { __meta:true, customer: customer || "", user: USER?.username || "", saved_at: new Date().toISOString() };
+      return [meta, ...ops];
+    }
+
+    async function saveInvoice(status){
+      if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
+
+      const customer = custInput.value.trim();
+      const total = calcTotal();
+
+      const payload = {
+        id: invoiceId,
+        owner_id: USER.id,
+        customer_name: customer || null,
+        customer: customer || null,
+        rows: buildRowsWithMeta(customer),
+        total: total,
+        status: status,
+        closed_at: status === "closed" ? new Date().toISOString() : null
+      };
+
+      await refreshNetState(false);
+      if(!NET_OK){
+        qAdd(payload);
+        return { ok:true, id: invoiceId, queued:true };
+      }
+
+      try{
+        const { data, error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict:"id" }).select("id").limit(1);
+        if(error){
+          qAdd(payload);
+          return { ok:true, id: invoiceId, queued:true };
+        }
+        return { ok:true, id: (data?.[0]?.id || invoiceId) };
+      }catch{
+        qAdd(payload);
+        return { ok:true, id: invoiceId, queued:true };
+      }
+    }
+
+    async function ensureInvoiceOpened(){
+      const customer = requireCustomer();
+      if(!customer) return false;
+      if(invoiceOpen) return true;
+
+      invoiceId = uuid();
+      invoiceOpen = true;
+
+      const r = await saveInvoice("open");
+      if(!r.ok){
+        showErr(appErr, "فشل الحفظ (open).");
+        return false;
+      }
+      return true;
+    }
+
+    // =========================
+    // Calculator
+    // =========================
     function sanitizeForEval(s){
       return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
 
@@ -1780,7 +1251,6 @@
         logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
         return;
       }
-
       logBody.innerHTML = ops.map((o, idx)=>{
         const t = o.time || nowTime();
         const exp = (o.expr ? `${o.expr} = ${o.result}` : `${o.result}`);
@@ -1825,12 +1295,8 @@
       setExpr("");
       toast("تمت الإضافة ✅");
 
-      const r = await saveInvoice("open");
-      if(!r.ok){
-        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\n" + r.msg + "\n\n✅ غالباً id ليس Primary Key.");
-      }
-
-      await qSyncSilently(false);
+      await saveInvoice("open");
+      await qSyncSilently();
     }
 
     async function clearOperations(){
@@ -1842,29 +1308,19 @@
       resView.textContent = "0";
       renderLog();
 
-      if(invoiceOpen){
-        const r = await saveInvoice("open");
-        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
-      }
+      if(invoiceOpen) await saveInvoice("open");
       toast("تم المسح ✅");
-      await qSyncSilently(false);
+      await qSyncSilently();
     }
 
     async function deleteLastLine(){
       clearErr(appErr);
-      if(!ops.length){
-        toast("لا يوجد سطور");
-        return;
-      }
+      if(!ops.length){ toast("لا يوجد سطور"); return; }
       ops.shift();
       renderLog();
-
-      if(invoiceOpen){
-        const r = await saveInvoice("open");
-        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
-      }
+      if(invoiceOpen) await saveInvoice("open");
       toast("تم حذف آخر سطر ✅");
-      await qSyncSilently(false);
+      await qSyncSilently();
     }
 
     async function deleteLineAt(idx){
@@ -1873,15 +1329,14 @@
       if(!Number.isFinite(i) || i < 0 || i >= ops.length) return;
       ops.splice(i, 1);
       renderLog();
-
-      if(invoiceOpen){
-        const r = await saveInvoice("open");
-        if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
-      }
+      if(invoiceOpen) await saveInvoice("open");
       toast("تم حذف السطر ✅");
-      await qSyncSilently(false);
+      await qSyncSilently();
     }
 
+    // =========================
+    // PDF (Arabic OK, small size)
+    // =========================
     function buildPrintArea(){
       const pa = $("printArea");
       const customer = (custInput.value.trim() || "—");
@@ -1928,7 +1383,6 @@
       return pa;
     }
 
-    // ✅ PDF: Arabic correct + SMALL (JPEG compressed)
     async function exportPDF(){
       clearErr(appErr);
 
@@ -1938,24 +1392,11 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      const r = await saveInvoice("closed");
-      if(!r.ok){
-        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
-        return;
-      }
-
-      addSug(SUG_CUSTOMERS_KEY, customer);
+      await saveInvoice("closed");
 
       const pa = buildPrintArea();
 
-      // ✅ keep Arabic + reduce size
-      const canvas = await html2canvas(pa,{
-        scale: 1.15,
-        useCORS: true,
-        backgroundColor:"#ffffff"
-      });
-
-      // JPEG compression => small file
+      const canvas = await html2canvas(pa,{ scale: 1.15, useCORS:true, backgroundColor:"#ffffff" });
       const imgData = canvas.toDataURL("image/jpeg", 0.60);
 
       const { jsPDF } = window.jspdf;
@@ -1982,32 +1423,24 @@
       const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}.pdf`);
 
-      toast("تم تنزيل PDF ✅ (حجم صغير)");
+      toast("تم تنزيل PDF ✅");
       resetAll(false);
-
-      await qSyncSilently(false);
+      await qSyncSilently();
     }
 
-    // ✅ Print 80mm (works via Android Print Service / window.print)
+    // =========================
+    // Print 80mm (Browser print dialog)
+    // =========================
     function print80mm(){
       clearErr(appErr);
-
       const customer = custInput.value.trim();
-      if(!customer){
-        showErr(appErr, "اكتب اسم الزبون أولاً (إجباري) قبل الطباعة.");
-        custInput.focus();
-        return;
-      }
+      if(!customer){ showErr(appErr, "اكتب اسم الزبون أولاً (إجباري) قبل الطباعة."); custInput.focus(); return; }
 
-      // Build same invoice view
       const pa = buildPrintArea();
       const html = pa.innerHTML;
 
       const w = window.open("", "_blank");
-      if(!w){
-        alert("❌ المتصفح منع فتح نافذة جديدة. فعّل Popups ثم جرّب.");
-        return;
-      }
+      if(!w){ alert("❌ المتصفح منع فتح نافذة جديدة. فعّل Popups ثم جرّب."); return; }
 
       w.document.open();
       w.document.write(`
@@ -2032,31 +1465,22 @@
           </style>
         </head>
         <body>
-          <div class="paper">
-            ${html}
-          </div>
-          <script>
-            window.onload = () => {
-              setTimeout(() => { window.print(); }, 250);
-            };
-          </script>
+          <div class="paper">${html}</div>
+          <script>window.onload=()=>setTimeout(()=>window.print(),250);</script>
         </body>
         </html>
       `);
       w.document.close();
-
       toast("اختر الطابعة من نافذة الطباعة ✅");
     }
 
-    // ✅ EXPOSE: Smart voice add line
+    // =========================
+    // Expose smart voice add
+    // =========================
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
-        if(!c){
-          showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
-          custInput.focus();
-          return;
-        }
+        if(!c){ showErr(appErr, "اكتب اسم الزبون أولاً (إجباري)."); custInput.focus(); return; }
         clearErr(appErr);
 
         if(item && String(item).trim()){
@@ -2066,14 +1490,9 @@
         }
 
         const exprNorm = String(expression||"").trim();
-        if(!exprNorm){
-          showErr(appErr, "لم يتم العثور على عملية حسابية.");
-          return;
-        }
+        if(!exprNorm){ showErr(appErr, "لم يتم العثور على عملية حسابية."); return; }
 
-        const finalExpr = exprNorm.replaceAll("_","-");
-
-        setExpr(finalExpr);
+        setExpr(exprNorm);
         await equalsAndLog();
       }catch(e){
         showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
@@ -2081,7 +1500,7 @@
     };
 
     // =========================
-    // ✅ Assistant "حايك"
+    // Assistant
     // =========================
     function aiLogUser(t){
       assistantLogEl.insertAdjacentHTML("beforeend", `<div class="msgU">👤 ${escapeHtml(t)}</div>`);
@@ -2095,104 +1514,55 @@
     function aiNormalizeCommand(raw){
       let s = String(raw||"").trim();
       if(!s) return "";
-
-      // remove wake name if present
       const name = (FLAGS.assistant_name || "حايك").trim();
-      if(name && s.startsWith(name)){
-        s = s.slice(name.length).trim();
-      }
-      // also allow "hayek"
+      if(name && s.startsWith(name)) s = s.slice(name.length).trim();
       if(/^hayek/i.test(s)) s = s.replace(/^hayek/i,"").trim();
-
-      // normalize Arabic punctuation/spaces
       s = s.replace(/[؟]/g,"?").replace(/\s+/g," ").trim();
       return s;
     }
 
     async function aiRun(raw, fromWake=false){
-      if(!FLAGS.ai_enabled){
-        if(!fromWake) aiLogHayek("الميزة غير مفعلة لهذا الحساب.");
-        return;
-      }
+      if(!FLAGS.ai_enabled){ if(!fromWake) aiLogHayek("الميزة غير مفعلة لهذا الحساب."); return; }
 
       const cmd = aiNormalizeCommand(raw);
-      if(!cmd){
-        if(!fromWake) aiLogHayek("اكتب أمرًا. مثال: pdf / طباعة / احذف آخر سطر / مسح / سجل");
-        return;
-      }
+      if(!cmd){ if(!fromWake) aiLogHayek("اكتب أمرًا. مثال: pdf / طباعة / احذف آخر سطر / مسح / سجل"); return; }
 
-      // Friendly mapping
       const c = cmd.toLowerCase();
 
       try{
-        if(c.includes("مساعدة") || c === "help" || c.includes("اوامر") || c.includes("أوامر")){
-          aiLogHayek("الأوامر المتاحة: pdf ، طباعة 80 ، احذف آخر سطر ، مسح العمليات ، افتح السجل ، افتح الحاسبة.");
-          return;
-        }
-
         if(c.includes("pdf") || c.includes("تصدير") || c.includes("تنزيل")){
-          aiLogHayek("تمام ✅ سأصدر PDF الآن.");
+          if(!fromWake) aiLogHayek("تمام ✅ سأصدر PDF الآن.");
           await exportPDF();
           return;
         }
-
         if(c.includes("طباعة") || c.includes("print") || c.includes("80")){
-          if(!FLAGS.print80_enabled){
-            aiLogHayek("الطباعة 80مم غير مفعلة لهذا الحساب.");
-            return;
-          }
-          aiLogHayek("تمام ✅ سأفتح نافذة الطباعة 80مم.");
+          if(!FLAGS.print80_enabled){ if(!fromWake) aiLogHayek("الطباعة غير مفعلة."); return; }
+          if(!fromWake) aiLogHayek("تمام ✅ سأفتح نافذة الطباعة.");
           print80mm();
           return;
         }
-
         if(c.includes("احذف") && (c.includes("آخر") || c.includes("اخر") || c.includes("last"))){
-          aiLogHayek("تم ✅ سأحذف آخر سطر.");
+          if(!fromWake) aiLogHayek("تم ✅ سأحذف آخر سطر.");
           await deleteLastLine();
           return;
         }
-
         if(c.includes("مسح") || c.includes("clear")){
-          aiLogHayek("تم ✅ سأمسح العمليات.");
+          if(!fromWake) aiLogHayek("تم ✅ سأمسح العمليات.");
           await clearOperations();
           return;
         }
-
         if(c.includes("سجل") || c.includes("log")){
           setTab("log");
-          aiLogHayek("فتحت سجل العمليات ✅");
+          if(!fromWake) aiLogHayek("فتحت سجل العمليات ✅");
           return;
         }
-
         if(c.includes("حاسبة") || c.includes("calc")){
           setTab("calc");
-          aiLogHayek("فتحت الحاسبة ✅");
+          if(!fromWake) aiLogHayek("فتحت الحاسبة ✅");
           return;
         }
 
-        // set customer: "العميل أبو أحمد" / "زبون ..."
-        if(c.startsWith("العميل ") || c.startsWith("زبون ") || c.startsWith("customer ")){
-          const v = cmd.replace(/^العميل\s+/,"").replace(/^زبون\s+/,"").replace(/^customer\s+/i,"").trim();
-          if(v){
-            custInput.value = v;
-            custInput.dispatchEvent(new Event("change",{bubbles:true}));
-            aiLogHayek("تمام ✅ تم وضع اسم الزبون.");
-            return;
-          }
-        }
-
-        // set item: "البيان ..." / "منتج ..."
-        if(c.startsWith("البيان ") || c.startsWith("منتج ") || c.startsWith("item ")){
-          const v = cmd.replace(/^البيان\s+/,"").replace(/^منتج\s+/,"").replace(/^item\s+/i,"").trim();
-          if(v){
-            itemInput.value = v;
-            itemInput.dispatchEvent(new Event("change",{bubbles:true}));
-            aiLogHayek("تمام ✅ تم وضع البيان.");
-            return;
-          }
-        }
-
-        aiLogHayek("ما فهمت الأمر. جرّب: pdf / طباعة 80 / احذف آخر سطر / مسح / سجل");
+        if(!fromWake) aiLogHayek("ما فهمت الأمر. جرّب: pdf / طباعة 80 / احذف آخر سطر / مسح / سجل");
       }catch(e){
         if(!fromWake) aiLogHayek("حدث خطأ: " + (e?.message || e));
       }
@@ -2212,26 +1582,122 @@
       if(!t) return;
       aiLogUser(t);
       aiRun(t, false);
+      assistantInput.value = "";
     };
 
-    function closeAssistant(){
+    function closeAssistant(){ assistantPanel.style.display = "none"; }
+
+    // =========================
+    // Login (Edge function) + offline fallback
+    // =========================
+    async function apiLoginViaEdge(username, password){
+      const deviceId = getOrCreateDeviceId();
+
+      const res = await fetch(HAYEK_SYNC_URL, {
+        method: "POST",
+        headers: {
+          "content-type":"application/json",
+          "x-hayek-device": deviceId,
+          "x-hayek-user": String(username||""),
+          "x-hayek-pass": String(password||"")
+        },
+        body: JSON.stringify({ action:"login" })
+      });
+
+      const data = await res.json().catch(()=>null);
+      if(!res.ok || !data?.ok){
+        const err = data?.error || ("HTTP_" + res.status);
+        throw new Error(err);
+      }
+      return data.user;
+    }
+
+    function mapEdgeError(err){
+      const e = String(err||"");
+      if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
+      if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
+      if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
+      return "فشل تسجيل الدخول:\n" + e;
+    }
+
+    async function login(){
+      clearErr(loginErr);
+      const username = $("loginUser").value.trim();
+      const password = $("loginPass").value.trim();
+      if(!username || !password){ showErr(loginErr, "اكتب اسم المستخدم وكلمة السر."); return; }
+
+      await refreshNetState(true);
+
+      if(!NET_OK){
+        const cached = readOfflineUser();
+        if(!cached){ showErr(loginErr, "❌ لا يوجد دخول محفوظ. سجّل مرة واحدة مع الإنترنت."); return; }
+        if(cached.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
+        if(cached.username !== username || cached.password !== password){
+          showErr(loginErr, "❌ لا يمكن التحقق بدون إنترنت.\nاستخدم آخر حساب سجّل دخول على هذا الجهاز.");
+          return;
+        }
+        USER = cached;
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = "فاتورة المستخدم";
+        pill.innerHTML = `<b>${USER.username}</b>`;
+        applyFlagsFromUserRow(USER);
+        renderSug();
+        resetAll(true);
+        toast("وضع أوفلاين ✅");
+        return;
+      }
+
+      try{
+        const edgeUser = await apiLoginViaEdge(username, password);
+
+        USER = {
+          id: edgeUser.id,
+          username: edgeUser.username,
+          full_name: edgeUser.full_name || "",
+          device_id: edgeUser.device_id || null,
+          is_blocked: !!edgeUser.is_blocked,
+          password: password,
+          assistant_name: edgeUser.assistant_name,
+          ai_enabled: edgeUser.ai_enabled,
+          voice_enabled: edgeUser.voice_enabled,
+          print80_enabled: edgeUser.print80_enabled,
+          footer_enabled: edgeUser.footer_enabled
+        };
+
+        if(USER.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
+
+        saveOfflineUser(USER);
+
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = "فاتورة المستخدم";
+        pill.innerHTML = `<b>${USER.username}</b>`;
+        applyFlagsFromUserRow(USER);
+        renderSug();
+        resetAll(true);
+
+        await qSyncSilently();
+      }catch(e){
+        showErr(loginErr, mapEdgeError(e?.message || e));
+      }
+    }
+
+    function logout(){
+      USER = null;
+      loginCard.classList.remove("hide");
+      appCard.classList.add("hide");
+      subtitle.textContent = "تسجيل دخول المستخدم";
+      pill.innerHTML = "<b>غير مسجل</b>";
       assistantPanel.style.display = "none";
+      fabHayek.style.display = "none";
     }
 
     // =========================
-    // ✅ binds
+    // Bind UI
     // =========================
-    document.getElementById("loginCard").addEventListener("submit", (e)=>{
-      e.preventDefault();
-      login();
-    });
-
-    $("btnClear").addEventListener("click", ()=>{
-      $("loginUser").value="";
-      $("loginPass").value="";
-      clearErr(loginErr);
-    });
-
+    $("loginCard").addEventListener("submit", (e)=>{ e.preventDefault(); login(); });
+    $("btnClear").addEventListener("click", ()=>{ $("loginUser").value=""; $("loginPass").value=""; clearErr(loginErr); });
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
@@ -2252,60 +1718,40 @@
     $("btnDelLast").addEventListener("click", deleteLastLine);
     $("btnPrint80").addEventListener("click", print80mm);
 
-    // delete row in log (event delegation)
     logBody.addEventListener("click", (e)=>{
       const b = e.target.closest("button[data-del]");
       if(!b) return;
-      const idx = b.getAttribute("data-del");
-      deleteLineAt(idx);
+      deleteLineAt(b.getAttribute("data-del"));
     });
 
-    // assistant UI
     fabHayek.addEventListener("click", ()=> window.HAYEK_AI_OPEN());
     btnCloseAssistant.addEventListener("click", closeAssistant);
     btnSendAssistant.addEventListener("click", ()=> window.HAYEK_AI_SUBMIT(assistantInput.value));
     assistantInput.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){
-        e.preventDefault();
-        window.HAYEK_AI_SUBMIT(assistantInput.value);
-        assistantInput.value = "";
-      }
+      if(e.key === "Enter"){ e.preventDefault(); window.HAYEK_AI_SUBMIT(assistantInput.value); }
     });
 
-    // wake toggle
     btnWake.addEventListener("click", ()=>{
-      if(!FLAGS.voice_enabled){
-        aiLogHayek("الصوت غير مفعّل لهذا الحساب.");
-        return;
-      }
+      if(!FLAGS.voice_enabled){ aiLogHayek("الصوت غير مفعّل لهذا الحساب."); return; }
       const ok = window.HAYEK_WAKE_TOGGLE?.();
-      if(ok){
-        if(btnWake.classList.contains("on")){
-          btnWake.classList.remove("on");
-          btnWake.textContent = "🎧 استماع";
-          aiLogHayek("تم إيقاف الاستماع.");
-        }else{
-          btnWake.classList.add("on");
-          btnWake.textContent = "🎧 استماع (شغال)";
-          aiLogHayek(`تم تشغيل الاستماع ✅ قل: "${FLAGS.assistant_name} ..."`);
+      if(!ok) return;
 
-          // important hint if browser blocks
-          aiLogHayek("إذا ما استجاب: افتح إعدادات الموقع → Microphone → Allow ثم أعد تحميل الصفحة.");
-        }
+      if(btnWake.classList.contains("on")){
+        btnWake.classList.remove("on");
+        btnWake.textContent = "🎧 استماع";
+        aiLogHayek("تم إيقاف الاستماع.");
+      }else{
+        btnWake.classList.add("on");
+        btnWake.textContent = "🎧 استماع (شغال)";
+        aiLogHayek(`تم تشغيل الاستماع ✅ قل: "${FLAGS.assistant_name} ..."`);
+
       }
     });
 
-    // initial
+    // init
     setTab("calc");
     renderSug();
-    refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
-    restoreSession();
-
-    try{
-      if("serviceWorker" in navigator){
-        navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-      }
-    }catch{}
+    refreshNetState(true);
   </script>
 </body>
 </html>
