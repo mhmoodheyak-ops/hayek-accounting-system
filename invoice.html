@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HAYEK — نظام الفاتورة</title>
 
-  <!-- ✅ PWA / ICON -->
+  <!-- ✅ PWA / ICON (FINAL) -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -13,16 +13,19 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- ✅ PDF -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <!-- ✅ PDF TEXT (Small size) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <!-- ✅ Arabic shaping / fonts helper (light) -->
+  <script src="https://cdn.jsdelivr.net/npm/@bajzar/arabic-fonts@1.0.0/arabic.js"></script>
 
   <style>
     :root{
       --bg:#071018; --panel:#0e1b26; --line:rgba(255,255,255,.08);
       --txt:#e9f1ff; --muted:#98a8c2; --blue:#1f5bd8; --blue2:#2967ee;
       --shadow:0 12px 35px rgba(0,0,0,.35); --radius:22px;
-      --green:#22c55e; --red:#ff4d4d;
+      --green:#22c55e;
+      --danger:#ff4d4d;
     }
     *{box-sizing:border-box}
     body{
@@ -35,7 +38,7 @@
     .wrap{width:100%; max-width:420px}
     .top{display:flex; align-items:center; justify-content:space-between; padding:10px 10px 14px}
     .brand{display:flex; align-items:center; gap:10px}
-    .dot{width:12px;height:12px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 6px rgba(34,197,94,.12)}
+    .dot{width:12px;height:12px;border-radius:999px;background:var(--green);box-shadow:0 0 0 6px rgba(34,197,94,.12)}
     .ttl{font-weight:900}
     .sub{font-size:12px;color:var(--muted);margin-top:2px}
     .pill{border:1px solid var(--line); background:rgba(255,255,255,.04); padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
@@ -43,8 +46,8 @@
       background: linear-gradient(180deg, rgba(14,27,38,.95) 0%, rgba(10,20,30,.92) 100%);
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
-    .hint{color:#dbe8ff; font-size:14px; line-height:1.9; font-weight:900;}
-    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; font-weight:800;}
+    .hint{color:#dbe8ff;font-size:14px;line-height:1.9;font-weight:900;}
+    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px;font-weight:800;}
     input{
       width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
       background: rgba(0,0,0,.18); color:var(--txt); outline:none;
@@ -61,10 +64,10 @@
     .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .btn.blue{background:var(--blue); border-color:rgba(31,91,216,.2)}
     .btn.blue:hover{background:var(--blue2)}
-    .btn.green{background:rgba(34,197,94,.22); border-color:rgba(34,197,94,.35)}
-    .btn.green:hover{background:rgba(34,197,94,.30)}
-    .btn.red{background:rgba(255,77,77,.18); border-color:rgba(255,77,77,.25)}
-    .btn.red:hover{background:rgba(255,77,77,.24)}
+    .btn.danger{background:rgba(255,77,77,.18); border-color:rgba(255,77,77,.25)}
+    .btn.danger:hover{background:rgba(255,77,77,.25)}
+    .btn.good{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.30)}
+    .btn.good:hover{background:rgba(34,197,94,.24)}
     .btn.small{width:auto; padding:9px 12px; border-radius:14px; font-size:12px}
     .sep{height:1px; background:var(--line); margin:12px 0}
     .error{
@@ -86,45 +89,17 @@
     }
     .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
-
-    .exprTitle{font-size:14px; color:#cfe0ff; margin-bottom:8px; font-weight:900;}
+    .exprTitle{font-size:14px;color:#cfe0ff;margin-bottom:8px;font-weight:900;}
     .expr{
-      width:100%;
-      border:2px solid rgba(0,0,0,.16);
-      background:#ffffff;
-      color:#000000;
-      border-radius:16px;
-      padding:12px;
-      text-align:right;
-      min-height:52px;
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      white-space:nowrap;
-      overflow:auto;
-      font-weight:1000;
-      font-size:20px;
+      width:100%; border:2px solid rgba(0,0,0,.16); background:#ffffff; color:#000000;
+      border-radius:16px; padding:12px; text-align:right; min-height:52px; display:flex;
+      align-items:center; justify-content:flex-end; white-space:nowrap; overflow:auto;
+      font-weight:1000; font-size:20px;
     }
-    .resLine{
-      margin-top:10px;
-      display:flex;
-      justify-content:flex-end;
-      gap:8px;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:900;
-    }
+    .resLine{margin-top:10px;display:flex;justify-content:flex-end;gap:8px;color:var(--muted);font-size:13px;font-weight:900;}
     .resLine b{
-      color:#000;
-      font-size:18px;
-      font-weight:1000;
-      background:#fff;
-      border:2px solid rgba(0,0,0,.12);
-      padding:6px 10px;
-      border-radius:12px;
-      min-width:70px;
-      text-align:center;
-      display:inline-block;
+      color:#000; font-size:18px; font-weight:1000; background:#fff; border:2px solid rgba(0,0,0,.12);
+      padding:6px 10px; border-radius:12px; min-width:70px; text-align:center; display:inline-block;
     }
     .keys{margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
     .key{
@@ -138,12 +113,7 @@
     .key.back{grid-column:3 / span 2}
     .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
     .footerNote{
-      margin-top:10px;
-      text-align:center;
-      font-size:12px;
-      color:#cfe0ff;
-      line-height:1.8;
-      font-weight:900;
+      margin-top:10px; text-align:center; font-size:12px; color:#cfe0ff; line-height:1.8; font-weight:900;
     }
     .logTable{margin-top:10px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(0,0,0,.10)}
     table{width:100%; border-collapse:collapse}
@@ -153,161 +123,68 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* PDF hidden area */
-    #printArea{
-      position:fixed; left:-9999px; top:0;
-      width:794px;
-      background:#fff;
-      color:#111827;
-      padding:22px;
-      direction:rtl;
-      font-family:Arial,"Segoe UI",Tahoma,sans-serif;
-    }
-    .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
-    .p-header{text-align:center; padding:18px 16px;}
-    .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
-    .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
-    .p-field{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
-    }
-    .p-field .k{font-size:20px; font-weight:900; color:#000;}
-    .p-field .v{font-size:20px; font-weight:900; color:#000;}
-    .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
-    #printArea table{width:100%; border-collapse:collapse; background:#fff;}
-    #printArea thead th{
-      font-size:18px; font-weight:1000; padding:12px 10px;
-      border-bottom:2px solid #111; background:#fff; color:#000;
-    }
-    #printArea tbody td{
-      font-size:16px; font-weight:1000; padding:12px 10px;
-      border-bottom:1px solid #111; background:#fff; color:#000;
-    }
-    #printArea tbody tr:last-child td{border-bottom:0;}
-    .p-totalBox{
-      border:2px dashed #111; border-radius:16px; padding:14px 16px;
-      display:flex; justify-content:space-between; margin-top:12px;
-      font-weight:1000; font-size:20px; color:#000;
-    }
-    .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
-    .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
-    .p-phone{
-      display:inline-block; margin-top:12px; border:2px solid #0a7a55; color:#0a7a55;
-      border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
-    }
-
-    /* Voice mic buttons */
+    /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
       width:46px; min-width:46px; height:46px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--txt);
-      font-weight:1000;
-      cursor:pointer;
-      transition:.15s;
+      border-radius:14px; border:1px solid var(--line);
+      background: rgba(255,255,255,.06); color: var(--txt);
+      font-weight:1000; cursor:pointer; transition:.15s;
       display:flex; align-items:center; justify-content:center;
     }
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
 
-    /* Assistant */
-    .fab{
-      position:fixed;
-      right:16px;
-      bottom:78px;
-      z-index:9998;
-      width:58px;height:58px;border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(31,91,216,.35);
-      box-shadow:0 12px 35px rgba(0,0,0,.40);
-      display:none;
-      cursor:pointer;
-      color:#fff;
-      font-weight:1000;
-      font-size:18px;
-    }
-    .fab:hover{transform:translateY(-1px); background:rgba(31,91,216,.45)}
-    .assistant{
-      position:fixed;
-      inset:auto 14px 14px 14px;
-      max-width:420px;
-      margin:0 auto;
-      z-index:9999;
-      display:none;
-    }
-    .assistantCard{
+    /* ✅ Assistant panel */
+    .assistantPanel{
+      margin-top:10px;
       border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(14,27,38,.98) 0%, rgba(10,20,30,.96) 100%);
-      border-radius:22px;
-      box-shadow:0 12px 35px rgba(0,0,0,.45);
-      padding:12px;
+      background:rgba(0,0,0,.12);
+      border-radius:18px;
+      overflow:hidden;
     }
-    .assistantTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .assistantName{
-      font-weight:1000;
-      color:#eaf2ff;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .assistantDot{
-      width:10px;height:10px;border-radius:999px;
-      background:var(--green);
-      box-shadow:0 0 0 6px rgba(34,197,94,.12);
-    }
-    .assistantSmall{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:800;
-      line-height:1.6;
-      margin-top:2px;
-    }
-    .assistantLog{
-      max-height:170px;
-      overflow:auto;
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:rgba(0,0,0,.14);
-      padding:10px;
-      font-size:12px;
-      line-height:1.7;
-    }
-    .msgU{color:#dbe8ff; font-weight:900; margin-top:6px}
-    .msgA{color:#fff; font-weight:900; margin-top:6px}
-    .assistantInputRow{display:flex; gap:8px; margin-top:10px; align-items:center}
-    .assistantInputRow input{flex:1}
-    .assistantHint{
-      font-size:11px;
-      color:#cfe0ff;
-      opacity:.95;
-      margin-top:8px;
-      font-weight:900;
-      line-height:1.7;
-      text-align:center;
-    }
-    .miniBtn{
-      width:auto;
+    .assistantHead{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
       padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:var(--txt);
-      font-weight:1000;
-      cursor:pointer;
-      font-size:12px;
-      white-space:nowrap;
+      background:rgba(255,255,255,.04);
     }
-    .miniBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
-    .miniBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
-    .miniBtn.red{background:rgba(255,77,77,.16); border-color:rgba(255,77,77,.25)}
+    .assistantTitle{font-weight:1000; font-size:13px; color:#dbe8ff}
+    .assistantLog{
+      padding:10px 12px;
+      max-height:160px;
+      overflow:auto;
+      font-size:12px;
+      line-height:1.9;
+      color:#eaf2ff;
+      white-space:pre-wrap;
+    }
+    .assistantLog .muted{color:#a8b7d2}
+    .assistantInputRow{
+      display:flex; gap:10px; padding:10px 12px; border-top:1px solid var(--line);
+      background:rgba(0,0,0,.10);
+    }
+    .assistantInputRow input{
+      flex:1;
+      padding:11px 12px;
+      border-radius:14px;
+      font-weight:900;
+    }
+    .assistantInputRow .btn{width:auto; padding:10px 12px; border-radius:14px; font-size:12px}
+    .miniGrid{
+      display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;
+    }
+
+    /* ✅ 80mm print template (in new window) */
+    .p80{
+      width:80mm; margin:0 auto; font-family:Arial, Tahoma, sans-serif;
+      color:#000; direction:rtl;
+    }
+    .p80 h1{font-size:16px;margin:0 0 6px 0;text-align:center}
+    .p80 .meta{font-size:12px;margin:2px 0}
+    .p80 table{width:100%; border-collapse:collapse; font-size:12px}
+    .p80 th,.p80 td{border-bottom:1px dashed #000; padding:4px 0; text-align:right}
+    .p80 .total{font-weight:900; font-size:14px; margin-top:8px; display:flex; justify-content:space-between}
+    .p80 .foot{margin-top:10px; font-size:11px; text-align:center}
   </style>
 </head>
 
@@ -324,7 +201,7 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
-    <!-- LOGIN -->
+    <!-- ✅ login -->
     <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
@@ -338,15 +215,19 @@
       <div class="error" id="loginErr"></div>
     </form>
 
-    <!-- APP -->
+    <!-- ✅ app -->
     <div class="card hide" id="appCard">
-      <div class="row" style="align-items:center">
-        <button class="btn small" id="btnLogout" type="button">خروج</button>
+      <div class="row" style="align-items:center; justify-content:space-between">
+        <button class="btn small" id="btnLogout">خروج</button>
+        <div style="display:flex; gap:10px; align-items:center">
+          <span id="netBadge" class="pill" style="font-size:11px">…</span>
+        </div>
       </div>
 
       <div class="sep"></div>
 
-      <div style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
+      <!-- ✅ Voice language toggle -->
+      <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
         <button class="btn small" id="hayekLangTR" type="button">Türkçe</button>
@@ -366,8 +247,28 @@
       </div>
       <datalist id="itemList"></datalist>
 
+      <!-- ✅ Smart voice add -->
       <div style="margin-top:10px">
         <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
+      </div>
+
+      <!-- ✅ Assistant (Hayek) -->
+      <div class="assistantPanel" id="assistantPanel">
+        <div class="assistantHead">
+          <div class="assistantTitle">🤖 المساعد: <b id="assistantNameLabel">حايك</b></div>
+          <div style="display:flex; gap:10px">
+            <button class="btn small good" id="btnHayekOn" type="button">تشغيل حايك</button>
+            <button class="btn small" id="btnHayekOff" type="button">إيقاف</button>
+          </div>
+        </div>
+        <div class="assistantLog" id="assistantLog">
+          <span class="muted">قل: "حايك فتح الحاسبة" أو "حايك تصدير pdf" أو "حايك حذف آخر سطر"</span>
+        </div>
+        <div class="assistantInputRow">
+          <input id="assistantText" placeholder='اكتب أمر: "حايك تصدير pdf"' autocomplete="off" />
+          <button class="btn blue" id="assistantSend" type="button">إرسال</button>
+          <button class="btn" id="assistantMic" type="button" title="أمر بالصوت">🎤</button>
+        </div>
       </div>
 
       <div class="tabs">
@@ -407,10 +308,16 @@
           </div>
 
           <div class="actions2">
-            <button class="btn red" id="btnDelLast" type="button">🗑️ حذف آخر سطر</button>
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
-            <button class="btn green" id="btnPrint80" type="button">🖨️ طباعة 80مم</button>
-            <button class="btn blue" id="btnPDF" type="button">تصدير PDF (عربي + حجم صغير)</button>
+            <button class="btn danger" id="btnDelLast" type="button">حذف آخر سطر</button>
+
+            <div class="row">
+              <input id="delIndex" inputmode="numeric" placeholder="رقم السطر للحذف (1..)" style="flex:1" />
+              <button class="btn danger" id="btnDelIndex" type="button" style="flex:0.8">حذف</button>
+            </div>
+
+            <button class="btn blue" id="btnPDF" type="button">تصدير PDF (خفيف)</button>
+            <button class="btn good" id="btnPrint80" type="button">طباعة 80mm</button>
           </div>
 
           <div class="footerNote" id="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
@@ -422,14 +329,13 @@
           <table>
             <thead>
               <tr>
-                <th style="width:44%">البيان</th>
+                <th style="width:52%">البيان</th>
                 <th style="width:26%">العملية</th>
-                <th style="width:18%">الوقت</th>
-                <th style="width:12%">حذف</th>
+                <th style="width:22%">الوقت</th>
               </tr>
             </thead>
             <tbody id="logBody">
-              <tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>
+              <tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>
             </tbody>
           </table>
         </div>
@@ -438,45 +344,10 @@
       <div class="error" id="appErr"></div>
     </div>
 
-    <div id="printArea"></div>
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- Assistant button -->
-  <button class="fab" id="fabHayek" type="button" title="مساعد حايك">ح</button>
-
-  <!-- Assistant panel -->
-  <div class="assistant" id="assistantPanel">
-    <div class="assistantCard">
-      <div class="assistantTop">
-        <div>
-          <div class="assistantName"><span class="assistantDot"></span> <span id="assistantName">حايك</span></div>
-          <div class="assistantSmall" id="assistantSub">قل: "حايك" ثم الأمر (أو اكتب الأمر هنا).</div>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button class="miniBtn" id="btnWake" type="button" title="تشغيل/إيقاف الاستماع">🎧 استماع</button>
-          <button class="miniBtn red" id="btnCloseAssistant" type="button">إغلاق</button>
-        </div>
-      </div>
-
-      <div class="assistantLog" id="assistantLog">
-        <div class="msgA">أنا <b>حايك</b> ✅</div>
-        <div class="msgA">أوامر سريعة: <span style="opacity:.9">pdf / طباعة / احذف آخر سطر / مسح / سجل</span></div>
-      </div>
-
-      <div class="assistantInputRow">
-        <input id="assistantInput" placeholder='اكتب: حايك صدّر pdf' autocomplete="off" />
-        <button class="miniBtn" id="btnSendAssistant" type="button">إرسال</button>
-        <button class="miniBtn" id="btnMicAssistant" type="button" title="تسجيل أمر بالصوت">🎤</button>
-      </div>
-
-      <div class="assistantHint">
-        ملاحظة: الصوت يحتاج Chrome + سماح المايك + HTTPS (أو تطبيق مثبت).
-      </div>
-    </div>
-  </div>
-
-  <!-- ✅ VOICE / WAKE WORD (غير module) -->
+  <!-- ✅ Voice helpers + Smart Add + Assistant mic -->
   <script>
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -500,6 +371,7 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
+        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
         btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
@@ -553,8 +425,11 @@
       });
     }
 
+    // --- helpers for smart parse ---
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-    function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
+    function toLatinDigits(s){
+      return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d);
+    }
     function normalizeExpr(s){
       let x = toLatinDigits(s);
       x = x.replace(/\s+/g,"");
@@ -583,6 +458,7 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
+        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
         btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
@@ -592,6 +468,7 @@
       rec.continuous = false;
 
       let listening = false;
+
       function off(){
         listening = false;
         btn.classList.remove("on");
@@ -611,18 +488,19 @@
           if (e.results[i].isFinal) finalText += t;
           else interim += t;
         }
-
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
           if(!parsed){
-            alert("❌ ما قدرت أفهم الصيغة.\nمثال: بطاطا 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
+            alert("❌ ما قدرت أفهم الصيغة.\nمثال: علبة شامبو 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
             return;
           }
-          if(typeof window.HAYEK_VOICE_ADD_LINE !== "function"){
-            alert("❌ النظام غير جاهز. حدّث الصفحة.");
+          const item = (parsed.item || "").trim();
+          const expr = (parsed.expr || "").trim();
+          if(!window.HAYEK_VOICE_ADD_LINE){
+            alert("❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى.");
             return;
           }
-          window.HAYEK_VOICE_ADD_LINE((parsed.item||""), (parsed.expr||""));
+          window.HAYEK_VOICE_ADD_LINE(item, expr);
         }
       };
 
@@ -642,15 +520,15 @@
       });
     }
 
-    // assistant mic one-shot
-    function attachAssistantMic(btnId, inputId){
+    // --- assistant single shot mic (command) ---
+    function attachAssistantMic(btnId, onFinalText){
       const btn = document.getElementById(btnId);
-      const input = document.getElementById(inputId);
-      if(!btn || !input) return;
+      if(!btn) return;
 
       if(!SR){
         btn.style.opacity = "0.6";
-        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
+        btn.title = "الصوت غير مدعوم";
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم الصوت.\nجرّب Google Chrome."));
         return;
       }
 
@@ -659,6 +537,7 @@
       rec.continuous = false;
 
       let listening = false;
+
       function off(){
         listening = false;
         btn.classList.remove("on");
@@ -672,22 +551,14 @@
 
       rec.onresult = (e) => {
         let finalText = "";
-        let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const t = e.results[i][0].transcript;
           if (e.results[i].isFinal) finalText += t;
-          else interim += t;
-        }
-        const text = (finalText || interim).trim();
-        if(text){
-          input.value = text;
-          input.dispatchEvent(new Event("input", { bubbles:true }));
         }
         if(finalText && finalText.trim()){
-          if(typeof window.HAYEK_AI_SUBMIT === "function") window.HAYEK_AI_SUBMIT(finalText.trim());
+          onFinalText(finalText.trim());
         }
       };
-
       rec.onend = off;
       rec.onerror = off;
 
@@ -704,97 +575,36 @@
       });
     }
 
-    // wake word continuous
-    let WAKE_ON = false;
-    let WAKE_REC = null;
-
-    function startWake(){
-      if(!SR) return false;
-      try{ if(WAKE_REC) WAKE_REC.stop(); }catch{}
-      WAKE_REC = new SR();
-      WAKE_REC.lang = getLang();
-      WAKE_REC.continuous = true;
-      WAKE_REC.interimResults = true;
-
-      WAKE_REC.onresult = (e) => {
-        let txt = "";
-        for(let i=e.resultIndex;i<e.results.length;i++){
-          txt += (e.results[i][0].transcript || "") + " ";
-        }
-        txt = (txt||"").trim().replace(/\s+/g," ");
-        if(!txt) return;
-
-        const lower = txt.toLowerCase();
-        const startsAR = txt.startsWith("حايك");
-        const startsEN = lower.startsWith("hayek");
-
-        if(startsAR || startsEN){
-          const cmd = startsAR ? txt.replace(/^حايك\s*/,"").trim()
-                               : txt.replace(/^hayek\s*/i,"").trim();
-          if(cmd && typeof window.HAYEK_AI_RUN === "function"){
-            if(typeof window.HAYEK_AI_OPEN === "function") window.HAYEK_AI_OPEN();
-            window.HAYEK_AI_RUN(cmd, true);
-          }
-        }
-      };
-
-      WAKE_REC.onend = () => {
-        if(WAKE_ON){
-          setTimeout(()=>{ try{ WAKE_REC.start(); }catch{} }, 350);
-        }
-      };
-      WAKE_REC.onerror = () => {
-        if(WAKE_ON){
-          setTimeout(()=>{ try{ WAKE_REC.start(); }catch{} }, 600);
-        }
-      };
-
-      try{ WAKE_REC.start(); return true; }catch{ return false; }
-    }
-
-    window.HAYEK_WAKE_TOGGLE = function(){
-      if(!SR){
-        alert("❌ متصفحك لا يدعم الاستماع الصوتي.\nجرّب Google Chrome.");
-        return false;
-      }
-      WAKE_ON = !WAKE_ON;
-      if(WAKE_ON){
-        const ok = startWake();
-        if(!ok){
-          WAKE_ON = false;
-          alert("❌ لم يتم تشغيل الاستماع.\nتأكد من سماح المايك للصفحة.");
-          return false;
-        }
-        return true;
-      }else{
-        try{ WAKE_REC && WAKE_REC.stop(); }catch{}
-        return true;
-      }
-    };
-
-    // bind
-    attachMic("hayekMicCustomer","customerName");
-    attachMic("hayekMicItem","itemName");
+    // bind inputs mics
+    attachMic("hayekMicCustomer", "customerName");
+    attachMic("hayekMicItem", "itemName");
     attachSmart("hayekSmartAdd");
-    attachAssistantMic("btnMicAssistant","assistantInput");
 
+    // bind lang
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
     if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
     if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
 
+    // assistant mic
+    attachAssistantMic("assistantMic", (t)=>{
+      const inp = document.getElementById("assistantText");
+      if(inp){ inp.value = t; }
+      if(window.HAYEK_ASSISTANT_HANDLE) window.HAYEK_ASSISTANT_HANDLE(t);
+    });
+
     refreshLangUI();
   })();
   </script>
 
-  <!-- ✅ MAIN APP (module) -->
+  <!-- ✅ App logic -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     const SUPABASE_URL = "https://itidwqvyrjydmegjzuvn.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_j4ubD1htJvuMvOWUKC9w7g_mwVQzHb_";
 
-    const HAYEK_SYNC_URL = `${SUPABASE_URL}/functions/v1/hayek-sync`;
+    const HAYEK_SYNC_URL = \`\${SUPABASE_URL}/functions/v1/hayek-sync\`;
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id)=>document.getElementById(id);
@@ -805,6 +615,7 @@
     const appErr    = $("appErr");
     const subtitle  = $("subtitle");
     const pill      = $("pill");
+    const netBadge  = $("netBadge");
 
     const tabCalc   = $("tabCalc");
     const tabLog    = $("tabLog");
@@ -822,16 +633,11 @@
     const logBody   = $("logBody");
     const toastEl   = $("toast");
 
-    const fabHayek  = $("fabHayek");
     const assistantPanel = $("assistantPanel");
-    const assistantNameEl = $("assistantName");
-    const assistantSubEl  = $("assistantSub");
-    const assistantLogEl  = $("assistantLog");
-    const assistantInput  = $("assistantInput");
-    const btnSendAssistant= $("btnSendAssistant");
-    const btnCloseAssistant= $("btnCloseAssistant");
-    const btnWake = $("btnWake");
-    const footerNote = $("footerNote");
+    const assistantLogEl = $("assistantLog");
+    const assistantText  = $("assistantText");
+    const assistantNameLabel = $("assistantNameLabel");
+    const footerNoteEl = $("footerNote");
 
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
@@ -855,7 +661,7 @@
     }
 
     // =========================
-    // Net Check (simple)
+    // ✅ Net Check
     // =========================
     let NET_OK = false;
     let NET_LAST = 0;
@@ -866,18 +672,35 @@
         const ctrl = new AbortController();
         const t = setTimeout(()=>ctrl.abort(), timeoutMs);
 
-        const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1`;
+        const url = \`\${SUPABASE_URL}/rest/v1/\${encodeURIComponent(INVOICE_TABLE)}?select=id&limit=1\`;
+
         const res = await fetch(url, {
           method: "GET",
           mode: "cors",
           cache: "no-store",
           signal: ctrl.signal,
-          headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + SUPABASE_ANON_KEY
+          }
         });
+
         clearTimeout(t);
-        return !!(res && res.ok);
+        if(!res || !res.ok) return false;
+        return true;
       }catch{
         return false;
+      }
+    }
+
+    function renderNetBadge(){
+      if(!netBadge) return;
+      if(NET_OK){
+        netBadge.innerHTML = "<b>متصل ✅</b>";
+        netBadge.style.borderColor = "rgba(34,197,94,.35)";
+      }else{
+        netBadge.innerHTML = "<b>أوفلاين ⚠️</b>";
+        netBadge.style.borderColor = "rgba(255,77,77,.35)";
       }
     }
 
@@ -885,21 +708,55 @@
       const now = Date.now();
       if(!force && (now - NET_LAST) < 2500) return NET_OK;
       if(NET_INFLIGHT) return NET_OK;
+
       NET_INFLIGHT = true;
       try{
-        NET_OK = await isNetOK();
+        const ok = await isNetOK();
+        NET_OK = !!ok;
         NET_LAST = now;
+        renderNetBadge();
         return NET_OK;
       }finally{
         NET_INFLIGHT = false;
       }
     }
 
-    window.addEventListener("online", ()=> refreshNetState(true));
-    window.addEventListener("focus", ()=> refreshNetState(false));
+    function netNow(){ return !!NET_OK; }
+    async function kickNet(){ await refreshNetState(true); }
+
+    window.addEventListener("online", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
+
+    window.addEventListener("focus", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
+
+    document.addEventListener("visibilitychange", async ()=>{
+      if(!document.hidden){
+        await kickNet();
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
+      }
+    });
+
+    window.addEventListener("pageshow", async ()=>{
+      await kickNet();
+      await qSyncSilently(true);
+      await syncDeviceIdIfNeeded();
+    });
+
+    setInterval(async ()=>{
+      await refreshNetState(false);
+      await qSyncSilently(false);
+    }, 8000);
 
     // =========================
-    // Offline queue
+    // ✅ OFFLINE QUEUE
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -917,23 +774,45 @@
       qWrite(filtered);
     }
 
+    function cleanInvoicePayload(p){
+      if(!p || typeof p !== "object") return null;
+
+      const out = { ...p };
+      delete out.__queued_at;
+      delete out.__meta;
+      delete out.__local;
+
+      for(const k of Object.keys(out)){
+        if(out[k] === undefined) delete out[k];
+      }
+      return out;
+    }
+
     let __syncing = false;
-    async function qSyncSilently(){
+
+    async function qSyncSilently(force=false){
       if(__syncing) return;
+
       const arr = qRead();
       if(!arr.length) return;
 
-      await refreshNetState(false);
-      if(!NET_OK) return;
+      if(!force){
+        await refreshNetState(false);
+        if(!netNow()) return;
+      }
 
       __syncing = true;
       try{
         const keep = [];
         for(const raw of arr){
           try{
-            const payload = { ...raw };
-            delete payload.__queued_at;
-            const { error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict: "id" });
+            const payload = cleanInvoicePayload(raw);
+            if(!payload?.id){ continue; }
+
+            const { error } = await supabase
+              .from(INVOICE_TABLE)
+              .upsert(payload, { onConflict: "id" });
+
             if(error) keep.push(raw);
           }catch{
             keep.push(raw);
@@ -945,10 +824,8 @@
       }
     }
 
-    setInterval(qSyncSilently, 8000);
-
     // =========================
-    // Offline user cache
+    // ✅ Offline Login Cache
     // =========================
     const OFFLINE_USER_KEY = "HAYEK_OFFLINE_LAST_USER_V1";
     function saveOfflineUser(u){
@@ -959,7 +836,16 @@
           password: u?.password || "",
           full_name: u?.full_name || "",
           is_blocked: !!u?.is_blocked,
-          device_id: u?.device_id || null
+          device_id: u?.device_id || null,
+
+          // feature flags
+          assistant_name: u?.assistant_name || "حايك",
+          ai_enabled: (u?.ai_enabled !== undefined ? !!u.ai_enabled : true),
+          voice_enabled: (u?.voice_enabled !== undefined ? !!u.voice_enabled : true),
+          print80_enabled: (u?.print80_enabled !== undefined ? !!u.print80_enabled : true),
+          footer_enabled: (u?.footer_enabled !== undefined ? !!u.footer_enabled : true),
+
+          saved_at: new Date().toISOString()
         };
         localStorage.setItem(OFFLINE_USER_KEY, JSON.stringify(slim));
       }catch{}
@@ -967,12 +853,13 @@
     function readOfflineUser(){
       try{
         const v = JSON.parse(localStorage.getItem(OFFLINE_USER_KEY) || "null");
-        return (v && typeof v === "object") ? v : null;
+        if(!v || typeof v !== "object") return null;
+        return v;
       }catch{ return null; }
     }
 
     // =========================
-    // IDs
+    // ✅ Device/Tab Locks
     // =========================
     function getOrCreateDeviceId(){
       const KEY = "HAYEK_DEVICE_ID_V1";
@@ -983,6 +870,215 @@
       }
       return v;
     }
+
+    function getOrCreateTabId(){
+      const KEY = "HAYEK_TAB_ID_V1";
+      let v = sessionStorage.getItem(KEY);
+      if(!v){
+        v = (crypto?.randomUUID?.() || ("tab_" + Math.random().toString(16).slice(2) + Date.now()));
+        sessionStorage.setItem(KEY, v);
+      }
+      return v;
+    }
+
+    let TAB_BLOCKED = false;
+    let TAB_TIMER = null;
+    let TAB_USERNAME = null;
+
+    function lockKeyFor(username){ return \`HAYEK_ACTIVE_TAB_LOCK::\${username}\`; }
+    function nowMs(){ return Date.now(); }
+
+    function readLock(username){
+      try{
+        const raw = localStorage.getItem(lockKeyFor(username));
+        if(!raw) return null;
+        const obj = JSON.parse(raw);
+        if(!obj || typeof obj !== "object") return null;
+        return obj;
+      }catch{ return null; }
+    }
+
+    function writeLock(username, objOrNull){
+      try{
+        if(!objOrNull) localStorage.removeItem(lockKeyFor(username));
+        else localStorage.setItem(lockKeyFor(username), JSON.stringify(objOrNull));
+      }catch{}
+    }
+
+    function stopSingleTabGuard(){
+      if(TAB_TIMER) clearInterval(TAB_TIMER);
+      TAB_TIMER = null;
+      TAB_BLOCKED = false;
+      TAB_USERNAME = null;
+    }
+
+    function startSingleTabGuard(username){
+      stopSingleTabGuard();
+      TAB_USERNAME = username;
+
+      const tabId = getOrCreateTabId();
+      const TTL = 12000;
+      const HEARTBEAT = 4000;
+
+      function isStale(lock){
+        if(!lock?.ts) return true;
+        return (nowMs() - Number(lock.ts)) > TTL;
+      }
+
+      function tryAcquire(){
+        const lock = readLock(username);
+
+        if(!lock || isStale(lock) || lock.tabId === tabId){
+          writeLock(username, { tabId, ts: nowMs() });
+          TAB_BLOCKED = false;
+          return true;
+        }
+
+        TAB_BLOCKED = true;
+        if(!sessionStorage.getItem(\`HAYEK_TAB_BLOCKED_SHOWN::\${username}\`)){
+          sessionStorage.setItem(\`HAYEK_TAB_BLOCKED_SHOWN::\${username}\`, "1");
+          showErr(loginErr, "❌ هذا الحساب مفتوح بالفعل في تبويب آخر.\\nأغلق التبويب الآخر للمتابعة.");
+        }
+        return false;
+      }
+
+      tryAcquire();
+
+      TAB_TIMER = setInterval(()=>{
+        if(!TAB_USERNAME) return;
+
+        const lock = readLock(username);
+
+        if(lock && lock.tabId === tabId){
+          writeLock(username, { tabId, ts: nowMs() });
+          TAB_BLOCKED = false;
+          return;
+        }
+
+        tryAcquire();
+      }, HEARTBEAT);
+
+      window.addEventListener("storage", (e)=>{
+        if(e.key === lockKeyFor(username)){
+          tryAcquire();
+        }
+      });
+
+      window.addEventListener("beforeunload", ()=>{
+        try{
+          const lock = readLock(username);
+          if(lock && lock.tabId === tabId){
+            writeLock(username, null);
+          }
+        }catch{}
+      });
+    }
+
+    async function enforceDeviceLockForUserRow(u){
+      const deviceId = getOrCreateDeviceId();
+
+      await refreshNetState(false);
+      if(!netNow()){
+        if(!u.device_id){
+          u.device_id = deviceId;
+          saveOfflineUser(u);
+          return u;
+        }
+        if(u.device_id !== deviceId){
+          throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
+        }
+        return u;
+      }
+
+      if(!u.device_id){
+        const { error: uerr } = await supabase
+          .from(USERS_TABLE)
+          .update({ device_id: deviceId })
+          .eq("id", u.id)
+          .is("device_id", null);
+
+        if(uerr) throw new Error(uerr.message || "فشل تحديث device_id");
+
+        const { data, error } = await supabase
+          .from(USERS_TABLE)
+          .select("*")
+          .eq("id", u.id)
+          .limit(1);
+
+        if(error) throw new Error(error.message || "فشل قراءة المستخدم بعد التحديث");
+        if(!data?.length) throw new Error("المستخدم غير موجود بعد التحديث");
+        u = data[0];
+      }
+
+      if(u.device_id !== deviceId){
+        throw new Error("❌ هذا الحساب مسجّل على جهاز آخر.\\nتواصل مع الأدمن لإعادة تعيين الجهاز.");
+      }
+
+      return u;
+    }
+
+    async function syncDeviceIdIfNeeded(){
+      await refreshNetState(false);
+      if(!netNow()) return;
+
+      try{
+        if(!USER?.id) return;
+        const deviceId = getOrCreateDeviceId();
+
+        if(!USER.device_id){
+          const { error } = await supabase
+            .from(USERS_TABLE)
+            .update({ device_id: deviceId })
+            .eq("id", USER.id)
+            .is("device_id", null);
+
+          if(!error){
+            USER.device_id = deviceId;
+            saveOfflineUser(USER);
+          }
+        }
+      }catch{}
+    }
+
+    // =========================
+    // ✅ Suggestions
+    // =========================
+    const SUG_CUSTOMERS_KEY = "HAYEK_SUG_CUSTOMERS";
+    const SUG_ITEMS_KEY     = "HAYEK_SUG_ITEMS";
+    const MAX_SUG = 60;
+
+    function readSug(key){
+      try{
+        const arr = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(arr) ? arr.filter(Boolean) : [];
+      }catch{ return []; }
+    }
+    function writeSug(key, arr){
+      localStorage.setItem(key, JSON.stringify(arr.slice(0, MAX_SUG)));
+    }
+    function addSug(key, value){
+      const v = String(value || "").trim();
+      if(!v) return;
+
+      const arr = readSug(key);
+      const norm = v.toLowerCase();
+
+      const filtered = arr.filter(x => String(x).toLowerCase() !== norm);
+      filtered.unshift(v);
+      writeSug(key, filtered);
+      renderSug();
+    }
+    function renderDatalist(el, values){
+      el.innerHTML = values.map(v => \`<option value="\${escapeHtml(v)}"></option>\`).join("");
+    }
+    function renderSug(){
+      renderDatalist(custList, readSug(SUG_CUSTOMERS_KEY));
+      renderDatalist(itemList, readSug(SUG_ITEMS_KEY));
+    }
+
+    custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
+    itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
+
     function uuid(){
       if(window.crypto?.randomUUID) return crypto.randomUUID();
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c=>{
@@ -991,77 +1087,329 @@
       });
     }
 
-    // =========================
-    // State
-    // =========================
+    // ------- STATE -------
     let USER = null;
     let invoiceId = null;
     let invoiceOpen = false;
+
     let ops = [];
     let expr = "";
     let lastResult = 0;
 
-    // =========================
-    // Feature flags (safe defaults)
-    // =========================
-    const DEFAULT_FLAGS = {
+    // ------- Feature flags -------
+    const FLAGS = {
       assistant_name: "حايك",
       ai_enabled: true,
       voice_enabled: true,
       print80_enabled: true,
-      footer_enabled: true
+      footer_enabled: true,
     };
-    let FLAGS = { ...DEFAULT_FLAGS };
 
-    function normalizeBool(v, fallback){
-      if(v === true || v === false) return v;
-      if(v == null) return fallback;
-      if(typeof v === "number") return v !== 0;
-      if(typeof v === "string"){
-        const s = v.trim().toLowerCase();
-        if(["true","1","yes","y","on","enabled"].includes(s)) return true;
-        if(["false","0","no","n","off","disabled"].includes(s)) return false;
-      }
-      return fallback;
+    function applyFlagsFromUserRow(u){
+      FLAGS.assistant_name = (u?.assistant_name || u?.assistantName || "حايك").trim() || "حايك";
+      FLAGS.ai_enabled = (u?.ai_enabled !== undefined ? !!u.ai_enabled : true);
+      FLAGS.voice_enabled = (u?.voice_enabled !== undefined ? !!u.voice_enabled : true);
+      FLAGS.print80_enabled = (u?.print80_enabled !== undefined ? !!u.print80_enabled : true);
+      FLAGS.footer_enabled = (u?.footer_enabled !== undefined ? !!u.footer_enabled : true);
+
+      if(assistantNameLabel) assistantNameLabel.textContent = FLAGS.assistant_name;
+      if(assistantPanel) assistantPanel.style.display = FLAGS.ai_enabled ? "" : "none";
+      if(footerNoteEl) footerNoteEl.style.display = FLAGS.footer_enabled ? "" : "none";
+
+      const btnPrint80 = $("btnPrint80");
+      if(btnPrint80) btnPrint80.style.display = FLAGS.print80_enabled ? "" : "none";
     }
 
-    function applyFlagsFromUserRow(row){
-      const r = row || {};
-      FLAGS.assistant_name = (r.assistant_name || DEFAULT_FLAGS.assistant_name || "حايك");
-      FLAGS.ai_enabled = normalizeBool(r.ai_enabled, DEFAULT_FLAGS.ai_enabled);
-      FLAGS.voice_enabled = normalizeBool(r.voice_enabled, DEFAULT_FLAGS.voice_enabled);
-      FLAGS.print80_enabled = normalizeBool(r.print80_enabled, DEFAULT_FLAGS.print80_enabled);
-      FLAGS.footer_enabled = normalizeBool(r.footer_enabled, DEFAULT_FLAGS.footer_enabled);
+    // ------- SUPABASE SAVE -------
+    async function saveInvoice(status){
+      if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
 
-      assistantNameEl.textContent = FLAGS.assistant_name || "حايك";
+      const customer = custInput.value.trim();
+      const total = calcTotal();
 
-      fabHayek.style.display = FLAGS.ai_enabled ? "block" : "none";
-      if(!FLAGS.ai_enabled) assistantPanel.style.display = "none";
+      const payload = {
+        id: invoiceId,
+        owner_id: USER.id,
+        customer_name: customer || null,
+        customer: customer || null,
+        rows: buildRowsWithMeta(customer),
+        total: total,
+        status: status,
+        closed_at: status === "closed" ? new Date().toISOString() : null
+      };
 
-      footerNote.style.display = FLAGS.footer_enabled ? "block" : "none";
+      await refreshNetState(false);
 
-      $("btnPrint80").disabled = !FLAGS.print80_enabled;
-      $("btnPrint80").style.opacity = FLAGS.print80_enabled ? "1" : "0.55";
+      if(!netNow()){
+        qAdd(payload);
+        return { ok:true, id: invoiceId, queued:true };
+      }
 
-      const voiceEls = [
-        $("hayekMicCustomer"), $("hayekMicItem"), $("hayekSmartAdd"),
-        $("btnMicAssistant"), $("btnWake"),
-        $("hayekLangAR"), $("hayekLangTR"),
-      ].filter(Boolean);
+      try{
+        const { data, error } = await supabase
+          .from(INVOICE_TABLE)
+          .upsert(payload, { onConflict: "id" })
+          .select("id")
+          .limit(1);
 
-      voiceEls.forEach(el=>{
-        el.disabled = !FLAGS.voice_enabled;
-        el.style.opacity = FLAGS.voice_enabled ? "1" : "0.55";
+        if(error){
+          qAdd(payload);
+          return { ok:true, id: invoiceId, queued:true };
+        }
+        return { ok:true, id: (data?.[0]?.id || invoiceId) };
+      }catch{
+        qAdd(payload);
+        return { ok:true, id: invoiceId, queued:true };
+      }
+    }
+
+    function buildRowsWithMeta(customer){
+      const meta = {
+        __meta: true,
+        customer: customer || "",
+        user: USER?.username || "",
+        saved_at: new Date().toISOString()
+      };
+      return [meta, ...ops];
+    }
+
+    // =========================
+    // ✅ LOGIN via Edge Function (hayek-sync)
+    // =========================
+    async function apiLoginViaEdge(username, password){
+      const deviceId = getOrCreateDeviceId();
+
+      const res = await fetch(HAYEK_SYNC_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-hayek-device": deviceId,
+          "x-hayek-user": String(username||""),
+          "x-hayek-pass": String(password||"")
+        },
+        body: JSON.stringify({ action: "login" })
       });
 
-      assistantSubEl.textContent = FLAGS.voice_enabled
-        ? `قل: "${FLAGS.assistant_name}" ثم الأمر (أو اكتب الأمر هنا).`
-        : "الصوت غير مفعل لهذا الحساب. استخدم الكتابة بالأوامر.";
+      const data = await res.json().catch(()=>null);
+      if(!res.ok || !data?.ok){
+        const err = data?.error || ("HTTP_" + res.status);
+        throw new Error(err);
+      }
+      return data.user;
     }
 
-    // =========================
-    // Helpers
-    // =========================
+    function mapEdgeError(err){
+      const e = String(err||"");
+      if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
+      if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
+      if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
+      if(e === "Missing headers") return "مشكلة في الطلب (headers).";
+      return "فشل تسجيل الدخول:\\n" + e;
+    }
+
+    // ------- LOGIN -------
+    async function login(){
+      clearErr(loginErr);
+      const username = $("loginUser").value.trim();
+      const password = $("loginPass").value.trim();
+
+      if(!username || !password){
+        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
+        return;
+      }
+
+      await refreshNetState(true);
+
+      if(!netNow()){
+        const cached = readOfflineUser();
+        if(!cached){
+          showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
+          return;
+        }
+        if(cached.is_blocked){
+          showErr(loginErr, "هذا الحساب محظور.");
+          return;
+        }
+        if(cached.username !== username || cached.password !== password){
+          showErr(loginErr, "❌ لا يمكن التحقق بدون إنترنت.\\nأدخل بيانات آخر حساب سجّل دخول على هذا الجهاز.");
+          return;
+        }
+
+        let u = cached;
+
+        try{
+          u = await enforceDeviceLockForUserRow(u);
+        }catch(e){
+          showErr(loginErr, e?.message || "تم منع الدخول");
+          return;
+        }
+
+        startSingleTabGuard(u.username);
+        if(TAB_BLOCKED) return;
+
+        USER = u;
+        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:true }));
+
+        applyFlagsFromUserRow(u);
+
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = "فاتورة المستخدم";
+        pill.innerHTML = \`<b>\${escapeHtml(u.username)}</b>\`;
+        resetAll(true);
+
+        renderSug();
+        toast("وضع أوفلاين ✅");
+        return;
+      }
+
+      try{
+        const edgeUser = await apiLoginViaEdge(username, password);
+
+        let u = {
+          id: edgeUser.id,
+          username: edgeUser.username,
+          full_name: edgeUser.full_name || "",
+          device_id: edgeUser.device_id || null,
+          is_blocked: !!edgeUser.is_blocked,
+          password: password,
+
+          assistant_name: edgeUser.assistant_name || "حايك",
+          ai_enabled: (edgeUser.ai_enabled !== undefined ? !!edgeUser.ai_enabled : true),
+          voice_enabled: (edgeUser.voice_enabled !== undefined ? !!edgeUser.voice_enabled : true),
+          print80_enabled: (edgeUser.print80_enabled !== undefined ? !!edgeUser.print80_enabled : true),
+          footer_enabled: (edgeUser.footer_enabled !== undefined ? !!edgeUser.footer_enabled : true),
+        };
+
+        if(u.is_blocked){
+          showErr(loginErr, "هذا الحساب محظور.");
+          return;
+        }
+
+        try{
+          u = await enforceDeviceLockForUserRow(u);
+        }catch(e){
+          showErr(loginErr, e?.message || "تم منع الدخول");
+          return;
+        }
+
+        startSingleTabGuard(u.username);
+        if(TAB_BLOCKED) return;
+
+        USER = u;
+        localStorage.setItem("HAYEK_USER_SESSION", JSON.stringify({ id:u.id, offline:false }));
+        saveOfflineUser(u);
+
+        applyFlagsFromUserRow(u);
+
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = "فاتورة المستخدم";
+        pill.innerHTML = \`<b>\${escapeHtml(u.username)}</b>\`;
+        resetAll(true);
+
+        renderSug();
+
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
+      }catch(e){
+        showErr(loginErr, mapEdgeError(e?.message || e));
+      }
+    }
+
+    async function restoreSession(){
+      try{
+        const s = JSON.parse(localStorage.getItem("HAYEK_USER_SESSION")||"null");
+        if(!s?.id) return;
+
+        await refreshNetState(true);
+
+        if(!netNow()){
+          const cached = readOfflineUser();
+          if(!cached || cached.id !== s.id) return;
+          if(cached.is_blocked){
+            localStorage.removeItem("HAYEK_USER_SESSION");
+            return;
+          }
+
+          let u = cached;
+
+          try{
+            u = await enforceDeviceLockForUserRow(u);
+          }catch(e){
+            localStorage.removeItem("HAYEK_USER_SESSION");
+            showErr(loginErr, e?.message || "تم منع الدخول");
+            return;
+          }
+
+          startSingleTabGuard(u.username);
+          if(TAB_BLOCKED) return;
+
+          USER = u;
+          applyFlagsFromUserRow(u);
+
+          loginCard.classList.add("hide");
+          appCard.classList.remove("hide");
+          subtitle.textContent = "فاتورة المستخدم";
+          pill.innerHTML = \`<b>\${escapeHtml(USER.username)}</b>\`;
+          resetAll(true);
+          renderSug();
+          return;
+        }
+
+        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
+        if(error) return;
+        if(!data?.length) return;
+
+        let u = data[0];
+        if(u.is_blocked){
+          localStorage.removeItem("HAYEK_USER_SESSION");
+          return;
+        }
+
+        const cached = readOfflineUser();
+        const pass = cached?.password || "";
+
+        u = { ...u, password: pass };
+
+        try{
+          u = await enforceDeviceLockForUserRow(u);
+        }catch(e){
+          localStorage.removeItem("HAYEK_USER_SESSION");
+          showErr(loginErr, e?.message || "تم منع الدخول");
+          return;
+        }
+
+        startSingleTabGuard(u.username);
+        if(TAB_BLOCKED) return;
+
+        USER = u;
+        saveOfflineUser(u);
+        applyFlagsFromUserRow(u);
+
+        loginCard.classList.add("hide");
+        appCard.classList.remove("hide");
+        subtitle.textContent = "فاتورة المستخدم";
+        pill.innerHTML = \`<b>\${escapeHtml(USER.username)}</b>\`;
+        resetAll(true);
+        renderSug();
+
+        await qSyncSilently(true);
+        await syncDeviceIdIfNeeded();
+      }catch{}
+    }
+
+    function logout(){
+      USER = null;
+      localStorage.removeItem("HAYEK_USER_SESSION");
+      stopSingleTabGuard();
+
+      loginCard.classList.remove("hide");
+      appCard.classList.add("hide");
+      subtitle.textContent = "تسجيل دخول المستخدم";
+      pill.innerHTML = "<b>غير مسجل</b>";
+    }
+
     function setTab(which){
       if(which==="calc"){
         tabCalc.classList.add("active");
@@ -1104,97 +1452,6 @@
       return c;
     }
 
-    // =========================
-    // Suggestions
-    // =========================
-    const SUG_CUSTOMERS_KEY = "HAYEK_SUG_CUSTOMERS";
-    const SUG_ITEMS_KEY     = "HAYEK_SUG_ITEMS";
-    const MAX_SUG = 60;
-
-    function readSug(key){
-      try{
-        const arr = JSON.parse(localStorage.getItem(key) || "[]");
-        return Array.isArray(arr) ? arr.filter(Boolean) : [];
-      }catch{ return []; }
-    }
-    function writeSug(key, arr){
-      localStorage.setItem(key, JSON.stringify(arr.slice(0, MAX_SUG)));
-    }
-    function addSug(key, value){
-      const v = String(value || "").trim();
-      if(!v) return;
-      const arr = readSug(key);
-      const norm = v.toLowerCase();
-      const filtered = arr.filter(x => String(x).toLowerCase() !== norm);
-      filtered.unshift(v);
-      writeSug(key, filtered);
-      renderSug();
-    }
-    function renderDatalist(el, values){
-      el.innerHTML = values.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
-    }
-    function renderSug(){
-      renderDatalist(custList, readSug(SUG_CUSTOMERS_KEY));
-      renderDatalist(itemList, readSug(SUG_ITEMS_KEY));
-    }
-
-    custInput?.addEventListener("change", ()=> addSug(SUG_CUSTOMERS_KEY, custInput.value));
-    itemInput?.addEventListener("change", ()=> addSug(SUG_ITEMS_KEY, itemInput.value));
-
-    // =========================
-    // Invoice save
-    // =========================
-    function calcTotal(){
-      let t = 0;
-      for(const o of ops){
-        const n = Number(o.result);
-        if(Number.isFinite(n)) t += n;
-      }
-      if(!ops.length && Number.isFinite(lastResult)) t = lastResult;
-      return Math.round(t*100)/100;
-    }
-
-    function buildRowsWithMeta(customer){
-      const meta = { __meta:true, customer: customer || "", user: USER?.username || "", saved_at: new Date().toISOString() };
-      return [meta, ...ops];
-    }
-
-    async function saveInvoice(status){
-      if(!invoiceId || !USER?.id) return { ok:false, msg:"no-invoice" };
-
-      const customer = custInput.value.trim();
-      const total = calcTotal();
-
-      const payload = {
-        id: invoiceId,
-        owner_id: USER.id,
-        customer_name: customer || null,
-        customer: customer || null,
-        rows: buildRowsWithMeta(customer),
-        total: total,
-        status: status,
-        closed_at: status === "closed" ? new Date().toISOString() : null
-      };
-
-      await refreshNetState(false);
-      if(!NET_OK){
-        qAdd(payload);
-        return { ok:true, id: invoiceId, queued:true };
-      }
-
-      try{
-        const { data, error } = await supabase.from(INVOICE_TABLE).upsert(payload, { onConflict:"id" }).select("id").limit(1);
-        if(error){
-          qAdd(payload);
-          return { ok:true, id: invoiceId, queued:true };
-        }
-        return { ok:true, id: (data?.[0]?.id || invoiceId) };
-      }catch{
-        qAdd(payload);
-        return { ok:true, id: invoiceId, queued:true };
-      }
-    }
-
     async function ensureInvoiceOpened(){
       const customer = requireCustomer();
       if(!customer) return false;
@@ -1205,15 +1462,22 @@
 
       const r = await saveInvoice("open");
       if(!r.ok){
-        showErr(appErr, "فشل الحفظ (open).");
+        showErr(appErr, "فشل الحفظ (open):\\n" + r.msg + "\\n\\n✅ تأكد أن عمود id Primary Key في Supabase.");
         return false;
       }
       return true;
     }
 
-    // =========================
-    // Calculator
-    // =========================
+    function calcTotal(){
+      let t = 0;
+      for(const o of ops){
+        const n = Number(o.result);
+        if(Number.isFinite(n)) t += n;
+      }
+      if(!ops.length && Number.isFinite(lastResult)) t = lastResult;
+      return Math.round(t*100)/100;
+    }
+
     function sanitizeForEval(s){
       return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
 
@@ -1248,20 +1512,19 @@
 
     function renderLog(){
       if(!ops.length){
-        logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
+        logBody.innerHTML = \`<tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>\`;
         return;
       }
       logBody.innerHTML = ops.map((o, idx)=>{
         const t = o.time || nowTime();
-        const exp = (o.expr ? `${o.expr} = ${o.result}` : `${o.result}`);
-        return `
+        const exp = (o.expr ? \`\${o.expr} = \${o.result}\` : \`\${o.result}\`);
+        return \`
           <tr>
-            <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
-            <td>${escapeHtml(exp)}</td>
-            <td>${escapeHtml(t)}</td>
-            <td><button class="btn small red" data-del="${idx}" type="button">🗑</button></td>
+            <td><b>\${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">#\${idx+1} — \${escapeHtml(exp)}</div></td>
+            <td>\${escapeHtml(exp)}</td>
+            <td>\${escapeHtml(t)}</td>
           </tr>
-        `;
+        \`;
       }).join("");
     }
 
@@ -1295,8 +1558,12 @@
       setExpr("");
       toast("تمت الإضافة ✅");
 
-      await saveInvoice("open");
-      await qSyncSilently();
+      const r = await saveInvoice("open");
+      if(!r.ok){
+        showErr(appErr, "فشل الحفظ بعد إضافة العملية:\\n" + r.msg + "\\n\\n✅ غالباً id ليس Primary Key.");
+      }
+
+      await qSyncSilently(false);
     }
 
     async function clearOperations(){
@@ -1308,79 +1575,64 @@
       resView.textContent = "0";
       renderLog();
 
-      if(invoiceOpen) await saveInvoice("open");
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\\n" + r.msg);
+      }
       toast("تم المسح ✅");
-      await qSyncSilently();
+      await qSyncSilently(false);
     }
 
     async function deleteLastLine(){
       clearErr(appErr);
-      if(!ops.length){ toast("لا يوجد سطور"); return; }
+      if(!ops.length){
+        toast("لا يوجد سطر للحذف");
+        return;
+      }
       ops.shift();
       renderLog();
-      if(invoiceOpen) await saveInvoice("open");
       toast("تم حذف آخر سطر ✅");
-      await qSyncSilently();
+
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\\n" + r.msg);
+      }
+      await qSyncSilently(false);
     }
 
-    async function deleteLineAt(idx){
+    async function deleteByIndex(){
       clearErr(appErr);
-      const i = Number(idx);
-      if(!Number.isFinite(i) || i < 0 || i >= ops.length) return;
-      ops.splice(i, 1);
+      const raw = ($("delIndex").value || "").trim();
+      const idx = Number(raw);
+      if(!Number.isFinite(idx) || idx < 1){
+        toast("اكتب رقم سطر صحيح");
+        return;
+      }
+      if(idx > ops.length){
+        toast("رقم السطر أكبر من الموجود");
+        return;
+      }
+      ops.splice(idx-1, 1);
       renderLog();
-      if(invoiceOpen) await saveInvoice("open");
       toast("تم حذف السطر ✅");
-      await qSyncSilently();
+
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ:\\n" + r.msg);
+      }
+      await qSyncSilently(false);
     }
 
     // =========================
-    // PDF (Arabic OK, small size)
+    // ✅ PDF Export (text+table => small size)
     // =========================
-    function buildPrintArea(){
-      const pa = $("printArea");
-      const customer = (custInput.value.trim() || "—");
-      const user = (USER?.full_name || USER?.username || "—");
-      const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-      const total = calcTotal();
-
-      const rows = ops.slice().reverse().map(o=>`
-        <tr>
-          <td style="width:24%">${escapeHtml(o.time || "")}</td>
-          <td style="width:34%">${escapeHtml(o.label || "")}</td>
-          <td style="width:26%">${escapeHtml(o.expr || "")}</td>
-          <td style="width:16%">${escapeHtml(o.result)}</td>
-        </tr>
-      `).join("");
-
-      pa.innerHTML = `
-        <div class="p-box p-header">
-          <div class="p-title">شركة الحايك</div>
-          <div class="p-subtitle">HAYEK SPOT</div>
-        </div>
-
-        <div class="p-field"><div class="k">اسم المستخدم</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
-        <div class="p-field"><div class="k">اسم العميل</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
-        <div class="p-field"><div class="k">رقم الفاتورة</div><div class="v">${escapeHtml(invId)}</div></div>
-        <div class="p-field"><div class="k">التاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
-
-        <div class="p-tableWrap">
-          <table>
-            <thead><tr><th>الوقت</th><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}</tbody>
-          </table>
-        </div>
-
-        <div class="p-totalBox"><div>إجمالي الكشف:</div><div>${escapeHtml(total)}</div></div>
-
-        <div class="p-foot">
-          <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-          <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
-          <div class="p-phone">05510217646</div>
-        </div>
-      `;
-      return pa;
+    function arabicShape(text){
+      try{
+        if(window.arabicFonts && window.arabicFonts.arabic){
+          return window.arabicFonts.arabic(text);
+        }
+      }catch{}
+      return text;
     }
 
     async function exportPDF(){
@@ -1392,95 +1644,181 @@
       const ok = await ensureInvoiceOpened();
       if(!ok) return;
 
-      await saveInvoice("closed");
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\\n" + r.msg + "\\n\\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        return;
+      }
 
-      const pa = buildPrintArea();
-
-      const canvas = await html2canvas(pa,{ scale: 1.15, useCORS:true, backgroundColor:"#ffffff" });
-      const imgData = canvas.toDataURL("image/jpeg", 0.60);
+      addSug(SUG_CUSTOMERS_KEY, customer);
 
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF("p","mm","a4");
 
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-
-      const imgW = pageW;
-      const imgH = canvas.height * (imgW / canvas.width);
-
-      if(imgH <= pageH){
-        pdf.addImage(imgData,"JPEG",0,0,imgW,imgH, undefined, "FAST");
-      }else{
-        let remaining = imgH;
-        let position = 0;
-        while(remaining > 0){
-          pdf.addImage(imgData,"JPEG",0,position,imgW,imgH, undefined, "FAST");
-          remaining -= pageH;
-          if(remaining > 0){ pdf.addPage(); position -= pageH; }
+      // Try set arabic font if available
+      try{
+        if(window.arabicFonts && window.arabicFonts.amiri){
+          pdf.addFileToVFS("Amiri-Regular.ttf", window.arabicFonts.amiri);
+          pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+          pdf.setFont("Amiri");
         }
-      }
+      }catch{}
+
+      const userName = USER?.full_name || USER?.username || "—";
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
+
+      pdf.setFontSize(16);
+      pdf.text(arabicShape("شركة الحايك — HAYEK SPOT"), 105, 14, {align:"center"});
+
+      pdf.setFontSize(12);
+      pdf.text(arabicShape("اسم المستخدم: " + userName), 200, 24, {align:"right"});
+      pdf.text(arabicShape("اسم العميل: " + customer), 200, 32, {align:"right"});
+      pdf.text(arabicShape("رقم الفاتورة: " + String(invoiceId || "—")), 200, 40, {align:"right"});
+      pdf.text(arabicShape("التاريخ: " + dateText), 200, 48, {align:"right"});
+
+      const body = ops.slice().reverse().map(o=>[
+        arabicShape(String(o.time || "")),
+        arabicShape(String(o.label || "")),
+        arabicShape(String(o.expr || "")),
+        String(o.result ?? "")
+      ]);
+
+      pdf.autoTable({
+        startY: 56,
+        head: [[arabicShape("الوقت"), arabicShape("البيان"), arabicShape("العملية"), arabicShape("النتيجة")]],
+        body,
+        styles: { font: (pdf.getFont().fontName || "helvetica"), fontSize: 10, halign: "right" },
+        headStyles: { halign: "right" },
+        columnStyles: { 3: { halign: "center" } },
+        margin: { left: 10, right: 10 }
+      });
+
+      const y = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 10 : 70;
+      pdf.setFontSize(13);
+      pdf.text(arabicShape("إجمالي الكشف: " + String(total)), 200, y, {align:"right"});
+
+      pdf.setFontSize(10);
+      pdf.text(arabicShape("تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك"), 105, 285, {align:"center"});
 
       const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
-      pdf.save(`HAYEK_${safeName}.pdf`);
+      pdf.save(\`HAYEK_\${safeName}.pdf\`);
 
       toast("تم تنزيل PDF ✅");
       resetAll(false);
-      await qSyncSilently();
+
+      await qSyncSilently(false);
     }
 
     // =========================
-    // Print 80mm (Browser print dialog)
+    // ✅ Print 80mm (browser print)
     // =========================
-    function print80mm(){
-      clearErr(appErr);
-      const customer = custInput.value.trim();
-      if(!customer){ showErr(appErr, "اكتب اسم الزبون أولاً (إجباري) قبل الطباعة."); custInput.focus(); return; }
+    function build80mmHTML(){
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
 
-      const pa = buildPrintArea();
-      const html = pa.innerHTML;
+      const rows = ops.slice().reverse().map(o=>\`
+        <tr>
+          <td>\${escapeHtml(o.time || "")}</td>
+          <td>\${escapeHtml(o.label || "")}</td>
+          <td>\${escapeHtml(o.result)}</td>
+        </tr>
+      \`).join("");
+
+      return \`
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>طباعة 80mm</title>
+<style>
+  body{margin:0;padding:0;background:#fff}
+  .p80{width:80mm;margin:0 auto;font-family:Arial,Tahoma,sans-serif;color:#000;direction:rtl;padding:6mm}
+  h1{font-size:16px;margin:0 0 6px 0;text-align:center}
+  .meta{font-size:12px;margin:2px 0}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  th,td{border-bottom:1px dashed #000;padding:4px 0;text-align:right}
+  .total{font-weight:900;font-size:14px;margin-top:8px;display:flex;justify-content:space-between}
+  .foot{margin-top:10px;font-size:11px;text-align:center}
+  @media print{
+    @page { size: 80mm auto; margin: 0; }
+    body{margin:0}
+    .p80{padding:4mm}
+  }
+</style>
+</head>
+<body>
+  <div class="p80">
+    <h1>شركة الحايك</h1>
+    <div class="meta">HAYEK SPOT</div>
+    <div class="meta">المستخدم: \${escapeHtml(user)}</div>
+    <div class="meta">العميل: \${escapeHtml(customer)}</div>
+    <div class="meta">التاريخ: \${escapeHtml(dateText)}</div>
+    <div class="meta">فاتورة: \${escapeHtml(String(invoiceId||"—"))}</div>
+
+    <table>
+      <thead><tr><th>الوقت</th><th>البيان</th><th>المبلغ</th></tr></thead>
+      <tbody>\${rows || \`<tr><td colspan="3">لا يوجد عمليات</td></tr>\`}</tbody>
+    </table>
+
+    <div class="total"><span>الإجمالي</span><span>\${escapeHtml(String(total))}</span></div>
+    <div class="foot">05510217646</div>
+    <div class="foot">تم التطوير بواسطة الحايك</div>
+  </div>
+
+<script>
+  window.onload = () => { setTimeout(()=>window.print(), 300); };
+<\/script>
+</body>
+</html>\`;
+    }
+
+    async function print80mm(){
+      clearErr(appErr);
+
+      const customer = requireCustomer();
+      if(!customer) return;
+
+      const ok = await ensureInvoiceOpened();
+      if(!ok) return;
+
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\\n" + r.msg);
+        return;
+      }
 
       const w = window.open("", "_blank");
-      if(!w){ alert("❌ المتصفح منع فتح نافذة جديدة. فعّل Popups ثم جرّب."); return; }
-
+      if(!w){
+        alert("❌ المتصفح منع فتح نافذة الطباعة.\\nفعّل popups للموقع.");
+        return;
+      }
       w.document.open();
-      w.document.write(`
-        <!doctype html>
-        <html lang="ar" dir="rtl">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>طباعة 80مم</title>
-          <style>
-            @page { size: 80mm auto; margin: 0; }
-            body{ margin:0; padding:0; direction:rtl; font-family: Arial, Tahoma, sans-serif; background:#fff; }
-            .paper{ width:80mm; padding:6mm; box-sizing:border-box; }
-            table{ width:100%; border-collapse:collapse; }
-            th,td{ border-bottom:1px solid #000; padding:6px 4px; font-size:12px; font-weight:700; }
-            .p-box,.p-field,.p-tableWrap,.p-foot{ border:0 !important; }
-            .p-title{ font-size:18px !important; font-weight:900; text-align:center; margin:0 0 6px; }
-            .p-subtitle{ font-size:12px !important; font-weight:900; text-align:center; margin:0 0 10px; color:#0a7a55; }
-            .p-totalBox{ margin-top:10px; font-size:14px; font-weight:900; display:flex; justify-content:space-between; }
-            .small{ font-size:11px; font-weight:800; text-align:center; margin-top:10px; }
-            .p-phone{ display:none; }
-          </style>
-        </head>
-        <body>
-          <div class="paper">${html}</div>
-          <script>window.onload=()=>setTimeout(()=>window.print(),250);</script>
-        </body>
-        </html>
-      `);
+      w.document.write(build80mmHTML());
       w.document.close();
-      toast("اختر الطابعة من نافذة الطباعة ✅");
+
+      toast("فتحنا الطباعة ✅");
+      resetAll(false);
+
+      await qSyncSilently(false);
     }
 
-    // =========================
-    // Expose smart voice add
-    // =========================
+    // ✅ EXPOSE: Smart voice add line
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
+        if(FLAGS.voice_enabled === false){
+          showErr(appErr, "ميزة الصوت غير مفعّلة لهذا المستخدم.");
+          return;
+        }
         const c = custInput.value.trim();
-        if(!c){ showErr(appErr, "اكتب اسم الزبون أولاً (إجباري)."); custInput.focus(); return; }
+        if(!c){
+          showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
+          custInput.focus();
+          return;
+        }
         clearErr(appErr);
 
         if(item && String(item).trim()){
@@ -1490,214 +1828,288 @@
         }
 
         const exprNorm = String(expression||"").trim();
-        if(!exprNorm){ showErr(appErr, "لم يتم العثور على عملية حسابية."); return; }
+        if(!exprNorm){
+          showErr(appErr, "لم يتم العثور على عملية حسابية.");
+          return;
+        }
 
-        setExpr(exprNorm);
+        const finalExpr = exprNorm.replaceAll("_","-");
+        setExpr(finalExpr);
         await equalsAndLog();
       }catch(e){
-        showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
+        showErr(appErr, "فشل إضافة بالصوت:\\n" + (e?.message || e));
       }
     };
 
     // =========================
-    // Assistant
+    // ✅ Assistant "Hayek" (commands)
     // =========================
-    function aiLogUser(t){
-      assistantLogEl.insertAdjacentHTML("beforeend", `<div class="msgU">👤 ${escapeHtml(t)}</div>`);
-      assistantLogEl.scrollTop = assistantLogEl.scrollHeight;
-    }
-    function aiLogHayek(t){
-      assistantLogEl.insertAdjacentHTML("beforeend", `<div class="msgA">🤖 ${escapeHtml(t)}</div>`);
+    function aiLogHayek(text){
+      if(!assistantLogEl) return;
+      const t = String(text||"").trim();
+      if(!t) return;
+      const line = document.createElement("div");
+      line.textContent = t;
+      assistantLogEl.appendChild(line);
       assistantLogEl.scrollTop = assistantLogEl.scrollHeight;
     }
 
     function aiNormalizeCommand(raw){
       let s = String(raw||"").trim();
       if(!s) return "";
+
+      // wake name (حايك / hayek)
       const name = (FLAGS.assistant_name || "حايك").trim();
-      if(name && s.startsWith(name)) s = s.slice(name.length).trim();
-      if(/^hayek/i.test(s)) s = s.replace(/^hayek/i,"").trim();
-      s = s.replace(/[؟]/g,"?").replace(/\s+/g," ").trim();
+      const nameLower = name.toLowerCase();
+
+      // remove starting name
+      const sLower = s.toLowerCase();
+      if(sLower.startsWith(nameLower)){
+        s = s.slice(name.length).trim();
+      }
+      if(/^hayek/i.test(s)) s = s.replace(/^hayek/i, "").trim();
+      if(/^حايك/.test(s)) s = s.replace(/^حايك/, "").trim();
+
+      // normalize punctuation/spaces
+      s = s.replace(/\s+/g, " ").trim();
       return s;
     }
 
-    async function aiRun(raw, fromWake=false){
-      if(!FLAGS.ai_enabled){ if(!fromWake) aiLogHayek("الميزة غير مفعلة لهذا الحساب."); return; }
-
+    async function aiRun(raw){
+      if(FLAGS.ai_enabled === false){
+        aiLogHayek("❌ المساعد غير مفعّل لهذا المستخدم.");
+        return;
+      }
       const cmd = aiNormalizeCommand(raw);
-      if(!cmd){ if(!fromWake) aiLogHayek("اكتب أمرًا. مثال: pdf / طباعة / احذف آخر سطر / مسح / سجل"); return; }
+
+      if(!cmd){
+        aiLogHayek("✅ أنا حايك. اكتب أمر مثل: تصدير pdf / حذف آخر سطر / افتح السجل / افتح الحاسبة");
+        return;
+      }
 
       const c = cmd.toLowerCase();
 
       try{
-        if(c.includes("pdf") || c.includes("تصدير") || c.includes("تنزيل")){
-          if(!fromWake) aiLogHayek("تمام ✅ سأصدر PDF الآن.");
-          await exportPDF();
+        // help
+        if(c.includes("مساعدة") || c === "help"){
+          aiLogHayek("الأوامر المتاحة:");
+          aiLogHayek("- تصدير pdf");
+          aiLogHayek("- طباعة 80 / طباعة 80mm");
+          aiLogHayek("- حذف آخر سطر");
+          aiLogHayek("- حذف سطر 3");
+          aiLogHayek("- افتح الحاسبة / افتح السجل");
+          aiLogHayek("- ضع اسم الزبون أحمد");
+          aiLogHayek("- ضع البيان قداحة");
           return;
         }
-        if(c.includes("طباعة") || c.includes("print") || c.includes("80")){
-          if(!FLAGS.print80_enabled){ if(!fromWake) aiLogHayek("الطباعة غير مفعلة."); return; }
-          if(!fromWake) aiLogHayek("تمام ✅ سأفتح نافذة الطباعة.");
-          print80mm();
-          return;
-        }
-        if(c.includes("احذف") && (c.includes("آخر") || c.includes("اخر") || c.includes("last"))){
-          if(!fromWake) aiLogHayek("تم ✅ سأحذف آخر سطر.");
-          await deleteLastLine();
-          return;
-        }
-        if(c.includes("مسح") || c.includes("clear")){
-          if(!fromWake) aiLogHayek("تم ✅ سأمسح العمليات.");
-          await clearOperations();
-          return;
-        }
-        if(c.includes("سجل") || c.includes("log")){
+
+        // open tabs
+        if(c.includes("السجل") || c.includes("log")){
           setTab("log");
-          if(!fromWake) aiLogHayek("فتحت سجل العمليات ✅");
+          aiLogHayek("✅ فتحت سجل العمليات");
           return;
         }
-        if(c.includes("حاسبة") || c.includes("calc")){
+        if(c.includes("الحاسبة") || c.includes("calc")){
           setTab("calc");
-          if(!fromWake) aiLogHayek("فتحت الحاسبة ✅");
+          aiLogHayek("✅ فتحت الحاسبة");
           return;
         }
 
-        if(!fromWake) aiLogHayek("ما فهمت الأمر. جرّب: pdf / طباعة 80 / احذف آخر سطر / مسح / سجل");
+        // set customer
+        if(c.startsWith("ضع اسم الزبون") || c.startsWith("اسم الزبون") || c.startsWith("customer ")){
+          let v = cmd.replace(/^ضع اسم الزبون\s*/,"").replace(/^اسم الزبون\s*/,"").replace(/^customer\s*/i,"").trim();
+          if(v){
+            custInput.value = v;
+            custInput.dispatchEvent(new Event("change", { bubbles:true }));
+            aiLogHayek("✅ تم وضع اسم الزبون");
+          }else{
+            aiLogHayek("❌ اكتب الاسم بعد الأمر");
+          }
+          return;
+        }
+
+        // set item
+        if(c.startsWith("ضع البيان") || c.startsWith("البيان") || c.startsWith("item ")){
+          let v = cmd.replace(/^ضع البيان\s*/,"").replace(/^البيان\s*/,"").replace(/^item\s*/i,"").trim();
+          if(v){
+            itemInput.value = v;
+            itemInput.dispatchEvent(new Event("change", { bubbles:true }));
+            aiLogHayek("✅ تم وضع البيان");
+          }else{
+            aiLogHayek("❌ اكتب البيان بعد الأمر");
+          }
+          return;
+        }
+
+        // export pdf
+        if(c.includes("pdf") || c.includes("تصدير")){
+          aiLogHayek("⏳ ساصدّر PDF الآن…");
+          await exportPDF();
+          aiLogHayek("✅ تم");
+          return;
+        }
+
+        // print 80
+        if(c.includes("طباعة") && (c.includes("80") || c.includes("80mm") || c.includes("80مم"))){
+          if(FLAGS.print80_enabled === false){
+            aiLogHayek("❌ ميزة طباعة 80mm غير مفعّلة.");
+            return;
+          }
+          aiLogHayek("⏳ سأفتح الطباعة 80mm…");
+          await print80mm();
+          aiLogHayek("✅ تم");
+          return;
+        }
+
+        // delete last
+        if((c.includes("آخر") || c.includes("last")) && (c.includes("حذف") || c.includes("delete"))){
+          aiLogHayek("⏳ سأحذف آخر سطر…");
+          await deleteLastLine();
+          aiLogHayek("✅ تم");
+          return;
+        }
+
+        // delete by index: "حذف سطر 3"
+        const m = cmd.match(/(?:حذف\s*سطر|delete\s*line)\s*([0-9٠-٩]+)/i);
+        if(m){
+          const rawN = m[1];
+          const map = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+          const n = Number(String(rawN).replace(/[٠-٩]/g, d=>map[d]||d));
+          if(Number.isFinite(n) && n>=1){
+            $("delIndex").value = String(n);
+            await deleteByIndex();
+            aiLogHayek("✅ تم حذف السطر");
+          }else{
+            aiLogHayek("❌ رقم السطر غير صحيح");
+          }
+          return;
+        }
+
+        // clear operations
+        if(c.includes("مسح") || c.includes("clear")){
+          await clearOperations();
+          aiLogHayek("✅ تم مسح العمليات");
+          return;
+        }
+
+        aiLogHayek("❌ لم أفهم الأمر. اكتب: مساعدة");
       }catch(e){
-        if(!fromWake) aiLogHayek("حدث خطأ: " + (e?.message || e));
+        aiLogHayek("❌ خطأ: " + (e?.message || e));
       }
     }
 
-    window.HAYEK_AI_RUN = aiRun;
+    // Expose handler for assistant mic
+    window.HAYEK_ASSISTANT_HANDLE = (text)=> aiRun(text);
 
-    window.HAYEK_AI_OPEN = function(){
-      if(!FLAGS.ai_enabled) return;
-      assistantPanel.style.display = "block";
-      fabHayek.style.display = "block";
-      setTimeout(()=> assistantInput.focus(), 50);
-    };
-
-    window.HAYEK_AI_SUBMIT = function(text){
-      const t = String(text||"").trim();
+    // Assistant send button
+    $("assistantSend").addEventListener("click", ()=>{
+      const t = (assistantText.value || "").trim();
       if(!t) return;
-      aiLogUser(t);
-      aiRun(t, false);
-      assistantInput.value = "";
-    };
-
-    function closeAssistant(){ assistantPanel.style.display = "none"; }
-
-    // =========================
-    // Login (Edge function) + offline fallback
-    // =========================
-    async function apiLoginViaEdge(username, password){
-      const deviceId = getOrCreateDeviceId();
-
-      const res = await fetch(HAYEK_SYNC_URL, {
-        method: "POST",
-        headers: {
-          "content-type":"application/json",
-          "x-hayek-device": deviceId,
-          "x-hayek-user": String(username||""),
-          "x-hayek-pass": String(password||"")
-        },
-        body: JSON.stringify({ action:"login" })
-      });
-
-      const data = await res.json().catch(()=>null);
-      if(!res.ok || !data?.ok){
-        const err = data?.error || ("HTTP_" + res.status);
-        throw new Error(err);
+      aiLogHayek("🗣️ " + t);
+      aiRun(t);
+      assistantText.value = "";
+    });
+    assistantText.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        $("assistantSend").click();
       }
-      return data.user;
-    }
+    });
 
-    function mapEdgeError(err){
-      const e = String(err||"");
-      if(e === "USER_NOT_FOUND") return "المستخدم غير موجود.";
-      if(e === "BAD_PASSWORD") return "كلمة السر غير صحيحة.";
-      if(e === "USER_BLOCKED") return "هذا الحساب محظور.";
-      return "فشل تسجيل الدخول:\n" + e;
-    }
+    // Assistant listen mode (continuous) — starts only when user clicks ON
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let hayekRec = null;
+    let hayekListening = false;
 
-    async function login(){
-      clearErr(loginErr);
-      const username = $("loginUser").value.trim();
-      const password = $("loginPass").value.trim();
-      if(!username || !password){ showErr(loginErr, "اكتب اسم المستخدم وكلمة السر."); return; }
-
-      await refreshNetState(true);
-
-      if(!NET_OK){
-        const cached = readOfflineUser();
-        if(!cached){ showErr(loginErr, "❌ لا يوجد دخول محفوظ. سجّل مرة واحدة مع الإنترنت."); return; }
-        if(cached.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
-        if(cached.username !== username || cached.password !== password){
-          showErr(loginErr, "❌ لا يمكن التحقق بدون إنترنت.\nاستخدم آخر حساب سجّل دخول على هذا الجهاز.");
-          return;
-        }
-        USER = cached;
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${USER.username}</b>`;
-        applyFlagsFromUserRow(USER);
-        renderSug();
-        resetAll(true);
-        toast("وضع أوفلاين ✅");
+    function hayekStart(){
+      if(FLAGS.ai_enabled === false){
+        toast("المساعد غير مفعّل");
         return;
       }
-
-      try{
-        const edgeUser = await apiLoginViaEdge(username, password);
-
-        USER = {
-          id: edgeUser.id,
-          username: edgeUser.username,
-          full_name: edgeUser.full_name || "",
-          device_id: edgeUser.device_id || null,
-          is_blocked: !!edgeUser.is_blocked,
-          password: password,
-          assistant_name: edgeUser.assistant_name,
-          ai_enabled: edgeUser.ai_enabled,
-          voice_enabled: edgeUser.voice_enabled,
-          print80_enabled: edgeUser.print80_enabled,
-          footer_enabled: edgeUser.footer_enabled
-        };
-
-        if(USER.is_blocked){ showErr(loginErr, "هذا الحساب محظور."); return; }
-
-        saveOfflineUser(USER);
-
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${USER.username}</b>`;
-        applyFlagsFromUserRow(USER);
-        renderSug();
-        resetAll(true);
-
-        await qSyncSilently();
-      }catch(e){
-        showErr(loginErr, mapEdgeError(e?.message || e));
+      if(!SR){
+        alert("❌ متصفحك لا يدعم SpeechRecognition.\nجرّب Chrome.");
+        return;
       }
+      if(hayekListening) return;
+
+      hayekRec = new SR();
+      hayekRec.interimResults = true;
+      hayekRec.continuous = true;
+
+      const lang = localStorage.getItem("HAYEK_VOICE_LANG_V1") || "ar-SA";
+      hayekRec.lang = lang;
+
+      let lastFinal = "";
+
+      hayekRec.onresult = (e)=>{
+        let finalText = "";
+        let interim = "";
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          const t = e.results[i][0].transcript;
+          if(e.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        const name = (FLAGS.assistant_name || "حايك").trim();
+        const nameLower = name.toLowerCase();
+        const full = (finalText || interim || "").trim();
+        if(!full) return;
+
+        // Only execute on final, and only if contains wake
+        if(finalText && finalText.trim()){
+          const s = finalText.trim();
+          const sLower = s.toLowerCase();
+          const hasWake =
+            sLower.startsWith(nameLower) ||
+            sLower.startsWith("hayek") ||
+            s.startsWith("حايك");
+
+          if(hasWake && s !== lastFinal){
+            lastFinal = s;
+            aiLogHayek("🎧 " + s);
+            aiRun(s);
+          }
+        }
+      };
+
+      hayekRec.onerror = ()=>{};
+      hayekRec.onend = ()=>{
+        hayekListening = false;
+        // auto-restart if enabled (keep alive)
+        setTimeout(()=>{
+          if(window.__HAYEK_KEEP_LISTENING){
+            hayekStart();
+          }
+        }, 300);
+      };
+
+      window.__HAYEK_KEEP_LISTENING = true;
+      hayekListening = true;
+      hayekRec.start();
+      toast("حايك يعمل بالصوت ✅");
     }
 
-    function logout(){
-      USER = null;
-      loginCard.classList.remove("hide");
-      appCard.classList.add("hide");
-      subtitle.textContent = "تسجيل دخول المستخدم";
-      pill.innerHTML = "<b>غير مسجل</b>";
-      assistantPanel.style.display = "none";
-      fabHayek.style.display = "none";
+    function hayekStop(){
+      window.__HAYEK_KEEP_LISTENING = false;
+      try{ hayekRec && hayekRec.stop(); }catch{}
+      hayekRec = null;
+      hayekListening = false;
+      toast("تم إيقاف حايك");
     }
 
-    // =========================
-    // Bind UI
-    // =========================
-    $("loginCard").addEventListener("submit", (e)=>{ e.preventDefault(); login(); });
-    $("btnClear").addEventListener("click", ()=>{ $("loginUser").value=""; $("loginPass").value=""; clearErr(loginErr); });
+    $("btnHayekOn").addEventListener("click", hayekStart);
+    $("btnHayekOff").addEventListener("click", hayekStop);
+
+    // ------- binds -------
+    document.getElementById("loginCard").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      login();
+    });
+
+    $("btnClear").addEventListener("click", ()=>{
+      $("loginUser").value="";
+      $("loginPass").value="";
+      clearErr(loginErr);
+    });
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
@@ -1713,45 +2125,26 @@
 
     $("btnBack").addEventListener("click", backspace);
     $("btnEq").addEventListener("click", equalsAndLog);
+
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
+
     $("btnDelLast").addEventListener("click", deleteLastLine);
+    $("btnDelIndex").addEventListener("click", deleteByIndex);
+
     $("btnPrint80").addEventListener("click", print80mm);
 
-    logBody.addEventListener("click", (e)=>{
-      const b = e.target.closest("button[data-del]");
-      if(!b) return;
-      deleteLineAt(b.getAttribute("data-del"));
-    });
-
-    fabHayek.addEventListener("click", ()=> window.HAYEK_AI_OPEN());
-    btnCloseAssistant.addEventListener("click", closeAssistant);
-    btnSendAssistant.addEventListener("click", ()=> window.HAYEK_AI_SUBMIT(assistantInput.value));
-    assistantInput.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter"){ e.preventDefault(); window.HAYEK_AI_SUBMIT(assistantInput.value); }
-    });
-
-    btnWake.addEventListener("click", ()=>{
-      if(!FLAGS.voice_enabled){ aiLogHayek("الصوت غير مفعّل لهذا الحساب."); return; }
-      const ok = window.HAYEK_WAKE_TOGGLE?.();
-      if(!ok) return;
-
-      if(btnWake.classList.contains("on")){
-        btnWake.classList.remove("on");
-        btnWake.textContent = "🎧 استماع";
-        aiLogHayek("تم إيقاف الاستماع.");
-      }else{
-        btnWake.classList.add("on");
-        btnWake.textContent = "🎧 استماع (شغال)";
-        aiLogHayek(`تم تشغيل الاستماع ✅ قل: "${FLAGS.assistant_name} ..."`);
-
-      }
-    });
-
-    // init
     setTab("calc");
+
     renderSug();
-    refreshNetState(true);
+    refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
+    restoreSession();
+
+    try{
+      if("serviceWorker" in navigator){
+        navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+      }
+    }catch{}
   </script>
 </body>
 </html>
