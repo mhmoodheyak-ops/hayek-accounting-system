@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- PDF + Canvas -->
+  <!-- PDF -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -43,8 +43,10 @@
       border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
     }
 
-    .hint{color:#dbe8ff;font-size:14px;line-height:1.9;font-weight:900;}
-    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px;font-weight:800;}
+    .hint{ color:#dbe8ff; font-size:14px; line-height:1.9; font-weight:900; }
+
+    label{ display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; font-weight:800; }
+
     input{
       width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
       background: rgba(0,0,0,.18); color:var(--txt); outline:none;
@@ -83,7 +85,8 @@
     .tab.active{background:rgba(31,91,216,.22); border-color:rgba(31,91,216,.25)}
     .calcBox{border:1px solid var(--line); background:rgba(0,0,0,.12); border-radius:18px; padding:12px}
 
-    .exprTitle{font-size:14px;color:#cfe0ff;margin-bottom:8px;font-weight:900;}
+    .exprTitle{ font-size:14px; color:#cfe0ff; margin-bottom:8px; font-weight:900; }
+
     .expr{
       width:100%;
       border:2px solid rgba(0,0,0,.16);
@@ -101,7 +104,16 @@
       font-weight:1000;
       font-size:20px;
     }
-    .resLine{margin-top:10px;display:flex;justify-content:flex-end;gap:8px;color:var(--muted);font-size:13px;font-weight:900;}
+
+    .resLine{
+      margin-top:10px;
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:900;
+    }
     .resLine b{
       color:#000;
       font-size:18px;
@@ -116,7 +128,10 @@
     }
 
     .keys{margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
-    .key{border:0;border-radius:14px;background:rgba(255,255,255,.10);color:var(--txt);padding:14px 0;font-size:18px;font-weight:900;cursor:pointer;}
+    .key{
+      border:0; border-radius:14px; background:rgba(255,255,255,.10);
+      color:var(--txt); padding:14px 0; font-size:18px; font-weight:900; cursor:pointer;
+    }
     .key:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
     .key.op{background:rgba(255,255,255,.12)}
     .key.eq{grid-column:1 / span 2; background:var(--blue)}
@@ -124,7 +139,14 @@
     .key.back{grid-column:3 / span 2}
     .actions2{margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px}
 
-    .footerNote{margin-top:10px;text-align:center;font-size:12px;color:#cfe0ff;line-height:1.8;font-weight:900;}
+    .footerNote{
+      margin-top:10px;
+      text-align:center;
+      font-size:12px;
+      color:#cfe0ff;
+      line-height:1.8;
+      font-weight:900;
+    }
 
     .logTable{margin-top:10px; border:1px solid var(--line); border-radius:18px; overflow:hidden; background:rgba(0,0,0,.10)}
     table{width:100%; border-collapse:collapse}
@@ -134,24 +156,7 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* ✅ زر حذف السطر */
-    .delBtn{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,77,77,.12);
-      color:#ffd6d6;
-      width:34px; height:34px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:1000;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      transition:.15s;
-    }
-    .delBtn:hover{transform:translateY(-1px); background:rgba(255,77,77,.18)}
-    .delCell{width:44px; text-align:center; vertical-align:middle}
-
-    /* ===== A4 Print Area (PDF) ===== */
+    /* PDF printArea (A4) */
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -161,54 +166,60 @@
       direction:rtl;
       font-family:Arial,"Segoe UI",Tahoma,sans-serif;
     }
+
     .p-box{border:2px solid #111; border-radius:16px; padding:14px 16px; margin-bottom:14px;}
     .p-header{text-align:center; padding:18px 16px;}
     .p-title{font-weight:900; font-size:34px; margin:0; color:#000;}
     .p-subtitle{margin-top:8px; font-size:22px; color:#0a7a55; font-weight:900;}
+
     .p-field{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:12px 14px; border:2px solid #111; border-radius:14px; margin-bottom:10px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 14px;
+      border:2px solid #111;
+      border-radius:14px;
+      margin-bottom:10px;
     }
     .p-field .k{font-size:20px; font-weight:900; color:#000;}
     .p-field .v{font-size:20px; font-weight:900; color:#000;}
+
     .p-tableWrap{border:2px solid #111; border-radius:16px; overflow:hidden;}
     #printArea table{width:100%; border-collapse:collapse; background:#fff;}
-    #printArea thead th{font-size:18px;font-weight:1000;padding:12px 10px;border-bottom:2px solid #111;background:#fff;color:#000;}
-    #printArea tbody td{font-size:16px;font-weight:1000;padding:12px 10px;border-bottom:1px solid #111;background:#fff;color:#000;}
-    #printArea tbody tr:last-child td{border-bottom:0;}
-    .p-totalBox{
-      border:2px dashed #111; border-radius:16px; padding:14px 16px;
-      display:flex; justify-content:space-between; margin-top:12px;
-      font-weight:1000; font-size:20px; color:#000;
+    #printArea thead th{
+      font-size:18px; font-weight:1000; padding:12px 10px;
+      border-bottom:2px solid #111; background:#fff; color:#000;
     }
+    #printArea tbody td{
+      font-size:16px; font-weight:1000; padding:12px 10px;
+      border-bottom:1px solid #111; background:#fff; color:#000;
+    }
+    #printArea tbody tr:last-child td{border-bottom:0;}
+
+    .p-totalBox{
+      border:2px dashed #111;
+      border-radius:16px;
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      margin-top:12px;
+      font-weight:1000;
+      font-size:20px;
+      color:#000;
+    }
+
     .p-foot{border:2px solid #111; border-radius:16px; padding:16px 18px; margin-top:14px; text-align:center;}
     .p-foot .small{font-size:20px; color:#000; font-weight:900; line-height:1.9;}
     .p-phone{
-      display:inline-block; margin-top:12px; border:2px solid #0a7a55;
-      color:#0a7a55; border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
+      display:inline-block;
+      margin-top:12px;
+      border:2px solid #0a7a55;
+      color:#0a7a55;
+      border-radius:999px;
+      padding:12px 20px;
+      font-weight:1000;
+      font-size:22px;
     }
-
-    /* ===== 80mm Receipt Area (for Bluetooth print) ===== */
-    #receiptArea{
-      position:fixed; left:-9999px; top:0;
-      width:576px; /* 80mm at 203dpi تقريباً */
-      background:#fff;
-      color:#000;
-      padding:14px 16px;
-      direction:rtl;
-      font-family: Arial, "Segoe UI", Tahoma, sans-serif;
-    }
-    .r-title{font-size:30px; font-weight:900; text-align:center; margin:0}
-    .r-sub{font-size:18px; font-weight:900; text-align:center; margin:6px 0 10px; color:#0a7a55}
-    .r-line{border-top:2px dashed #000; margin:10px 0}
-    .r-row{display:flex; justify-content:space-between; gap:12px; font-size:18px; font-weight:900; margin:6px 0}
-    .r-row .k{opacity:.85}
-    .r-table{width:100%; border-collapse:collapse; margin-top:10px}
-    .r-table th{font-size:16px; font-weight:1000; border-bottom:2px solid #000; padding:8px 6px; text-align:right}
-    .r-table td{font-size:16px; font-weight:900; border-bottom:1px solid #000; padding:8px 6px; text-align:right; vertical-align:top}
-    .r-total{font-size:22px; font-weight:1000; display:flex; justify-content:space-between; margin-top:10px}
-    .r-foot{margin-top:10px; text-align:center; font-size:16px; font-weight:900; line-height:1.8}
-    .r-phone{display:inline-block; margin-top:8px; border:2px solid #0a7a55; color:#0a7a55; border-radius:999px; padding:8px 14px; font-weight:1000; font-size:18px}
 
     /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
@@ -225,6 +236,23 @@
     }
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
+
+    /* ✅ delete row button (log) */
+    .delBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,77,77,.12);
+      color:#ffd6d6;
+      width:34px; height:34px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:1000;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:.15s;
+    }
+    .delBtn:hover{transform:translateY(-1px); background:rgba(255,77,77,.18)}
+    .delCell{width:44px; text-align:center; vertical-align:middle}
   </style>
 </head>
 
@@ -241,6 +269,7 @@
       <div class="pill" id="pill"><b>غير مسجل</b></div>
     </div>
 
+    <!-- ✅ loginCard FORM -->
     <form class="card" id="loginCard" autocomplete="on">
       <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
       <label>اسم المستخدم</label>
@@ -261,6 +290,7 @@
 
       <div class="sep"></div>
 
+      <!-- ✅ Voice language toggle -->
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
@@ -281,6 +311,7 @@
       </div>
       <datalist id="itemList"></datalist>
 
+      <!-- ✅ Smart voice add -->
       <div style="margin-top:10px">
         <button class="btn" id="hayekSmartAdd" type="button">🎙️ إضافة بالصوت (اسم + عملية)</button>
       </div>
@@ -323,8 +354,10 @@
 
           <div class="actions2">
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
-            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm</button>
             <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
+
+            <!-- ✅ NEW: 80mm print (Raster via system print) -->
+            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (Raster)</button>
           </div>
 
           <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
@@ -337,8 +370,8 @@
             <thead>
               <tr>
                 <th class="delCell">حذف</th>
-                <th style="width:48%">البيان</th>
-                <th style="width:30%">العملية</th>
+                <th style="width:46%">البيان</th>
+                <th style="width:32%">العملية</th>
                 <th style="width:22%">الوقت</th>
               </tr>
             </thead>
@@ -353,7 +386,6 @@
     </div>
 
     <div id="printArea"></div>
-    <div id="receiptArea"></div>
     <div class="toast" id="toast"></div>
   </div>
 
@@ -382,7 +414,7 @@
       if(!SR){
         btn.style.opacity = "0.6";
         btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
-        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome.")); 
         return;
       }
 
@@ -435,8 +467,11 @@
       });
     }
 
+    // --- helpers for smart parse ---
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-    function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
+    function toLatinDigits(s){
+      return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d);
+    }
     function normalizeExpr(s){
       let x = toLatinDigits(s);
       x = x.replace(/\s+/g,"");
@@ -449,12 +484,15 @@
     function parseSmart(text){
       const t0 = toLatinDigits(String(text||"")).trim();
       if(!t0) return null;
+
       const m = t0.match(/[0-9]/);
       if(!m || m.index == null) return null;
+
       const idx = m.index;
       const item = t0.slice(0, idx).trim();
       const exprRaw = t0.slice(idx).trim();
       const expr = normalizeExpr(exprRaw);
+
       if(!expr) return null;
       return { item, expr };
     }
@@ -505,7 +543,7 @@
             alert("❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى.");
             return;
           }
-          window.HAYEK_VOICE_ADD_LINE((parsed.item||"").trim(), (parsed.expr||"").trim());
+          window.HAYEK_VOICE_ADD_LINE((parsed.item||""), (parsed.expr||""));
         }
       };
 
@@ -515,7 +553,7 @@
       btn.addEventListener("click", ()=>{
         try{
           if(listening){ rec.stop(); return; }
-          rec.lang = getLang();
+          rec.lang = localStorage.getItem("HAYEK_VOICE_LANG_V1") || "ar-SA";
           on();
           rec.start();
         }catch{
@@ -527,13 +565,13 @@
 
     attachMic("hayekMicCustomer", "customerName");
     attachMic("hayekMicItem", "itemName");
+    attachSmart("hayekSmartAdd");
 
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
-    if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
-    if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
+    if(arBtn) arBtn.addEventListener("click", ()=> { localStorage.setItem("HAYEK_VOICE_LANG_V1","ar-SA"); refreshLangUI(); });
+    if(trBtn) trBtn.addEventListener("click", ()=> { localStorage.setItem("HAYEK_VOICE_LANG_V1","tr-TR"); refreshLangUI(); });
 
-    attachSmart("hayekSmartAdd");
     refreshLangUI();
   })();
   </script>
@@ -580,7 +618,7 @@
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
-      setTimeout(()=> toastEl.style.display="none", 1600);
+      setTimeout(()=> toastEl.style.display="none", 1400);
     }
     function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
 
@@ -643,6 +681,7 @@
     }
 
     function netNow(){ return !!NET_OK; }
+
     async function kickNet(){ await refreshNetState(true); }
 
     window.addEventListener("online", async ()=>{
@@ -650,11 +689,13 @@
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
     });
+
     window.addEventListener("focus", async ()=>{
       await kickNet();
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
     });
+
     document.addEventListener("visibilitychange", async ()=>{
       if(!document.hidden){
         await kickNet();
@@ -662,6 +703,7 @@
         await syncDeviceIdIfNeeded();
       }
     });
+
     window.addEventListener("pageshow", async ()=>{
       await kickNet();
       await qSyncSilently(true);
@@ -676,14 +718,14 @@
     // =========================
     // ✅ OFFLINE QUEUE
     // =========================
-    const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
+    const OFFLINE_QUEUE_KEY_V1 = "HAYEK_OFFLINE_INVOICES_V1";
 
     function qRead(){
-      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }
+      try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY_V1) || "[]"); }
       catch{ return []; }
     }
     function qWrite(arr){
-      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[]));
+      localStorage.setItem(OFFLINE_QUEUE_KEY_V1, JSON.stringify(Array.isArray(arr)?arr:[]));
     }
     function qAdd(payload){
       const arr = qRead();
@@ -694,16 +736,13 @@
 
     function cleanInvoicePayload(p){
       if(!p || typeof p !== "object") return null;
-
       const out = { ...p };
       delete out.__queued_at;
       delete out.__meta;
       delete out.__local;
-
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
-
       return out;
     }
 
@@ -1061,7 +1100,7 @@
     }
 
     // =========================
-    // ✅ LOGIN via Edge Function
+    // ✅ LOGIN عبر Edge Function (hayek-sync)
     // =========================
     async function apiLoginViaEdge(username, password){
       const deviceId = getOrCreateDeviceId();
@@ -1123,12 +1162,8 @@
 
         let u = cached;
 
-        try{
-          u = await enforceDeviceLockForUserRow(u);
-        }catch(e){
-          showErr(loginErr, e?.message || "تم منع الدخول");
-          return;
-        }
+        try{ u = await enforceDeviceLockForUserRow(u); }
+        catch(e){ showErr(loginErr, e?.message || "تم منع الدخول"); return; }
 
         startSingleTabGuard(u.username);
         if(TAB_BLOCKED) return;
@@ -1164,12 +1199,8 @@
           return;
         }
 
-        try{
-          u = await enforceDeviceLockForUserRow(u);
-        }catch(e){
-          showErr(loginErr, e?.message || "تم منع الدخول");
-          return;
-        }
+        try{ u = await enforceDeviceLockForUserRow(u); }
+        catch(e){ showErr(loginErr, e?.message || "تم منع الدخول"); return; }
 
         startSingleTabGuard(u.username);
         if(TAB_BLOCKED) return;
@@ -1185,7 +1216,6 @@
         resetAll(true);
 
         renderSug();
-
         await qSyncSilently(true);
         await syncDeviceIdIfNeeded();
       }catch(e){
@@ -1210,9 +1240,8 @@
 
           let u = cached;
 
-          try{
-            u = await enforceDeviceLockForUserRow(u);
-          }catch(e){
+          try{ u = await enforceDeviceLockForUserRow(u); }
+          catch(e){
             localStorage.removeItem("HAYEK_USER_SESSION");
             showErr(loginErr, e?.message || "تم منع الدخول");
             return;
@@ -1245,9 +1274,8 @@
         const pass = cached?.password || "";
         u = { ...u, password: pass };
 
-        try{
-          u = await enforceDeviceLockForUserRow(u);
-        }catch(e){
+        try{ u = await enforceDeviceLockForUserRow(u); }
+        catch(e){
           localStorage.removeItem("HAYEK_USER_SESSION");
           showErr(loginErr, e?.message || "تم منع الدخول");
           return;
@@ -1382,6 +1410,7 @@
       if(navigator.vibrate) navigator.vibrate(10);
     }
 
+    /* ✅ render log with delete button */
     function renderLog(){
       if(!ops.length){
         logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
@@ -1401,23 +1430,6 @@
           </tr>
         `;
       }).join("");
-    }
-
-    async function deleteOpByIndex(i){
-      const idx = Number(i);
-      if(!Number.isFinite(idx)) return;
-      if(idx < 0 || idx >= ops.length) return;
-
-      ops.splice(idx, 1);
-      renderLog();
-      toast("تم حذف السطر ✅");
-      if(navigator.vibrate) navigator.vibrate(12);
-
-      if(invoiceOpen){
-        const r = await saveInvoice("open");
-        if(!r.ok) showErr(appErr, "فشل الحفظ بعد الحذف:\n" + r.msg);
-      }
-      await qSyncSilently(false);
     }
 
     async function equalsAndLog(){
@@ -1475,6 +1487,18 @@
       await qSyncSilently(false);
     }
 
+    async function deleteOp(index){
+      const i = Number(index);
+      if(!Number.isFinite(i) || i < 0 || i >= ops.length) return;
+      ops.splice(i,1);
+      renderLog();
+      toast("تم حذف السطر ✅");
+      if(invoiceOpen){
+        await saveInvoice("open");
+      }
+      await qSyncSilently(false);
+    }
+
     function buildPrintArea(){
       const pa = $("printArea");
       const customer = (custInput.value.trim() || "—");
@@ -1521,56 +1545,6 @@
       return pa;
     }
 
-    function buildReceiptArea(){
-      const ra = $("receiptArea");
-      const customer = (custInput.value.trim() || "—");
-      const user = (USER?.full_name || USER?.username || "—");
-      const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-      const total = calcTotal();
-
-      const rows = ops.slice().reverse().map(o=>`
-        <tr>
-          <td style="width:18%">${escapeHtml(o.time || "")}</td>
-          <td style="width:34%">${escapeHtml(o.label || "")}</td>
-          <td style="width:30%">${escapeHtml(o.expr || "")}</td>
-          <td style="width:18%">${escapeHtml(o.result)}</td>
-        </tr>
-      `).join("");
-
-      ra.innerHTML = `
-        <div class="r-title">شركة الحايك</div>
-        <div class="r-sub">HAYEK SPOT</div>
-
-        <div class="r-line"></div>
-
-        <div class="r-row"><div class="k">المستخدم</div><div class="v">${escapeHtml(user)}</div></div>
-        <div class="r-row"><div class="k">العميل</div><div class="v">${escapeHtml(customer)}</div></div>
-        <div class="r-row"><div class="k">رقم</div><div class="v">${escapeHtml(invId)}</div></div>
-        <div class="r-row"><div class="k">تاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
-
-        <div class="r-line"></div>
-
-        <table class="r-table">
-          <thead><tr><th>وقت</th><th>بيان</th><th>عملية</th><th>نتيجة</th></tr></thead>
-          <tbody>
-            ${rows || `<tr><td colspan="4" style="padding:10px;font-weight:900">لا يوجد عمليات</td></tr>`}
-          </tbody>
-        </table>
-
-        <div class="r-total"><div>الإجمالي</div><div>${escapeHtml(total)}</div></div>
-
-        <div class="r-line"></div>
-
-        <div class="r-foot">
-          تم تطوير هذه الحاسبة من قبل شركة الحايك<br/>
-          تجارة عامة / دعاية و اعلان / حلول رقمية<br/>
-          <span class="r-phone">05510217646</span>
-        </div>
-      `;
-      return ra;
-    }
-
     async function exportPDF(){
       clearErr(appErr);
 
@@ -1589,15 +1563,11 @@
       addSug(SUG_CUSTOMERS_KEY, customer);
 
       const pa = buildPrintArea();
-
-      const SCALE = 1.35;
-      const JPEG_Q = 0.72;
-
-      const canvas = await html2canvas(pa,{scale:SCALE,useCORS:true,backgroundColor:"#ffffff"});
-      const imgData = canvas.toDataURL("image/jpeg", JPEG_Q);
+      const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
+      const imgData = canvas.toDataURL("image/png");
 
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation:"p", unit:"mm", format:"a4", compress:true });
+      const pdf = new jsPDF("p","mm","a4");
 
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
@@ -1606,12 +1576,12 @@
       const imgH = canvas.height * (imgW / canvas.width);
 
       if(imgH <= pageH){
-        pdf.addImage(imgData,"JPEG",0,0,imgW,imgH, undefined, "FAST");
+        pdf.addImage(imgData,"PNG",0,0,imgW,imgH);
       }else{
         let remaining = imgH;
         let position = 0;
         while(remaining > 0){
-          pdf.addImage(imgData,"JPEG",0,position,imgW,imgH, undefined, "FAST");
+          pdf.addImage(imgData,"PNG",0,position,imgW,imgH);
           remaining -= pageH;
           if(remaining > 0){ pdf.addPage(); position -= pageH; }
         }
@@ -1626,7 +1596,149 @@
       await qSyncSilently(false);
     }
 
-    // ✅ EXPOSE: Smart voice add line
+    /* =========================================================
+       ✅ NEW: 80mm PRINT (Raster via browser print dialog)
+       - نفتح نافذة فيها إيصال بعرض 80mm
+       - ثم window.print() => النظام يحولها Raster للطابعة => عربي مضبوط
+    ========================================================= */
+    function buildReceipt80HTML(){
+      const customer = (custInput.value.trim() || "—");
+      const user = (USER?.full_name || USER?.username || "—");
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const total = calcTotal();
+
+      const rows = ops.slice().reverse().map(o=>{
+        const label = escapeHtml(o.label || "");
+        const ex = escapeHtml(o.expr || "");
+        const rs = escapeHtml(String(o.result ?? ""));
+        const tm = escapeHtml(o.time || "");
+        return `
+          <tr>
+            <td style="width:18%;text-align:left;direction:ltr">${tm}</td>
+            <td style="width:52%">${label}<div style="font-size:10px;color:#444;margin-top:2px">${ex}</div></td>
+            <td style="width:30%;text-align:left;direction:ltr;font-weight:900">${rs}</td>
+          </tr>
+        `;
+      }).join("");
+
+      return `
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HAYEK 80mm</title>
+<style>
+  /* 80mm receipt - print */
+  @page { size: 80mm auto; margin: 3mm; }
+  html,body{ margin:0; padding:0; }
+  body{
+    width:74mm; /* داخل الهوامش */
+    font-family: Arial, "Segoe UI", Tahoma, sans-serif;
+    direction:rtl;
+    color:#000;
+    background:#fff;
+  }
+  .center{text-align:center}
+  .title{font-size:18px;font-weight:900; margin-top:2mm}
+  .sub{font-size:12px;font-weight:900; margin-top:1mm}
+  .hr{border-top:1px dashed #000; margin:2.5mm 0}
+  .row{display:flex; justify-content:space-between; gap:6px; font-size:12px; font-weight:800}
+  .k{color:#000}
+  .v{color:#000}
+  table{width:100%; border-collapse:collapse; font-size:12px}
+  th,td{padding:2mm 0; border-bottom:1px solid #000; vertical-align:top}
+  th{font-weight:900}
+  tr:last-child td{border-bottom:0}
+  .total{display:flex; justify-content:space-between; font-size:14px; font-weight:900; margin-top:2mm}
+  .foot{margin-top:2mm; font-size:11px; font-weight:900; text-align:center}
+  .muted{font-size:10px; color:#222; font-weight:800}
+  /* تحسين للطباعة الحرارية */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+</style>
+</head>
+<body>
+  <div class="center">
+    <div class="title">شركة الحايك</div>
+    <div class="sub">HAYEK SPOT</div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="row"><div class="k">المستخدم</div><div class="v">${escapeHtml(user)}</div></div>
+  <div class="row"><div class="k">العميل</div><div class="v">${escapeHtml(customer)}</div></div>
+  <div class="row"><div class="k">التاريخ</div><div class="v" style="direction:ltr;text-align:left">${escapeHtml(dateText)}</div></div>
+
+  <div class="hr"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%;text-align:left;direction:ltr">وقت</th>
+        <th style="width:52%">بيان</th>
+        <th style="width:30%;text-align:left;direction:ltr">نتيجة</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || `<tr><td colspan="3" style="padding:3mm 0;font-weight:900">لا يوجد عمليات</td></tr>`}
+    </tbody>
+  </table>
+
+  <div class="hr"></div>
+
+  <div class="total"><div>الإجمالي</div><div style="direction:ltr;text-align:left">${escapeHtml(String(total))}</div></div>
+
+  <div class="hr"></div>
+
+  <div class="foot">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
+  <div class="foot muted">05510217646</div>
+
+<script>
+  // اطبع بعد التحميل
+  window.onload = () => {
+    setTimeout(() => { window.print(); }, 250);
+  };
+</script>
+</body>
+</html>`;
+    }
+
+    async function print80mm(){
+      clearErr(appErr);
+
+      const customer = requireCustomer();
+      if(!customer) return;
+
+      const ok = await ensureInvoiceOpened();
+      if(!ok) return;
+
+      // حفظ كـ closed اختياري — خليته مثل PDF حتى تكون الفاتورة “مقفولة”
+      const r = await saveInvoice("closed");
+      if(!r.ok){
+        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
+        return;
+      }
+
+      addSug(SUG_CUSTOMERS_KEY, customer);
+
+      const html = buildReceipt80HTML();
+      const w = window.open("", "_blank");
+      if(!w){
+        showErr(appErr, "❌ المتصفح منع فتح نافذة الطباعة.\nافتح السماح Pop-ups ثم أعد المحاولة.");
+        return;
+      }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+
+      toast("افتح نافذة الطباعة واختر الطابعة ✅");
+
+      // لا نمسح البيانات مباشرة — نخليها مثل PDF (بعد نجاح المستخدم يقدر يمسح)
+      // إذا بدك نفس سلوك PDF (يمسح بعد الطباعة) قلّي.
+      await qSyncSilently(false);
+    }
+
+    // ✅ Smart voice add line
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
@@ -1657,190 +1769,6 @@
       }
     };
 
-    // =========================
-    // ✅ Bluetooth 80mm Printing (BLE + ESC/POS raster image)
-    // =========================
-    let BT = { device:null, server:null, ch:null, name:"" };
-
-    function u8(...arr){ return new Uint8Array(arr); }
-
-    async function findWritableCharacteristic(server){
-      const KNOWN = [
-        "0000ffe0-0000-1000-8000-00805f9b34fb",
-        "0000ffe5-0000-1000-8000-00805f9b34fb",
-        "0000ff00-0000-1000-8000-00805f9b34fb",
-        "0000fff0-0000-1000-8000-00805f9b34fb",
-        "0000fff1-0000-1000-8000-00805f9b34fb",
-        "0000fff2-0000-1000-8000-00805f9b34fb",
-        "6e400001-b5a3-f393-e0a9-e50e24dcca9e", // Nordic UART
-        "49535343-fe7d-4ae5-8fa9-9fafd205e455"  // ISSC Transparent
-      ];
-
-      // 1) try known services directly
-      for(const suuid of KNOWN){
-        try{
-          const svc = await server.getPrimaryService(suuid);
-          const chars = await svc.getCharacteristics();
-          for(const ch of chars){
-            const p = ch.properties;
-            if(p.write || p.writeWithoutResponse) return ch;
-          }
-        }catch{}
-      }
-
-      // 2) last resort: loop through all available services
-      try{
-        const services = await server.getPrimaryServices();
-        for(const svc of services){
-          const chars = await svc.getCharacteristics();
-          for(const ch of chars){
-            const p = ch.properties;
-            if(p.write || p.writeWithoutResponse) return ch;
-          }
-        }
-      }catch{}
-
-      return null;
-    }
-
-    async function ensurePrinterConnected(){
-      if(!("bluetooth" in navigator)){
-        throw new Error("❌ المتصفح لا يدعم Bluetooth للطباعة.\nاستخدم Chrome على Android.");
-      }
-      if(BT.ch && BT.device && BT.device.gatt?.connected){
-        return BT;
-      }
-
-      const optionalServices = [
-        "0000ffe0-0000-1000-8000-00805f9b34fb",
-        "0000ffe5-0000-1000-8000-00805f9b34fb",
-        "0000ff00-0000-1000-8000-00805f9b34fb",
-        "0000fff0-0000-1000-8000-00805f9b34fb",
-        "0000fff1-0000-1000-8000-00805f9b34fb",
-        "0000fff2-0000-1000-8000-00805f9b34fb",
-        "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
-        "49535343-fe7d-4ae5-8fa9-9fafd205e455",
-        "0000180a-0000-1000-8000-00805f9b34fb",
-        "0000180f-0000-1000-8000-00805f9b34fb"
-      ];
-
-      const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices
-      });
-
-      device.addEventListener("gattserverdisconnected", ()=>{
-        BT = { device:null, server:null, ch:null, name:"" };
-      });
-
-      const server = await device.gatt.connect();
-      const ch = await findWritableCharacteristic(server);
-
-      if(!ch){
-        throw new Error("❌ لم أجد قناة كتابة للطابعة.\nغالباً الطابعة Classic (SPP) أو BLE بخدمة غير قياسية.");
-      }
-
-      BT = { device, server, ch, name: device.name || "Printer" };
-      return BT;
-    }
-
-    async function writeChunks(ch, bytes){
-      const MAX = 180; // safe for BLE
-      for(let i=0; i<bytes.length; i+=MAX){
-        const slice = bytes.slice(i, i+MAX);
-        if(ch.properties.writeWithoutResponse){
-          await ch.writeValueWithoutResponse(slice);
-        }else{
-          await ch.writeValue(slice);
-        }
-        await new Promise(r=>setTimeout(r, 8));
-      }
-    }
-
-    function canvasToEscposRaster(canvas){
-      const w0 = canvas.width;
-      const h0 = canvas.height;
-      const w = w0 - (w0 % 8);
-      const h = h0;
-
-      const ctx = canvas.getContext("2d");
-      const img = ctx.getImageData(0, 0, w, h).data;
-
-      const bytesPerRow = w / 8;
-      const data = new Uint8Array(bytesPerRow * h);
-
-      for(let y=0; y<h; y++){
-        for(let x=0; x<w; x++){
-          const i = (y*w + x) * 4;
-          const r = img[i], g = img[i+1], b = img[i+2], a = img[i+3];
-          const lum = (0.299*r + 0.587*g + 0.114*b);
-          const isBlack = (a > 10) && (lum < 200);
-          if(isBlack){
-            const byteIndex = y*bytesPerRow + (x >> 3);
-            data[byteIndex] |= (0x80 >> (x & 7));
-          }
-        }
-      }
-
-      const xL = bytesPerRow & 0xFF;
-      const xH = (bytesPerRow >> 8) & 0xFF;
-      const yL = h & 0xFF;
-      const yH = (h >> 8) & 0xFF;
-
-      const header = u8(0x1D,0x76,0x30,0x00, xL,xH, yL,yH);
-
-      const init = u8(0x1B,0x40);
-      const center = u8(0x1B,0x61,0x01);
-      const left = u8(0x1B,0x61,0x00);
-
-      const feed = u8(0x1B,0x64,0x05);
-      const cut  = u8(0x1D,0x56,0x41,0x10);
-
-      const out = new Uint8Array(init.length + center.length + header.length + data.length + left.length + feed.length + cut.length);
-      let p=0;
-      out.set(init, p); p+=init.length;
-      out.set(center, p); p+=center.length;
-      out.set(header, p); p+=header.length;
-      out.set(data, p); p+=data.length;
-      out.set(left, p); p+=left.length;
-      out.set(feed, p); p+=feed.length;
-      out.set(cut, p); p+=cut.length;
-
-      return out;
-    }
-
-    async function print80mm(){
-      clearErr(appErr);
-
-      const customer = requireCustomer();
-      if(!customer) return;
-
-      const ok = await ensureInvoiceOpened();
-      if(!ok) return;
-
-      const r = await saveInvoice("closed");
-      if(!r.ok){
-        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg);
-        return;
-      }
-
-      const ra = buildReceiptArea();
-
-      toast("جاري تجهيز الطباعة…");
-      const canvas = await html2canvas(ra, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
-
-      toast("اختر الطابعة من القائمة…");
-      const { ch, name } = await ensurePrinterConnected();
-
-      toast("طباعة إلى: " + name);
-      const bytes = canvasToEscposRaster(canvas);
-      await writeChunks(ch, bytes);
-
-      toast("تمت الطباعة ✅");
-      resetAll(false);
-      await qSyncSilently(false);
-    }
-
     // ------- binds -------
     document.getElementById("loginCard").addEventListener("submit", (e)=>{
       e.preventDefault();
@@ -1852,7 +1780,6 @@
       $("loginPass").value="";
       clearErr(loginErr);
     });
-
     $("btnLogout").addEventListener("click", logout);
 
     tabCalc.addEventListener("click", ()=>setTab("calc"));
@@ -1871,27 +1798,18 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
-    $("btnPrint80").addEventListener("click", async ()=>{
-      try{
-        await print80mm();
-      }catch(e){
-        const msg = (e?.message || e || "").toString();
-        showErr(appErr,
-          "❌ فشل الطباعة 80mm.\n" +
-          msg + "\n\n" +
-          "ملاحظات مهمة:\n" +
-          "1) افتح الصفحة على HTTPS (GitHub Pages ✅)\n" +
-          "2) استخدم Chrome Android\n" +
-          "3) إذا بقي نفس الخطأ: الطابعة غالباً Classic (SPP) ولن تعمل من الويب"
-        );
+    /* ✅ delete row click */
+    logBody.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button");
+      if(!btn) return;
+      const idx = btn.getAttribute("data-del");
+      if(idx != null){
+        deleteOp(idx);
       }
     });
 
-    logBody.addEventListener("click", (e)=>{
-      const btn = e.target.closest("button[data-del]");
-      if(!btn) return;
-      deleteOpByIndex(btn.getAttribute("data-del"));
-    });
+    /* ✅ NEW: print 80mm */
+    $("btnPrint80").addEventListener("click", print80mm);
 
     setTab("calc");
 
