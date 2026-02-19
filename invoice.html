@@ -69,12 +69,16 @@
       border:1px solid rgba(255,77,77,.25); background:rgba(255,77,77,.10);
       color:#ffd6d6; white-space:pre-wrap; font-size:12px;
     }
+
+    /* ✅ TOAST من الأعلى */
     .toast{
-      position:fixed; left:50%; transform:translateX(-50%); bottom:16px;
-      background:rgba(0,0,0,.75); border:1px solid rgba(255,255,255,.10);
+      position:fixed; left:50%; transform:translateX(-50%); top:16px;
+      background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.10);
       padding:10px 12px; border-radius:999px; color:#eaf2ff; font-size:12px; display:none; z-index:9999;
       max-width:92vw; text-align:center;
+      box-shadow:0 14px 28px rgba(0,0,0,.35);
     }
+
     .tabs{display:flex; gap:10px; margin-top:8px; margin-bottom:10px}
     .tab{
       flex:1; padding:10px 10px; border-radius:999px; border:1px solid var(--line);
@@ -208,7 +212,6 @@
     .hayekMicBtn:hover{transform:translateY(-1px); background:rgba(255,255,255,.08)}
     .hayekMicBtn.on{background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.35)}
 
-    /* ✅ زر حذف سطر */
     .delBtn{
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,77,77,.12);
@@ -255,7 +258,7 @@
 
     <div class="card hide" id="appCard">
       <div class="row" style="align-items:center">
-        <button class="btn small" id="btnLogout">خروج</button>
+        <button class="btn small" id="btnLogout" type="button">خروج</button>
       </div>
 
       <div class="sep"></div>
@@ -323,7 +326,7 @@
           <div class="actions2">
             <button class="btn" id="btnClearOps" type="button">مسح العمليات</button>
             <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
-            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (Raster)</button>
+            <button class="btn" id="btnPrint80" type="button">🖨️ طباعة 80mm (صورة/شكل ثابت)</button>
           </div>
 
           <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
@@ -359,7 +362,6 @@
   <script>
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
     const LANG_KEY = "HAYEK_VOICE_LANG_V1";
     function getLang(){ return localStorage.getItem(LANG_KEY) || "ar-SA"; }
     function setLang(v){ localStorage.setItem(LANG_KEY, v); refreshLangUI(); }
@@ -389,17 +391,8 @@
       rec.continuous = false;
 
       let listening = false;
-
-      function off(){
-        listening = false;
-        btn.classList.remove("on");
-        btn.textContent = "🎤";
-      }
-      function on(){
-        listening = true;
-        btn.classList.add("on");
-        btn.textContent = "⏹";
-      }
+      function off(){ listening=false; btn.classList.remove("on"); btn.textContent="🎤"; }
+      function on(){ listening=true; btn.classList.add("on"); btn.textContent="⏹"; }
 
       rec.onresult = (e) => {
         let finalText = "";
@@ -416,7 +409,6 @@
           input.dispatchEvent(new Event("change", { bubbles:true }));
         }
       };
-
       rec.onend = off;
       rec.onerror = off;
 
@@ -473,17 +465,8 @@
       rec.continuous = false;
 
       let listening = false;
-
-      function off(){
-        listening = false;
-        btn.classList.remove("on");
-        btn.textContent = "🎙️ إضافة بالصوت (اسم + عملية)";
-      }
-      function on(){
-        listening = true;
-        btn.classList.add("on");
-        btn.textContent = "⏹ إيقاف التسجيل";
-      }
+      function off(){ listening=false; btn.classList.remove("on"); btn.textContent="🎙️ إضافة بالصوت (اسم + عملية)"; }
+      function on(){ listening=true; btn.classList.add("on"); btn.textContent="⏹ إيقاف التسجيل"; }
 
       rec.onresult = (e) => {
         let finalText = "";
@@ -504,7 +487,6 @@
           window.HAYEK_VOICE_ADD_LINE((parsed.item||""), (parsed.expr||""));
         }
       };
-
       rec.onend = off;
       rec.onerror = off;
 
@@ -529,7 +511,6 @@
     const trBtn = document.getElementById("hayekLangTR");
     if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
     if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
-
     refreshLangUI();
   })();
   </script>
@@ -573,13 +554,14 @@
 
     function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
     function clearErr(box){ box.style.display="none"; box.textContent = ""; }
+
     function toast(msg){
       toastEl.textContent = msg;
       toastEl.style.display = "block";
       setTimeout(()=> toastEl.style.display="none", 1400);
     }
-    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
 
+    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
     function escapeHtml(s){
       return String(s||"")
         .replaceAll("&","&amp;")
@@ -639,7 +621,6 @@
     }
 
     function netNow(){ return !!NET_OK; }
-
     async function kickNet(){ await refreshNetState(true); }
 
     window.addEventListener("online", async ()=>{
@@ -900,7 +881,7 @@
 
       if(!u.device_id){
         const { error: uerr } = await supabase
-          .from(USERS_TABLE)
+          .from("app_users")
           .update({ device_id: deviceId })
           .eq("id", u.id)
           .is("device_id", null);
@@ -908,7 +889,7 @@
         if(uerr) throw new Error(uerr.message || "فشل تحديث device_id");
 
         const { data, error } = await supabase
-          .from(USERS_TABLE)
+          .from("app_users")
           .select("*")
           .eq("id", u.id)
           .limit(1);
@@ -935,7 +916,7 @@
 
         if(!USER.device_id){
           const { error } = await supabase
-            .from(USERS_TABLE)
+            .from("app_users")
             .update({ device_id: deviceId })
             .eq("id", USER.id)
             .is("device_id", null);
@@ -1217,43 +1198,6 @@
           renderSug();
           return;
         }
-
-        const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("id", s.id).limit(1);
-        if(error) return;
-        if(!data?.length) return;
-
-        let u = data[0];
-        if(u.is_blocked){
-          localStorage.removeItem("HAYEK_USER_SESSION");
-          return;
-        }
-
-        const cached = readOfflineUser();
-        const pass = cached?.password || "";
-        u = { ...u, password: pass };
-
-        try{ u = await enforceDeviceLockForUserRow(u); }
-        catch(e){
-          localStorage.removeItem("HAYEK_USER_SESSION");
-          showErr(loginErr, e?.message || "تم منع الدخول");
-          return;
-        }
-
-        startSingleTabGuard(u.username);
-        if(TAB_BLOCKED) return;
-
-        USER = u;
-        saveOfflineUser(u);
-
-        loginCard.classList.add("hide");
-        appCard.classList.remove("hide");
-        subtitle.textContent = "فاتورة المستخدم";
-        pill.innerHTML = `<b>${USER.username}</b>`;
-        resetAll(true);
-        renderSug();
-
-        await qSyncSilently(true);
-        await syncDeviceIdIfNeeded();
       }catch{}
     }
 
@@ -1456,107 +1400,10 @@
       await qSyncSilently(false);
     }
 
-    function buildPrintArea(){
-      const pa = $("printArea");
-      const customer = (custInput.value.trim() || "—");
-      const user = (USER?.full_name || USER?.username || "—");
-      const invId = String(invoiceId || "—");
-      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-      const total = calcTotal();
-
-      const rows = ops.slice().reverse().map(o=>`
-        <tr>
-          <td style="width:24%">${escapeHtml(o.time || "")}</td>
-          <td style="width:34%">${escapeHtml(o.label || "")}</td>
-          <td style="width:26%">${escapeHtml(o.expr || "")}</td>
-          <td style="width:16%">${escapeHtml(o.result)}</td>
-        </tr>
-      `).join("");
-
-      pa.innerHTML = `
-        <div class="p-box p-header">
-          <div class="p-title">شركة الحايك</div>
-          <div class="p-subtitle">HAYEK SPOT</div>
-        </div>
-
-        <div class="p-field"><div class="k">اسم المستخدم</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(user)}</div></div>
-        <div class="p-field"><div class="k">اسم العميل</div><div class="v" style="direction:rtl;text-align:right">${escapeHtml(customer)}</div></div>
-        <div class="p-field"><div class="k">رقم الفاتورة</div><div class="v">${escapeHtml(invId)}</div></div>
-        <div class="p-field"><div class="k">التاريخ</div><div class="v" style="direction:ltr">${escapeHtml(dateText)}</div></div>
-
-        <div class="p-tableWrap">
-          <table>
-            <thead><tr><th>الوقت</th><th>البيان</th><th>العملية</th><th>النتيجة</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="4" style="padding:14px;font-weight:800;color:#555">لا يوجد عمليات</td></tr>`}</tbody>
-          </table>
-        </div>
-
-        <div class="p-totalBox"><div>إجمالي الكشف:</div><div>${escapeHtml(total)}</div></div>
-
-        <div class="p-foot">
-          <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
-          <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
-          <div class="p-phone">05510217646</div>
-        </div>
-      `;
-      return pa;
-    }
-
-    async function exportPDF(){
-      clearErr(appErr);
-
-      const customer = requireCustomer();
-      if(!customer) return;
-
-      const ok = await ensureInvoiceOpened();
-      if(!ok) return;
-
-      const r = await saveInvoice("closed");
-      if(!r.ok){
-        showErr(appErr, "فشل إغلاق/حفظ الفاتورة:\n" + r.msg + "\n\n✅ الحل: اجعل id Primary Key في جدول app_invoices.");
-        return;
-      }
-
-      addSug(SUG_CUSTOMERS_KEY, customer);
-
-      const pa = buildPrintArea();
-      const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
-      const imgData = canvas.toDataURL("image/png");
-
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF("p","mm","a4");
-
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-
-      const imgW = pageW;
-      const imgH = canvas.height * (imgW / canvas.width);
-
-      if(imgH <= pageH){
-        pdf.addImage(imgData,"PNG",0,0,imgW,imgH);
-      }else{
-        let remaining = imgH;
-        let position = 0;
-        while(remaining > 0){
-          pdf.addImage(imgData,"PNG",0,position,imgW,imgH);
-          remaining -= pageH;
-          if(remaining > 0){ pdf.addPage(); position -= pageH; }
-        }
-      }
-
-      const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
-      pdf.save(`HAYEK_${safeName}.pdf`);
-
-      toast("تم تنزيل PDF ✅");
-      resetAll(false);
-
-      await qSyncSilently(false);
-    }
-
     /* =========================
-       ✅ 80mm PRINT (Raster via system print)
-       ✅ خيار 2: بعد الطباعة لا نعمل Reset
-       ✅ إصلاح نهائي: لا نكتب </script> بشكل مباشر داخل string
+       ✅ 80mm PRINT (بدون أي <script> داخل الـ HTML)
+       ✅ خيار 2: بعد الطباعة لا Reset
+       ✅ يطبع الشكل ثابت (يشبه PDF) ويتجنب كسر الصفحة نهائياً
     ========================= */
     function buildReceipt80HTML(){
       const customer = (custInput.value.trim() || "—");
@@ -1577,9 +1424,6 @@
           </tr>
         `;
       }).join("");
-
-      const openScript = "<scr" + "ipt>";
-      const closeScript = "</scr" + "ipt>";
 
       return `<!doctype html>
 <html lang="ar" dir="rtl">
@@ -1612,7 +1456,8 @@
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 </style>
 </head>
-<body>
+
+<body onload="setTimeout(function(){ window.print(); }, 250);">
   <div class="center">
     <div class="title">شركة الحايك</div>
     <div class="sub">HAYEK SPOT</div>
@@ -1645,10 +1490,6 @@
   <div class="hr"></div>
   <div class="foot">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
   <div class="foot muted">05510217646</div>
-
-  ${openScript}
-    window.onload = () => { setTimeout(() => window.print(), 250); };
-  ${closeScript}
 </body>
 </html>`;
     }
@@ -1716,10 +1557,7 @@
     };
 
     // ------- binds -------
-    document.getElementById("loginCard").addEventListener("submit", (e)=>{
-      e.preventDefault();
-      login();
-    });
+    $("loginCard").addEventListener("submit", (e)=>{ e.preventDefault(); login(); });
 
     $("btnClear").addEventListener("click", ()=>{
       $("loginUser").value="";
@@ -1742,7 +1580,6 @@
 
     $("btnBack").addEventListener("click", backspace);
     $("btnEq").addEventListener("click", equalsAndLog);
-    $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
     logBody.addEventListener("click", (e)=>{
@@ -1755,7 +1592,6 @@
     $("btnPrint80").addEventListener("click", print80mm);
 
     setTab("calc");
-
     renderSug();
     refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
     restoreSession();
