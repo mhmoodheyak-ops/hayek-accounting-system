@@ -188,8 +188,7 @@
       color:#0a7a55; border-radius:999px; padding:12px 20px; font-weight:1000; font-size:22px;
     }
 
-    /* ===== 80mm Receipt Area (for Bluetooth print) =====
-       نستخدمه فقط لتحويله لصورة ثم إرسال ESC/POS */
+    /* ===== 80mm Receipt Area (for Bluetooth print) ===== */
     #receiptArea{
       position:fixed; left:-9999px; top:0;
       width:576px; /* 80mm at 203dpi تقريباً */
@@ -644,7 +643,6 @@
     }
 
     function netNow(){ return !!NET_OK; }
-
     async function kickNet(){ await refreshNetState(true); }
 
     window.addEventListener("online", async ()=>{
@@ -652,13 +650,11 @@
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
     });
-
     window.addEventListener("focus", async ()=>{
       await kickNet();
       await qSyncSilently(true);
       await syncDeviceIdIfNeeded();
     });
-
     document.addEventListener("visibilitychange", async ()=>{
       if(!document.hidden){
         await kickNet();
@@ -666,7 +662,6 @@
         await syncDeviceIdIfNeeded();
       }
     });
-
     window.addEventListener("pageshow", async ()=>{
       await kickNet();
       await qSyncSilently(true);
@@ -1670,16 +1665,41 @@
     function u8(...arr){ return new Uint8Array(arr); }
 
     async function findWritableCharacteristic(server){
-      const services = await server.getPrimaryServices();
-      for(const svc of services){
-        const chars = await svc.getCharacteristics();
-        for(const ch of chars){
-          const p = ch.properties;
-          if(p.write || p.writeWithoutResponse){
-            return ch;
+      const KNOWN = [
+        "0000ffe0-0000-1000-8000-00805f9b34fb",
+        "0000ffe5-0000-1000-8000-00805f9b34fb",
+        "0000ff00-0000-1000-8000-00805f9b34fb",
+        "0000fff0-0000-1000-8000-00805f9b34fb",
+        "0000fff1-0000-1000-8000-00805f9b34fb",
+        "0000fff2-0000-1000-8000-00805f9b34fb",
+        "6e400001-b5a3-f393-e0a9-e50e24dcca9e", // Nordic UART
+        "49535343-fe7d-4ae5-8fa9-9fafd205e455"  // ISSC Transparent
+      ];
+
+      // 1) try known services directly
+      for(const suuid of KNOWN){
+        try{
+          const svc = await server.getPrimaryService(suuid);
+          const chars = await svc.getCharacteristics();
+          for(const ch of chars){
+            const p = ch.properties;
+            if(p.write || p.writeWithoutResponse) return ch;
+          }
+        }catch{}
+      }
+
+      // 2) last resort: loop through all available services
+      try{
+        const services = await server.getPrimaryServices();
+        for(const svc of services){
+          const chars = await svc.getCharacteristics();
+          for(const ch of chars){
+            const p = ch.properties;
+            if(p.write || p.writeWithoutResponse) return ch;
           }
         }
-      }
+      }catch{}
+
       return null;
     }
 
@@ -1691,10 +1711,15 @@
         return BT;
       }
 
-      // خدمات شائعة لطابعات BLE (قد تختلف حسب الموديل)
       const optionalServices = [
         "0000ffe0-0000-1000-8000-00805f9b34fb",
+        "0000ffe5-0000-1000-8000-00805f9b34fb",
         "0000ff00-0000-1000-8000-00805f9b34fb",
+        "0000fff0-0000-1000-8000-00805f9b34fb",
+        "0000fff1-0000-1000-8000-00805f9b34fb",
+        "0000fff2-0000-1000-8000-00805f9b34fb",
+        "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+        "49535343-fe7d-4ae5-8fa9-9fafd205e455",
         "0000180a-0000-1000-8000-00805f9b34fb",
         "0000180f-0000-1000-8000-00805f9b34fb"
       ];
@@ -1712,7 +1737,7 @@
       const ch = await findWritableCharacteristic(server);
 
       if(!ch){
-        throw new Error("❌ لم أجد قناة كتابة للطابعة.\nقد تكون الطابعة Bluetooth Classic وليست BLE.");
+        throw new Error("❌ لم أجد قناة كتابة للطابعة.\nغالباً الطابعة Classic (SPP) أو BLE بخدمة غير قياسية.");
       }
 
       BT = { device, server, ch, name: device.name || "Printer" };
@@ -1720,7 +1745,7 @@
     }
 
     async function writeChunks(ch, bytes){
-      const MAX = 180; // آمن لـ BLE
+      const MAX = 180; // safe for BLE
       for(let i=0; i<bytes.length; i+=MAX){
         const slice = bytes.slice(i, i+MAX);
         if(ch.properties.writeWithoutResponse){
@@ -1733,8 +1758,6 @@
     }
 
     function canvasToEscposRaster(canvas){
-      // GS v 0  (raster bit image)
-      // Width must be multiple of 8 pixels
       const w0 = canvas.width;
       const h0 = canvas.height;
       const w = w0 - (w0 % 8);
@@ -1746,13 +1769,12 @@
       const bytesPerRow = w / 8;
       const data = new Uint8Array(bytesPerRow * h);
 
-      // تحويل إلى أسود/أبيض (عتبة بسيطة)
       for(let y=0; y<h; y++){
         for(let x=0; x<w; x++){
           const i = (y*w + x) * 4;
           const r = img[i], g = img[i+1], b = img[i+2], a = img[i+3];
           const lum = (0.299*r + 0.587*g + 0.114*b);
-          const isBlack = (a > 10) && (lum < 200); // عتبة قابلة للتعديل
+          const isBlack = (a > 10) && (lum < 200);
           if(isBlack){
             const byteIndex = y*bytesPerRow + (x >> 3);
             data[byteIndex] |= (0x80 >> (x & 7));
@@ -1767,16 +1789,13 @@
 
       const header = u8(0x1D,0x76,0x30,0x00, xL,xH, yL,yH);
 
-      // init + align center
       const init = u8(0x1B,0x40);
       const center = u8(0x1B,0x61,0x01);
       const left = u8(0x1B,0x61,0x00);
 
-      // feed + cut (قد تختلف، بعض الطابعات بدون قاطع تتجاهله)
       const feed = u8(0x1B,0x64,0x05);
       const cut  = u8(0x1D,0x56,0x41,0x10);
 
-      // دمج كل شيء
       const out = new Uint8Array(init.length + center.length + header.length + data.length + left.length + feed.length + cut.length);
       let p=0;
       out.set(init, p); p+=init.length;
@@ -1805,18 +1824,14 @@
         return;
       }
 
-      // بناء إيصال 80mm
       const ra = buildReceiptArea();
 
-      // render to canvas
       toast("جاري تجهيز الطباعة…");
       const canvas = await html2canvas(ra, { scale: 2, useCORS:true, backgroundColor:"#ffffff" });
 
-      // اتصال بالطابعة
       toast("اختر الطابعة من القائمة…");
       const { ch, name } = await ensurePrinterConnected();
 
-      // تحويل لصيغة ESC/POS وإرسال
       toast("طباعة إلى: " + name);
       const bytes = canvasToEscposRaster(canvas);
       await writeChunks(ch, bytes);
@@ -1856,7 +1871,6 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
-    // ✅ طباعة 80mm
     $("btnPrint80").addEventListener("click", async ()=>{
       try{
         await print80mm();
@@ -1868,12 +1882,11 @@
           "ملاحظات مهمة:\n" +
           "1) افتح الصفحة على HTTPS (GitHub Pages ✅)\n" +
           "2) استخدم Chrome Android\n" +
-          "3) الطابعة يجب أن تكون BLE (بعض الطابعات Classic فقط)"
+          "3) إذا بقي نفس الخطأ: الطابعة غالباً Classic (SPP) ولن تعمل من الويب"
         );
       }
     });
 
-    // ✅ حذف سطر
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-del]");
       if(!btn) return;
