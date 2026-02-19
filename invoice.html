@@ -174,6 +174,23 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
+    /* ✅ زر حذف السطر */
+    .delBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,77,77,.12);
+      color:#ffd6d6;
+      width:34px; height:34px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:1000;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:.15s;
+    }
+    .delBtn:hover{transform:translateY(-1px); background:rgba(255,77,77,.18)}
+    .delCell{width:44px; text-align:center; vertical-align:middle}
+
     #printArea{
       position:fixed; left:-9999px; top:0;
       width:794px;
@@ -377,13 +394,14 @@
           <table>
             <thead>
               <tr>
-                <th style="width:52%">البيان</th>
-                <th style="width:26%">العملية</th>
+                <th class="delCell">حذف</th>
+                <th style="width:48%">البيان</th>
+                <th style="width:30%">العملية</th>
                 <th style="width:22%">الوقت</th>
               </tr>
             </thead>
             <tbody id="logBody">
-              <tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>
+              <tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>
             </tbody>
           </table>
         </div>
@@ -493,7 +511,6 @@
       const t0 = toLatinDigits(String(text||"")).trim();
       if(!t0) return null;
 
-      // find first digit index
       const m = t0.match(/[0-9]/);
       if(!m || m.index == null) return null;
 
@@ -545,7 +562,6 @@
         const text = (finalText || interim).trim();
         if(!text) return;
 
-        // only act on final
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
           if(!parsed){
@@ -580,19 +596,15 @@
       });
     }
 
-    // bind inputs mics
     attachMic("hayekMicCustomer", "customerName");
     attachMic("hayekMicItem", "itemName");
 
-    // bind lang
     const arBtn = document.getElementById("hayekLangAR");
     const trBtn = document.getElementById("hayekLangTR");
     if(arBtn) arBtn.addEventListener("click", ()=> setLang("ar-SA"));
     if(trBtn) trBtn.addEventListener("click", ()=> setLang("tr-TR"));
 
-    // bind smart
     attachSmart("hayekSmartAdd");
-
     refreshLangUI();
   })();
   </script>
@@ -1126,6 +1138,65 @@
     }
 
     // =========================
+    // ✅ OFFLINE QUEUE (functions)
+    // =========================
+    const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
+    function qRead(){ try{ return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]"); }catch{ return []; } }
+    function qWrite(arr){ localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.isArray(arr)?arr:[])); }
+    function qAdd(payload){
+      const arr = qRead();
+      const filtered = arr.filter(x => x?.id !== payload?.id);
+      filtered.push({ ...payload, __queued_at: new Date().toISOString() });
+      qWrite(filtered);
+    }
+
+    function cleanInvoicePayload(p){
+      if(!p || typeof p !== "object") return null;
+      const out = { ...p };
+      delete out.__queued_at;
+      delete out.__meta;
+      delete out.__local;
+      for(const k of Object.keys(out)){
+        if(out[k] === undefined) delete out[k];
+      }
+      return out;
+    }
+
+    let __syncing = false;
+    async function qSyncSilently(force=false){
+      if(__syncing) return;
+      const arr = qRead();
+      if(!arr.length) return;
+
+      if(!force){
+        await refreshNetState(false);
+        if(!netNow()) return;
+      }
+
+      __syncing = true;
+      try{
+        const keep = [];
+        for(const raw of arr){
+          try{
+            const payload = cleanInvoicePayload(raw);
+            if(!payload?.id) continue;
+
+            const { error } = await supabase
+              .from(INVOICE_TABLE)
+              .upsert(payload, { onConflict: "id" });
+
+            if(error) keep.push(raw);
+          }catch{
+            keep.push(raw);
+          }
+        }
+        qWrite(keep);
+      }finally{
+        __syncing = false;
+      }
+    }
+
+    // =========================
     // ✅ LOGIN عبر Edge Function (hayek-sync)
     // =========================
     async function apiLoginViaEdge(username, password){
@@ -1309,7 +1380,6 @@
 
         const cached = readOfflineUser();
         const pass = cached?.password || "";
-
         u = { ...u, password: pass };
 
         try{
@@ -1451,20 +1521,45 @@
 
     function renderLog(){
       if(!ops.length){
-        logBody.innerHTML = `<tr><td colspan="3" class="muted">لا يوجد عمليات بعد.</td></tr>`;
+        logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
         return;
       }
-      logBody.innerHTML = ops.map(o=>{
+
+      logBody.innerHTML = ops.map((o, idx)=>{
         const t = o.time || nowTime();
         const exp = (o.expr ? `${o.expr} = ${o.result}` : `${o.result}`);
         return `
-          <tr>
-            <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
+          <tr data-i="${idx}">
+            <td class="delCell">
+              <button class="delBtn" type="button" data-del="${idx}" title="حذف السطر">🗑️</button>
+            </td>
+            <td>
+              <b>${escapeHtml(o.label||"عملية")}</b>
+              <div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div>
+            </td>
             <td>${escapeHtml(exp)}</td>
             <td>${escapeHtml(t)}</td>
           </tr>
         `;
       }).join("");
+    }
+
+    async function deleteOpByIndex(i){
+      clearErr(appErr);
+      const idx = Number(i);
+      if(!Number.isFinite(idx)) return;
+      if(idx < 0 || idx >= ops.length) return;
+
+      ops.splice(idx, 1);
+      renderLog();
+      toast("تم حذف السطر ✅");
+      if(navigator.vibrate) navigator.vibrate(12);
+
+      if(invoiceOpen){
+        const r = await saveInvoice("open");
+        if(!r.ok) showErr(appErr, "فشل الحفظ بعد الحذف:\n" + r.msg);
+      }
+      await qSyncSilently(false);
     }
 
     async function equalsAndLog(){
@@ -1586,11 +1681,26 @@
       addSug(SUG_CUSTOMERS_KEY, customer);
 
       const pa = buildPrintArea();
-      const canvas = await html2canvas(pa,{scale:2,useCORS:true,backgroundColor:"#ffffff"});
-      const imgData = canvas.toDataURL("image/png");
+
+      /* ✅ ضغط الملف لأقل حجم ممكن مع الحفاظ على وضوح القراءة:
+         - scale أقل (بدل 2)
+         - استخدام JPEG بدل PNG
+         - تفعيل ضغط jsPDF
+         - ضغط صورة FAST
+      */
+      const SCALE = 1.35;           // وضوح ممتاز + حجم أقل
+      const JPEG_Q = 0.72;          // جودة مناسبة + حجم أقل
+
+      const canvas = await html2canvas(pa,{
+        scale: SCALE,
+        useCORS:true,
+        backgroundColor:"#ffffff"
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", JPEG_Q);
 
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF("p","mm","a4");
+      const pdf = new jsPDF({ orientation:"p", unit:"mm", format:"a4", compress:true });
 
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
@@ -1599,12 +1709,12 @@
       const imgH = canvas.height * (imgW / canvas.width);
 
       if(imgH <= pageH){
-        pdf.addImage(imgData,"PNG",0,0,imgW,imgH);
+        pdf.addImage(imgData,"JPEG",0,0,imgW,imgH, undefined, "FAST");
       }else{
         let remaining = imgH;
         let position = 0;
         while(remaining > 0){
-          pdf.addImage(imgData,"PNG",0,position,imgW,imgH);
+          pdf.addImage(imgData,"JPEG",0,position,imgW,imgH, undefined, "FAST");
           remaining -= pageH;
           if(remaining > 0){ pdf.addPage(); position -= pageH; }
         }
@@ -1642,7 +1752,6 @@
           return;
         }
 
-        // دعم: 10_3 -> 10-3
         const finalExpr = exprNorm.replaceAll("_","-");
 
         setExpr(finalExpr);
@@ -1680,6 +1789,14 @@
     $("btnEq").addEventListener("click", equalsAndLog);
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
+
+    /* ✅ التقاط ضغط زر الحذف من جدول السجل */
+    logBody.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-del]");
+      if(!btn) return;
+      const i = btn.getAttribute("data-del");
+      deleteOpByIndex(i);
+    });
 
     setTab("calc");
 
