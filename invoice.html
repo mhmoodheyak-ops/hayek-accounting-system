@@ -134,6 +134,7 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
+    /* ✅ زر حذف السطر */
     .delBtn{
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,77,77,.12);
@@ -203,6 +204,7 @@
       font-size:22px;
     }
 
+    /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
       width:46px; min-width:46px; height:46px;
@@ -226,7 +228,7 @@
       <div class="brand">
         <div class="dot"></div>
         <div>
-          <div class="ttl" id="ttlTop">HAYEK — نظام الفاتورة</div>
+          <div class="ttl">HAYEK — نظام الفاتورة</div>
           <div class="sub" id="subtitle">تسجيل دخول المستخدم</div>
         </div>
       </div>
@@ -234,13 +236,13 @@
     </div>
 
     <form class="card" id="loginCard" autocomplete="on">
-      <div class="hint" id="loginHint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
-      <label id="lblUser">اسم المستخدم</label>
+      <div class="hint">ادخل اسم المستخدم وكلمة السر (من الأدمن).</div>
+      <label>اسم المستخدم</label>
       <input id="loginUser" autocomplete="username" name="username" />
-      <label id="lblPass">كلمة السر</label>
+      <label>كلمة السر</label>
       <input id="loginPass" type="password" autocomplete="current-password" name="password" />
       <div class="row" style="margin-top:12px">
-        <button class="btn blue" type="submit" id="btnLogin">دخول</button>
+        <button class="btn blue" type="submit">دخول</button>
         <button class="btn" id="btnClear" type="button">تفريغ</button>
       </div>
       <div class="error" id="loginErr"></div>
@@ -253,26 +255,20 @@
 
       <div class="sep"></div>
 
-      <div class="hayekUiLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
-        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;" id="uiLangLabel">لغة النظام:</div>
-        <button class="btn small" id="uiLangAR" type="button">عربي</button>
-        <button class="btn small" id="uiLangTR" type="button">Türkçe</button>
-      </div>
-
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
-        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;" id="voiceLangLabel">لغة الصوت:</div>
+        <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
         <button class="btn small" id="hayekLangTR" type="button">Türkçe</button>
       </div>
 
-      <label id="lblCustomer">اسم الزبون (إجباري)</label>
+      <label>اسم الزبون (إجباري)</label>
       <div class="hayekMicWrap">
         <input id="customerName" placeholder="مثال: أبو أحمد" list="custList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicCustomer" type="button" title="تسجيل صوت لاسم الزبون">🎤</button>
       </div>
       <datalist id="custList"></datalist>
 
-      <label id="lblItem">اسم المنتج / البيان (اختياري)</label>
+      <label>اسم المنتج / البيان (اختياري)</label>
       <div class="hayekMicWrap">
         <input id="itemName" placeholder="مثال: قداحة" list="itemList" autocomplete="off" />
         <button class="hayekMicBtn" id="hayekMicItem" type="button" title="تسجيل صوت لاسم المنتج">🎤</button>
@@ -290,9 +286,9 @@
 
       <div id="viewCalc">
         <div class="calcBox">
-          <div class="exprTitle" id="exprTitle">العملية الحسابية (من أزرار الشاشة)</div>
+          <div class="exprTitle">العملية الحسابية (من أزرار الشاشة)</div>
           <div class="expr" id="exprView"></div>
-          <div class="resLine"><span id="resLabel">النتيجة:</span> <b id="resView">0</b></div>
+          <div class="resLine"><span>النتيجة:</span> <b id="resView">0</b></div>
 
           <div class="keys" id="keys">
             <button class="key op" data-k="÷" type="button">÷</button>
@@ -324,7 +320,7 @@
             <button class="btn blue" id="btnPDF" type="button">تصدير PDF</button>
           </div>
 
-          <div class="footerNote" id="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
+          <div class="footerNote">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية</div>
         </div>
       </div>
 
@@ -333,14 +329,14 @@
           <table>
             <thead>
               <tr>
-                <th class="delCell" id="thDel">حذف</th>
-                <th style="width:48%" id="thLabel">البيان</th>
-                <th style="width:30%" id="thExpr">العملية</th>
-                <th style="width:22%" id="thTime">الوقت</th>
+                <th class="delCell">حذف</th>
+                <th style="width:48%">البيان</th>
+                <th style="width:30%">العملية</th>
+                <th style="width:22%">الوقت</th>
               </tr>
             </thead>
             <tbody id="logBody">
-              <tr><td colspan="4" class="muted" id="emptyLog">لا يوجد عمليات بعد.</td></tr>
+              <tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>
             </tbody>
           </table>
         </div>
@@ -358,143 +354,6 @@
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    // ========= UI LANG (AR/TR) =========
-    const UI_LANG_KEY = "HAYEK_UI_LANG_V1";
-    const STR = {
-      ar: {
-        subtitle_login: "تسجيل دخول المستخدم",
-        subtitle_invoice: "فاتورة المستخدم",
-        not_logged: "غير مسجل",
-        login_hint: "ادخل اسم المستخدم وكلمة السر (من الأدمن).",
-        username: "اسم المستخدم",
-        password: "كلمة السر",
-        login: "دخول",
-        clear: "تفريغ",
-        logout: "خروج",
-        ui_lang: "لغة النظام:",
-        voice_lang: "لغة الصوت:",
-        customer: "اسم الزبون (إجباري)",
-        item: "اسم المنتج / البيان (اختياري)",
-        smart_add: "🎙️ إضافة بالصوت (اسم + عملية)",
-        tab_calc: "الحاسبة",
-        tab_log: "سجل العمليات",
-        expr_title: "العملية الحسابية (من أزرار الشاشة)",
-        result: "النتيجة:",
-        clear_ops: "مسح العمليات",
-        export_pdf: "تصدير PDF",
-        footer: "تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك للحلول الرقمية",
-        th_del: "حذف",
-        th_label: "البيان",
-        th_expr: "العملية",
-        th_time: "الوقت",
-        empty_log: "لا يوجد عمليات بعد.",
-        toast_offline: "وضع أوفلاين ✅",
-        add_ok: "تمت الإضافة ✅",
-        del_ok: "تم حذف السطر ✅",
-        cleared: "تم المسح ✅",
-        pdf_ok: "تم تنزيل PDF ✅",
-        need_customer: "اكتب اسم الزبون أولاً (إجباري).",
-        bad_expr: "صيغة العملية غير صحيحة.",
-        voice_no_support: "❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome.",
-        voice_mic_fail: "❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.",
-        voice_smart_fail: "❌ ما قدرت أفهم الصيغة.\nمثال: فلافل 2*15\nأو: 2 فلافل * 15\nأو: 10 ÷ 2\nأو: 10 + 10",
-        internal_not_ready: "❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى."
-      },
-      tr: {
-        subtitle_login: "Kullanıcı girişi",
-        subtitle_invoice: "Kullanıcı faturası",
-        not_logged: "Giriş yok",
-        login_hint: "Kullanıcı adı ve şifreyi girin (admin verir).",
-        username: "Kullanıcı adı",
-        password: "Şifre",
-        login: "Giriş",
-        clear: "Temizle",
-        logout: "Çıkış",
-        ui_lang: "Sistem dili:",
-        voice_lang: "Ses dili:",
-        customer: "Müşteri adı (zorunlu)",
-        item: "Ürün / açıklama (opsiyonel)",
-        smart_add: "🎙️ Sesle ekle (isim + işlem)",
-        tab_calc: "Hesap Makinesi",
-        tab_log: "İşlem Kaydı",
-        expr_title: "Hesap işlemi (tuşlardan)",
-        result: "Sonuç:",
-        clear_ops: "İşlemleri temizle",
-        export_pdf: "PDF dışa aktar",
-        footer: "Bu profesyonel hesap makinesi HAYEK tarafından geliştirilmiştir",
-        th_del: "Sil",
-        th_label: "Açıklama",
-        th_expr: "İşlem",
-        th_time: "Saat",
-        empty_log: "Henüz işlem yok.",
-        toast_offline: "Offline mod ✅",
-        add_ok: "Eklendi ✅",
-        del_ok: "Satır silindi ✅",
-        cleared: "Temizlendi ✅",
-        pdf_ok: "PDF indirildi ✅",
-        need_customer: "Önce müşteri adını yazın (zorunlu).",
-        bad_expr: "İşlem formatı hatalı.",
-        voice_no_support: "❌ Tarayıcınız ses → yazı desteklemiyor.\nGoogle Chrome deneyin.",
-        voice_mic_fail: "❌ Mikrofon açılamadı.\nSayfaya mikrofon izni verin.",
-        voice_smart_fail: "❌ Formatı anlayamadım.\nÖrnek: falafel 2*15\nveya: 2 falafel * 15\nveya: 10/2\nveya: 10 + 10",
-        internal_not_ready: "❌ Sistem hazır değil.\nSayfayı yenileyin."
-      }
-    };
-
-    function getUiLang(){ return localStorage.getItem(UI_LANG_KEY) || "ar"; }
-    function setUiLang(v){ localStorage.setItem(UI_LANG_KEY, v); applyUiLang(); }
-    function t(key){
-      const L = getUiLang();
-      return (STR[L] && STR[L][key]) ? STR[L][key] : (STR.ar[key] || key);
-    }
-
-    function applyUiLang(){
-      const L = getUiLang();
-      const arBtn = document.getElementById("uiLangAR");
-      const trBtn = document.getElementById("uiLangTR");
-      if(arBtn) arBtn.style.opacity = (L === "ar") ? "1" : "0.65";
-      if(trBtn) trBtn.style.opacity = (L === "tr") ? "1" : "0.65";
-      document.documentElement.lang = (L === "tr") ? "tr" : "ar";
-
-      const map = [
-        ["subtitle","subtitle_login"],
-        ["loginHint","login_hint"],
-        ["lblUser","username"],
-        ["lblPass","password"],
-        ["btnLogin","login"],
-        ["btnClear","clear"],
-        ["btnLogout","logout"],
-        ["uiLangLabel","ui_lang"],
-        ["voiceLangLabel","voice_lang"],
-        ["lblCustomer","customer"],
-        ["lblItem","item"],
-        ["hayekSmartAdd","smart_add"],
-        ["tabCalc","tab_calc"],
-        ["tabLog","tab_log"],
-        ["exprTitle","expr_title"],
-        ["resLabel","result"],
-        ["btnClearOps","clear_ops"],
-        ["btnPDF","export_pdf"],
-        ["footerNote","footer"],
-        ["thDel","th_del"],
-        ["thLabel","th_label"],
-        ["thExpr","th_expr"],
-        ["thTime","th_time"],
-        ["emptyLog","empty_log"],
-      ];
-      for(const [id, key] of map){
-        const el = document.getElementById(id);
-        if(!el || !key) continue;
-        el.textContent = t(key);
-      }
-
-      const cust = document.getElementById("customerName");
-      const item = document.getElementById("itemName");
-      if(cust) cust.placeholder = (L === "tr") ? "Örn: Ali" : "مثال: أبو أحمد";
-      if(item) item.placeholder = (L === "tr") ? "Örn: çakmak" : "مثال: قداحة";
-    }
-
-    // ========= Voice LANG (AR/TR) =========
     const LANG_KEY = "HAYEK_VOICE_LANG_V1";
     function getLang(){ return localStorage.getItem(LANG_KEY) || "ar-SA"; }
     function setLang(v){ localStorage.setItem(LANG_KEY, v); refreshLangUI(); }
@@ -514,8 +373,8 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
-        btn.title = "Voice-to-text not supported";
-        btn.addEventListener("click", ()=> alert(t("voice_no_support")));
+        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
 
@@ -540,9 +399,9 @@
         let finalText = "";
         let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const tt = e.results[i][0].transcript;
-          if (e.results[i].isFinal) finalText += tt;
-          else interim += tt;
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
         }
         const text = (finalText || interim).trim();
         if(text){
@@ -563,74 +422,30 @@
           rec.start();
         }catch{
           off();
-          alert(t("voice_mic_fail"));
+          alert("❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.");
         }
       });
     }
 
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
     function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
-
-    // ✅ normalize strong (mul/div + words)
     function normalizeExpr(s){
-      let x = toLatinDigits(String(s||""));
-
-      x = x.replace(/\u2212/g, "-");                 // −
-      x = x.replace(/[×✕✖xX*]/g, "×");               // multiply
-      x = x.replace(/[\/\\／]/g, "÷");               // slash -> ÷
-      x = x.replace(/[٫]/g, ".").replace(/,/g, "."); // decimals
-
-      // division words AR/TR
-      x = x.replace(/\b(على|قسمة|تقسيم)\b/gi, "÷");
-      x = x.replace(/\b(bölü|bölme|bölüm|böl)\b/gi, "÷");
-      x = x.replace(/\b(üzerine)\b/gi, "÷");
-
+      let x = toLatinDigits(s);
       x = x.replace(/\s+/g,"");
       x = x.replaceAll("_","-");
+      x = x.replace(/[xX*]/g,"×");
+      x = x.replace(/\//g,"÷");
+      x = x.replace(/−/g,"-");
       return x;
     }
-
-    // ✅ NEW parseSmart supports:
-    // 1) item + expr   => "فلافل 2*15"
-    // 2) qty + item + op + price => "2 فلافل * 15" => label "فلافل", expr "2×15"
-    // 3) item + qty op price => "فلافل 2 × 15" => label "فلافل", expr "2×15"
     function parseSmart(text){
-      const raw = toLatinDigits(String(text||"")).trim();
-      if(!raw) return null;
-
-      // keep spaced version to catch: "2 فلافل × 15"
-      let s = raw;
-
-      // unify ops and division words before parsing
-      s = s.replace(/\u2212/g, "-");
-      s = s.replace(/[×✕✖xX*]/g, "×");
-      s = s.replace(/[\/\\／]/g, "÷");
-      s = s.replace(/[٫]/g, ".").replace(/,/g, ".");
-      s = s.replace(/\b(على|قسمة|تقسيم)\b/gi, "÷");
-      s = s.replace(/\b(bölü|bölme|bölüm|böl)\b/gi, "÷");
-      s = s.replace(/\b(üzerine)\b/gi, "÷");
-      s = s.replaceAll("_","-");
-      s = s.replace(/\s+/g," ").trim();
-
-      // Case A: starts with number => "2 فلافل × 15" or "2 فلافل 15"
-      // We'll accept missing op between qty and price? (only if op exists later, otherwise fail)
-      let m = s.match(/^\s*(\d+(?:[.,]\d+)?)\s+(.+?)\s*(?:([×÷+\-])\s*)?(\d+(?:[.,]\d+)?)\s*$/);
-      if(m){
-        const qty = String(m[1]||"").replace(",",".");
-        const label = String(m[2]||"").trim();
-        let op = (m[3]||"×").trim(); // default multiply if missing (often user means ×)
-        const price = String(m[4]||"").replace(",",".");
-        const expr = normalizeExpr(`${qty}${op}${price}`);
-        if(label && expr) return { item: label, expr };
-      }
-
-      // Case B: item first then numbers => "فلافل 2×15" OR "فلافل 2 × 15"
-      // Split by first digit occurrence
-      const idx = (s.match(/[0-9]/) || {}).index;
-      if(idx == null) return null;
-
-      const item = s.slice(0, idx).trim();
-      const exprRaw = s.slice(idx).trim();
+      const t0 = toLatinDigits(String(text||"")).trim();
+      if(!t0) return null;
+      const m = t0.match(/[0-9]/);
+      if(!m || m.index == null) return null;
+      const idx = m.index;
+      const item = t0.slice(0, idx).trim();
+      const exprRaw = t0.slice(idx).trim();
       const expr = normalizeExpr(exprRaw);
       if(!expr) return null;
       return { item, expr };
@@ -642,8 +457,8 @@
 
       if(!SR){
         btn.style.opacity = "0.6";
-        btn.title = "Voice-to-text not supported";
-        btn.addEventListener("click", ()=> alert(t("voice_no_support")));
+        btn.title = "تحويل الصوت إلى نص غير مدعوم على هذا المتصفح";
+        btn.addEventListener("click", ()=> alert("❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome."));
         return;
       }
 
@@ -656,30 +471,30 @@
       function off(){
         listening = false;
         btn.classList.remove("on");
-        btn.textContent = t("smart_add");
+        btn.textContent = "🎙️ إضافة بالصوت (اسم + عملية)";
       }
       function on(){
         listening = true;
         btn.classList.add("on");
-        btn.textContent = (getUiLang()==="tr") ? "⏹ Kaydı durdur" : "⏹ إيقاف التسجيل";
+        btn.textContent = "⏹ إيقاف التسجيل";
       }
 
       rec.onresult = (e) => {
         let finalText = "";
         let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const tt = e.results[i][0].transcript;
-          if (e.results[i].isFinal) finalText += tt;
-          else interim += tt;
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
         }
         if(finalText && finalText.trim()){
           const parsed = parseSmart(finalText);
           if(!parsed){
-            alert(t("voice_smart_fail"));
+            alert("❌ ما قدرت أفهم الصيغة.\nمثال: علبة شامبو 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10");
             return;
           }
           if(!window.HAYEK_VOICE_ADD_LINE){
-            alert(t("internal_not_ready"));
+            alert("❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى.");
             return;
           }
           window.HAYEK_VOICE_ADD_LINE((parsed.item||"").trim(), (parsed.expr||"").trim());
@@ -697,15 +512,10 @@
           rec.start();
         }catch{
           off();
-          alert(t("voice_mic_fail"));
+          alert("❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.");
         }
       });
     }
-
-    const uiAr = document.getElementById("uiLangAR");
-    const uiTr = document.getElementById("uiLangTR");
-    if(uiAr) uiAr.addEventListener("click", ()=> setUiLang("ar"));
-    if(uiTr) uiTr.addEventListener("click", ()=> setUiLang("tr"));
 
     attachMic("hayekMicCustomer", "customerName");
     attachMic("hayekMicItem", "itemName");
@@ -717,11 +527,6 @@
 
     attachSmart("hayekSmartAdd");
     refreshLangUI();
-    applyUiLang();
-
-    window.HAYEK_T = t;
-    window.HAYEK_UI_LANG = getUiLang;
-    window.HAYEK_APPLY_UI_LANG = applyUiLang;
   })();
   </script>
 
@@ -762,9 +567,6 @@
     const USERS_TABLE   = "app_users";
     const INVOICE_TABLE = "app_invoices";
 
-    const T = (k)=> (window.HAYEK_T ? window.HAYEK_T(k) : k);
-    const UIL = ()=> (window.HAYEK_UI_LANG ? window.HAYEK_UI_LANG() : "ar");
-
     function showErr(box, msg){ box.style.display="block"; box.textContent = msg; }
     function clearErr(box){ box.style.display="none"; box.textContent = ""; }
     function toast(msg){
@@ -772,11 +574,7 @@
       toastEl.style.display = "block";
       setTimeout(()=> toastEl.style.display="none", 1400);
     }
-
-    function nowTime(){
-      const loc = (UIL()==="tr") ? "tr-TR" : "ar";
-      return new Date().toLocaleTimeString(loc,{hour:"2-digit", minute:"2-digit"});
-    }
+    function nowTime(){ return new Date().toLocaleTimeString("ar",{hour:"2-digit", minute:"2-digit"}); }
 
     function escapeHtml(s){
       return String(s||"")
@@ -837,6 +635,7 @@
     }
 
     function netNow(){ return !!NET_OK; }
+
     async function kickNet(){ await refreshNetState(true); }
 
     window.addEventListener("online", async ()=>{
@@ -871,7 +670,7 @@
     }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE
+    // ✅ OFFLINE QUEUE (مرة واحدة فقط ✅)
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -900,6 +699,7 @@
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
+
       return out;
     }
 
@@ -1296,14 +1096,14 @@
       const password = $("loginPass").value.trim();
 
       if(!username || !password){
-        showErr(loginErr, (UIL()==="tr") ? "Kullanıcı adı ve şifre yazın." : "اكتب اسم المستخدم وكلمة السر.");
+        showErr(loginErr, "اكتب اسم المستخدم وكلمة السر.");
         return;
       }
 
       await refreshNetState(true);
 
       if(!netNow()){
-        const cached = JSON.parse(localStorage.getItem("HAYEK_OFFLINE_LAST_USER_V1") || "null");
+        const cached = readOfflineUser();
         if(!cached){
           showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
           return;
@@ -1334,12 +1134,12 @@
 
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
-        subtitle.textContent = T("subtitle_invoice");
+        subtitle.textContent = "فاتورة المستخدم";
         pill.innerHTML = `<b>${u.username}</b>`;
         resetAll(true);
 
         renderSug();
-        toast(T("toast_offline"));
+        toast("وضع أوفلاين ✅");
         return;
       }
 
@@ -1356,7 +1156,7 @@
         };
 
         if(u.is_blocked){
-          showErr(loginErr, (UIL()==="tr") ? "Bu hesap engelli." : "هذا الحساب محظور.");
+          showErr(loginErr, "هذا الحساب محظور.");
           return;
         }
 
@@ -1376,7 +1176,7 @@
 
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
-        subtitle.textContent = T("subtitle_invoice");
+        subtitle.textContent = "فاتورة المستخدم";
         pill.innerHTML = `<b>${u.username}</b>`;
         resetAll(true);
 
@@ -1420,7 +1220,7 @@
           USER = u;
           loginCard.classList.add("hide");
           appCard.classList.remove("hide");
-          subtitle.textContent = T("subtitle_invoice");
+          subtitle.textContent = "فاتورة المستخدم";
           pill.innerHTML = `<b>${USER.username}</b>`;
           resetAll(true);
           renderSug();
@@ -1457,7 +1257,7 @@
 
         loginCard.classList.add("hide");
         appCard.classList.remove("hide");
-        subtitle.textContent = T("subtitle_invoice");
+        subtitle.textContent = "فاتورة المستخدم";
         pill.innerHTML = `<b>${USER.username}</b>`;
         resetAll(true);
         renderSug();
@@ -1474,8 +1274,8 @@
 
       loginCard.classList.remove("hide");
       appCard.classList.add("hide");
-      subtitle.textContent = T("subtitle_login");
-      pill.innerHTML = `<b>${T("not_logged")}</b>`;
+      subtitle.textContent = "تسجيل دخول المستخدم";
+      pill.innerHTML = "<b>غير مسجل</b>";
     }
 
     function setTab(which){
@@ -1511,7 +1311,7 @@
     function requireCustomer(){
       const c = custInput.value.trim();
       if(!c){
-        showErr(appErr, T("need_customer"));
+        showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
         custInput.focus();
         return null;
       }
@@ -1547,15 +1347,11 @@
     }
 
     function sanitizeForEval(s){
-      return String(s||"")
-        .replaceAll("×","*")
-        .replaceAll("÷","/")
-        .replaceAll("٫",".")
-        .replaceAll(",",".");
+      return s.replaceAll("×","*").replaceAll("÷","/").replaceAll("٫",".").replaceAll(",",".");
 
     }
     function safeEval(s){
-      const cleaned = sanitizeForEval(String(s||"")).trim();
+      const cleaned = sanitizeForEval(s).trim();
       if(!cleaned) return 0;
       if(!/^[0-9+\-*/().\s]+$/.test(cleaned)) throw new Error("bad");
       const fn = new Function("return ("+cleaned+");");
@@ -1563,7 +1359,6 @@
       if(!Number.isFinite(val)) return 0;
       return Math.round(val*100)/100;
     }
-
     function updatePreview(){
       try{ resView.textContent = String(safeEval(expr)); }
       catch{ resView.textContent = "0"; }
@@ -1585,7 +1380,7 @@
 
     function renderLog(){
       if(!ops.length){
-        logBody.innerHTML = `<tr><td colspan="4" class="muted">${escapeHtml(T("empty_log"))}</td></tr>`;
+        logBody.innerHTML = `<tr><td colspan="4" class="muted">لا يوجد عمليات بعد.</td></tr>`;
         return;
       }
       logBody.innerHTML = ops.map((o, idx)=>{
@@ -1594,9 +1389,9 @@
         return `
           <tr>
             <td class="delCell">
-              <button class="delBtn" type="button" data-del="${idx}" title="${UIL()==="tr" ? "Sil" : "حذف السطر"}">🗑️</button>
+              <button class="delBtn" type="button" data-del="${idx}" title="حذف السطر">🗑️</button>
             </td>
-            <td><b>${escapeHtml(o.label|| (UIL()==="tr" ? "İşlem" : "عملية"))}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
+            <td><b>${escapeHtml(o.label||"عملية")}</b><div class="muted" style="margin-top:4px">${escapeHtml(exp)}</div></td>
             <td>${escapeHtml(exp)}</td>
             <td>${escapeHtml(t)}</td>
           </tr>
@@ -1611,7 +1406,7 @@
 
       ops.splice(idx, 1);
       renderLog();
-      toast(T("del_ok"));
+      toast("تم حذف السطر ✅");
       if(navigator.vibrate) navigator.vibrate(12);
 
       if(invoiceOpen){
@@ -1631,12 +1426,12 @@
 
       let result = 0;
       try{ result = safeEval(expr); }
-      catch{ showErr(appErr, T("bad_expr")); return; }
+      catch{ showErr(appErr, "صيغة العملية غير صحيحة."); return; }
 
       lastResult = result;
 
       const item = itemInput.value.trim();
-      const label = item || (UIL()==="tr" ? "İşlem" : "عملية");
+      const label = item || "عملية";
       if(item) addSug(SUG_ITEMS_KEY, item);
 
       ops.unshift({
@@ -1649,7 +1444,7 @@
 
       renderLog();
       setExpr("");
-      toast(T("add_ok"));
+      toast("تمت الإضافة ✅");
 
       const r = await saveInvoice("open");
       if(!r.ok){
@@ -1672,7 +1467,7 @@
         const r = await saveInvoice("open");
         if(!r.ok) showErr(appErr, "فشل الحفظ:\n" + r.msg);
       }
-      toast(T("cleared"));
+      toast("تم المسح ✅");
       await qSyncSilently(false);
     }
 
@@ -1681,8 +1476,7 @@
       const customer = (custInput.value.trim() || "—");
       const user = (USER?.full_name || USER?.username || "—");
       const invId = String(invoiceId || "—");
-      const loc = (UIL()==="tr") ? "tr-TR" : "ar";
-      const dateText = new Date().toLocaleString(loc,{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      const dateText = new Date().toLocaleString("ar",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
       const total = calcTotal();
 
       const rows = ops.slice().reverse().map(o=>`
@@ -1717,7 +1511,7 @@
         <div class="p-foot">
           <div class="small">تم تطوير هذه الحاسبة الاحترافية من قبل شركة الحايك</div>
           <div class="small">شركة الحايك / تجارة عامة / توزيع جملة / دعاية و اعلان / طباعة / حلول رقمية</div>
-          <div class="p-phone">0095510217646</div>
+          <div class="p-phone">05510217646</div>
         </div>
       `;
       return pa;
@@ -1742,6 +1536,7 @@
 
       const pa = buildPrintArea();
 
+      // ✅ ضغط قوي مع بقاء القراءة واضحة
       const SCALE = 1.35;
       const JPEG_Q = 0.72;
 
@@ -1772,18 +1567,17 @@
       const safeName = (customer || "invoice").replace(/[\\/:*?"<>|]/g,"-");
       pdf.save(`HAYEK_${safeName}.pdf`);
 
-      toast(T("pdf_ok"));
+      toast("تم تنزيل PDF ✅");
       resetAll(false);
 
       await qSyncSilently(false);
     }
 
-    // ✅ هذا يستقبل النص الجاهز من parseSmart
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
         if(!c){
-          showErr(appErr, T("need_customer"));
+          showErr(appErr, "اكتب اسم الزبون أولاً (إجباري).");
           custInput.focus();
           return;
         }
@@ -1797,11 +1591,12 @@
 
         const exprNorm = String(expression||"").trim();
         if(!exprNorm){
-          showErr(appErr, (UIL()==="tr") ? "İşlem bulunamadı." : "لم يتم العثور على عملية حسابية.");
+          showErr(appErr, "لم يتم العثور على عملية حسابية.");
           return;
         }
 
-        setExpr(exprNorm);
+        const finalExpr = exprNorm.replaceAll("_","-");
+        setExpr(finalExpr);
         await equalsAndLog();
       }catch(e){
         showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
@@ -1838,6 +1633,7 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
+    // ✅ حذف سطر
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-del]");
       if(!btn) return;
@@ -1852,20 +1648,6 @@
     restoreSession();
 
     try{
-      window.addEventListener("storage", (e)=>{
-        if(e.key === "HAYEK_UI_LANG_V1" && window.HAYEK_APPLY_UI_LANG){
-          window.HAYEK_APPLY_UI_LANG();
-          if(USER?.username){
-            subtitle.textContent = T("subtitle_invoice");
-          }else{
-            subtitle.textContent = T("subtitle_login");
-            pill.innerHTML = `<b>${T("not_logged")}</b>`;
-          }
-        }
-      });
-    }catch{}
-
-    try{
       if("serviceWorker" in navigator){
         navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
       }
@@ -1873,4 +1655,3 @@
   </script>
 </body>
 </html>
-
