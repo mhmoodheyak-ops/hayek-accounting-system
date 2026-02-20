@@ -134,7 +134,6 @@
     .muted{color:var(--muted)}
     .hide{display:none !important}
 
-    /* ✅ زر حذف السطر */
     .delBtn{
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,77,77,.12);
@@ -204,7 +203,6 @@
       font-size:22px;
     }
 
-    /* ✅ Voice mic buttons */
     .hayekMicWrap{display:flex; gap:10px; align-items:center}
     .hayekMicBtn{
       width:46px; min-width:46px; height:46px;
@@ -255,14 +253,12 @@
 
       <div class="sep"></div>
 
-      <!-- ✅ لغة النظام -->
       <div class="hayekUiLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;" id="uiLangLabel">لغة النظام:</div>
         <button class="btn small" id="uiLangAR" type="button">عربي</button>
         <button class="btn small" id="uiLangTR" type="button">Türkçe</button>
       </div>
 
-      <!-- ✅ لغة الصوت -->
       <div class="hayekMicLang" style="display:flex; gap:10px; align-items:center; margin:6px 0 10px;">
         <div style="flex:1; color:var(--muted); font-weight:900; font-size:12px;" id="voiceLangLabel">لغة الصوت:</div>
         <button class="btn small" id="hayekLangAR" type="button">عربي</button>
@@ -401,7 +397,7 @@
         bad_expr: "صيغة العملية غير صحيحة.",
         voice_no_support: "❌ متصفحك لا يدعم تحويل الصوت إلى نص.\nجرّب Google Chrome.",
         voice_mic_fail: "❌ تعذر تشغيل الميكروفون.\nتأكد من السماح بالمايك للصفحة.",
-        voice_smart_fail: "❌ ما قدرت أفهم الصيغة.\nمثال: علبة شامبو 5x10\nأو: 10_3\nأو: 10 ÷4\nأو: 10 +10",
+        voice_smart_fail: "❌ ما قدرت أفهم الصيغة.\nمثال: فلافل 2*15\nأو: 2 فلافل * 15\nأو: 10 ÷ 2\nأو: 10 + 10",
         internal_not_ready: "❌ النظام الداخلي غير جاهز.\nحدّث الصفحة وحاول مرة أخرى."
       },
       tr: {
@@ -440,14 +436,13 @@
         bad_expr: "İşlem formatı hatalı.",
         voice_no_support: "❌ Tarayıcınız ses → yazı desteklemiyor.\nGoogle Chrome deneyin.",
         voice_mic_fail: "❌ Mikrofon açılamadı.\nSayfaya mikrofon izni verin.",
-        voice_smart_fail: "❌ Formatı anlayamadım.\nÖrnek: şampuan 5x10\nveya: 10-3\nveya: 10/4\nveya: 10 +10",
+        voice_smart_fail: "❌ Formatı anlayamadım.\nÖrnek: falafel 2*15\nveya: 2 falafel * 15\nveya: 10/2\nveya: 10 + 10",
         internal_not_ready: "❌ Sistem hazır değil.\nSayfayı yenileyin."
       }
     };
 
     function getUiLang(){ return localStorage.getItem(UI_LANG_KEY) || "ar"; }
     function setUiLang(v){ localStorage.setItem(UI_LANG_KEY, v); applyUiLang(); }
-
     function t(key){
       const L = getUiLang();
       return (STR[L] && STR[L][key]) ? STR[L][key] : (STR.ar[key] || key);
@@ -459,13 +454,10 @@
       const trBtn = document.getElementById("uiLangTR");
       if(arBtn) arBtn.style.opacity = (L === "ar") ? "1" : "0.65";
       if(trBtn) trBtn.style.opacity = (L === "tr") ? "1" : "0.65";
-
-      // (نترك RTL كما هو لتجنب كسر التصميم، فقط نغيّر النصوص)
       document.documentElement.lang = (L === "tr") ? "tr" : "ar";
 
       const map = [
         ["subtitle","subtitle_login"],
-        ["pill", null], // handled elsewhere
         ["loginHint","login_hint"],
         ["lblUser","username"],
         ["lblPass","password"],
@@ -496,7 +488,6 @@
         el.textContent = t(key);
       }
 
-      // تحديث placeholder
       const cust = document.getElementById("customerName");
       const item = document.getElementById("itemName");
       if(cust) cust.placeholder = (L === "tr") ? "Örn: Ali" : "مثال: أبو أحمد";
@@ -580,44 +571,66 @@
     const AR2EN = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
     function toLatinDigits(s){ return String(s||"").replace(/[٠-٩]/g, d => AR2EN[d] || d); }
 
-    // ✅ تطبيع أقوى — يدعم كلمات القسمة عربي/تركي + الرموز المختلفة
+    // ✅ normalize strong (mul/div + words)
     function normalizeExpr(s){
       let x = toLatinDigits(String(s||""));
 
-      // توحيد أحرف/رموز شائعة
-      x = x.replace(/\u2212/g, "-");           // −
-      x = x.replace(/[×✕✖xX*]/g, "×");         // multiply
-      x = x.replace(/[\/\\／]/g, "÷");         // slash variants -> ÷
-      x = x.replace(/[٫]/g, ".");              // Arabic decimal separator
-      x = x.replace(/,/g, ".");                // comma decimals
+      x = x.replace(/\u2212/g, "-");                 // −
+      x = x.replace(/[×✕✖xX*]/g, "×");               // multiply
+      x = x.replace(/[\/\\／]/g, "÷");               // slash -> ÷
+      x = x.replace(/[٫]/g, ".").replace(/,/g, "."); // decimals
 
-      // كلمات عربية للقسمة
+      // division words AR/TR
       x = x.replace(/\b(على|قسمة|تقسيم)\b/gi, "÷");
-
-      // كلمات تركية للقسمة (تقريباً)
       x = x.replace(/\b(bölü|bölme|bölüm|böl)\b/gi, "÷");
-      x = x.replace(/\b(üzerine|bölü)\b/gi, "÷");
+      x = x.replace(/\b(üzerine)\b/gi, "÷");
 
-      // كلمات الجمع/الطرح
-      x = x.replace(/\b(ناقص)\b/gi, "-");
-      x = x.replace(/\b(زائد)\b/gi, "+");
-
-      // مسافات
       x = x.replace(/\s+/g,"");
       x = x.replaceAll("_","-");
       return x;
     }
 
+    // ✅ NEW parseSmart supports:
+    // 1) item + expr   => "فلافل 2*15"
+    // 2) qty + item + op + price => "2 فلافل * 15" => label "فلافل", expr "2×15"
+    // 3) item + qty op price => "فلافل 2 × 15" => label "فلافل", expr "2×15"
     function parseSmart(text){
-      const t0 = toLatinDigits(String(text||"")).trim();
-      if(!t0) return null;
+      const raw = toLatinDigits(String(text||"")).trim();
+      if(!raw) return null;
 
-      const m = t0.match(/[0-9]/);
-      if(!m || m.index == null) return null;
+      // keep spaced version to catch: "2 فلافل × 15"
+      let s = raw;
 
-      const idx = m.index;
-      const item = t0.slice(0, idx).trim();
-      const exprRaw = t0.slice(idx).trim();
+      // unify ops and division words before parsing
+      s = s.replace(/\u2212/g, "-");
+      s = s.replace(/[×✕✖xX*]/g, "×");
+      s = s.replace(/[\/\\／]/g, "÷");
+      s = s.replace(/[٫]/g, ".").replace(/,/g, ".");
+      s = s.replace(/\b(على|قسمة|تقسيم)\b/gi, "÷");
+      s = s.replace(/\b(bölü|bölme|bölüm|böl)\b/gi, "÷");
+      s = s.replace(/\b(üzerine)\b/gi, "÷");
+      s = s.replaceAll("_","-");
+      s = s.replace(/\s+/g," ").trim();
+
+      // Case A: starts with number => "2 فلافل × 15" or "2 فلافل 15"
+      // We'll accept missing op between qty and price? (only if op exists later, otherwise fail)
+      let m = s.match(/^\s*(\d+(?:[.,]\d+)?)\s+(.+?)\s*(?:([×÷+\-])\s*)?(\d+(?:[.,]\d+)?)\s*$/);
+      if(m){
+        const qty = String(m[1]||"").replace(",",".");
+        const label = String(m[2]||"").trim();
+        let op = (m[3]||"×").trim(); // default multiply if missing (often user means ×)
+        const price = String(m[4]||"").replace(",",".");
+        const expr = normalizeExpr(`${qty}${op}${price}`);
+        if(label && expr) return { item: label, expr };
+      }
+
+      // Case B: item first then numbers => "فلافل 2×15" OR "فلافل 2 × 15"
+      // Split by first digit occurrence
+      const idx = (s.match(/[0-9]/) || {}).index;
+      if(idx == null) return null;
+
+      const item = s.slice(0, idx).trim();
+      const exprRaw = s.slice(idx).trim();
       const expr = normalizeExpr(exprRaw);
       if(!expr) return null;
       return { item, expr };
@@ -689,7 +702,6 @@
       });
     }
 
-    // bind UI lang buttons
     const uiAr = document.getElementById("uiLangAR");
     const uiTr = document.getElementById("uiLangTR");
     if(uiAr) uiAr.addEventListener("click", ()=> setUiLang("ar"));
@@ -707,7 +719,6 @@
     refreshLangUI();
     applyUiLang();
 
-    // expose translator for module script
     window.HAYEK_T = t;
     window.HAYEK_UI_LANG = getUiLang;
     window.HAYEK_APPLY_UI_LANG = applyUiLang;
@@ -826,7 +837,6 @@
     }
 
     function netNow(){ return !!NET_OK; }
-
     async function kickNet(){ await refreshNetState(true); }
 
     window.addEventListener("online", async ()=>{
@@ -861,7 +871,7 @@
     }, 8000);
 
     // =========================
-    // ✅ OFFLINE QUEUE (مرة واحدة فقط ✅)
+    // ✅ OFFLINE QUEUE
     // =========================
     const OFFLINE_QUEUE_KEY = "HAYEK_OFFLINE_INVOICES_V1";
 
@@ -890,7 +900,6 @@
       for(const k of Object.keys(out)){
         if(out[k] === undefined) delete out[k];
       }
-
       return out;
     }
 
@@ -1294,7 +1303,7 @@
       await refreshNetState(true);
 
       if(!netNow()){
-        const cached = readOfflineUser();
+        const cached = JSON.parse(localStorage.getItem("HAYEK_OFFLINE_LAST_USER_V1") || "null");
         if(!cached){
           showErr(loginErr, "❌ لا يوجد بيانات دخول محفوظة لهذا الجهاز.\nسجّل دخول مرة واحدة مع الإنترنت أولاً.");
           return;
@@ -1538,7 +1547,7 @@
     }
 
     function sanitizeForEval(s){
-      return s
+      return String(s||"")
         .replaceAll("×","*")
         .replaceAll("÷","/")
         .replaceAll("٫",".")
@@ -1548,15 +1557,13 @@
     function safeEval(s){
       const cleaned = sanitizeForEval(String(s||"")).trim();
       if(!cleaned) return 0;
-
-      // ✅ حماية + السماح بالقسمة "/"
       if(!/^[0-9+\-*/().\s]+$/.test(cleaned)) throw new Error("bad");
-
       const fn = new Function("return ("+cleaned+");");
       const val = fn();
       if(!Number.isFinite(val)) return 0;
       return Math.round(val*100)/100;
     }
+
     function updatePreview(){
       try{ resView.textContent = String(safeEval(expr)); }
       catch{ resView.textContent = "0"; }
@@ -1687,7 +1694,6 @@
         </tr>
       `).join("");
 
-      // (نترك قالب الطباعة عربي كما هو حسب طلبك السابق للطباعة بالعربي)
       pa.innerHTML = `
         <div class="p-box p-header">
           <div class="p-title">شركة الحايك</div>
@@ -1736,7 +1742,6 @@
 
       const pa = buildPrintArea();
 
-      // ✅ ضغط قوي مع بقاء القراءة واضحة
       const SCALE = 1.35;
       const JPEG_Q = 0.72;
 
@@ -1773,6 +1778,7 @@
       await qSyncSilently(false);
     }
 
+    // ✅ هذا يستقبل النص الجاهز من parseSmart
     window.HAYEK_VOICE_ADD_LINE = async (item, expression)=>{
       try{
         const c = custInput.value.trim();
@@ -1795,16 +1801,7 @@
           return;
         }
 
-        // ✅ مهم: دعم "/" بالصوت (تحويله ل÷) + كلمات القسمة
-        const normalized = exprNorm
-          .replace(/[\/\\／]/g, "÷")
-          .replace(/\b(على|قسمة|تقسيم)\b/gi, "÷")
-          .replace(/\b(bölü|bölme|bölüm|böl)\b/gi, "÷")
-          .replace(/[×✕✖xX*]/g, "×")
-          .replaceAll("_","-")
-          .replace(/\s+/g,"");
-
-        setExpr(normalized);
+        setExpr(exprNorm);
         await equalsAndLog();
       }catch(e){
         showErr(appErr, "فشل إضافة بالصوت:\n" + (e?.message || e));
@@ -1841,7 +1838,6 @@
     $("btnPDF").addEventListener("click", exportPDF);
     $("btnClearOps").addEventListener("click", clearOperations);
 
-    // ✅ حذف سطر
     logBody.addEventListener("click", (e)=>{
       const btn = e.target.closest("button[data-del]");
       if(!btn) return;
@@ -1855,12 +1851,10 @@
     refreshNetState(true).then(async ()=>{ await qSyncSilently(false); });
     restoreSession();
 
-    // تحديث نصوص الواجهة فوراً (إذا غيّر المستخدم لغة النظام)
     try{
       window.addEventListener("storage", (e)=>{
         if(e.key === "HAYEK_UI_LANG_V1" && window.HAYEK_APPLY_UI_LANG){
           window.HAYEK_APPLY_UI_LANG();
-          // تحديث subtitle/pill إذا كان مسجّل
           if(USER?.username){
             subtitle.textContent = T("subtitle_invoice");
           }else{
